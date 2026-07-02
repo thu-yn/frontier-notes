@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}前沿手记{% endblock %}</title>
+<meta name="description" content="每天早晨更新的 AI 前沿摘录:论文、开源仓库与资讯,由 Claude 编辑筛选。">
+<style>
+:root {
+  --paper: #f7f7f2;
+  --ink: #22303c;
+  --ink-soft: #5c6871;
+  --blue: #2440b3;
+  --red: #b03a1a;
+  --hl: #ffe95c;
+  --rule: rgba(34, 48, 60, .18);
+  --serif: "Songti SC", "STSong", "Noto Serif SC", "Source Han Serif SC", "SimSun", serif;
+  --sans: -apple-system, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+  --kai: "Kaiti SC", "STKaiti", "KaiTi", "Noto Serif SC", serif;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.85;
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(rgba(36, 64, 179, .045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(36, 64, 179, .045) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 3px; }
+a:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 2px; }
+
+.sheet {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+  position: relative;
+}
+/* 作业本式的左侧红边线,窄屏隐藏 */
+@media (min-width: 60rem) {
+  .sheet::before {
+    content: "";
+    position: absolute;
+    top: 0; bottom: 0;
+    left: -1.6rem;
+    border-left: 1.5px solid rgba(176, 58, 26, .45);
+  }
+}
+
+/* ---- 报头 ---- */
+.masthead { margin-bottom: 2.2rem; }
+.masthead .stamp {
+  font-family: var(--mono);
+  font-size: .78rem;
+  letter-spacing: .08em;
+  color: var(--ink-soft);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.masthead .stamp nav { display: flex; gap: 1.1rem; }
+.masthead h1 {
+  font-family: var(--serif);
+  font-weight: 900;
+  font-size: clamp(2.3rem, 7vw, 3.2rem);
+  letter-spacing: .06em;
+  margin: .6rem 0 .2rem;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+.masthead h1 a { color: var(--ink); }
+.masthead .tagline {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: .92rem;
+}
+.masthead .rule {
+  margin-top: 1.2rem;
+  border: 0;
+  border-top: 2px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  height: 3px;
+}
+
+/* ---- 编者按(楷体红笔) ---- */
+.editor-note {
+  margin: 2rem 0 2.6rem;
+  padding: .2rem 0 .2rem 1.1rem;
+  border-left: 3px double var(--red);
+}
+.editor-note .label {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: .85rem;
+  color: var(--red);
+  letter-spacing: .35em;
+  display: inline-block;
+  border: 1px solid var(--red);
+  padding: .05rem .3rem .05rem .62rem;
+  margin-bottom: .5rem;
+}
+.editor-note p {
+  margin: 0;
+  font-family: var(--kai);
+  font-size: 1.06rem;
+  color: #6b3423;
+}
+
+/* ---- 栏目 ---- */
+section.column { margin: 3rem 0; }
+.column-head {
+  display: flex;
+  align-items: baseline;
+  gap: .7rem;
+  margin-bottom: 1.4rem;
+}
+.column-head h2 {
+  font-family: var(--serif);
+  font-size: 1.45rem;
+  font-weight: 900;
+  letter-spacing: .12em;
+  margin: 0;
+  text-decoration: underline wavy var(--blue) 1.5px;
+  text-underline-offset: 8px;
+}
+.column-head .count {
+  font-family: var(--mono);
+  font-size: .8rem;
+  color: var(--ink-soft);
+}
+
+/* ---- 条目 ---- */
+.entry { padding: 1.5rem 0; }
+.entry + .entry { border-top: 1.5px dashed var(--rule); }
+.entry h3 {
+  font-family: var(--serif);
+  font-size: 1.22rem;
+  font-weight: 700;
+  margin: 0 0 .1rem;
+  line-height: 1.55;
+  text-wrap: balance;
+}
+.entry h3 a { color: var(--ink); }
+.entry h3 a:hover { color: var(--blue); }
+.entry .orig {
+  margin: 0 0 .55rem;
+  font-size: .82rem;
+  color: var(--ink-soft);
+  font-style: italic;
+}
+.entry .oneliner { margin: .35rem 0 .55rem; font-size: 1.02rem; }
+mark {
+  background: linear-gradient(100deg,
+    transparent 0%, rgba(255, 233, 92, .55) 3%,
+    var(--hl) 12%, var(--hl) 88%,
+    rgba(255, 233, 92, .55) 97%, transparent 100%);
+  color: inherit;
+  padding: .12em .35em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+.entry .summary { margin: .3rem 0 .6rem; max-width: 40rem; }
+.entry .meta {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: .78rem;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.entry .meta a { color: var(--ink-soft); text-decoration: underline; text-underline-offset: 2px; }
+.entry .meta a:hover { color: var(--blue); }
+.tag { white-space: nowrap; }
+
+/* 仓库条目名字用等宽 */
+.entry h3.repo-name { font-family: var(--mono); font-size: 1.05rem; letter-spacing: 0; }
+.lang-dot {
+  display: inline-block;
+  width: .6em; height: .6em;
+  border-radius: 50%;
+  background: var(--blue);
+  margin-right: .3em;
+  vertical-align: baseline;
+}
+
+/* 资讯更紧凑 */
+.entry.news { padding: 1.1rem 0; }
+.entry.news h3 { font-size: 1.08rem; }
+.entry.news .summary { margin-top: .2rem; }
+.source-chip {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--red);
+  border: 1px solid rgba(176, 58, 26, .5);
+  padding: 0 .4em;
+  border-radius: 2px;
+  white-space: nowrap;
+  vertical-align: .12em;
+  margin-left: .45em;
+}
+
+/* ---- 期与期之间的导航 ---- */
+.issue-nav {
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  border-top: 2px solid var(--ink);
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: .9rem;
+  flex-wrap: wrap;
+}
+
+/* ---- 归档页 ---- */
+.archive-list { list-style: none; padding: 0; margin: 0; }
+.archive-list li {
+  padding: .9rem 0;
+  border-bottom: 1.5px dashed var(--rule);
+  display: flex;
+  gap: 1rem;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+.archive-list .no { font-family: var(--mono); font-size: .8rem; color: var(--ink-soft); min-width: 5.5em; }
+.archive-list .d { font-family: var(--serif); font-weight: 700; }
+.archive-list .teaser {
+  color: var(--ink-soft);
+  font-family: var(--kai);
+  font-size: .92rem;
+  flex: 1 1 16rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+footer {
+  margin-top: 4rem;
+  font-size: .8rem;
+  color: var(--ink-soft);
+  border-top: 1px solid var(--rule);
+  padding-top: 1rem;
+}
+footer p { margin: .2rem 0; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .entry { animation: settle .4s ease-out backwards; }
+  .entry:nth-child(2) { animation-delay: .04s; }
+  .entry:nth-child(3) { animation-delay: .08s; }
+  @keyframes settle {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: none; }
+  }
+}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <header class="masthead">
+    <div class="stamp">
+      <span>{% block stamp %}{% endblock %}</span>
+      <nav>
+        <a href="{{ root }}index.html">本期</a>
+        <a href="{{ root }}archive.html">归档</a>
+      </nav>
+    </div>
+    <h1><a href="{{ root }}index.html">前沿手记</a></h1>
+    <p class="tagline">每天早晨的 AI 前沿摘录 —— 论文、开源与资讯,读过再挑给你。</p>
+    <hr class="rule">
+  </header>
+
+  {% block content %}{% endblock %}
+
+  <footer>
+    <p>本站每天早上由 GitHub Actions 自动出版,编辑是 Claude:选文、总结、编者按都出自它手,口味会随时间慢慢调教。</p>
+    <p>内容来源:Hugging Face Daily Papers · GitHub Trending · TechCrunch / The Verge / Ars Technica / VentureBeat / Hacker News。</p>
+  </footer>
+</div>
+</body>
+</html>

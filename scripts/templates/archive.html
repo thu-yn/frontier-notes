@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}前沿手记 · 归档{% endblock %}
+{% block stamp %}往期归档 · 共 {{ issues | length }} 期{% endblock %}
+
+{% block content %}
+<section class="column">
+  <div class="column-head">
+    <h2>归档</h2>
+    <span class="count">从最近一期往前翻</span>
+  </div>
+  <ul class="archive-list">
+    {% for i in issues %}
+    <li>
+      <span class="no">第 {{ i.issue_no }} 期</span>
+      <a class="d" href="issues/{{ i.date }}.html">{{ i.date }}</a>
+      <span class="teaser">{{ i.editor_note | truncate(48) }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

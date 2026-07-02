@@ -1,0 +1,9 @@
+# 站点是构建产物,由 Actions 生成并直接部署,不入库
+site/
+
+# 原始抓取数据只在当天的流水线里用,不入库(总结后的 data/daily 才入库)
+data/raw/
+
+__pycache__/
+.DS_Store
+.venv/
