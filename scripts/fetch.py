@@ -162,6 +162,7 @@ def fetch_news(hours: int = 36) -> list[dict]:
 def main() -> None:
     date = today_cst()
     out = ROOT / "data" / "raw" / f"{date}.json"
+    out.parent.mkdir(parents=True, exist_ok=True)  # data/raw 不入库,CI 检出时不存在
 
     sections, errors = {}, {}
     for key, fn in [("papers", fetch_hf_papers), ("repos", fetch_github_trending), ("news", fetch_news)]:
