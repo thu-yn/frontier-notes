@@ -17,6 +17,28 @@ SITE = ROOT / "site"
 
 WEEKDAYS = "一二三四五六日"
 
+# 领域 id → (显示名, 标签色)。与 prompts/summarize.md 的领域体系保持一致
+DOMAINS = {
+    "ai": ("AI·大模型", "#2440b3"),
+    "embodied": ("具身智能", "#0d7a68"),
+    "chip": ("半导体", "#8a5a12"),
+    "bio": ("生物医学", "#a83a52"),
+    "quantum": ("量子计算", "#6b3fa0"),
+    "ai4s": ("AI4Science", "#0b6f8a"),
+    "energy": ("新能源", "#3f7d20"),
+    "space": ("商业航天", "#4a5a8a"),
+}
+
+
+def issue_domains(issue: dict) -> list[str]:
+    """本期实际出现过的领域,按 DOMAINS 定义顺序排,供筛选条使用。"""
+    seen = {
+        item.get("domain", "ai")
+        for key in ("papers", "repos", "news")
+        for item in issue.get(key, [])
+    }
+    return [d for d in DOMAINS if d in seen]
+
 
 def load_issues() -> list[dict]:
     issues = []
@@ -47,6 +69,8 @@ def main() -> None:
         trim_blocks=True,
         lstrip_blocks=True,
     )
+    env.globals["DOMAINS"] = DOMAINS
+    env.globals["issue_domains"] = issue_domains
     issue_tpl = env.get_template("issue.html")
     archive_tpl = env.get_template("archive.html")
 

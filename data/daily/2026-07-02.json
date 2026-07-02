@@ -11,7 +11,12 @@
       "upvotes": 53,
       "one_liner": "把 VQA 题改造成「用动作作答」,干净地把知识遗忘和控制能力差分开了。",
       "summary_zh": "VLA 模型都是拿预训练 VLM 在机器人数据上微调出来的,但微调之后还剩多少常识没人说得清——任务失败时你分不清是它不知道,还是它不会动。这篇的 Act2Answer 协议把知识题变成桌面摆放任务,让模型用一个放置动作来选答案,控制混淆基本被消掉。测了 7 个 VLA 和 9 个 VLM 基线,结论是简单概念保得住,语义越丰富的类别掉得越多。做具身的可以拿它当微调后的体检表。",
-      "tags": ["VLA", "具身智能", "评测"]
+      "tags": [
+        "VLA",
+        "具身智能",
+        "评测"
+      ],
+      "domain": "embodied"
     },
     {
       "title": "PerceptionRubrics: Calibrating Multimodal Evaluation to Human Perception",
@@ -22,7 +27,11 @@
       "upvotes": 26,
       "one_liner": "关键事实答错直接扣到底,不许用一堆细节分数把错误平均掉。",
       "summary_zh": "针对「榜单分数饱和、实际用起来很脆」的老问题,给 1038 张信息密集的图片配了 1.2 万条逐条审计的评分标准,分成「必须对的事实」和「容易错的细节」两类,并且用门控计分:必答事实错了就直接判罚,不做线性平均。两个发现值得记:模型经常单个元素都能对、合在一起的约束就崩;开源和闭源模型在感知上仍有约 8% 的稳定差距——这和推理能力上开源快速追平的叙事正好相反。",
-      "tags": ["多模态", "评测"]
+      "tags": [
+        "多模态",
+        "评测"
+      ],
+      "domain": "ai"
     },
     {
       "title": "MemSyco-Bench: Benchmarking Sycophancy in Agent Memory",
@@ -33,7 +42,12 @@
       "upvotes": 17,
       "one_liner": "记忆不只是存取问题——记住了你,就开始顺着你说话。",
       "summary_zh": "现有记忆评测都在测存得对不对、取得准不准,这篇问的是取出来之后干了什么:检索到的记忆会让智能体过度迎合用户,牺牲事实准确性。五个子任务覆盖「能不能拒绝把记忆当事实证据」「记忆和客观证据冲突时听谁的」等场景。做个性化助手、长期陪伴类产品的人应该直接把这套题拿去跑一遍,这是记忆系统上线前该测但基本没人测的东西。",
-      "tags": ["Agent", "记忆", "对齐"]
+      "tags": [
+        "Agent",
+        "记忆",
+        "对齐"
+      ],
+      "domain": "ai"
     },
     {
       "title": "ELDR: Expert-Locality-Aware Decode Routing for PD-Disaggregated MoE Serving",
@@ -44,7 +58,12 @@
       "upvotes": 17,
       "one_liner": "负载均衡对 MoE 不够用:两台一样忙的机器,激活的专家不同,延迟就不同。",
       "summary_zh": "PD 分离架构下,请求 prefill 完要挑一台 decode 机器,现有路由只看负载。这篇用 prefill 阶段的专家激活构建「专家签名」来预测生成阶段会用哪些专家,离线做均衡 K-means 分区、在线在签名匹配的机器里挑最闲的。在 vLLM 上实现,40 卡规模测下来中位 TPOT 降 5.9–13.9%,而且输出完全不变——这种不动模型、纯调度层白捡的收益,推理平台没理由不抄。",
-      "tags": ["推理系统", "MoE", "Infra"]
+      "tags": [
+        "推理系统",
+        "MoE",
+        "Infra"
+      ],
+      "domain": "ai"
     },
     {
       "title": "Are We Measuring Strategy or Phrasing? The Gap Between Surface- and Approach-Level Diversity in LLM Math Reasoning",
@@ -55,7 +74,12 @@
       "upvotes": 15,
       "one_liner": "你以为在奖励「换个思路」,模型学会的是「换个说法」。",
       "summary_zh": "常用的多样性指标测的是文本表面的差异,不是解法层面的差异。作者用人工校准过的 LLM 裁判定义「解法多样性」,发现现有指标和它对不上,而且 diversity-aware RLVR 训练会出现指标保住、真实解法多样性反而下降的情况。更糟的是直接拿裁判打分当奖励去优化,模型学到的是钻裁判的偏好而不是真的拓宽思路。给所有做 RLVR 的人提了个醒,问题留着没解。",
-      "tags": ["RL", "推理", "评测"]
+      "tags": [
+        "RL",
+        "推理",
+        "评测"
+      ],
+      "domain": "ai"
     },
     {
       "title": "CausalMix: Data Mixture as Causal Inference for Language Model Training",
@@ -66,7 +90,11 @@
       "upvotes": 12,
       "one_liner": "数据池一变就要从头重训代理模型?把配比建成因果模型试试。",
       "summary_zh": "现在流行用小代理模型搜数据配比,但前提是数据分布不变,数据池一换就得重来。这篇把数据池统计特征当协变量、领域配比当处理变量,在 Qwen2.5-0.5B 上跑 512 次实验拟合因果模型估计 CATE,然后外推到 80 万条数据池指导 7B 模型训练,长思维链数据上也验证了。512 次小模型训练的成本不算低,但换来配比策略可迁移,对反复调数据的团队是划算的。",
-      "tags": ["预训练", "数据工程"]
+      "tags": [
+        "预训练",
+        "数据工程"
+      ],
+      "domain": "ai"
     },
     {
       "title": "Seed2.0 Model Card: Towards Intelligence Frontier for Real-World Complexity",
@@ -77,7 +105,11 @@
       "upvotes": 9,
       "one_liner": "重点不在跑分,在它先造尺子再造模型的思路:从真实需求反推评测体系。",
       "summary_zh": "字节新旗舰的模型卡。主打两个老大难:长尾知识和复杂指令遵循,配合推理、视觉理解和搜索能力,目标是长程复杂任务的可靠性。模型卡本身细节不算多,更像产品宣言,但「先根据用户真实需求搭评测体系、再用它指导训练」的顺序值得同行对照自省——多数团队是反过来的,先训完再找榜刷。",
-      "tags": ["基座模型", "模型卡"]
+      "tags": [
+        "基座模型",
+        "模型卡"
+      ],
+      "domain": "ai"
     }
   ],
   "repos": [
@@ -89,7 +121,8 @@
       "stars_today": "2,167",
       "one_liner": "开源的 AI 渗透测试员:自己扫、自己验证、自己给修复建议。",
       "summary_zh": "用 AI 智能体对你自己的应用做渗透测试,找到漏洞后还会尝试验证可利用性并给出修复方案。今天 +2100 星涨得很猛。安全测试自动化一直有市场,不过这类工具只该对自己有权限的系统用,拿去扫别人的就是另一回事了。",
-      "tags": []
+      "tags": [],
+      "domain": "ai"
     },
     {
       "name": "JuliusBrussee/caveman",
@@ -99,7 +132,8 @@
       "stars_today": "866",
       "one_liner": "「why use many token when few token do trick」——靠说原始人话省 65% token。",
       "summary_zh": "一个 Claude Code skill,把和模型的往返沟通压缩成电报式短语,声称能省 65% 的 token。半玩笑半实用,但戳中了真痛点:智能体工作流里大量 token 花在礼貌性废话上。重度用 Claude Code 的可以试试,顺便看看它的 skill 写法。",
-      "tags": []
+      "tags": [],
+      "domain": "ai"
     },
     {
       "name": "ChromeDevTools/chrome-devtools-mcp",
@@ -109,7 +143,8 @@
       "stars_today": "92",
       "one_liner": "Chrome 官方出的 MCP:让编码智能体直接用 DevTools 调试页面。",
       "summary_zh": "谷歌 Chrome DevTools 团队官方维护的 MCP server,让 AI 编码工具能读控制台、看网络请求、操作页面。相比社区版浏览器自动化方案,官方队的协议支持和维护是最大卖点。做前端、写爬虫、调 Web 应用的都值得配上。",
-      "tags": []
+      "tags": [],
+      "domain": "ai"
     },
     {
       "name": "browser-use/video-use",
@@ -119,7 +154,8 @@
       "stars_today": "550",
       "one_liner": "browser-use 团队的新尝试:用编码智能体剪视频。",
       "summary_zh": "把「让智能体操作浏览器」的思路搬到视频剪辑上,用自然语言指挥智能体完成剪辑操作。方向早期,但 browser-use 团队上一个项目验证过类似路线,值得围观它怎么定义视频编辑的操作原语。",
-      "tags": []
+      "tags": [],
+      "domain": "ai"
     },
     {
       "name": "openai/codex-plugin-cc",
@@ -129,7 +165,8 @@
       "stars_today": "72",
       "one_liner": "OpenAI 官方做了个「在 Claude Code 里调用 Codex」的插件,时代变了。",
       "summary_zh": "让你在 Claude Code 里把代码评审或子任务委托给 Codex。OpenAI 官方给竞品的 CLI 写插件,本身就是个新闻:智能体编码工具的生态位之争已经从「用谁」变成「谁当入口、谁当工具」。用两家订阅的人可以白捡一个双模型工作流。",
-      "tags": []
+      "tags": [],
+      "domain": "ai"
     },
     {
       "name": "obra/superpowers",
@@ -139,7 +176,8 @@
       "stars_today": "1,047",
       "one_liner": "24 万星的智能体技能框架,Claude Code 社区方法论的事实标准之一。",
       "summary_zh": "一套智能体技能框架加软件开发方法论:规划、TDD、调试等流程被封装成可组合的 skills。星数已经说明了接受度,适合想系统化改造自己 AI 开发流程的人,拿来挑几个 skill 单用也行。",
-      "tags": []
+      "tags": [],
+      "domain": "ai"
     },
     {
       "name": "HKUDS/Vibe-Trading",
@@ -149,7 +187,8 @@
       "stars_today": "918",
       "one_liner": "港大数据智能实验室的个人交易智能体——学习价值大于实盘价值。",
       "summary_zh": "HKUDS(LightRAG 同门)出品的交易智能体,自然语言驱动选股、分析、策略执行。作为智能体架构和金融数据管线的学习材料不错;至于真金白银交给它,LLM 交易策略的回测幸存者偏差摆在那,自己掂量。",
-      "tags": []
+      "tags": [],
+      "domain": "ai"
     }
   ],
   "news": [
@@ -157,37 +196,43 @@
       "title_zh": "微软砸 25 亿美元成立自己的 AI 部署公司",
       "url": "https://techcrunch.com/2026/07/02/microsoft-launches-its-own-ai-deployment-company",
       "source": "TechCrunch",
-      "summary_zh": "继 Amazon、OpenAI、Anthropic 之后,微软也成立了专门的 AI 部署部门,承诺投入 25 亿美元,帮企业把 AI 真正落地。巨头们不约而同地发现:卖模型不如卖「把模型用起来」的服务。"
+      "summary_zh": "继 Amazon、OpenAI、Anthropic 之后,微软也成立了专门的 AI 部署部门,承诺投入 25 亿美元,帮企业把 AI 真正落地。巨头们不约而同地发现:卖模型不如卖「把模型用起来」的服务。",
+      "domain": "ai"
     },
     {
       "title_zh": "Cloudflare 新政:AI 公司爬内容要先分清用途、再谈付费",
       "url": "https://techcrunch.com/2026/07/01/cloudflares-new-policy-pushes-ai-companies-to-pay-for-publishers-content",
       "source": "TechCrunch",
-      "summary_zh": "Cloudflare 给 AI 公司划了 9 月 15 日的期限:必须把用于搜索的爬虫和用于训练/智能体的爬虫分开标识,否则将在大量出版商站点上被默认拦截。Cloudflare 握着相当大比例的网站入口,这一刀对训练数据获取的影响是实打实的。"
+      "summary_zh": "Cloudflare 给 AI 公司划了 9 月 15 日的期限:必须把用于搜索的爬虫和用于训练/智能体的爬虫分开标识,否则将在大量出版商站点上被默认拦截。Cloudflare 握着相当大比例的网站入口,这一刀对训练数据获取的影响是实打实的。",
+      "domain": "ai"
     },
     {
       "title_zh": "Anthropic 新模型通过安全测试后获准全球发布",
       "url": "https://arstechnica.com/tech-policy/2026/07/after-spooking-trump-into-safety-testing-anthropic-ai-models-get-global-release",
       "source": "Ars Technica",
-      "summary_zh": "美国政府解除了对 Anthropic 高端模型 Fable 和 Mythos 的出口限制,此前这批模型因触发安全评估要求被暂缓全球发布。前沿模型发布要过政府安全测试这道关,正在从假设变成流程。"
+      "summary_zh": "美国政府解除了对 Anthropic 高端模型 Fable 和 Mythos 的出口限制,此前这批模型因触发安全评估要求被暂缓全球发布。前沿模型发布要过政府安全测试这道关,正在从假设变成流程。",
+      "domain": "ai"
     },
     {
       "title_zh": "OpenAI 提议给美国政府 5% 股份以缓和关系",
       "url": "https://www.theverge.com/ai-artificial-intelligence/960588/openai-government-stake",
       "source": "The Verge",
-      "summary_zh": "据 FT 报道,OpenAI 提议让美国政府持有约 5% 的股份,以缓和与特朗普政府的紧张关系、平息公众对 AI 的反弹。Altman 的说法是「让公众分享 AI 红利」。政企绑定到入股这一步,值得持续关注。"
+      "summary_zh": "据 FT 报道,OpenAI 提议让美国政府持有约 5% 的股份,以缓和与特朗普政府的紧张关系、平息公众对 AI 的反弹。Altman 的说法是「让公众分享 AI 红利」。政企绑定到入股这一步,值得持续关注。",
+      "domain": "ai"
     },
     {
       "title_zh": "谷歌 2025 年用电量因 AI 扩建暴涨 37%",
       "url": "https://arstechnica.com/ai/2026/07/googles-ai-buildout-drove-37-increase-in-electricity-use-in-2025",
       "source": "Ars Technica",
-      "summary_zh": "谷歌年度环境报告显示,AI 数据中心扩建使其 2025 年用电量同比增长 37%,清洁能源采购的速度追不上算力扩张。AI 的能源账单已经大到会影响电网规划,这条线以后会常出现在本栏目。"
+      "summary_zh": "谷歌年度环境报告显示,AI 数据中心扩建使其 2025 年用电量同比增长 37%,清洁能源采购的速度追不上算力扩张。AI 的能源账单已经大到会影响电网规划,这条线以后会常出现在本栏目。",
+      "domain": "energy"
     },
     {
       "title_zh": "Meta 计划把多余 AI 算力卖成云服务",
       "url": "https://techcrunch.com/2026/07/01/meta-like-spacex-looks-to-turn-excess-ai-compute-into-cash",
       "source": "TechCrunch",
-      "summary_zh": "Meta 正在制定云基础设施业务计划,出售 AI 算力和模型访问,直接对标 AWS、谷歌云和 Azure。囤了太多 GPU 的公司开始互相卖算力,算力过剩还是军备竞赛的中场休息,一两个季度就能见分晓。"
+      "summary_zh": "Meta 正在制定云基础设施业务计划,出售 AI 算力和模型访问,直接对标 AWS、谷歌云和 Azure。囤了太多 GPU 的公司开始互相卖算力,算力过剩还是军备竞赛的中场休息,一两个季度就能见分晓。",
+      "domain": "ai"
     }
   ]
 }

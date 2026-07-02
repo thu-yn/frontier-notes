@@ -10,6 +10,16 @@
 </aside>
 {% endif %}
 
+{% set present = issue_domains(issue) %}
+{% if present | length > 1 %}
+<div class="filter-bar" role="group" aria-label="按领域筛选">
+  <button type="button" data-domain="all" aria-pressed="true">全部</button>
+  {% for d in present %}
+  <button type="button" data-domain="{{ d }}" aria-pressed="false" style="--chip: {{ DOMAINS[d][1] }}">{{ DOMAINS[d][0] }}</button>
+  {% endfor %}
+</div>
+{% endif %}
+
 {% if issue.papers %}
 <section class="column" id="papers">
   <div class="column-head">
@@ -17,8 +27,9 @@
     <span class="count">{{ issue.papers | length }} 篇 · 来自 HF Daily Papers</span>
   </div>
   {% for p in issue.papers %}
-  <article class="entry">
-    <h3><a href="{{ p.url }}">{{ p.title_zh }}</a></h3>
+  {% set d = p.domain | default("ai") %}
+  <article class="entry" data-domain="{{ d }}">
+    <h3><a href="{{ p.url }}">{{ p.title_zh }}</a><span class="domain-chip" style="color: {{ DOMAINS[d][1] }}">{{ DOMAINS[d][0] }}</span></h3>
     <p class="orig">{{ p.title }}</p>
     {% if p.one_liner %}<p class="oneliner"><mark>{{ p.one_liner }}</mark></p>{% endif %}
     <p class="summary">{{ p.summary_zh }}</p>
@@ -40,8 +51,9 @@
     <span class="count">{{ issue.repos | length }} 个 · 来自 GitHub Trending</span>
   </div>
   {% for r in issue.repos %}
-  <article class="entry">
-    <h3 class="repo-name"><a href="{{ r.url }}">{{ r.name }}</a></h3>
+  {% set d = r.domain | default("ai") %}
+  <article class="entry" data-domain="{{ d }}">
+    <h3 class="repo-name"><a href="{{ r.url }}">{{ r.name }}</a><span class="domain-chip" style="color: {{ DOMAINS[d][1] }}">{{ DOMAINS[d][0] }}</span></h3>
     {% if r.one_liner %}<p class="oneliner"><mark>{{ r.one_liner }}</mark></p>{% endif %}
     <p class="summary">{{ r.summary_zh }}</p>
     <p class="meta">
@@ -61,8 +73,9 @@
     <span class="count">{{ issue.news | length }} 条</span>
   </div>
   {% for n in issue.news %}
-  <article class="entry news">
-    <h3><a href="{{ n.url }}">{{ n.title_zh }}</a><span class="source-chip">{{ n.source }}</span></h3>
+  {% set d = n.domain | default("ai") %}
+  <article class="entry news" data-domain="{{ d }}">
+    <h3><a href="{{ n.url }}">{{ n.title_zh }}</a><span class="domain-chip" style="color: {{ DOMAINS[d][1] }}">{{ DOMAINS[d][0] }}</span><span class="source-chip">{{ n.source }}</span></h3>
     <p class="summary">{{ n.summary_zh }}</p>
   </article>
   {% endfor %}
@@ -74,4 +87,27 @@
   <span><a href="{{ root }}archive.html">全部归档</a></span>
   <span>{% if next %}<a href="{{ root }}issues/{{ next.date }}.html">下一期 · {{ next.date }}</a> →{% elif not is_latest %}<a href="{{ root }}index.html">回到最新一期</a> →{% endif %}</span>
 </nav>
+
+<script>
+(function () {
+  var bar = document.querySelector(".filter-bar");
+  if (!bar) return;
+  bar.addEventListener("click", function (e) {
+    var btn = e.target.closest("button[data-domain]");
+    if (!btn) return;
+    var want = btn.dataset.domain;
+    bar.querySelectorAll("button").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(b === btn));
+    });
+    document.querySelectorAll(".entry[data-domain]").forEach(function (el) {
+      el.classList.toggle("dimmed", want !== "all" && el.dataset.domain !== want);
+    });
+    // 某栏目被筛空时整个隐藏
+    document.querySelectorAll("section.column").forEach(function (sec) {
+      var visible = sec.querySelectorAll(".entry[data-domain]:not(.dimmed)").length;
+      sec.classList.toggle("dimmed", visible === 0);
+    });
+  });
+})();
+</script>
 {% endblock %}

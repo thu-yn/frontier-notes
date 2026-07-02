@@ -115,6 +115,46 @@ a:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-ra
   color: #6b3423;
 }
 
+/* ---- 领域筛选条 ---- */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin: 1.6rem 0 .4rem;
+}
+.filter-bar button {
+  font-family: var(--mono);
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--chip, var(--ink-soft));
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: .18rem .6rem;
+  cursor: pointer;
+}
+.filter-bar button:hover { border-color: currentColor; }
+.filter-bar button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.filter-bar button[aria-pressed="true"] {
+  color: var(--paper);
+  background: var(--chip, var(--ink));
+  border-color: var(--chip, var(--ink));
+}
+.entry.dimmed, section.column.dimmed { display: none; }
+
+/* ---- 领域标签 ---- */
+.domain-chip {
+  font-family: var(--mono);
+  font-size: .7rem;
+  letter-spacing: .05em;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  padding: 0 .35em;
+  white-space: nowrap;
+  vertical-align: .15em;
+  margin-left: .5em;
+}
+
 /* ---- 栏目 ---- */
 section.column { margin: 3rem 0; }
 .column-head {

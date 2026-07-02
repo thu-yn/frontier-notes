@@ -25,12 +25,35 @@ NEWS_FEEDS = [
     ("The Verge AI", "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml"),
     ("Ars Technica AI", "https://arstechnica.com/ai/feed/"),
     ("VentureBeat AI", "https://venturebeat.com/category/ai/feed/"),
+    ("IEEE Spectrum", "https://spectrum.ieee.org/feeds/feed.rss"),
+    ("The Robot Report", "https://www.therobotreport.com/feed/"),
+    ("SemiEngineering", "https://semiengineering.com/feed/"),
+    ("Fierce Biotech", "https://www.fiercebiotech.com/rss/xml"),
+    ("SpaceNews", "https://spacenews.com/feed/"),
+    ("Quanta Magazine", "https://www.quantamagazine.org/feed/"),
+    ("Ars Technica Science", "https://arstechnica.com/science/feed/"),
 ]
 
-# HN 上和 AI/系统/开源相关的关键词,用于粗筛,精筛交给 Claude
+# 各领域的 arXiv 分类,每天取最新提交,由 Claude 精筛
+ARXIV_DOMAINS = {
+    "embodied": "cat:cs.RO",
+    "quantum": "cat:quant-ph",
+    "bio": "cat:q-bio.BM OR cat:q-bio.GN OR cat:q-bio.QM",
+    "energy": "cat:cond-mat.mtrl-sci",
+    "chip": "cat:cs.AR OR cat:cs.ET",
+    "ai4s": "cat:physics.comp-ph OR cat:cs.CE",
+}
+
+# HN 头版粗筛关键词(覆盖全部领域),精筛交给 Claude
 HN_KEYWORDS = re.compile(
     r"\b(ai|llm|gpt|claude|gemini|deepseek|qwen|llama|mistral|openai|anthropic|"
-    r"model|agent|transformer|diffusion|rag|inference|cuda|open.?source)\b",
+    r"model|agent|transformer|diffusion|rag|inference|cuda|open.?source|"
+    r"robot|humanoid|drone|autonomous|"
+    r"chip|semiconductor|tsmc|nvidia|asml|euv|fab|risc-v|gpu|"
+    r"quantum|qubit|"
+    r"protein|crispr|drug|genome|biotech|alphafold|"
+    r"battery|fusion|solar|nuclear|grid|"
+    r"rocket|satellite|spacex|orbit|starship)\b",
     re.I,
 )
 
@@ -103,6 +126,40 @@ def fetch_github_trending(top_n: int = 20) -> list[dict]:
     return repos
 
 
+def fetch_arxiv_domains(per_domain: int = 25) -> dict[str, list[dict]]:
+    """各领域 arXiv 最新提交(HF 榜单以 AI 为主,其他领域靠这里补)。"""
+    out: dict[str, list[dict]] = {}
+    for domain, query in ARXIV_DOMAINS.items():
+        r = requests.get(
+            "https://export.arxiv.org/api/query",
+            params={
+                "search_query": query,
+                "sortBy": "submittedDate",
+                "sortOrder": "descending",
+                "max_results": per_domain,
+            },
+            headers=UA,
+            timeout=45,
+        )
+        r.raise_for_status()
+        feed = feedparser.parse(r.text)
+        papers = []
+        for e in feed.entries:
+            arxiv_id = e.get("id", "").rsplit("/", 1)[-1]
+            papers.append(
+                {
+                    "arxiv_id": arxiv_id,
+                    "title": re.sub(r"\s+", " ", e.get("title", "")).strip(),
+                    "abstract": re.sub(r"\s+", " ", e.get("summary", ""))[:700].strip(),
+                    "authors": [a.get("name", "") for a in e.get("authors", [])][:6],
+                    "url": f"https://arxiv.org/abs/{arxiv_id}",
+                    "published": e.get("published", ""),
+                }
+            )
+        out[domain] = papers
+    return out
+
+
 def fetch_news(hours: int = 36) -> list[dict]:
     cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
     items = []
@@ -165,7 +222,12 @@ def main() -> None:
     out.parent.mkdir(parents=True, exist_ok=True)  # data/raw 不入库,CI 检出时不存在
 
     sections, errors = {}, {}
-    for key, fn in [("papers", fetch_hf_papers), ("repos", fetch_github_trending), ("news", fetch_news)]:
+    for key, fn in [
+        ("papers", fetch_hf_papers),
+        ("domain_papers", fetch_arxiv_domains),
+        ("repos", fetch_github_trending),
+        ("news", fetch_news),
+    ]:
         try:
             sections[key] = fn()
         except Exception as exc:  # 单个源挂掉不阻塞整期
@@ -179,8 +241,9 @@ def main() -> None:
         **sections,
     }
     out.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    n_domain = sum(len(v) for v in sections["domain_papers"].values()) if sections["domain_papers"] else 0
     print(
-        f"[fetch] {date}: {len(sections['papers'])} papers, "
+        f"[fetch] {date}: {len(sections['papers'])} hf papers, {n_domain} domain papers, "
         f"{len(sections['repos'])} repos, {len(sections['news'])} news -> {out}"
     )
     if errors:
