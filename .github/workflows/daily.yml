@@ -50,9 +50,13 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # claude-code-action 会覆盖 checkout 留下的凭证,这里显式用 GITHUB_TOKEN 推送
+          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git add data/daily
           git diff --cached --quiet || git commit -m "第 $(date -u -d '+8 hours' +%F) 期"
-          git push
+          git push origin HEAD:main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 配置 Pages
         uses: actions/configure-pages@v5
