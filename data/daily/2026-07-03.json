@@ -1,0 +1,290 @@
+{
+  "date": "2026-07-03",
+  "editor_note": "今天最想安利的是「合成细胞第一次实现生长分裂」——从头拼出来的活细胞能自己分裂了,虽然只撑得住几轮、还得靠外部材料吊命,但这是货真价实的硬核进展。AI 这边有条隐线挺好玩:caveman、superpowers、agentskills 三个仓库都在讲「技能」这件事,智能体的可复用能力正在从各家私有格式往公共基础设施上走。芯片那头遥相呼应:Anthropic 在跟三星谈定制芯片,同一天 Mega 这篇论文交出一颗真流片的 22nm 脉冲神经网络加速器,一边是巨头砸钱下场,一边是学界把能效抠到极限。论文里最想点开的是 MemSyco-Bench——记忆会让智能体越来越顺着你说话,做长期助手的人迟早得面对这问题。资讯这块,OpenAI 提议给美国政府 5% 股份、微软自己砸 25 亿做 AI 部署公司,巨头们都在忙着证明「AI 能落地」比「AI 有多强」更值钱。",
+  "papers": [
+    {
+      "domain": "embodied",
+      "title": "Does VLA Even Know the Basics? Measuring Commonsense and World Knowledge Retention in Vision-Language-Action Models",
+      "title_zh": "VLA 还记得常识吗?测量视觉-语言-动作模型的知识保留",
+      "url": "https://arxiv.org/abs/2606.19297",
+      "hf_url": "https://huggingface.co/papers/2606.19297",
+      "authors": "Kachaev, Moskalenko, Skripkin 等",
+      "upvotes": 54,
+      "one_liner": "把知识题改成「用动作作答」,干净地把记性差和手笨这两件事分开了。",
+      "summary_zh": "VLA 模型都是拿 VLM 微调出来的,但微调完还剩多少常识没人说得清——任务失败到底是不懂还是不会做,过去很难分辨。这篇的 Act2Answer 让模型用摆放物体的动作来选答案,把这两件事拆开测。测了 7 个 VLA 和 9 个 VLM 后发现:简单概念还记得,语义越复杂的类别丢得越狠,而且用 VQA 一起训练能帮着少忘点。做微调的可以拿它当上线前的体检表。",
+      "tags": ["VLA", "具身智能", "评测"]
+    },
+    {
+      "domain": "ai",
+      "title": "PerceptionRubrics: Calibrating Multimodal Evaluation to Human Perception",
+      "title_zh": "PerceptionRubrics:把多模态评测校准到人类感知",
+      "url": "https://arxiv.org/abs/2606.28322",
+      "hf_url": "https://huggingface.co/papers/2606.28322",
+      "authors": "Yana Wei, Hongbo Peng 等",
+      "upvotes": 32,
+      "one_liner": "必答题错一道直接判零分,不许靠凑细节分把硬伤平均掉。",
+      "summary_zh": "多模态评测早就刷分刷到失真——模型跑分很高,实际一用就露怯。这篇给 1038 张信息密集图片配了 1.2 万条逐条审计的评分标准,分成「必须答对的事实」和「容易出错的细节」两类,用门控计分:必答题错了直接扣到底,不用线性平均糊过去。测下来发现模型经常单点都对、放一起的约束就崩,而且开源和闭源模型的感知能力还有 8% 的稳定差距——这跟推理能力上开源追平的说法正好相反。",
+      "tags": ["多模态", "评测"]
+    },
+    {
+      "domain": "ai",
+      "title": "MemSyco-Bench: Benchmarking Sycophancy in Agent Memory",
+      "title_zh": "MemSyco-Bench:测量智能体记忆引发的谄媚",
+      "url": "https://arxiv.org/abs/2607.01071",
+      "hf_url": "https://huggingface.co/papers/2607.01071",
+      "authors": "Zhishang Xiang, Jinsong Su 等(厦门大学 DeepLIT)",
+      "upvotes": 18,
+      "one_liner": "记住你是谁之后,智能体开始顺着你说话——这是记忆系统没人测过的坑。",
+      "summary_zh": "现在的记忆评测都在测存得对不对、取得准不准,这篇问的是取出来之后拿去干了什么:检索到的记忆会让智能体过度迎合用户,牺牲事实和客观推理。五个子任务专门测「记忆和客观证据冲突时听谁的」「能不能拒绝把记忆当铁证」这类场景。做长期助手、陪伴类产品的团队,记忆系统上线前真该拿这套题跑一遍。",
+      "tags": ["Agent", "记忆", "对齐"]
+    },
+    {
+      "domain": "ai",
+      "title": "TurboServe: Serving Streaming Video Generation Efficiently and Economically",
+      "title_zh": "TurboServe:高效经济地服务流式视频生成",
+      "url": "https://arxiv.org/abs/2606.19271",
+      "hf_url": "https://huggingface.co/papers/2606.19271",
+      "authors": "Youhe Jiang, Jun Zhu 等(清华大学)",
+      "upvotes": 18,
+      "one_liner": "流式视频生成服务的第一套调度系统:延迟和成本一起砍。",
+      "summary_zh": "流式视频生成是边生成边看的长会话,和离线生成、LLM 服务都不一样:要在活跃和空闲之间保状态,还得反复调度、每个 chunk 卡着延迟线交付。TurboServe 把这当成在线调度问题,一边做迁移感知的会话放置来压最大延迟,一边做负载驱动的自动扩缩容来省成本。在生数科技的真实生产流量上、最多 64 张 B300 上测,最坏情况延迟降 37.5%、GPU 成本降 37.2%。这类新工作负载专用的服务系统,以后会越来越多。",
+      "tags": ["推理系统", "视频生成", "Infra"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Domain Arithmetic: One-Shot VLA Adaptation under Environmental Shifts",
+      "title_zh": "Domain Arithmetic:VLA 模型的一次性环境迁移适配",
+      "url": "https://arxiv.org/abs/2607.00666",
+      "hf_url": "https://huggingface.co/papers/2607.00666",
+      "authors": "Taewook Kang, Jonghyun Choi 等(首尔大学)",
+      "upvotes": 16,
+      "one_liner": "换个机械臂、挪个摄像头,VLA 就不会干活了——DART 只用一条演示就能补救。",
+      "summary_zh": "VLA 模型换个环境就容易失灵,比如摄像头角度变了,或者从 Panda 换到 UR5e 机械臂,以前的做法都得为每个任务收集好几条新演示重新训练。DART 换了个思路:把这看成权重向量的加减法,只用一条演示就能把「目标域特有的东西」从权重里提取出来叠加上去,还用子空间对齐过滤掉噪声分量。仿真和真实机器人实验里都打赢了现有的适配方法,数据收集成本压到极限的思路,对天天换场地部署的团队很实用。",
+      "tags": ["VLA", "具身智能", "模型编辑"]
+    },
+    {
+      "domain": "ai",
+      "title": "CausalMix: Data Mixture as Causal Inference for Language Model Training",
+      "title_zh": "CausalMix:把训练数据配比当作因果推断问题",
+      "url": "https://arxiv.org/abs/2607.01104",
+      "hf_url": "https://huggingface.co/papers/2607.01104",
+      "authors": "Zinan Tang, Yukun Zhang 等",
+      "upvotes": 14,
+      "one_liner": "数据池一换就要从头重训代理模型?把配比当因果推断问题就不用重来。",
+      "summary_zh": "现在流行用小代理模型去搜训练数据配比,但前提是数据分布不能变,数据池一换就得整个重来。这篇把数据池的统计特征当协变量、把领域配比当处理变量,在 Qwen2.5-0.5B 上跑了 512 次实验拟合因果模型估计处理效应,然后外推到 80 万条数据的池子去训 7B 模型,长思维链数据上也验证了。512 次小模型实验的前期成本不低,但换来配比策略可以跨规模迁移,对天天调数据配比的团队是笔划算账。",
+      "tags": ["预训练", "数据工程"]
+    },
+    {
+      "domain": "ai",
+      "title": "The State-Prediction Separation Hypothesis",
+      "title_zh": "状态-预测分离假说",
+      "url": "https://arxiv.org/abs/2607.01218",
+      "hf_url": "https://huggingface.co/papers/2607.01218",
+      "authors": "Giovanni Monea, Yoav Artzi 等(康奈尔)",
+      "upvotes": 7,
+      "one_liner": "Transformer 一边要猜下一个词、一边要替未来存好状态,这篇说这两件事不该用同一路信号做。",
+      "summary_zh": "标准 Transformer 用同一套前向计算流同时干两件事:预测下一个词,以及为后续预测存有用的状态信息。这篇提出「状态-预测分离假说」,设计了一个双流架构把这两个角色拆开算,在多个规模上预训练验证。结果是验证损失更低、下游任务平均高出标准 Transformer 2-3 个百分点,数据和算力效率都更好。架构改动不算大,但这种对 Transformer 内部到底在干什么的拆解挺有启发,值得跟一跟后续工作。",
+      "tags": ["Transformer", "架构", "预训练"]
+    },
+    {
+      "domain": "embodied",
+      "title": "ASPIRE: Agentic Skills Discovery for Robotics",
+      "title_zh": "ASPIRE:机器人的智能体技能发现",
+      "url": "https://arxiv.org/abs/2607.00272",
+      "hf_url": "https://huggingface.co/papers/2607.00272",
+      "authors": "Runyu Lu, Guanya Shi 等(CMU / NVIDIA)",
+      "upvotes": 11,
+      "one_liner": "机器人自己写代码、自己发现哪里错了、自己攒成技能库——失败也是经验。",
+      "summary_zh": "传统机器人编程要手动处理多模态感知、接触力学和各种失败情况,很累人。ASPIRE 让机器人自己写控制程序、遇到失败自动诊断并修复,验证过的修复方案会被沉淀成可复用的技能库,还用演化搜索去探索单条轨迹之外的更多任务组合。在 LIBERO-Pro 抗扰动操作上比现有方法高出 77%,长程家务任务 BEHAVIOR-1K 上高 32%,积累的技能库还能零样本泛化到没见过的长程任务。仿真里攒的技能能往真机上迁移,这条路径值得关注。",
+      "tags": ["机器人", "Agent", "技能学习"]
+    },
+    {
+      "domain": "bio",
+      "title": "BioInsight: Multi-Agent Orchestration for Interactive Biomedical Knowledge Discovery",
+      "title_zh": "BioInsight:面向交互式生物医学知识发现的多智能体编排",
+      "url": "https://arxiv.org/abs/2606.20997",
+      "hf_url": "https://huggingface.co/papers/2606.20997",
+      "authors": "Jieyi Wang, Bingxuan Li 等",
+      "upvotes": 6,
+      "one_liner": "别再给医生一份写死的报告了,证据、假设、不确定性都应该能点开细看。",
+      "summary_zh": "现在的生物医学 AI 大多是给一份静态报告,但研究者做决策时需要能查证据来源、比较机制假说、评估不确定性,一份写死的文本远远不够。BioInsight 用多智能体把疾病证据拆解成通路排序、文献证据包、机理推理笔记等结构化中间产物,再动态渲染成可交互界面,而不是简单甩一段总结。在标准生物医学问答和蛋白功能推理任务上表现最好。从「读报告」到「可交互查证据」,这个方向对做临床辅助工具的团队是个提醒。",
+      "tags": ["生物医学", "Agent", "知识发现"]
+    },
+    {
+      "domain": "ai",
+      "title": "AutoTrainess: Teaching Language Models to Improve Language Models Autonomously",
+      "title_zh": "AutoTrainess:教语言模型自主改进语言模型",
+      "url": "https://arxiv.org/abs/2606.31551",
+      "hf_url": "https://huggingface.co/papers/2606.31551",
+      "authors": "Zhaojian Yu, Penghao Yin 等",
+      "upvotes": 7,
+      "one_liner": "让智能体自己训模型,难的不是写代码,是记得住几十小时前定的实验计划。",
+      "summary_zh": "自动化训练模型看着像个 coding 任务,其实更难的是智能体要持续规划迭代、造对齐评测标准的数据、稳定跑训练任务、评估检查点,还要在几十小时的交互里不丢失实验状态。AutoTrainess 把这些操作都封装成智能体可调用的接口,把人类调参的经验固化成明确的工作流和执行约束,而不是扔给智能体一个裸 CLI 环境自己摸索。在 PostTrainBench 上,用 GPT-5.4 时平均分从纯 CLI 基线的 23.21 提到 26.94,换到 DeepSeek-V4-Flash 上也从 12.13 提到 19.58。自动化调参这件事,拼的越来越是工程脚手架而不是模型本身聪不聪明。",
+      "tags": ["Agent", "自动化训练", "后训练"]
+    },
+    {
+      "domain": "chip",
+      "title": "Mega: A 22 nm Convolutional Spiking Neural Network Accelerator Achieving 0.375 pJ/SOP for Efficient Edge Vision",
+      "title_zh": "Mega:22nm 卷积脉冲神经网络加速器,能效 0.375 pJ/SOP",
+      "url": "https://arxiv.org/abs/2606.30039v1",
+      "authors": "Rick Luiken, Manil Dev Gomony, Sander Stuijk(TU Eindhoven)",
+      "one_liner": "22nm 真流片的脉冲神经网络加速器,边缘视觉能耗压到极致。",
+      "summary_zh": "脉冲神经网络本该靠事件驱动的稀疏计算省电,但现有加速器要么没吃满卷积层的并行度,要么应付不了逐层变化的内存需求和稀疏度。Mega 做了三件事:把 3×3 卷积做到高度并行、给脉冲信号和神经元状态、权重共用一块统一内存、再加低开销的脉冲检测。这是真实流片(22nm)跑出来的结果,不是仿真估算,0.375 pJ/SOP 的能效对边缘视觉场景是扎实的硬件进展,比一堆纸面架构论文更值得信。",
+      "tags": ["芯片", "脉冲神经网络", "边缘计算"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "usestrix/strix",
+      "url": "https://github.com/usestrix/strix",
+      "language": "Python",
+      "stars": 31818,
+      "stars_today": "2,167",
+      "one_liner": "开源的 AI 渗透测试员:自动扫描、自动验证漏洞、还给修复建议。",
+      "summary_zh": "拿 AI 智能体给自己的应用做渗透测试,发现漏洞后不光是报告,还会尝试验证是否真能利用、并给出修复方案。今天又涨了 2100+ 星,安全自动化这个方向确实有真实需求。提醒一句:这类工具只该用来测自己有权限的系统,拿去扫别人的就是另一回事了。"
+    },
+    {
+      "domain": "ai",
+      "name": "JuliusBrussee/caveman",
+      "url": "https://github.com/JuliusBrussee/caveman",
+      "language": "JavaScript",
+      "stars": 80571,
+      "stars_today": "866",
+      "one_liner": "「why use many token when few token do trick」——说人话省 token 的极限版。",
+      "summary_zh": "一个 Claude Code skill,把跟模型的往返沟通压缩成电报式短语,号称能省 65% 的 token。半玩笑半实用,但戳中了真痛点:智能体工作流里有大量 token 花在礼貌性废话上。重度用 Claude Code 的可以试试,顺便学一下它的 skill 写法。"
+    },
+    {
+      "domain": "ai",
+      "name": "ChromeDevTools/chrome-devtools-mcp",
+      "url": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
+      "language": "TypeScript",
+      "stars": 45048,
+      "stars_today": "141",
+      "one_liner": "Chrome 官方出的 MCP:让编码智能体直接用 DevTools 调试网页。",
+      "summary_zh": "谷歌 Chrome DevTools 团队官方维护的 MCP server,让 AI 编码工具能读控制台日志、看网络请求、直接操作页面。相比社区拼凑的浏览器自动化方案,官方队维护和协议支持是最大卖点。做前端、写爬虫、调 Web 应用的都值得配上。"
+    },
+    {
+      "domain": "ai",
+      "name": "browser-use/video-use",
+      "url": "https://github.com/browser-use/video-use",
+      "language": "Python",
+      "stars": 13714,
+      "stars_today": "550",
+      "one_liner": "browser-use 团队的新尝试:把「操作浏览器」那一套挪去剪视频。",
+      "summary_zh": "延续 browser-use「让智能体操作界面」的思路,这次对象换成了视频剪辑,用自然语言指挥智能体完成剪辑操作。方向还早期,但团队上一个项目已经验证过类似路线的可行性,值得围观他们怎么定义视频编辑的操作原语。"
+    },
+    {
+      "domain": "ai",
+      "name": "openai/codex-plugin-cc",
+      "url": "https://github.com/openai/codex-plugin-cc",
+      "language": "JavaScript",
+      "stars": 22524,
+      "stars_today": "448",
+      "one_liner": "OpenAI 官方给 Claude Code 做了个「调用 Codex」的插件,时代真的变了。",
+      "summary_zh": "装上之后能在 Claude Code 里直接把代码评审或子任务委托给 Codex。OpenAI 官方给竞品的 CLI 写插件,这件事本身就是新闻:智能体编码工具的生态位之争,已经从「用谁」变成了「谁当入口、谁当被调用的工具」。两家订阅都有的人可以白捡一个双模型工作流。"
+    },
+    {
+      "domain": "ai",
+      "name": "obra/superpowers",
+      "url": "https://github.com/obra/superpowers",
+      "language": "Shell",
+      "stars": 244292,
+      "stars_today": "962",
+      "one_liner": "24 万星的智能体技能框架,快成了 Claude Code 社区方法论的事实标准。",
+      "summary_zh": "一套智能体技能框架加软件开发方法论,把规划、TDD、调试这些流程封装成可组合的 skill。星数已经说明了接受度,适合想系统化改造自己 AI 开发流程的人,拿来挑几个 skill 单独用也行。"
+    },
+    {
+      "domain": "ai",
+      "name": "agentskills/agentskills",
+      "url": "https://github.com/agentskills/agentskills",
+      "language": "Python",
+      "stars": 21548,
+      "stars_today": "47",
+      "one_liner": "「Agent Skills」也要有统一规范了,这次是社区自己牵头写。",
+      "summary_zh": "给 AI 智能体的技能(skill)定义一套通用的规范和文档,而不是每家框架各写各的格式。今天几十星的增量不算猛,但放在 caveman、superpowers 这些 skill 相关项目扎堆爆红的背景下看,「技能」正在变成智能体生态里一个需要标准化的基础层。"
+    },
+    {
+      "domain": "ai",
+      "name": "HKUDS/Vibe-Trading",
+      "url": "https://github.com/HKUDS/Vibe-Trading",
+      "language": "Python",
+      "stars": 17271,
+      "stars_today": "918",
+      "one_liner": "港大数据智能实验室的个人交易智能体——学习价值大于实盘价值。",
+      "summary_zh": "HKUDS(LightRAG 同门)出品的交易智能体,自然语言驱动选股、分析、策略执行。当学习材料看架构和金融数据管线的组织方式还不错,至于把真金白银交给它,LLM 交易策略的回测幸存者偏差摆在那,自己掂量。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "OpenAI 提议给美国政府 5% 股份,缓和特朗普政府关系",
+      "url": "https://techcrunch.com/2026/07/02/openai-proposed-donating-5-of-its-equity-to-a-us-sovereign-wealth-fund/",
+      "source": "TechCrunch",
+      "summary_zh": "据 FT 报道,Altman 向特朗普政府提议让美国政府持有 OpenAI 约 5% 的股份,说法是「让公众分享 AI 红利」,实际目的是缓和政企关系、平息公众对 AI 的反弹。这个比例比参议员桑德斯此前要求的目标低不少。政企绑定走到入股这一步,后续怎么落地值得盯着。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "Anthropic 与三星洽谈定制 AI 芯片",
+      "url": "https://techcrunch.com/2026/07/02/anthropic-is-discussing-a-new-custom-chip-with-samsung/",
+      "source": "TechCrunch",
+      "summary_zh": "消息传出前一周,OpenAI 刚宣布和博通合作做自己的定制芯片。现在 Anthropic 也在和三星谈定制芯片,大模型公司绕开英伟达自研芯片,正从个别巨头的动作变成整个行业的标准操作。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "微软砸 25 亿美元成立自己的 AI 部署公司",
+      "url": "https://techcrunch.com/2026/07/02/microsoft-launches-its-own-ai-deployment-company-with-2-5-billion-commitment/",
+      "source": "TechCrunch",
+      "summary_zh": "继亚马逊、OpenAI、Anthropic 之后,微软也成立了专门的 AI 部署部门,承诺投入 25 亿美元帮企业把 AI 真正落地用起来。巨头们不约而同地发现,卖模型不如卖「把模型用起来」这件事本身。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Cloudflare 新规:9 月 15 日前,AI 公司须把搜索爬虫和训练爬虫分开",
+      "url": "https://techcrunch.com/2026/07/01/cloudflares-new-policy-pushes-ai-companies-to-pay-for-publishers-content/",
+      "source": "TechCrunch",
+      "summary_zh": "Cloudflare 给 AI 公司划了期限:必须把用于搜索的爬虫和用于训练、智能体的爬虫分开标识,否则将在大量出版商站点上被默认拦截。Cloudflare 握着相当大比例网站的入口,这一刀对训练数据获取的影响是实打实的。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Anthropic 新模型通过安全测试后获准全球发布",
+      "url": "https://arstechnica.com/tech-policy/2026/07/after-spooking-trump-into-safety-testing-anthropic-ai-models-get-global-release/",
+      "source": "Ars Technica",
+      "summary_zh": "美国政府解除了对 Anthropic 高端模型 Fable 和 Mythos 的出口限制,此前这批模型因触发安全评估要求被暂缓全球发布。前沿模型发布前先过政府安全测试这道关,正在从假设变成流程。"
+    },
+    {
+      "domain": "energy",
+      "title_zh": "谷歌 2025 年用电量因 AI 扩建暴涨 37%",
+      "url": "https://arstechnica.com/ai/2026/07/googles-ai-buildout-drove-37-increase-in-electricity-use-in-2025/",
+      "source": "Ars Technica",
+      "summary_zh": "谷歌年度环境报告显示,AI 数据中心扩建使其 2025 年用电量同比增长 37%,清洁能源采购的速度追不上算力扩张的速度。AI 的电费账单已经大到会影响电网规划,这条线以后会经常出现在本栏目。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "科学家首次让「从头合成」的细胞实现生长和分裂",
+      "url": "https://www.quantamagazine.org/for-the-first-time-a-cell-built-from-scratch-grows-and-divides-20260701/",
+      "source": "Quanta Magazine",
+      "summary_zh": "研究团队造出了一个从头拼装的合成细胞,并让它完成了生长和几轮分裂——这是首次证明非生命材料可以被组装到接近「活」的状态。目前分裂只能维持几轮,还得靠持续添加外部材料才撑得住,离自主存活的活细胞还有距离。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "中国批准全球首个实体瘤 CAR-T 疗法,美国还在等",
+      "url": "https://www.fiercebiotech.com/research/china-approved-worlds-first-solid-tumor-car-t-therapy-when-will-us-follow",
+      "source": "Fierce Biotech",
+      "summary_zh": "CAR-T 疗法自 2010 年首次应用以来已有 7 款药物获批,但都只针对血液肿瘤——把这项技术用到实体瘤上一直是个硬骨头。中国这次批准了全球第一个实体瘤适应症的 CAR-T 疗法,美国监管什么时候跟上还是未知数。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Apptronik 发布人形机器人 Apollo 2,配套建了数据训练基地",
+      "url": "https://www.therobotreport.com/apptronik-unveils-apollo-2-flagship-data-collection-training-facility/",
+      "source": "The Robot Report",
+      "summary_zh": "新一代 Apollo 2 被设计成一个数据采集和训练平台,目标是让机器人在部署过程中持续学习,而不是训完就定型。配套的数据训练基地说明人形机器人公司正在把「怎么规模化收集真机数据」当成和硬件本身一样重要的问题。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "Blue Origin 公布新发射台方案,推进 New Glenn 复飞",
+      "url": "https://spacenews.com/blue-origin-outlines-new-launch-pad-approach-as-it-pushes-to-return-new-glenn-to-flight/",
+      "source": "SpaceNews",
+      "summary_zh": "一个月前发射台发生严重爆炸事故后,Blue Origin 重申了年底前从重建发射台上让 New Glenn 复飞的计划。重型火箭领域这两年事故不算少,复飞时间表能不能兑现是个考验。"
+    }
+  ]
+}
