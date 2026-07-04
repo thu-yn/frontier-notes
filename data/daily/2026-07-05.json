@@ -1,0 +1,284 @@
+{
+  "date": "2026-07-05",
+  "editor_note": "今天最想聊的是「记忆」这条线:AgenticSTS 老老实实搭了个测试床,量化记忆结构怎么影响长程决策;AutoMem 更狠,直接把「怎么管理记忆」训练成一项技能,32B 模型光靠这个就把长程任务表现顶到接近 Opus 4.5、Gemini 3.1 Pro 的水平——参数量之外,这可能是条更划算的路。Program-as-Weights 也值得点开:把大模型从「每次现场推理」变成「一次编译、以后离线跑」,如果这套路子能推广,很多小工具以后都不用天天调 API 了。AI 公司下场生物医药这条线今天挺热闹:Anthropic 发布 Claude Science 的同一天,Insilico 和武田的 6 亿美元合作还在加码,中国又批了全球首个实体瘤 CAR-T——AI、资本、监管三头同时在往这个方向使劲。芯片这边挑了个冷门但好玩的:声表面波做的桌面级伊辛机,跟同一天「AI 耗电正在冲击电网调度」的新闻放一起看,低功耗专用硬件的故事接下来应该会更多。新能源这块今天的原始数据基本全是凝聚态物理和材料测量,没挑到真正贴题的电池、储能或电网新闻,先空着。",
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Program-as-Weights: A Programming Paradigm for Fuzzy Functions",
+      "title_zh": "权重即程序:给「模糊函数」的新编程范式",
+      "url": "https://arxiv.org/abs/2607.02512",
+      "hf_url": "https://huggingface.co/papers/2607.02512",
+      "authors": "Wentao Zhang, Liliana Hotsko, Woojeong Kim 等",
+      "upvotes": 68,
+      "one_liner": "让大模型只当一次性编译器,跑起来的是几十兆的适配器,不是 32B 模型",
+      "summary_zh": "很多任务本质是「给我一段自然语言描述的函数」,以前只能靠现场调用 LLM API。这篇干脆训练一个 4B 编译器,把自然语言规格编译成一个给冻结小模型用的参数高效适配器,以后每次调用就是这个小模型在跑,不用再过一遍大模型。0.6B 的 Qwen3 装上适配器后跟直接提示 Qwen3-32B 打平,显存却只要五十分之一,在 MacBook M3 上能跑到 30 token/s。思路挺讨巧——把「一次编译」和「反复现场推理」拆开,以后本地化小工具可能会走这条路,只是复杂任务上限还得再看。",
+      "tags": ["LLM", "小模型", "编译范式"]
+    },
+    {
+      "domain": "ai",
+      "title": "EvoPolicyGym: Evaluating Autonomous Policy Evolution in Interactive Environments",
+      "title_zh": "EvoPolicyGym:给智能体的「策略进化」能力做基准",
+      "url": "https://arxiv.org/abs/2607.02440",
+      "hf_url": "https://huggingface.co/papers/2607.02440",
+      "authors": "Zhilin Wang, Han Song, Runzhe Zhan 等",
+      "upvotes": 41,
+      "one_liner": "光看任务过没过关不够,还要看 agent 怎么把反馈变成更好的策略",
+      "summary_zh": "现在不少 agent 号称能靠反馈自我改进,但过去的评测要么只看最终分数,要么和「会不会写代码」混在一起,分不清是真学会了改策略还是蒙对了。这篇搭了 16 个轻量交互式 RL 环境,让 agent 在固定交互预算内反复编辑一套可执行策略。GPT-5.5 综合排第一,16 个环境都能进前二,但作者更看重轨迹级诊断——真正拉开差距的是「能不能找到这个任务该用的机制」,而不是死磕某一次胜负。算是给「agent 自我进化」这个越来越热的说法配了把尺子。",
+      "tags": ["Agent", "强化学习", "Benchmark"]
+    },
+    {
+      "domain": "ai",
+      "title": "Morphing into Hybrid Attention Models",
+      "title_zh": "FlashMorph:挑着改造 Transformer 成混合注意力模型",
+      "url": "https://arxiv.org/abs/2606.30562",
+      "hf_url": "https://huggingface.co/papers/2606.30562",
+      "authors": "Disen Lan, Jianbin Zheng, Yuxi Ren 等",
+      "upvotes": 36,
+      "one_liner": "到底该在哪几层留全注意力,不该再靠经验拍脑袋",
+      "summary_zh": "混合注意力模型(部分层全注意力、部分层线性注意力)能省长上下文的计算量,但效果好坏很大程度取决于挑哪几层留全注意力,以前大多靠固定间隔或逐层打分这类经验规则,忽略了各层之间的相互影响。FlashMorph 把选层问题变成带预算约束的联合优化:给每层配一个可切换的线性注意力分支,冻结原模型权重,在长上下文检索数据上联合训练每层的「开关」,再蒸馏落地。找到的混合结构长文召回和常规榜单都更稳,选层本身的计算开销也降了不少,算是把这个玄学问题工程化了一步。",
+      "tags": ["长上下文", "模型架构", "线性注意力"]
+    },
+    {
+      "domain": "ai",
+      "title": "Multi-Resolution Flow Matching: Training-Free Diffusion Acceleration via Staged Sampling",
+      "title_zh": "MrFlow:免训练的多分辨率扩散加速",
+      "url": "https://arxiv.org/abs/2607.01642",
+      "hf_url": "https://huggingface.co/papers/2607.01642",
+      "authors": "Xingyu Zheng, Xianglong Liu, Yifu Ding 等",
+      "upvotes": 26,
+      "one_liner": "先在低分辨率画骨架,再放大补细节,10 倍提速还不用重新训练",
+      "summary_zh": "现有的多分辨率加速方法图省事,先低分辨率生成再直接在 latent 空间放大,容易糊、容易出伪影。MrFlow 换了个流程:低分辨率先出主体结构,用轻量 GAN 在像素空间做超分,注入低强度噪声重新采样高频细节,最后高分辨率再精修一遍。在 FLUX.1-dev 和 Qwen-Image 上,不训练、不用运行时动态识别就能提速 10 倍,画质只掉 1% 以内,还能和已有的 step 蒸馏叠加到 25 倍。对着急出图又不想动模型的团队,这种纯推理侧加速比较实用。",
+      "tags": ["扩散模型", "推理加速", "文生图"]
+    },
+    {
+      "domain": "ai",
+      "title": "WorldDirector: Building Controllable World Simulators with Persistent Dynamic Memory",
+      "title_zh": "WorldDirector:给可控世界模型装上「持久动态记忆」",
+      "url": "https://arxiv.org/abs/2607.02517",
+      "hf_url": "https://huggingface.co/papers/2607.02517",
+      "authors": "Hanlin Wang, Hao Ouyang, Qiuyu Wang 等",
+      "upvotes": 20,
+      "one_liner": "角色离开画面很久再出现,长相和轨迹还能对得上",
+      "summary_zh": "现在的世界模型大多把物理动态和像素渲染绑在一起,靠持续视觉观测维持运动,物体一旦长时间不在画面里,回来时容易走形。WorldDirector 把「语义层面的运动编排」和「视觉生成」拆开:先用 LLM 把 3D 轨迹和镜头运动协调好,再拿这套编排结果当控制信号生成视频,物体长时间离开视野再回来,外观和物理逻辑都还站得住。实验显示能撑起更长、更复杂的事件序列,控制力比同类方法明显更强,对做长视频叙事或游戏引擎级模拟的团队会有启发。",
+      "tags": ["世界模型", "视频生成", "可控生成"]
+    },
+    {
+      "domain": "ai",
+      "title": "AutoMem: Automated Learning of Memory as a Cognitive Skill",
+      "title_zh": "AutoMem:把「怎么管理记忆」本身训练成一项技能",
+      "url": "https://arxiv.org/abs/2607.01224",
+      "hf_url": "https://huggingface.co/papers/2607.01224",
+      "authors": "Shengguang Wu, Hao Zhu, Yuhui Zhang 等",
+      "upvotes": 12,
+      "one_liner": "32B 模型光靠学会记笔记,长程任务就顶到接近 Opus 4.5",
+      "summary_zh": "认知科学里有个说法叫元记忆——知道该记什么、什么时候翻出来、怎么组织,这本身是可以学的技能。AutoMem 把「文件系统操作」提升成和「任务动作」平级的一等操作,让模型自己决定怎么管理记忆文件,再用两个循环分别优化记忆结构和模型用这套结构的熟练度。在 Crafter、MiniHack、NetHack 这几个跑几千步的长程游戏里,光优化记忆、不动任务行为策略,就把一个 32B 开源模型的表现拉高了 2 到 4 倍,追近了 Claude Opus 4.5 和 Gemini 3.1 Pro Thinking。说明记忆管理本身就是块高杠杆的独立能力,值得单拎出来抠。",
+      "tags": ["Agent", "记忆管理", "长程任务"]
+    },
+    {
+      "domain": "bio",
+      "title": "Breaking Failure Cascades: Step-Aware Reinforcement Learning for Medical Multimodal Reasoning",
+      "title_zh": "MRPO:医疗多模态问答里,一步错步步错怎么破",
+      "url": "https://arxiv.org/abs/2606.31825",
+      "hf_url": "https://huggingface.co/papers/2606.31825",
+      "authors": "Junha Jung, Minbyul Jeong, Suhyeon Lim 等(Korea University DMIS Lab)",
+      "upvotes": 17,
+      "one_liner": "前面推理走错一步,后面全崩——这篇专治「级联错误」",
+      "summary_zh": "训练医疗多模态大模型大多只看最终答案对不对,奖励信号太稀疏,没法精细纠正推理过程。作者发现医疗视觉问答里答错的主因常是前几步推理就已经走偏,后面全是错上加错。MRPO 分步给奖励:答案错了就对早期错误步骤加指数级更重的惩罚,专门打断这种级联,又不影响本来走对的路径。三个骨干模型上都比标准 GRPO 强,在 Qwen3-VL-8B 上甚至反超参数大得多的 HuatuoGPT-Vision-34B,早期推理失败率从 64% 压到 13%。思路直接,但这类过程奖励高度依赖「哪一步算错」的标注质量,还得看能不能推广到别的医疗任务。",
+      "tags": ["医疗AI", "多模态", "强化学习"]
+    },
+    {
+      "domain": "bio",
+      "title": "Affinage: genome-scale mechanistic gene annotation from the published literature",
+      "title_zh": "Affinage:用大模型把基因功能注释这件事规模化",
+      "url": "https://arxiv.org/abs/2607.02217v1",
+      "authors": "Matteo Di Bernardo, Iain M. Cheeseman(Whitehead Institute)",
+      "one_liner": "大把基因的功能还散落在几千篇论文里,没人有空整理",
+      "summary_zh": "很多基因的机制功能至今没有清楚记录,要么散在成百上千篇原始论文里,要么数据库注释已经过时好几年,人工整理一遍成本太高还不可复现。Affinage 让大模型对着某个基因的全部原始文献做一次检索加机理推理,把结果沉淀成可复用的结构化注释,不用每个人每次都重新读一遍文献。这类工具的价值不在算法多新颖,而在「一次投入、全网复用」——如果准确率经得起验证,对基础生物学的检索效率会是实打实的提升,但目前还没看到大规模人工核验的结果。",
+      "tags": ["基因组学", "LLM", "文献挖掘"]
+    },
+    {
+      "domain": "embodied",
+      "title": "HEFT: Heavy-Payload Full-size Humanoid Teleoperation with Privileged Motion Guidance and Windowed Payload Curriculum",
+      "title_zh": "HEFT:让全尺寸人形机器人扛着重物也能稳定遥操作",
+      "url": "https://arxiv.org/abs/2607.02332v1",
+      "authors": "Chenxin Liu, Qingzhou Lu, Guangxiao Yang 等",
+      "one_liner": "之前的人形遥操作大多轻装上阵,这篇专挑扛重物的场景练",
+      "summary_zh": "之前的动作追踪、遥操作方案大多在小尺寸机器人上验证,或者压根不带负载测试,全尺寸人形机器人扛真实重物基本没人碰过。个头一大,惯性变大、平衡余量变小,VR 体感设备的噪声和动作重定向误差就会被放大成明显失衡。HEFT 用带特权信息的动作引导,配合「分阶段增加负重」的课程训练,让机器人先学干净动作再逐步加压力测试。算是把人形机器人从「能模仿动作」往「能扛活干重活」这个更实用的方向推了一步。",
+      "tags": ["人形机器人", "遥操作", "负重"]
+    },
+    {
+      "domain": "chip",
+      "title": "A 2048-spin bulk acoustic wave Ising machine for number partitioning and Sudoku",
+      "title_zh": "2048 比特声表面波伊辛机:桌面上跑组合优化",
+      "url": "https://arxiv.org/abs/2607.02112v1",
+      "authors": "Venkatesh Vadde, Roman Ovcharov, Victor H. González 等(哥德堡大学)",
+      "one_liner": "不用光学平台,声学延迟线也能搭出全连接的伊辛机",
+      "summary_zh": "光学相干伊辛机在连接度和规模上进展不小,但设备体积大、耗电高、热稳定性差,还贵。这篇改用体声波(固态延迟线里的行波包)在微波频段搭时分复用伊辛机,两条 20.5 MHz、707 微秒的延迟线串起来就能撑 2048 个自旋,做到全连接、15 比特耦合精度,还能解数独和数字分割这类组合优化问题。桌面级、低功耗、热稳定这几个词放一起挺难得,如果精度和规模能再往上走,这可能是专用优化硬件里一条便宜好用的路子。",
+      "tags": ["伊辛机", "专用硬件", "组合优化"]
+    },
+    {
+      "domain": "quantum",
+      "title": "One More Time: Revisiting Neural Quantum States from a Reinforcement Learning Perspective",
+      "title_zh": "用强化学习的眼光重新看神经网络量子态",
+      "url": "https://arxiv.org/abs/2607.02292v1",
+      "authors": "Juan Agustín Duque, Sergio García Heredia, Vinicius Hernandes 等(含 Aaron Courville, Mila)",
+      "one_liner": "训练量子多体波函数,原来可以直接套 policy gradient",
+      "summary_zh": "神经网络量子态(NQS)是逼近量子多体波函数的灵活方法,自回归版本能直接从 Born 分布精确采样,不用像马尔可夫链方法那样操心自相关和混合问题。但它的优化一直没被细究——Adam 好用但不管函数空间的几何结构,随机重构讲道理但代价大又容易数值不稳。这篇把变分能量最小化看成一个在 Born 分布上做优势加权的 policy gradient 问题,相当于把 NQS 训练和强化学习的工具箱接了起来。对同时懂强化学习和量子多体计算的人来说,这是个挺自然的桥接思路,是否比现有优化器全面更好还要看后续更大规模系统的验证。",
+      "tags": ["量子多体", "神经网络量子态", "强化学习"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Grounded autonomous research: a fault-tolerant LLM pipeline from corpus to manuscript in frontier computational physics",
+      "title_zh": "从文献到论文:一条不瞎编文献的 LLM 自动科研流水线",
+      "url": "https://arxiv.org/abs/2607.02329v1",
+      "authors": "Haonan Huang",
+      "one_liner": "物理研究最怕 agent「编」文献,这篇专门卡住这个坑",
+      "summary_zh": "之前的自主科研 agent 大多在机器学习沙盒里跑,靠代码执行结果自我校准,但硬核物理不一样——每个方法选择都靠物理推理支撑,工具链常常没写清楚文档,校准得靠外部文献撑腰,普通 agent 引用文献但不会核对,容易根据内部先验编出看着靠谱、实际验证不了的结果。这篇搭了条流水线,从 11083 篇最新凝聚态物理 arXiv 论文出发,端到端跑出一篇发表水准的手稿,里面有三条关于交替磁体压磁效应的实际物理发现。对「AI 能不能真的做科研」这个争论,这是个具体、可检验的样本,比空谈 AI4Science 有意思,但样本量还只是一篇论文,能不能稳定复现是下一个问题。",
+      "tags": ["AI4Science", "自动科研", "凝聚态物理"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "alibaba/page-agent",
+      "url": "https://github.com/alibaba/page-agent",
+      "language": "TypeScript",
+      "stars": 23002,
+      "stars_today": "726",
+      "one_liner": "用自然语言直接操控网页 GUI 的浏览器 agent",
+      "summary_zh": "页面内运行的 JS agent,靠自然语言指令去点按钮、填表单、控制网页交互,不需要额外的浏览器扩展或外部编排框架。做浏览器自动化、RPA 这块的人可以留意一下这种轻量方案能不能替掉现有的爬虫/脚本套路。"
+    },
+    {
+      "domain": "ai",
+      "name": "usestrix/strix",
+      "url": "https://github.com/usestrix/strix",
+      "language": "Python",
+      "stars": 35883,
+      "stars_today": "1,910",
+      "one_liner": "开源的 AI 渗透测试员,自动挖洞自动出报告",
+      "summary_zh": "用 AI agent 自动化跑渗透测试,找应用漏洞并给修复建议。今天又涨了近 2000 星,安全自动化这个方向确实有真实需求。提醒一句:这类工具只该用来测自己有权限的系统。"
+    },
+    {
+      "domain": "ai",
+      "name": "asgeirtj/system_prompts_leaks",
+      "url": "https://github.com/asgeirtj/system_prompts_leaks",
+      "language": "JavaScript",
+      "stars": 48745,
+      "stars_today": "432",
+      "one_liner": "各家系统提示词泄露合集,更新还挺勤",
+      "summary_zh": "收集了 Anthropic、OpenAI、Google、xAI 等家的系统提示词泄露内容,涵盖 Claude、ChatGPT、Gemini、Grok 以及一堆 IDE/agent 产品。想知道各家产品背后怎么「调教」模型的,这仓库是个还算靠谱的窗口,但真实性没法百分百验证,当参考别当圣经。"
+    },
+    {
+      "domain": "embodied",
+      "name": "CoplayDev/unity-mcp",
+      "url": "https://github.com/CoplayDev/unity-mcp",
+      "language": "C#",
+      "stars": 11524,
+      "stars_today": "68",
+      "one_liner": "让 LLM 直接动手操作 Unity 编辑器",
+      "summary_zh": "把 Unity 编辑器包装成 MCP 工具,LLM 可以直接管理资源、控制场景、改脚本,不用人工在编辑器里一步步点。做游戏开发或机器人仿真训练场景的人,可以盯一下「agent 直接操作专业工具」这种模式会不会变成下一批 MCP 集成的标准套路。"
+    },
+    {
+      "domain": "ai",
+      "name": "agentskills/agentskills",
+      "url": "https://github.com/agentskills/agentskills",
+      "language": "Python",
+      "stars": 22272,
+      "stars_today": "351",
+      "one_liner": "给「Agent Skills」这个概念定规范",
+      "summary_zh": "一份关于 Agent Skills 的规范和文档,想让不同 agent 产品之间的技能定义能互相兼容,而不是各写各的格式。现在各家 agent 工具都在搞自己的 skill 体系,这种想统一标准的仓库值得关注会不会被业界接住。"
+    },
+    {
+      "domain": "ai",
+      "name": "harvard-edge/cs249r_book",
+      "url": "https://github.com/harvard-edge/cs249r_book",
+      "language": "Python",
+      "stars": 26502,
+      "stars_today": "446",
+      "one_liner": "哈佛开源的机器学习系统教材",
+      "summary_zh": "系统讲「机器学习系统」——不是算法,是从数据、训练到部署的整套工程——的开源教材项目,覆盖面从边缘设备一路铺到训练 infra。想系统补这块知识、又不想东拼西凑博客的人可以留意。"
+    },
+    {
+      "domain": "ai",
+      "name": "Zackriya-Solutions/meetily",
+      "url": "https://github.com/Zackriya-Solutions/meetily",
+      "language": "Rust",
+      "stars": 15025,
+      "stars_today": "865",
+      "one_liner": "全本地跑的会议纪要工具,不用云端也不用心疼隐私",
+      "summary_zh": "用 Rust 写的会议助手,语音转写(Parakeet/Whisper)、说话人分离、摘要生成(Ollama 本地模型)全部本地跑,不用把会议内容传去云端。对合规要求严、又不想为了做纪要交出数据的团队,这类隐私优先的 AI 工具会越来越有市场。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "阿里据报禁止员工使用 Claude Code",
+      "url": "https://techcrunch.com/2026/07/04/alibaba-reportedly-bans-employees-from-using-claude-code/",
+      "source": "TechCrunch",
+      "summary_zh": "据报道,阿里巴巴把 Claude Code 归为「高风险软件」,禁止员工使用。国内大厂对海外 coding agent 一直谨慎,这次被摆到台面上,大概率还是数据出境和供应链风险的老问题。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "AI 用电的真正麻烦不是总量,是忽高忽低",
+      "url": "https://spectrum.ieee.org/data-centers-grid-instability",
+      "source": "IEEE Spectrum",
+      "summary_zh": "一直以来大家担心的是数据中心整体耗电占比会涨到全球用电的 3-4%,但这篇说真正让电网头疼的是 AI 负载的波动性——训练任务集群式启停,给电网调度带来的冲击比稳定的高负载更难对付。算是把「AI 耗电」从总量焦虑拉到了电网工程的实操细节上。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "Anthropic 也想亲自下场做药了",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/961311/anthropic-claude-science-ai-drug-development",
+      "source": "The Verge",
+      "summary_zh": "Anthropic 在「The Briefing: AI for Science」活动上发布了 Claude Science,一个把科研工具和数据集拢到一起、能自动生成图表的「AI 科研工作台」。看点是这次的表述明显往「自己参与药物研发」靠,不只是给药企卖工具——跟同一天 Insilico 和武田继续加码的合作放一起看,AI 公司直接下场生物医药的势头挺明显。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Midjourney 反将一军:要好莱坞交代自己怎么用 AI",
+      "url": "https://techcrunch.com/2026/07/04/midjourney-wants-hollywood-studios-to-reveal-the-details-of-their-ai-usage/",
+      "source": "TechCrunch",
+      "summary_zh": "在和三家好莱坞制片厂的版权官司里,Midjourney 这次要求对方公开自己内部怎么用 AI。这种以子之矛攻子之盾的诉讼策略,某种程度上也说明制片厂自己没少用 AI,只是不想被拿出来说。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "AI 已经把初级程序员的就业市场烧穿了",
+      "url": "https://seldo.com/posts/ai-has-torched-the-market-for-junior-programmers/",
+      "source": "Hacker News",
+      "summary_zh": "一篇分析帖认为,AI coding agent 直接冲击的不是资深工程师,而是入门岗位——公司越来越倾向让少数资深人 + agent 组合去干原来一整个初级团队的活。观点不算新,但放在几乎每周都有新 coding agent 发布的当下,这个判断的紧迫感又强了一层。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "让 LLM agent 帮软件「翻译」成适合高层次综合的代码",
+      "url": "https://semiengineering.com/llm-agents-to-refactor-software-for-high-level-synthesis-carnegie-mellon-ucla/",
+      "source": "SemiEngineering",
+      "summary_zh": "卡内基梅隆和 UCLA 的研究,用多 agent 工作流自动把普通软件重构成适合 HLS(高层次综合,把 C/C++ 代码直接编译成硬件电路)的形式,相比最好的 pragma 调优工具跑出了 6.51 倍的几何平均加速。芯片设计里人工调 HLS pragma 一直是苦活,这类工作往前推一步,受益的是想快速把算法落地成硬件的团队。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Avride 用云端 VLM 给配送机器人上一道安全网",
+      "url": "https://www.therobotreport.com/how-avride-uses-cloud-vlms-safety-net-delivery-robots/",
+      "source": "The Robot Report",
+      "summary_zh": "配送机器人公司 Avride 给机器人加了一层视觉语言模型,遇到本地感知模型没见过的复杂场景时调用云端 VLM 做「再确认」,提升环境理解能力。这种本地快模型加云端慢模型兜底的分层架构,在自动驾驶和机器人圈子里正变成一种标配搭法。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "中国批准全球首个实体瘤 CAR-T 疗法",
+      "url": "https://www.fiercebiotech.com/research/china-approved-worlds-first-solid-tumor-car-t-therapy-when-will-us-follow",
+      "source": "Fierce Biotech",
+      "summary_zh": "CAR-T 疗法在血液肿瘤上已有 7 款获批药物,但改造到实体瘤上一直是公认的硬骨头——实体瘤微环境更复杂,T 细胞难以浸润。这次中国先批了这个适应症,说明 CAR-T 打实体瘤真的能落地,不只是停留在论文里,也让人好奇 FDA 还要多久跟上。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "Insilico 和武田的 6 亿美元合作继续加码",
+      "url": "https://www.fiercebiotech.com/biotech/insilco-continues-run-partnership-600m-biobuck-collab-takeda",
+      "source": "Fierce Biotech",
+      "summary_zh": "AI 药物研发公司 Insilico Medicine 和武田签了一份最高 6 亿美元的合作,覆盖武田感兴趣的多个治疗领域的新药发现。这类「AI 公司 + 大药厂」biobucks 合作这两年谈了不少,真正决定成败的还是候选药物能不能推进临床,不是签约金额本身。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "GAO 点名太空军卫星项目成本超支、发射风险高",
+      "url": "https://spacenews.com/gao-flags-satellite-costs-launch-risks-in-space-force-portfolio/",
+      "source": "SpaceNews",
+      "summary_zh": "美国政府问责局(GAO)报告指出,导弹预警卫星项目成本持续上涨,数字工程环节存在缺口,加上人员裁减,可能拖慢国家安全发射任务的进度。军事航天项目的进度和预算问题不算新闻,但这次报告把具体卡点——数字工程、人力——点得比较细。"
+    }
+  ]
+}
