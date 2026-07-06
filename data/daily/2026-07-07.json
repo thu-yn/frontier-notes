@@ -1,0 +1,280 @@
+{
+  "date": "2026-07-07",
+  "editor_note": "今天最想安利Program-as-Weights:把自然语言写的模糊函数编译成一份可复用的小神经网络参数,0.6B模型跑出32B直接prompt的效果,这才是「用一次大模型换一辈子省钱」的正确姿势。AutoMem把「记忆管理」单独拆成一项可训练技能,32B模型光靠记忆调优就追上了Opus 4.5和Gemini 3.1 Pro Thinking——agent memory这条线这两天越看越像被低估的高杠杆点。芯片这边今天两条线对上了:SemiEngineering在问数据中心AI增长是不是要撞瓶颈,MxGLUT这篇论文给了个具体答案——现有LUT加速器压根没为prefill和decode这两种完全不同的算力形态做区分。ai4s里最有意思的发现是,给「机器学习原子间势」调优化器这件事以前没人认真试过,换上LLM训练圈最近很火的Muon直接把默认的Adam甩开,一个给语言模型发明的技巧顺手就把材料模拟也提速了。今天还有条不轻松的新闻——Anthropic自己被曝有个秘密追踪器在监控中国用户,跟公司一贯的「反监控」人设撞了个满怀。新能源那边今天又是清一色凝聚态物理和材料测量,没找到真正贴题的电池、电网新闻,继续空着。",
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "The Mirage of Optimizing Training Policies: Monotonic Inference Policies as the Real Objective for LLM Reinforcement Learning",
+      "title_zh": "练好了「训练策略」不代表部署时真的变强,LLM强化学习盯错了对象",
+      "url": "https://arxiv.org/abs/2606.29526",
+      "hf_url": "https://huggingface.co/papers/2606.29526",
+      "authors": "Jing Liang, Hongyao Tang, Yi Ma 等",
+      "upvotes": 136,
+      "one_liner": "训练引擎和推理引擎参数明明同步了,算出来的概率却对不上,这个「训练-推理不一致」的坑一直没人正视",
+      "summary_zh": "LLM做RL post-training时,训练和推理用的是两套引擎(为了效率和精度分开),同一条轨迹算出来的概率却经常对不上,即便参数已经同步——这天然制造了一种挥之不去的off-policy偏差。这篇的关键洞察是:大家一直在想办法让训练侧的policy更新更稳,却没人问「训练侧更新真的能保证部署用的推理policy也变好」,这两者被默认画了等号,其实并不成立。作者提出MIPU,一个两步框架:先构造一批参考采样器的候选更新,再用一个推理侧的差距代理指标去筛,只接受真正让推理policy变好的那些。在高错配场景下测了两个模型规模,推理效果和训练稳定性都有提升——算是把RL调参圈一直没戳破的一层默认假设戳破了。",
+      "tags": ["强化学习", "训练推理一致性", "LLM"]
+    },
+    {
+      "domain": "ai",
+      "title": "Program-as-Weights: A Programming Paradigm for Fuzzy Functions",
+      "title_zh": "把自然语言描述的「模糊函数」编译成一份可复用的小神经网络参数",
+      "url": "https://arxiv.org/abs/2607.02512",
+      "hf_url": "https://huggingface.co/papers/2607.02512",
+      "authors": "Wentao Zhang, Liliana Hotsko, Woojeong Kim 等",
+      "upvotes": 98,
+      "one_liner": "0.6B模型跑出32B直接prompt的效果,内存只要五十分之一,MacBook上还能跑到30 token/s",
+      "summary_zh": "很多日常编程任务(给日志报警、修复格式不对的JSON、按意图给搜索结果排序)没法写成干净的规则代码,现在大多直接甩给大模型API,代价是每次调用都要花钱、结果还不一定可复现。这篇提出「模糊函数编程」:把一个用自然语言写的函数规格,编译成一份紧凑、能本地跑的神经网络参数。具体做法是用一个4B的「编译器」模型(在自建的千万级样本FuzzyBench上训练)为一个冻结的轻量解释器生成参数高效的adapter,之后每次调用这个函数就直接跑adapter,不用再问大模型。跑起来的效果是0.6B的Qwen3解释器配合编译出的adapter,能打平直接prompt Qwen3-32B。相当于把大模型从「每次都要问的答题机」变成「只用一次的工具制造商」,这个思路比单纯蒸馏聪明。",
+      "tags": ["Fuzzy Function", "模型压缩", "编译型AI"]
+    },
+    {
+      "domain": "ai",
+      "title": "EvoPolicyGym: Evaluating Autonomous Policy Evolution in Interactive Environments",
+      "title_zh": "光看agent改代码改出的最终分数不够,这个benchmark专测它怎么把反馈变成更好的policy",
+      "url": "https://arxiv.org/abs/2607.02440",
+      "hf_url": "https://huggingface.co/papers/2607.02440",
+      "authors": "Zhilin Wang, Han Song, Runzhe Zhan 等",
+      "upvotes": 45,
+      "one_liner": "GPT-5.5在16个环境里都排进前二,但更有意思的是轨迹级诊断揭出来的「怎么赢的」",
+      "summary_zh": "现有评测经常把「agent能不能自主改进一份可执行策略」这件事,简单粗暴地压成一个最终分数,还容易跟开放式软件工程进步混在一起分不清。EvoPolicyGym换了个做法:在一批紧凑的交互式RL环境里,让一个agent在固定的交互预算下反复编辑一份可执行策略系统,专门评估它「迭代改进」这个过程本身。GPT-5.5在综合排名上最强,16个环境里都排进前二,但作者更看重的是轨迹级的诊断数据——能看出不同agent怎么分配预算、怎么把反馈转成参数调整,而不只是谁赢了。比起又一个排行榜,这套诊断工具对理解agent「学习方式」的差异更有用。",
+      "tags": ["Agent", "Benchmark", "策略进化"]
+    },
+    {
+      "domain": "ai",
+      "title": "Morphing into Hybrid Attention Models",
+      "title_zh": "Transformer改混合注意力省资源,这次选层不再靠拍脑袋",
+      "url": "https://arxiv.org/abs/2606.30562",
+      "hf_url": "https://huggingface.co/papers/2606.30562",
+      "authors": "Disen Lan, Jianbin Zheng, Yuxi Ren 等",
+      "upvotes": 42,
+      "one_liner": "把「哪几层该留全注意力」这道选择题,变成一道可以用梯度下降解的优化题",
+      "summary_zh": "混合注意力模型只保留一部分全注意力层、其余换成线性注意力来提升长上下文效率,但选哪几层留全注意力一直靠固定摆放模式或逐层打分这类启发式方法,把每层的重要性当成孤立的,忽略了层与层之间搭配起来的整体效应。FlashMorph把这道题重新定义成一个带预算约束的子集优化问题:先给每个全注意力层配一个可转换的线性注意力分支搭出「可变形模型」,冻住所有权重,只在合成的长上下文检索数据上联合训练每层的门控,再在预设的全注意力预算下把门控离散化,最后做常规的logits蒸馏和长上下文微调。实验显示这样找出来的混合配置比现有选层方法效果更好、长上下文召回保留得更多,选层本身的成本也大幅下降——把一个靠经验拍板的步骤变成可训练的,思路上是对的。",
+      "tags": ["注意力机制", "长上下文", "模型压缩"]
+    },
+    {
+      "domain": "ai",
+      "title": "AutoMem: Automated Learning of Memory as a Cognitive Skill",
+      "title_zh": "记不记得住东西,原来也是LLM agent能单独练出来的一项技能",
+      "url": "https://arxiv.org/abs/2607.01224",
+      "hf_url": "https://huggingface.co/papers/2607.01224",
+      "authors": "Shengguang Wu, Hao Zhu, Yuhui Zhang 等",
+      "upvotes": 17,
+      "one_liner": "光把「记忆」这一项练好,32B模型就追上了Opus 4.5和Gemini 3.1 Pro Thinking",
+      "summary_zh": "记忆专家其实是一种学出来的技能——知道该记什么、什么时候查、怎么组织,认知科学管这个叫元记忆。这篇把这个视角搬到LLM agent上:让文件系统操作跟任务动作一样成为「一等公民」的记忆动作,模型自己决定怎么管理自己的记忆。他们用两个循环来自动优化:一个是让一个更强的LLM审查完整的agent轨迹,反复修订塑造记忆行为的文件结构和schema;另一个是从大量episode里挑出agent自己做对的记忆决策,当作训练信号去打磨模型的记忆能力本身。在Crafter、MiniHack、NetHack这三个长程游戏里,只优化记忆、不碰任务动作本身,就把一个32B开源模型的表现提了2到4倍,追到了Claude Opus 4.5和Gemini 3.1 Pro Thinking这个量级。跟这两天关于agent记忆结构的讨论放一起看,记忆管理正在变成一个独立可练、且杠杆很大的能力项。",
+      "tags": ["Agent", "记忆", "强化学习"]
+    },
+    {
+      "domain": "embodied",
+      "title": "VT-WAM: Visual-Tactile World Action Model for Contact-Rich Manipulation",
+      "title_zh": "光靠「看」抓不住接触瞬间的滑动和形变,这篇把触觉预测也塞进世界模型里一起学",
+      "url": "https://arxiv.org/abs/2607.02503v1",
+      "authors": "Shuai Tian, Yupeng Zheng, Yuhang Zheng 等",
+      "one_liner": "触觉信号不能只当输入喂给动作预测,得先学会预判它接下来怎么变",
+      "summary_zh": "接触密集型操作(抓取、装配这类)需要对局部形变、压力、打滑、摩擦做出反应,但这些线索出现得很零散,在视觉画面里往往根本看不出来。现有的视觉-触觉策略大多是把触觉读数直接怼进动作预测,却很少去建模触觉形变本身在动作过程中是怎么演化的。VT-WAM在一个统一的flow matching框架里同时学「预测未来画面」「预测触觉形变」「预测动作」这三件事,还用了一种非对称的Mixture-of-Transformers注意力机制来衔接第一帧视觉锚点和后续触觉演化。论文摘要里没给出具体的成功率数字,但把触觉当成一个要「预判」而不只是「读取」的动态量,这个方向对接触密集型任务是对路的。",
+      "tags": ["VLA", "触觉", "世界模型"]
+    },
+    {
+      "domain": "embodied",
+      "title": "HEFT: Heavy-Payload Full-size Humanoid Teleoperation with Privileged Motion Guidance and Windowed Payload Curriculum",
+      "title_zh": "给能扛重物的全尺寸人形机器人做遥操作,VR体感手柄的噪声才是最大敌人",
+      "url": "https://arxiv.org/abs/2607.02332v1",
+      "authors": "Chenxin Liu, Qingzhou Lu, Guangxiao Yang 等",
+      "one_liner": "小尺寸机器人遥操作已经玩得挺熟了,真正扛重物的全尺寸人形机器人还是块没人碰过的硬骨头",
+      "summary_zh": "动作追踪和遥操作是让人形机器人低成本学技能的一条有前景的路,但现有框架大多在紧凑型平台上验证,或者压根没测过真实负重场景,全尺寸人形机器人扛着实际重量的情况基本没被探索过。放大到全尺寸带来两个叠加的难题:更大的惯量和更紧的平衡余量,让动作追踪对普通VR体感设备的噪声、漂移、重定向误差异常敏感;同时机器人本该有的负重能力也一直没被真正用起来。HEFT从带噪声的普通VR参考动作里学习,配合一套「特权动作引导」和「分阶段负重课程」来解决这两个问题——先在训练时给一个更完整信息的引导信号,再逐步加码实际负重难度。比起继续在轻量级平台上卷精度,这篇选了个更难但更实用的问题去啃。",
+      "tags": ["人形机器人", "遥操作", "运动控制"]
+    },
+    {
+      "domain": "bio",
+      "title": "Affinage: genome-scale mechanistic gene annotation from the published literature",
+      "title_zh": "与其每次都让LLM现查文献,不如把「这个基因到底干什么」的答案固化成一份可复用数据库",
+      "url": "https://arxiv.org/abs/2607.02217v1",
+      "authors": "Matteo Di Bernardo, Iain M. Cheeseman",
+      "one_liner": "同一个问题没必要让每个用户都重新问一遍大模型,答案该被缓存下来",
+      "summary_zh": "搞懂一个基因的机制性功能是生物学研究的起点,但对人类蛋白质组里的大部分基因来说,这类知识要么散落在成千上万篇论文里,要么根本没被系统整理过,而生物学家常用的那些数据库,更新速度又比不上文献增长。LLM现在能按需读完文献给出综合结论,但每次都从头做一遍检索加推理,既贵又不可复现,没法在多用户之间复用。Affinage的做法是:只从原始文献出发,对每个基因做一次这样的检索加推理,然后把结果存成一份可复用的结构化资源,而不是每个人各自跑一次对话。思路不复杂,但戳中了一个容易被忽略的点——如果答案不会因人而异,就该被缓存,而不是被反复重新生成。",
+      "tags": ["LLM", "基因组学", "文献挖掘"]
+    },
+    {
+      "domain": "bio",
+      "title": "SF-Cluster: Frustration-Guided MSA Subsampling for Alternative Protein Conformation Recovery",
+      "title_zh": "让AlphaFold认出蛋白质的「另一种构象」,这次靠的是局部「别扭程度」而不是序列相似度",
+      "url": "https://arxiv.org/abs/2607.00180v1",
+      "authors": "Hanqun Cao, Zijun Gao, Chunbin Gu 等",
+      "one_liner": "同一个蛋白质可能有好几种构象,AF-Cluster这类方法挑不准该往哪个方向采样",
+      "summary_zh": "深度学习结构预测器对输入的多序列比对(MSA)很敏感,所以对MSA做子采样是找出蛋白质「另一种构象」的一个实用技巧,AF-Cluster就是这么干的。但AF-Cluster是在序列空间里操作,没法精确控制会落到哪个构象盆地里。SF-Cluster换了个信号源:用预测出来的局部「能量挫折」(一种跟序列相似度基本无关的物理量)模式来指导子采样,理论上能更有针对性地引导。作者在48个横跨折叠转换、别构、寡聚化耦合、天然无序蛋白等类型的案例上做了测试,用类似AF-Cluster的双参考RMSD标准评估——具体提升了多少论文摘要里没给全,但用「局部别扭」替代「序列相似度」当采样信号,这个思路挺巧,只是想看到实打实的恢复率数字才能真下判断。",
+      "tags": ["蛋白质结构", "AlphaFold", "构象预测"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Neural-Network Inverse Design of SRF Cavities and Transmons for Bosonic Quantum Computation",
+      "title_zh": "想要的耦合强度先说出来,神经网络直接倒推该造什么形状的谐振腔",
+      "url": "https://arxiv.org/abs/2607.02289v1",
+      "authors": "Joseph Yaker, Jovan Markovic, Alessandro Reineri 等",
+      "one_liner": "从「目标性能」倒推「该造什么形状」,这类一对多的设计题正好是神经网络的强项",
+      "summary_zh": "三维超导射频(SRF)腔能提供寿命特别长的电磁模式,跟transmon这类非线性元件耦合起来,是玻色量子信息处理很有前景的架构。但反向设计这类系统——也就是从想要的电磁和耦合指标倒推出该造什么几何形状——通常是个一对多的难题:耦合强度既依赖transmon的几何形状,也依赖它在腔电磁场里的位置,设计空间一变大,传统靠反复跑仿真去试的办法成本就顶不住了。这篇直接用神经网络来做这个反向设计,论文摘要没给出最终精度数字,但如果这条路真跑得通,腔体设计就能从「跑仿真慢慢试」变成接近「查表」的速度,值得等一篇有具体数字的后续。",
+      "tags": ["量子硬件", "反向设计", "超导腔"]
+    },
+    {
+      "domain": "chip",
+      "title": "MxGLUT: A Reconfigurable LUT-Centric Broadcast Dataflow Accelerator for Mixed-Precision GEMM",
+      "title_zh": "LLM推理prefill和decode要的算力形态不一样,这颗加速器让LUT硬件跟着阶段变形",
+      "url": "https://arxiv.org/abs/2607.01607v1",
+      "authors": "Weiyu Zhou, Chen Ding, Mingyuan Liu 等",
+      "one_liner": "现有LUT加速器压根没为prefill和decode这两种完全不同的算力形态做区分",
+      "summary_zh": "LLM推理在prefill和decode两个阶段的效率问题一直没解决好,尤其是在weight-only量化下(激活值留在FP8、权重压到低比特整数),现有的LUT加速器大多只针对FP8-INT4这一种组合,attention的GEMM运算还得靠单独的浮点数据通路,硬件冗余不说,静态的数据流设计也很难兼顾prefill和decode这两种形态迥异的计算负载。MxGLUT提出一种可重构、以LUT为中心的「广播数据流」,能在同一套硬件里灵活适配这两个阶段不同的计算需求。跟今天SemiEngineering那篇「数据中心AI增长撞瓶颈」的报道放一起看,芯片圈现在纠结的瓶颈,已经从单纯的算力堆叠细化到了「同一颗芯片伺候两种截然不同工作负载」这么具体的问题。",
+      "tags": ["芯片架构", "LLM推理", "量化加速器"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Beyond Adam: SOAP and Muon for Faster, Label-Efficient Training of Machine Learning Interatomic Potentials",
+      "title_zh": "训练「机器学习原子间势」这件事大家默认用Adam,换成Muon/SOAP直接更快更准",
+      "url": "https://arxiv.org/abs/2607.02499v1",
+      "authors": "Gil Harari, Yoel Zimmermann, Ola Tangen Kulseng 等",
+      "one_liner": "LLM训练圈最近很火的Muon,顺手就把材料模拟的原子间势训练也提速了",
+      "summary_zh": "机器学习原子间势(MLIP)是AI4Science的招牌应用之一,这些年架构和数据集上的功夫做了不少,但训练用什么优化器这件事一直没人认真较真,社区默认就是Adam和它的变体。这篇系统对比了一类矩阵结构化优化器——Muon、SOAP,以及两者的混合版SOAP-Muon——用来训练NequIP和Allegro这两种MLIP模型。结果是这几个优化器在收敛速度和最终精度上都明显超过Adam,SOAP和SOAP-Muon表现最稳。Muon这两年主要是在大模型预训练圈子里讨论,这次跨界跑到原子间势训练上也管用,说明这波「换优化器」的红利可能不只是语言模型的专利。",
+      "tags": ["优化器", "机器学习势", "AI4Science"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "asgeirtj/system_prompts_leaks",
+      "url": "https://github.com/asgeirtj/system_prompts_leaks",
+      "language": "JavaScript",
+      "stars": 51316,
+      "stars_today": "1,386",
+      "one_liner": "把Claude、GPT、Gemini这些主流模型的系统提示词都扒出来放一块,方便是方便,厂商肯定不乐意",
+      "summary_zh": "收集了Anthropic、OpenAI、Google、xAI等家产品(包括Claude Code、Claude Design、Codex、Copilot、Cursor等)泄露出来的系统提示词,持续更新。想搞懂这些工具背后怎么「调教」模型的人会看得挺过瘾,但这类仓库一直游走在服务条款边缘。"
+    },
+    {
+      "domain": "ai",
+      "name": "addyosmani/agent-skills",
+      "url": "https://github.com/addyosmani/agent-skills",
+      "language": "Shell",
+      "stars": 70663,
+      "stars_today": "1,114",
+      "one_liner": "前Google Chrome团队的Addy Osmani亲自下场给coding agent写「生产级」技能包",
+      "summary_zh": "一套号称「生产级」的AI coding agent技能合集,作者是有一定知名度的前端工程师Addy Osmani,跟一堆随手攒的个人技能合集比,至少有个可信的名字背书。已经在用agent写代码、想要更靠谱技能包的团队可以看看。"
+    },
+    {
+      "domain": "ai",
+      "name": "Zackriya-Solutions/meetily",
+      "url": "https://github.com/Zackriya-Solutions/meetily",
+      "language": "Rust",
+      "stars": 19142,
+      "stars_today": "2,493",
+      "one_liner": "开会录音转写全在本地跑,不用把会议内容传上云",
+      "summary_zh": "隐私优先的AI会议助手,用Rust写,本地跑Parakeet/Whisper做转写、能分说话人,再用本地Ollama做摘要,全程不经过云端。开会内容比较敏感、又不想为个转写功能把数据交给第三方SaaS的团队,这类「全本地」工具接下来会越来越吃香。"
+    },
+    {
+      "domain": "ai",
+      "name": "bradautomates/claude-video",
+      "url": "https://github.com/bradautomates/claude-video",
+      "language": "Python",
+      "stars": 4127,
+      "stars_today": "539",
+      "one_liner": "给Claude装了双眼睛,一个/watch命令就能看视频",
+      "summary_zh": "让Claude能「看」任意视频的小工具,原理很直接——下载视频、抽帧、转写字幕,再把这些一起丢给Claude去理解。技术含量算不上多深,但把「看视频」做成一条命令,对需要总结教程、会议录像的人挺实用。"
+    },
+    {
+      "domain": "ai",
+      "name": "steipete/CodexBar",
+      "url": "https://github.com/steipete/CodexBar",
+      "language": "Swift",
+      "stars": 16692,
+      "stars_today": "598",
+      "one_liner": "菜单栏小工具,不用登录就能看Codex和Claude Code的用量",
+      "summary_zh": "Mac菜单栏应用,直接显示OpenAI Codex和Claude Code的用量统计,不用登录账号就能看。同时重度使用这两个coding agent、又想盯着别超支的人会用得上。"
+    },
+    {
+      "domain": "ai",
+      "name": "alibaba/zvec",
+      "url": "https://github.com/alibaba/zvec",
+      "language": "C++",
+      "stars": 13417,
+      "stars_today": "355",
+      "one_liner": "阿里出的向量数据库,轻量到能直接嵌进你的进程里跑",
+      "summary_zh": "C++写的进程内(in-process)向量数据库,主打轻量和快,不用额外起一个数据库服务。做RAG、向量检索又不想为个小项目搭一整套Milvus这类系统的人,这种嵌入式方案更省事。"
+    },
+    {
+      "domain": "ai",
+      "name": "karakeep-app/karakeep",
+      "url": "https://github.com/karakeep-app/karakeep",
+      "language": "TypeScript",
+      "stars": 26832,
+      "stars_today": "178",
+      "one_liner": "自建的「什么都能收藏」应用,AI自动打标签帮你找回收藏",
+      "summary_zh": "可自托管的收藏夹应用,链接、笔记、图片都能存,靠AI自动打标签和全文搜索,解决收藏了从此不会再点开第二次的老问题。已经攒了一堆浏览器书签、想要更聪明检索方式的人可以试试。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "微软新财年一开始就裁员近4800人,Xbox和商业销售部门首当其冲",
+      "url": "https://techcrunch.com/2026/07/06/microsoft-lays-off-nearly-5000-employees-across-xbox-commercial-sales/",
+      "source": "TechCrunch",
+      "summary_zh": "微软裁员约4800人,占全球员工2.1%,重灾区是Xbox和商业销售部门。这是继去年裁掉约9100人之后的又一轮,今年科技巨头「裁员时点名AI」的名单已经攒了长长一串。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Anthropic自曝翻车:秘密追踪器被扒出监控中国用户",
+      "url": "https://arstechnica.com/tech-policy/2026/07/anthropic-outed-for-claude-tracker-that-secretly-monitored-chinese-users/",
+      "source": "Ars Technica",
+      "summary_zh": "Anthropic被曝存在一个此前未公开的Claude追踪机制,专门监控中国用户,跟公司一贯高调宣传的「反监控」立场撞了个满怀。相关工程师回应称这个「实验」已经叫停,但对一家把隐私当卖点的公司来说,这种自曝家丑对口碑的伤害不会小。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "英国金融监管机构警告:AI用得太快,监管跟不上是场「军备竞赛」",
+      "url": "https://arstechnica.com/ai/2026/07/uk-regulator-warns-of-arms-race-to-keep-up-with-ai-use-in-financial-services/",
+      "source": "Ars Technica",
+      "summary_zh": "英国金融行为监管局(FCA)官员公开表态,数百万人已经在用AI工具做个人理财决策,现有监管权力跟不上这个速度,呼吁给自己加码。这类「监管者主动要权」的表态,往往是新一轮金融科技监管收紧的前奏。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "数据中心的AI增长,是不是快撞上瓶颈了",
+      "url": "https://semiengineering.com/data-center-ai-growth-faces-challenging-bottlenecks/",
+      "source": "SemiEngineering",
+      "summary_zh": "行业媒体SemiEngineering抛出的问题很直接:AI在数据中心里的增长速度还能撑多久,电力、散热、互联这些老问题会不会先把增长摁住。跟今天MxGLUT那篇论文放一起看,芯片圈现在讨论的瓶颈已经细化到了prefill和decode这种推理阶段内部的适配问题。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "无人机公司Quantum Systems融资12亿美元扩大产能",
+      "url": "https://www.therobotreport.com/quantum-systems-raises-1-2b-expand-drone-production-deployments/",
+      "source": "The Robot Report",
+      "summary_zh": "德国无人机公司Quantum Systems拿到12亿美元融资,准备扩大生产规模、加固供应链韧性。这个融资额在无人机赛道里算相当大的一笔,军民两用无人机这个方向资本还在持续加码。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "诺华11亿美元收购Myricx,加码ADC药物管线",
+      "url": "https://www.fiercebiotech.com/biotech/novartis-pay-11b-upfront-myricx-expand-adc-pipeline",
+      "source": "Fierce Biotech",
+      "summary_zh": "诺华出资11亿美元首付款收购英国biotech Myricx,拿下一套基于新型payload的抗体偶联药物(ADC)管线。ADC是这几年大药厂抢着布局的热门赛道,诺华这笔算是继续往里砸钱。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "AI制药公司Insilico又和武田签了笔最高6亿美元的合作",
+      "url": "https://www.fiercebiotech.com/biotech/insilco-continues-run-partnership-600m-biobuck-collab-takeda",
+      "source": "Fierce Biotech",
+      "summary_zh": "AI药物研发公司Insilico Medicine与日本大药厂武田达成一项最高6亿美元的「biobucks」合作,共同在武田感兴趣的多个治疗领域发现新药。这是Insilico最近一连串大药厂合作里的又一笔,AI驱动的药物发现现在换合作伙伴的频率相当高。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "中国「天问二号」抵达小行星Kamo'oalewa,传回首张近距照片",
+      "url": "https://spacenews.com/tianwen-2-arrives-at-asteroid-kamooalewa-first-image-revealed/",
+      "source": "SpaceNews",
+      "summary_zh": "中国的天问二号采样返回探测器抵达近地小行星Kamo'oalewa,传回的第一张照片显示这是一颗细长的岩质小天体。探测器2025年5月发射,这次抵达是整个采样返回任务的第一个关键节点,后面还要看采样和返回舱能不能顺利完成。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "New Glenn爆炸一个多月后,蓝色起源的登月舱项目仍在推进",
+      "url": "https://spacenews.com/blue-origin-continues-work-on-lunar-landers-during-recovery-from-new-glenn-explosion/",
+      "source": "SpaceNews",
+      "summary_zh": "蓝色起源的New Glenn火箭一个多月前在发射台爆炸,但公司透露旗下Blue Moon登月舱的研发没有停,目前有七艘飞行器在同步生产。运载火箭出了事故,登月舱这条线选择照常推进,算是把两条业务线的风险分开管理。"
+    },
+    {
+      "domain": "quantum",
+      "title_zh": "检验一个答案对不对,量子世界里也躲不开复杂度——量子交互式证明的新进展",
+      "url": "https://www.quantamagazine.org/researchers-reveal-the-power-of-quantum-proofs-20260706/",
+      "source": "Quanta Magazine",
+      "summary_zh": "这篇讲的是量子交互式证明系统的最新进展——本以为量子计算能让「验证一个解是否正确」这件事变简单,但研究发现量子世界自己的复杂度限制躲不开。对关心「量子计算优势边界到底在哪」这个问题的人,是个挺扎实的理论向更新。"
+    }
+  ]
+}
