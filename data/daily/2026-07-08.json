@@ -1,0 +1,270 @@
+{
+  "date": "2026-07-08",
+  "editor_note": "今天最想放一起看的是LLM-as-a-Verifier和EdgeBench:一篇说「打分」这件事本身就该单独砸算力去优化,不训练模型光靠调用法就刷到好几个benchmark的SOTA;另一篇用134个真实超长程任务、三万八千小时的agent交互数据,证明部署后agent的自我提升速度真能拟合成一条log-sigmoid曲线,还测出学习速度大概每三个月翻一倍——两篇加起来像是在说,接下来agent这条线拼的不是模型堆多大,而是「怎么知道它做得好不好」这套评估基础设施。Vera那篇红队测试结果有点扎心:拿Claude Code、Codex这些天天在用的coding agent做安全测试,多渠道攻击下平均成功率93.9%,跟这两天Anthropic自曝追踪器监控中国用户的丑闻放一块看,这个月Anthropic的公关是真不好过。芯片这边今天巧了:TileLens说下一代高带宽内存HBF/RoMe访问粒度一变粗,矩阵乘法反而慢一个数量级;转头就是HBM关键供应商SK海力士顶着AI内存涨价潮要在美股上市——一个讲瓶颈一个讲生意,刚好对上。量子那边难得凑齐两篇硬货,方向却正好相反:一篇用经典计算机复现了本被当成「展示量子优势」的里德堡阵列实验,在收窄优势边界;另一篇用两套互补色码绕开了Eastin-Knill这个卡了多年的老定理,在给容错计算挖新路。今天GitHub trending也有个小规律,沙箱、办公自动化、求职助手全是给agent配基础设施和场景应用的工具,agent本身的能力反而没人卷了,大家都在抢它周边这一圈。新能源那边翻了一遍还是清一色凝聚态物理和材料表征,没找到真正贴题的电池、电网新闻,继续空着。",
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "LLM-as-a-Verifier: A General-Purpose Verification Framework",
+      "title_zh": "把「打分」这件事也当成一个可以单独优化的scaling轴,不训练模型光靠调用法就冲到SOTA",
+      "url": "https://arxiv.org/abs/2607.05391",
+      "hf_url": "https://huggingface.co/papers/2607.05391",
+      "authors": "Jacky Kwok, Shulu Li, Pranav Atreya 等",
+      "upvotes": 9,
+      "one_liner": "验证被当成跟预训练、后训练、测试时计算并列的第四个scaling轴,这个定位挺大胆",
+      "summary_zh": "现在的LM judge大多让模型直接吐一个离散分数,判断质量全看prompt写得好不好。这篇换了个算法:不看模型嘴上说的分数,而是把打分token的logit分布取期望,得到一个连续、更容易校准的分数,然后沿着「打分粒度、重复评估次数、评分标准拆解」这三个维度往上堆算力,分数质量跟着一起涨。不用额外训练,直接在Terminal-Bench V2、SWE-Bench Verified、RoboRewardBench上冲到新SOTA(86.5%/78.2%/87.4%),还顺手给Claude Code做了个进度监控插件。把「验证」从锦上添花提到独立scaling轴,这个说法有点大,但数据摆在那,讲得通。",
+      "tags": ["LLM评估", "Verifier", "Scaling"]
+    },
+    {
+      "domain": "ai",
+      "title": "EdgeBench: Unveiling Scaling Laws of Learning from Real-World Environments",
+      "title_zh": "agent在真实世界里学习的速度,居然也能拟合出一条干净的scaling law",
+      "url": "https://arxiv.org/abs/2607.05155",
+      "hf_url": "https://huggingface.co/papers/2607.05155",
+      "authors": "Deyao Zhu, Xin Zhou, Shengling Qin 等",
+      "upvotes": 10,
+      "one_liner": "agent学习速度大概每三个月翻一倍,这条log-sigmoid曲线拟合优度高达R²=0.998",
+      "summary_zh": "预训练的scaling law大家都熟,但agent部署后靠环境反馈继续变强这件事,一直没人认真量化过。这篇分析了134个真实世界超长程任务(每个至少撑12小时连续运行,横跨科研、软件工程、组合优化、数学、游戏)里大概3.8万小时的agent交互数据,发现整体表现随环境学习进程精确符合一条log-sigmoid曲线,拟合优度R²=0.998。更抓眼球的是横向比较几代模型,agent的学习速度大概每三个月翻一倍——如果这个趋势稳,「部署后自我提升」这件事本身也是可预测、可外推的,不只是训练前砸了多少算力说了算。",
+      "tags": ["Scaling Law", "Agent", "Benchmark"]
+    },
+    {
+      "domain": "ai",
+      "title": "Multiplayer Interactive World Models with Representation Autoencoders",
+      "title_zh": "第一个真·多人世界模型,火箭联盟里四个玩家同时打了几小时也没崩",
+      "url": "https://arxiv.org/abs/2607.05352",
+      "hf_url": "https://huggingface.co/papers/2607.05352",
+      "authors": "Anthony Hu, Václav Volhejn, Adrien Ramanana Rahary 等",
+      "upvotes": 13,
+      "one_liner": "5B模型单卡B200实时跑20帧/秒,只训了短片段却能稳定推演到几小时不崩",
+      "summary_zh": "以前的世界模型碰到多智能体场景,基本把「别的玩家」当成环境噪声的一部分,自己一个人瞎学。这篇是第一个真正条件在多个玩家独立动作流上的世界模型,选了物理耦合特别紧、竞争合作交织的《火箭联盟》当测试场。用一万小时公开bot对战数据训出一个5B参数的隐扩散模型,单张B200 GPU上能实时生成四人对战,20帧/秒。最意外的是训练只喂了短片段,推演稳定性却能撑到5分钟(这是他们测的上限),实际观察甚至能跑几个小时不崩——训练窗口短、推演窗口长这个泛化能力,比模型架构本身更值得琢磨。",
+      "tags": ["世界模型", "多智能体", "游戏"]
+    },
+    {
+      "domain": "ai",
+      "title": "Safety Testing LLM Agents at Scale: From Risk Discovery to Evidence-Grounded Verification",
+      "title_zh": "拿Claude Code、Codex这些主流coding agent做红队测试,平均攻击成功率93.9%",
+      "url": "https://arxiv.org/abs/2607.01793",
+      "hf_url": "https://huggingface.co/papers/2607.01793",
+      "authors": "Yunhao Feng, Ruixiao Lin, Ming Wen 等",
+      "upvotes": 6,
+      "one_liner": "不听agent自证清白,而是从环境状态和工具调用记录里找证据,结果四个主流框架全部沦陷",
+      "summary_zh": "现在测LLM agent安全性,大多还是靠专家手写攻击场景,再用写死的规则或者让模型「自己说自己有没有中招」判断结果,这套东西很难跟着agent能力升级维护下去。Vera换了套流程:先从文献里持续挖新出现的风险类型,组合出可执行的攻击用例,每个用例都配一个基于环境真实状态和工具调用记录判断结果的验证器,再放到隔离沙箱里跑。测了OpenClaw、Hermes、Codex、Claude Code四个生产级agent框架,多渠道攻击下平均成功率93.9%——这个数字挺吓人,说明这些天天在用的coding agent,安全这块比想象中脆弱得多。",
+      "tags": ["Agent安全", "红队测试", "LLM"]
+    },
+    {
+      "domain": "ai",
+      "title": "Perceptual Flow Matching for Few-Step Generative Modeling",
+      "title_zh": "换个空间监督flow matching,采样步数从50步直接砍到4步",
+      "url": "https://arxiv.org/abs/2607.03524",
+      "hf_url": "https://huggingface.co/papers/2607.03524",
+      "authors": "Chuyang Zhao, Yifei Song, Hongfa Wang 等",
+      "upvotes": 11,
+      "one_liner": "不用teacher模型不用额外网络,只换了个监督特征空间,少步生成直接免费拿到",
+      "summary_zh": "现在做少步生成大多靠蒸馏,得先训一个teacher模型或者额外的score网络,流程重。这篇的做法简单到有点反直觉:不在VAE隐空间里回归velocity,而是换到预训练感知模型的特征空间里做监督,别的都不用改,采样步数就能从35-50步压到4-8步,质量基本不掉。作者的理论解释是:感知空间的监督会把回归目标从「求均值」变成「找众数」,让预测更贴着数据流形走,少步粗粒度积分时不容易跑偏。图像、视频、编辑任务上都验证了,免费午餐这种说法虽然老套,这次看着是真的。",
+      "tags": ["Flow Matching", "少步生成", "扩散模型"]
+    },
+    {
+      "domain": "embodied",
+      "title": "From Fixed to Free Cameras: Calibration-Free View-Robust Vision-Language-Action Model",
+      "title_zh": "机器人摄像头被挪了个位置就不认路,这个VLA模型选择自己猜相机在哪",
+      "url": "https://arxiv.org/abs/2607.05396v1",
+      "authors": "Wenhao Li, Xueying Jiang, Quanhao Qian 等",
+      "one_liner": "不告诉模型相机装在哪,让它自己从画面里反推相机几何,这个思路比要求提供外参实际得多",
+      "summary_zh": "机器人实际部署时摄像头三天两头被挪位置、重新安装,但现有的view-robust VLA策略大多得先喂给模型精确的相机外参才扛得住这种变化,一旦没有标定信息就很脆弱。CamVLA换了个立场:与其要求告诉模型相机在哪,不如让它自己从画面里把相机几何猜出来,具体做法是把末端执行器动作预测成一个以相机为中心的表达,动作预测和相机姿态就此解耦,不再需要显式标定。论文摘要没给出具体成功率数字,但「不告诉它、让它自己猜」这个立场转变,对付真实部署里摄像头老被挪的日常痛点,挺对症。",
+      "tags": ["VLA", "机器人", "标定"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Efficient classical simulation of two-dimensional long-range systems: Rydberg arrays and beyond",
+      "title_zh": "一台经典电脑,把之前被认为「只有量子计算机能做」的里德堡阵列实验重新算了一遍",
+      "url": "https://arxiv.org/abs/2607.05178v1",
+      "authors": "Jia-Lin Chan, Tao Xiang, Yantao Wu",
+      "one_liner": "变分蒙特卡洛算局域能量的复杂度从O(N³)砍到O(N),经典机器就复现了一个真实量子模拟器实验",
+      "summary_zh": "张量网络态做变分蒙特卡洛时,算局域能量这一步遇到全连接的长程相互作用系统开销会炸得很快。这篇把这一步复杂度从O(N³)砍到O(N),一下子能算之前算不动的实时动力学。作者直接拿一个真实发表过的里德堡原子阵列实验(2023年发在Nature上的10×10偶极XY模型绝热演化)当靶子,用经典方法把这个当时被认为展示了「经典算不了」能力的实验结果复现出来。拿一个具体的量子优越性候选实验,回头证明经典也能算,对量子优势到底成立到哪条线这个争论,是个挺扎实的更新。",
+      "tags": ["经典模拟", "量子优越性", "里德堡原子阵列"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Complementary 3D color codes for transversal quantum logic",
+      "title_zh": "拿两套互补的3D色码拼在一起,绕开了容错量子计算一个老大难定理",
+      "url": "https://arxiv.org/abs/2607.05107v1",
+      "authors": "Friederike Butt, Luis Colmenarez, Erik Weilandt 等",
+      "one_liner": "Eastin-Knill定理说单一纠错码里凑不出万能transversal门集,这篇拿两个码配合着凑",
+      "summary_zh": "Eastin-Knill定理证明了任何单一量子纠错码里都凑不出一套完整的transversal(横向)万能门集,这也是为什么容错量子计算一直得靠代价高昂的magic state distillation补非Clifford门。这篇用两套码配合:四面体3D色码和它做了Hadamard变换的对偶版本(「H-四面体码」),两套编码分别支持互补的transversal非Clifford操作,再加一个单向的transversal CNOT在两套编码间切换,拼出一套接近万能、不用distillation的transversal门集。来自纠错圈子里有分量的团队(Markus Müller组),对这个多年没绕开的老障碍给了个看着能落地的架构解法。",
+      "tags": ["量子纠错", "容错计算", "色码"]
+    },
+    {
+      "domain": "bio",
+      "title": "Spectral Diffusion for Protein Dynamics",
+      "title_zh": "蛋白质动力学生成模型换到频域做扩散,把慢构象变化和快速抖动分开学",
+      "url": "https://arxiv.org/abs/2607.04134v1",
+      "authors": "Hew Phipps, Matteo Cagiada, Santiago D. Villalba 等",
+      "one_liner": "蛋白质构象系综不是一堆无序快照而是一段连续轨迹,这篇第一次认真把「时间」当回事",
+      "summary_zh": "用生成模型替代分子动力学模拟采样蛋白质构象系综,是个省钱又有前景的方向,但现有方法大多把系综当成一堆无序快照来学,要么没法随蛋白质变大而scale,时间上的连贯性基本没人认真处理过。这篇换了个物理上更自然的表达:在频域(Fourier谱)里做扩散,慢速的构象变化模式和快速的原子抖动天然就被分开了,还能拿温度当条件,让同一个模型跨温度预测。来自牛津Deane组(蛋白质机器学习圈子里有分量的实验室),这种给扩散过程加物理归纳偏置的思路,不是又一次基准刷分,是对「生成模型怎么建模时间」给出的新答案。",
+      "tags": ["蛋白质动力学", "扩散模型", "分子模拟"]
+    },
+    {
+      "domain": "chip",
+      "title": "TileLens: Efficiently Using Large-Granularity Memory Systems with Transparent Two-Dimensional Memory Layout",
+      "title_zh": "下一代内存想给LLM推理省带宽,结果访问粒度一变粗,矩阵乘法直接慢十倍",
+      "url": "https://arxiv.org/abs/2607.04031v1",
+      "authors": "Jae Hyung Ju, Euijun Chung, Hritvik Taneja 等",
+      "one_liner": "2D的分块访问模式硬套到1D线性内存布局上,读放大能让LLM推理关键算子慢一个数量级",
+      "summary_zh": "高带宽闪存(HBF)、RoMe这类被寄予厚望、要接棒解决LLM推理HBM瓶颈的下一代内存技术,都有个共同特点——最小访问粒度是以KB为单位的「大颗粒度内存系统」。这篇发现这个特点会不知不觉让LLM推理最主要的算子——分块矩阵乘法——因为读放大效应慢上一个数量级,根源是2D的分块访问模式跟1D线性内存布局压根对不上。TileLens给出的修法是搞一套透明的二维内存布局,不用改内核代码就能填上这个坑。跟当前AI基础设施圈子拼命找HBM替代品的大背景放一起看,这篇算是提前把一个容易被忽略的坑标了出来。",
+      "tags": ["内存系统", "LLM推理", "芯片架构"]
+    },
+    {
+      "domain": "chip",
+      "title": "HiFA4: Training-Free 4-bit FlashAttention on Ascend HIF4 NPUs for LLM Inference",
+      "title_zh": "华为昇腾NPU上跑4bit的FlashAttention,不用重新训练就能省显存",
+      "url": "https://arxiv.org/abs/2607.04302v1",
+      "authors": "Hui Dong, Yanzhao Li, Jie Gao 等",
+      "one_liner": "两个小技巧把量化难度从K挪到Q、把softmax归一化项顺手求出来,4bit attention不retrain也能跑",
+      "summary_zh": "在非英伟达硬件上给LLM推理省钱,量化是最直接的路子,但FlashAttention这种核心算子的两个矩阵乘(QK^T和PV)要同时压到4bit又不牺牲精度,没那么简单。这篇在华为昇腾NPU的HIF4格式上,给出了号称第一个不用重新训练、两个矩阵乘都跑4bit的FlashAttention实现,同时把softmax中间状态留在FP16保数值稳定。两个技巧挺巧:一个是把量化难度从K挪到Q上(用静态按通道缩放,省掉逐块在线归约的开销),另一个是直接从算PV用的量化权重里顺手求出softmax归一化项,不用额外算一份高精度的。工程细节多,但对非英伟达生态的LLM推理降本,是个能落地的具体技巧。",
+      "tags": ["量化", "FlashAttention", "国产芯片"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "The Objective Decides: When a Learned Dynamics Model Uses a Conserved Quantity",
+      "title_zh": "探针能读出「守恒量」不代表模型真的在用它,这个反直觉发现给AI4Science提了个醒",
+      "url": "https://arxiv.org/abs/2607.03728v1",
+      "authors": "Chih-Ting Liao, Xin Cao",
+      "one_liner": "同一个方向、同一份表征,换个训练目标就能从「没用」变成「决定性」,能被探测≠被使用",
+      "summary_zh": "AI4Science圈子里一个常见的可解释性假设是:如果线性探针能从模型隐藏状态里读出某个守恒量(比如能量),就说明模型确实在用这个量做预测。这篇用「激活值互换」实验(把某个方向的取值换成另一个状态的值,看预测会不会跟着变)在力学系统、电路、偏微分方程系统,外加一个1.58亿参数的PDE基础模型上系统测了一遍,发现同一个方向哪怕探针能以R²≈1读出守恒量,在一种训练目标下对预测毫无因果作用,换一种训练目标,同一个方向、同一份表征里,这个量突然变成决定预测结果的关键因素。「探针读得出」不等于「模型在用」,这对怎么验证物理代理模型是不是真的尊重了守恒律,是个挺扎实的警钟。",
+      "tags": ["可解释性", "AI4Science", "物理约束"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "MadsLorentzen/ai-job-search",
+      "url": "https://github.com/MadsLorentzen/ai-job-search",
+      "language": "TypeScript",
+      "stars": 10256,
+      "stars_today": "2,402",
+      "one_liner": "把Claude Code拿来找工作,自动读职位、改简历、写求职信",
+      "summary_zh": "基于Claude Code搭的求职自动化框架,填好自己的背景资料后,Claude能帮忙评估招聘信息是否匹配、定制简历、写求职信、准备面试。今天新增star数最猛的一个,说明「用agent找工作」这个刚需场景确实有人买账。"
+    },
+    {
+      "domain": "ai",
+      "name": "ruvnet/RuView",
+      "url": "https://github.com/ruvnet/RuView",
+      "language": "Rust",
+      "stars": 78404,
+      "stars_today": "1,122",
+      "one_liner": "不用摄像头,靠家里WiFi信号就能测心率、测存在感",
+      "summary_zh": "把普通WiFi信号变成实时空间感知能力,能做生命体征监测和人员存在检测,全程不需要摄像头或视频画面。适合关心居家养老监护、又不想在屋里到处装摄像头的场景,是WiFi感知这个方向少见的、做成完整工具链的实现。"
+    },
+    {
+      "domain": "ai",
+      "name": "iOfficeAI/OfficeCLI",
+      "url": "https://github.com/iOfficeAI/OfficeCLI",
+      "language": "C#",
+      "stars": 9770,
+      "stars_today": "802",
+      "one_liner": "不用装Office,一个命令行工具就能让AI agent读写Word/Excel/PPT",
+      "summary_zh": "单文件、不依赖安装Office的CLI工具包,让AI agent能直接读取、编辑、自动化操作Word/Excel/PowerPoint文件。文档自动化一直是agent工作流里的短板,这个工具算是填了个实打实的空缺。"
+    },
+    {
+      "domain": "ai",
+      "name": "TencentCloud/CubeSandbox",
+      "url": "https://github.com/TencentCloud/CubeSandbox",
+      "language": "Rust",
+      "stars": 8390,
+      "stars_today": "665",
+      "one_liner": "腾讯云出品,专门给AI agent执行代码用的沙箱,启动快、并发高",
+      "summary_zh": "即开即用、支持并发、主打安全轻量的沙箱运行时,专门为执行AI agent生成的动作设计。越来越多系统开始让LLM agent自己跑代码,这类专用沙箱基础设施的需求也跟着水涨船高。"
+    },
+    {
+      "domain": "ai",
+      "name": "kyutai-labs/pocket-tts",
+      "url": "https://github.com/kyutai-labs/pocket-tts",
+      "language": "Python",
+      "stars": 6052,
+      "stars_today": "510",
+      "one_liner": "法国Kyutai出的轻量TTS,不用GPU,CPU上就能跑",
+      "summary_zh": "专为纯CPU环境设计的轻量语音合成模型,不需要GPU加速就能在普通硬件上本地跑起来。想做离线、低成本语音合成、又不想为个TTS单独配显卡的人,这个选择挺实用。"
+    },
+    {
+      "domain": "ai",
+      "name": "dotnet/skills",
+      "url": "https://github.com/dotnet/skills",
+      "language": "C#",
+      "stars": 4271,
+      "stars_today": "82",
+      "one_liner": "微软官方亲自下场,给coding agent配了一套.NET/C#专用技能包",
+      "summary_zh": "微软官方维护的技能仓库,帮AI coding agent正确理解和操作.NET/C#代码库。跟前几天Addy Osmani个人出品的agent-skills对照着看,大厂现在也认真下场规范「agent技能包」这个新格式,值得关注。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "Meta「超级智能实验室」首个成果落地:图像模型Muse上线Instagram全家桶",
+      "url": "https://www.theverge.com/tech/962485/meta-muse-image-ai-model-instagram",
+      "source": "The Verge",
+      "summary_zh": "Meta发布Muse Image,这是其Superintelligence Labs部门做出的第一个图像生成模型,已经接入Meta AI App、Instagram、WhatsApp的图片功能,Facebook和Messenger的支持也在路上。这是「Muse」系列模型家族的第一步,算是这个新成立部门真正拿出手的第一件产品。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Claude Cowork登陆手机和网页端,不用再守着电脑",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/961978/anthropic-claude-cowork-mobile-web",
+      "source": "The Verge",
+      "summary_zh": "Anthropic的agentic平台Claude Cowork此前只能在Mac/Windows桌面端用,现在首次开放手机和网页访问,先给Max订阅用户,其他套餐「未来几周」跟进。在电脑上把任务派下去,出门用手机查进度、拿结果,办公室之外也能盯着agent干活了。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "上周刷屏的「首例AI自主运营勒索软件」,扒开一看还是人在背后指挥",
+      "url": "https://techcrunch.com/2026/07/06/the-first-ai-run-ransomware-attack-still-needed-a-human/",
+      "source": "TechCrunch",
+      "summary_zh": "之前被吹成「首例AI自主运营」的勒索软件攻击,新细节显示虽然技术执行确实是AI agent做的,但选谁下手、搭建基础设施、拿到被盗凭证这些关键环节全是人干的。「全自主网络犯罪元年」这个说法,更准确的版本应该是「人指挥、AI干活」。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "被美国出口管制卡脖子,DeepSeek打算自己下场造芯片",
+      "url": "https://arstechnica.com/ai/2026/07/facing-us-export-controls-chinas-deepseek-plans-to-make-its-own-chips/",
+      "source": "Ars Technica",
+      "summary_zh": "因为持续受到美国对先进AI芯片的出口管制,DeepSeek据称正打算自己设计制造芯片,目的是同时降低对被禁运的英伟达和对国产供应商华为的依赖。报道称计划还处在早期阶段,但「大模型公司亲自下场做芯片」这条路径,现在看来已经不只是美国大厂的专利。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "存储芯片厂SK海力士要在美国上市了,搭着AI这波内存涨价潮",
+      "url": "https://techcrunch.com/2026/07/06/us-investors-will-soon-get-access-to-sk-hynix-another-memory-maker-riding-the-ai-boom/",
+      "source": "TechCrunch",
+      "summary_zh": "靠AI需求猛涨这波东风,存储芯片厂商SK海力士即将完成一笔数十亿美元规模的美股IPO,预计周五定价。这让美国投资者第一次能直接买到这家HBM(高带宽内存)关键供应商的股票——HBM正是这两天TileLens那篇论文里提到的、AI数据中心内存瓶颈的核心部件。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "Vertex史上最大手笔,100亿美元收购内分泌疾病公司Crinetics",
+      "url": "https://www.fiercebiotech.com/pharma/vertex-acquires-endocrine-disease-specialist-crinetics-10b",
+      "source": "Fierce Biotech",
+      "summary_zh": "Vertex Pharmaceuticals宣布以100亿美元收购内分泌疾病专科公司Crinetics Pharmaceuticals,这是Vertex史上金额最大的一笔收购。交易核心是两款在研药物Palsonify和atumelnant,公司给出的联合峰值销售预期超过50亿美元。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "又一款口服GLP-1减肥药三期达标,中国临床里减重11%",
+      "url": "https://www.fiercebiotech.com/biotech/kaileras-oral-glp-1-asset-hits-goals-chinese-phase-3-obesity-and-diabetes-trials",
+      "source": "Fierce Biotech",
+      "summary_zh": "Kailera Therapeutics的口服GLP-1候选药物在中国的肥胖症和糖尿病三期临床试验中都达到主要终点,减重幅度达到11%。这个结果让合作方恒瑞医药可以推进这两个适应症在中国的报批,口服GLP-1这条赛道的竞争又添了一个实锤玩家。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "世界杯赛场边,Atlas踢起了足球,Spot在场馆里巡逻",
+      "url": "https://www.therobotreport.com/boston-dynamics-brings-its-legged-robots-to-the-fifa-world-cup/",
+      "source": "The Robot Report",
+      "summary_zh": "现代汽车和Boston Dynamics借着2026世界杯这个场合,让人形机器人Atlas现场表演踢足球脚法,四足机器人Spot则被派去做场馆巡逻。算是Boston Dynamics借一场全球顶流体育赛事,给自家腿式机器人来了次高曝光度的公开展示。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "水下机器人公司Kraken Robotics花6.15亿美元收购Covelya Group",
+      "url": "https://www.therobotreport.com/kraken-robotics-acquires-covelya-group-for-615m/",
+      "source": "The Robot Report",
+      "summary_zh": "水下机器人厂商Kraken Robotics宣布以6.15亿美元收购Covelya Group,一举扩大产品线和可触达市场。这笔收购让Kraken在水下、海洋自主系统这个相对小众但持续有资本进场的赛道上,版图明显扩大了一圈。"
+    },
+    {
+      "domain": "energy",
+      "title_zh": "美国核管会打算调整用了几十年的「合理可行尽量低」辐射安全标准",
+      "url": "https://arstechnica.com/science/2026/07/nuclear-regulatory-commission-plans-really-minor-changes-to-safety-regs/",
+      "source": "Ars Technica",
+      "summary_zh": "美国核管理委员会(NRC)正推动修改甚至事实上废止用了几十年的ALARA(「合理可行尽量低」)辐射安全标准,官方说法是这只是措辞上的澄清,不涉及实质性安全要求变化。但放在当下新一轮核电新建潮的背景下,这个时间点上的调整还是引来了不少审视的目光。"
+    }
+  ]
+}
