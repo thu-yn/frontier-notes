@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}前沿手记 · 我的喜欢{% endblock %}
+{% block stamp %}我的喜欢 · 收藏夹{% endblock %}
+
+{% block content %}
+<section class="column" id="likes">
+  <div class="column-head">
+    <h2>我的喜欢</h2>
+    <span class="count" id="likes-count"></span>
+  </div>
+  <div id="likes-empty" class="likes-empty" hidden>
+    还没有喜欢的条目。在任意卡片右上角点 <span style="color: var(--red)">♥</span> 就会收藏到这里——收藏直接存在 GitHub 仓库里,换设备也还在。首次点心会提示你配置一个 GitHub Token。
+  </div>
+  <div id="likes-list"></div>
+</section>
+
+<script>
+/* 领域配色与 build.py 的 DOMAINS 同源,供客户端渲染领域标签用。 */
+window.FN_DOMAINS = {
+  {% for id, meta in DOMAINS.items() %}"{{ id }}": ["{{ meta[0] }}", "{{ meta[1] }}"]{% if not loop.last %}, {% endif %}
+  {% endfor %}
+};
+</script>
+{% endblock %}

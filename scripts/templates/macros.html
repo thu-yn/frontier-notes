@@ -1,0 +1,16 @@
+{# 喜欢按钮:每张卡片复用。item 里取展示标题/链接/领域,section 与 date 决定稳定 ID。 #}
+{% macro like_button(item, section, date) %}
+{% set d = item.domain | default("ai") %}
+{% set _title = item.title_zh or item.title or item.name or "" %}
+{% set _url = item.url | default("") %}
+<button type="button" class="like-btn"
+  data-id="{{ item_id(item, section, date) }}"
+  data-title="{{ _title }}"
+  data-url="{{ _url }}"
+  data-domain="{{ d }}"
+  data-section="{{ section }}"
+  data-date="{{ date }}"
+  aria-pressed="false" aria-label="喜欢" title="喜欢，收藏到「我的喜欢」">
+  <span class="heart" aria-hidden="true">♥</span>
+</button>
+{% endmacro %}

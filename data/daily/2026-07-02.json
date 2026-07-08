@@ -234,5 +234,45 @@
       "summary_zh": "Meta 正在制定云基础设施业务计划,出售 AI 算力和模型访问,直接对标 AWS、谷歌云和 Azure。囤了太多 GPU 的公司开始互相卖算力,算力过剩还是军备竞赛的中场休息,一两个季度就能见分晓。",
       "domain": "ai"
     }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "给智能体记忆加一个「谄媚闸门」:检索到的用户偏好先过一道事实核验再进上下文",
+      "based_on": [
+        {
+          "title": "MemSyco-Bench: Benchmarking Sycophancy in Agent Memory",
+          "url": "https://arxiv.org/abs/2607.01071"
+        }
+      ],
+      "why_now": "这篇刚把「记忆让智能体越来越顺着用户说话」量化成可测的 benchmark,但只诊断没给解法,正好留了个可做的口子。",
+      "feasibility": "纯推理层实验,单张 24G 卡跑开源 7B 模型足够,不用训练,一两周能出对照结果。",
+      "route": [
+        "复现 MemSyco-Bench 的五个子任务,拿一个开源 7B 模型跑出谄媚基线分",
+        "在记忆检索和拼接之间插一个轻量核验步骤:让模型先判断这条记忆是「用户偏好」还是「客观事实」,只有事实类才允许覆盖当前证据",
+        "对比加闸门前后的谄媚率与任务准确率,看能否在不掉准确率的前提下压下谄媚"
+      ],
+      "risk": "核验步骤本身也可能被带偏,收益若太小就沦为一层无用包装。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "一个即插即用的 MoE 解码路由小库:用 prefill 专家签名做 PD 分离下的机器选择",
+      "based_on": [
+        {
+          "title": "ELDR: Expert-Locality-Aware Decode Routing for PD-Disaggregated MoE Serving",
+          "url": "https://arxiv.org/abs/2607.00466"
+        }
+      ],
+      "why_now": "论文验证了「不动模型、纯调度层白捡 5–14% 延迟」的思路,但没放出可直接用的实现,社区里做 MoE 推理的人正缺这么个轮子。",
+      "feasibility": "算法本体是离线 K-means 分区加在线签名匹配,单卡就能开发验证,主要工作量在写成干净的 vLLM 插件,适合一个人做成开源库攒 star。",
+      "route": [
+        "在 vLLM 上抓一层 prefill 阶段的专家激活,构造每台机器的「专家签名」",
+        "实现离线均衡 K-means 分区 + 在线在签名匹配机器里挑最闲的路由策略,封成可配置的小库",
+        "用一个开源 MoE 模型跑端到端 TPOT 对比,把复现脚本和 README 一起开源"
+      ],
+      "risk": "小规模单机复现出来的收益可能不如论文的 40 卡场景明显,需要把适用条件讲清楚。"
+    }
   ]
 }

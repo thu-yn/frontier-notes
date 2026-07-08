@@ -6,6 +6,7 @@
 - site/archive.html        往期目录
 """
 
+import hashlib
 import json
 import shutil
 from pathlib import Path
@@ -14,6 +15,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "site"
+STATIC = ROOT / "scripts" / "static"
 
 WEEKDAYS = "一二三四五六日"
 
@@ -34,10 +36,23 @@ def issue_domains(issue: dict) -> list[str]:
     """本期实际出现过的领域,按 DOMAINS 定义顺序排,供筛选条使用。"""
     seen = {
         item.get("domain", "ai")
-        for key in ("papers", "repos", "news")
+        for key in ("papers", "repos", "news", "research_ideas")
         for item in issue.get(key, [])
     }
     return [d for d in DOMAINS if d in seen]
+
+
+def item_id(item: dict, section: str, date: str) -> str:
+    """给每条内容生成稳定 ID:{date}:{section}:{url 的 sha1 前 10 位}(url 缺失时用标题)。"""
+    key = (
+        item.get("url")
+        or item.get("title")
+        or item.get("title_zh")
+        or item.get("name")
+        or ""
+    )
+    h = hashlib.sha1(key.encode("utf-8")).hexdigest()[:10]
+    return f"{date}:{section}:{h}"
 
 
 def load_issues() -> list[dict]:
@@ -71,8 +86,11 @@ def main() -> None:
     )
     env.globals["DOMAINS"] = DOMAINS
     env.globals["issue_domains"] = issue_domains
+    env.globals["item_id"] = item_id
     issue_tpl = env.get_template("issue.html")
     archive_tpl = env.get_template("archive.html")
+    likes_tpl = env.get_template("likes.html")
+    research_tpl = env.get_template("research.html")
 
     if SITE.exists():
         shutil.rmtree(SITE)
@@ -102,6 +120,30 @@ def main() -> None:
     (SITE / "archive.html").write_text(
         archive_tpl.render(issues=list(reversed(issues)), root=""), encoding="utf-8"
     )
+
+    # 「我的喜欢」页:静态壳,内容由 likes.js 客户端实时拉 likes.json 渲染
+    (SITE / "likes.html").write_text(
+        likes_tpl.render(root=""), encoding="utf-8"
+    )
+
+    # 研究方向归档页:汇总所有期的 research_ideas,按日期倒序分组
+    idea_issues = [i for i in reversed(issues) if i.get("research_ideas")]
+    seen = {
+        idea.get("domain", "ai")
+        for i in idea_issues
+        for idea in i["research_ideas"]
+    }
+    idea_domains = [d for d in DOMAINS if d in seen]
+    (SITE / "research.html").write_text(
+        research_tpl.render(
+            idea_issues=idea_issues, idea_domains=idea_domains, root=""
+        ),
+        encoding="utf-8",
+    )
+
+    # 前端静态资源:build 会 rmtree(SITE),所以每次从 scripts/static 复制进来
+    shutil.copy(STATIC / "likes.js", SITE / "likes.js")
+
     (SITE / ".nojekyll").write_text("", encoding="utf-8")
     print(f"[build] {len(issues)} 期已生成 -> {SITE}")
 

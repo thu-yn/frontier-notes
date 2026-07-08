@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% from "macros.html" import like_button %}
+{% block title %}前沿手记 · 研究方向{% endblock %}
+{% block stamp %}研究方向 · 每日可做的研究点{% endblock %}
+
+{% block content %}
+<aside class="editor-note">
+  <span class="label">说明</span>
+  <p>这里汇总每期挑出的「今日可做的研究点」——都按单人、1–2 张 GPU 的微调/推理量级筛过,拿来当周末项目或练手选题。按日期倒序排列。</p>
+</aside>
+
+{% if idea_domains | length > 1 %}
+<div class="filter-bar" role="group" aria-label="按领域筛选">
+  <button type="button" data-domain="all" aria-pressed="true">全部</button>
+  {% for d in idea_domains %}
+  <button type="button" data-domain="{{ d }}" aria-pressed="false" style="--chip: {{ DOMAINS[d][1] }}">{{ DOMAINS[d][0] }}</button>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if idea_issues %}
+{% for issue in idea_issues %}
+<section class="column">
+  <div class="column-head">
+    <h2>{{ issue.date }}</h2>
+    <span class="count">第 {{ issue.issue_no }} 期 · {{ issue.research_ideas | length }} 条</span>
+  </div>
+  {% for idea in issue.research_ideas %}
+  {% set d = idea.domain | default("ai") %}
+  <article class="entry idea" data-domain="{{ d }}">
+    {{ like_button(idea, "ideas", issue.date) }}
+    <h3>{{ idea.title }}<span class="domain-chip" style="color: {{ DOMAINS[d][1] }}">{{ DOMAINS[d][0] }}</span></h3>
+    {% if idea.why_now %}<p class="idea-line"><b>为什么现在:</b>{{ idea.why_now }}</p>{% endif %}
+    {% if idea.feasibility %}<p class="idea-line"><b>可行性:</b>{{ idea.feasibility }}</p>{% endif %}
+    {% if idea.route %}
+    <ol class="idea-route">
+      {% for step in idea.route %}<li>{{ step }}</li>{% endfor %}
+    </ol>
+    {% endif %}
+    {% if idea.based_on %}
+    <p class="meta">出发点:{% for b in idea.based_on %}<a href="{{ b.url }}">{{ b.title }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</p>
+    {% endif %}
+    {% if idea.risk %}<p class="idea-risk">风险:{{ idea.risk }}</p>{% endif %}
+  </article>
+  {% endfor %}
+</section>
+{% endfor %}
+{% else %}
+<section class="column">
+  <p class="likes-empty">还没有研究点。等有新一期带 research_ideas 就会出现在这里。</p>
+</section>
+{% endif %}
+{% endblock %}

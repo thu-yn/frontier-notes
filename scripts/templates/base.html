@@ -178,6 +178,133 @@ section.column { margin: 3rem 0; }
   color: var(--ink-soft);
 }
 
+/* ---- 喜欢按钮 ---- */
+.like-btn {
+  float: right;
+  margin: .2rem 0 .4rem .8rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: .1rem .3rem;
+  line-height: 1;
+  color: var(--ink-soft);
+  border-radius: 2px;
+}
+.like-btn .heart {
+  font-size: 1.15rem;
+  color: transparent;
+  -webkit-text-stroke: 1.2px var(--ink-soft);
+  transition: color .18s ease, transform .18s ease, -webkit-text-stroke-color .18s ease;
+  display: inline-block;
+}
+.like-btn:hover .heart { -webkit-text-stroke-color: var(--red); transform: scale(1.12); }
+.like-btn.liked .heart {
+  color: var(--red);
+  -webkit-text-stroke-color: var(--red);
+}
+.like-btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+@media (prefers-reduced-motion: no-preference) {
+  .like-btn.liked .heart { animation: heart-pop .32s ease; }
+  @keyframes heart-pop {
+    0% { transform: scale(1); }
+    45% { transform: scale(1.35); }
+    100% { transform: scale(1); }
+  }
+}
+
+/* ---- 研究点板块 ---- */
+.entry.idea .idea-line { margin: .3rem 0; font-size: .98rem; }
+.entry.idea .idea-line b { font-family: var(--serif); color: var(--ink); }
+.entry.idea .idea-route {
+  margin: .5rem 0 .5rem 1.2rem;
+  padding: 0;
+  font-size: .98rem;
+}
+.entry.idea .idea-route li { margin: .18rem 0; }
+.entry.idea .idea-risk {
+  margin: .45rem 0 0;
+  font-size: .85rem;
+  color: var(--red);
+  font-style: italic;
+}
+
+/* ---- 我的喜欢页 ---- */
+.likes-date {
+  font-family: var(--mono);
+  font-size: .9rem;
+  color: var(--ink-soft);
+  letter-spacing: .05em;
+  margin: 1.8rem 0 .2rem;
+  padding-bottom: .2rem;
+  border-bottom: 1.5px solid var(--rule);
+}
+.likes-empty {
+  font-family: var(--kai);
+  font-size: 1.02rem;
+  color: var(--ink-soft);
+  padding: 1.5rem 0;
+}
+
+/* ---- token 设置浮层 ---- */
+#fn-token-back {
+  position: fixed; inset: 0;
+  background: rgba(34, 48, 60, .45);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1.2rem; z-index: 50;
+}
+#fn-token-panel {
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  border-radius: 4px;
+  max-width: 32rem; width: 100%;
+  max-height: 90vh; overflow: auto;
+  padding: 1.4rem 1.5rem;
+  box-shadow: 0 12px 40px rgba(34, 48, 60, .25);
+  font-size: .92rem;
+}
+#fn-token-panel h3 { font-family: var(--serif); margin: 0 0 .6rem; font-size: 1.2rem; }
+#fn-token-panel ol { margin: .6rem 0; padding-left: 1.3rem; }
+#fn-token-panel li { margin: .3rem 0; }
+#fn-token-panel code {
+  font-family: var(--mono); font-size: .82em;
+  background: rgba(36, 64, 179, .08); padding: 0 .25em; border-radius: 2px;
+}
+#fn-token-input {
+  width: 100%; margin: .6rem 0 .2rem;
+  font-family: var(--mono); font-size: .85rem;
+  padding: .5rem .6rem;
+  border: 1px solid var(--rule); border-radius: 3px;
+  background: #fff; color: var(--ink);
+}
+.fn-token-actions { display: flex; gap: .6rem; align-items: center; margin-top: 1rem; }
+.fn-token-actions button {
+  font-family: var(--sans); font-size: .85rem;
+  padding: .35rem .8rem;
+  border: 1px solid var(--rule); border-radius: 3px;
+  background: transparent; color: var(--ink); cursor: pointer;
+}
+.fn-token-actions button.primary { background: var(--blue); color: var(--paper); border-color: var(--blue); }
+.fn-token-actions button:hover { border-color: currentColor; }
+
+/* ---- 页脚齿轮入口 ---- */
+.gear {
+  font-family: var(--mono); font-size: .78rem;
+  background: transparent; border: none; padding: 0;
+  color: var(--ink-soft); cursor: pointer;
+}
+.gear:hover { color: var(--blue); text-decoration: underline; text-underline-offset: 2px; }
+
+/* ---- 同步提示 ---- */
+#fn-toast {
+  position: fixed; left: 50%; bottom: 1.4rem;
+  transform: translate(-50%, 1.5rem);
+  background: var(--ink); color: var(--paper);
+  font-size: .85rem; padding: .5rem .9rem; border-radius: 4px;
+  max-width: 90vw; opacity: 0; pointer-events: none;
+  transition: opacity .25s ease, transform .25s ease; z-index: 60;
+}
+#fn-toast.show { opacity: 1; transform: translate(-50%, 0); }
+
 /* ---- 条目 ---- */
 .entry { padding: 1.5rem 0; }
 .entry + .entry { border-top: 1.5px dashed var(--rule); }
@@ -310,6 +437,8 @@ footer p { margin: .2rem 0; }
       <span>{% block stamp %}{% endblock %}</span>
       <nav>
         <a href="{{ root }}index.html">本期</a>
+        <a href="{{ root }}research.html">研究方向</a>
+        <a href="{{ root }}likes.html">喜欢</a>
         <a href="{{ root }}archive.html">归档</a>
       </nav>
     </div>
@@ -323,7 +452,35 @@ footer p { margin: .2rem 0; }
   <footer>
     <p>本站每天早上由 GitHub Actions 自动出版,编辑是 Claude:选文、总结、编者按都出自它手,口味会随时间慢慢调教。</p>
     <p>内容来源:Hugging Face Daily Papers · GitHub Trending · TechCrunch / The Verge / Ars Technica / VentureBeat / Hacker News。</p>
+    <p><button type="button" id="fn-token-gear" class="gear" title="设置「喜欢」用的 GitHub Token">⚙ 喜欢设置</button></p>
   </footer>
 </div>
+
+<script>
+/* 领域筛选条:所有带 .filter-bar 的页面通用,无筛选条时直接跳过。 */
+(function () {
+  var bar = document.querySelector(".filter-bar");
+  if (!bar) return;
+  bar.addEventListener("click", function (e) {
+    var btn = e.target.closest("button[data-domain]");
+    if (!btn) return;
+    var want = btn.dataset.domain;
+    bar.querySelectorAll("button").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(b === btn));
+    });
+    document.querySelectorAll(".entry[data-domain]").forEach(function (el) {
+      el.classList.toggle("dimmed", want !== "all" && el.dataset.domain !== want);
+    });
+    // 某栏目被筛空时整个隐藏
+    document.querySelectorAll("section.column").forEach(function (sec) {
+      var visible = sec.querySelectorAll(".entry[data-domain]:not(.dimmed)").length;
+      if (sec.querySelector(".entry[data-domain]")) {
+        sec.classList.toggle("dimmed", visible === 0);
+      }
+    });
+  });
+})();
+</script>
+<script src="{{ root }}likes.js" defer></script>
 </body>
 </html>

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "macros.html" import like_button %}
 {% block title %}前沿手记 · 第 {{ issue.issue_no }} 期 · {{ issue.date }}{% endblock %}
 {% block stamp %}第 {{ issue.issue_no }} 期 · {{ issue.date_cn }}{% if not is_latest %} · 往期{% endif %}{% endblock %}
 
@@ -8,6 +9,33 @@
   <span class="label">编者按</span>
   <p>{{ issue.editor_note }}</p>
 </aside>
+{% endif %}
+
+{% if issue.research_ideas %}
+<section class="column" id="ideas">
+  <div class="column-head">
+    <h2>今日可做的研究点</h2>
+    <span class="count">{{ issue.research_ideas | length }} 条 · 单人可上手</span>
+  </div>
+  {% for idea in issue.research_ideas %}
+  {% set d = idea.domain | default("ai") %}
+  <article class="entry idea" data-domain="{{ d }}">
+    {{ like_button(idea, "ideas", issue.date) }}
+    <h3>{{ idea.title }}<span class="domain-chip" style="color: {{ DOMAINS[d][1] }}">{{ DOMAINS[d][0] }}</span></h3>
+    {% if idea.why_now %}<p class="idea-line"><b>为什么现在:</b>{{ idea.why_now }}</p>{% endif %}
+    {% if idea.feasibility %}<p class="idea-line"><b>可行性:</b>{{ idea.feasibility }}</p>{% endif %}
+    {% if idea.route %}
+    <ol class="idea-route">
+      {% for step in idea.route %}<li>{{ step }}</li>{% endfor %}
+    </ol>
+    {% endif %}
+    {% if idea.based_on %}
+    <p class="meta">出发点:{% for b in idea.based_on %}<a href="{{ b.url }}">{{ b.title }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</p>
+    {% endif %}
+    {% if idea.risk %}<p class="idea-risk">风险:{{ idea.risk }}</p>{% endif %}
+  </article>
+  {% endfor %}
+</section>
 {% endif %}
 
 {% set present = issue_domains(issue) %}
@@ -29,6 +57,7 @@
   {% for p in issue.papers %}
   {% set d = p.domain | default("ai") %}
   <article class="entry" data-domain="{{ d }}">
+    {{ like_button(p, "papers", issue.date) }}
     <h3><a href="{{ p.url }}">{{ p.title_zh }}</a><span class="domain-chip" style="color: {{ DOMAINS[d][1] }}">{{ DOMAINS[d][0] }}</span></h3>
     <p class="orig">{{ p.title }}</p>
     {% if p.one_liner %}<p class="oneliner"><mark>{{ p.one_liner }}</mark></p>{% endif %}
@@ -53,6 +82,7 @@
   {% for r in issue.repos %}
   {% set d = r.domain | default("ai") %}
   <article class="entry" data-domain="{{ d }}">
+    {{ like_button(r, "repos", issue.date) }}
     <h3 class="repo-name"><a href="{{ r.url }}">{{ r.name }}</a><span class="domain-chip" style="color: {{ DOMAINS[d][1] }}">{{ DOMAINS[d][0] }}</span></h3>
     {% if r.one_liner %}<p class="oneliner"><mark>{{ r.one_liner }}</mark></p>{% endif %}
     <p class="summary">{{ r.summary_zh }}</p>
@@ -75,6 +105,7 @@
   {% for n in issue.news %}
   {% set d = n.domain | default("ai") %}
   <article class="entry news" data-domain="{{ d }}">
+    {{ like_button(n, "news", issue.date) }}
     <h3><a href="{{ n.url }}">{{ n.title_zh }}</a><span class="domain-chip" style="color: {{ DOMAINS[d][1] }}">{{ DOMAINS[d][0] }}</span><span class="source-chip">{{ n.source }}</span></h3>
     <p class="summary">{{ n.summary_zh }}</p>
   </article>
@@ -87,27 +118,4 @@
   <span><a href="{{ root }}archive.html">全部归档</a></span>
   <span>{% if next %}<a href="{{ root }}issues/{{ next.date }}.html">下一期 · {{ next.date }}</a> →{% elif not is_latest %}<a href="{{ root }}index.html">回到最新一期</a> →{% endif %}</span>
 </nav>
-
-<script>
-(function () {
-  var bar = document.querySelector(".filter-bar");
-  if (!bar) return;
-  bar.addEventListener("click", function (e) {
-    var btn = e.target.closest("button[data-domain]");
-    if (!btn) return;
-    var want = btn.dataset.domain;
-    bar.querySelectorAll("button").forEach(function (b) {
-      b.setAttribute("aria-pressed", String(b === btn));
-    });
-    document.querySelectorAll(".entry[data-domain]").forEach(function (el) {
-      el.classList.toggle("dimmed", want !== "all" && el.dataset.domain !== want);
-    });
-    // 某栏目被筛空时整个隐藏
-    document.querySelectorAll("section.column").forEach(function (sec) {
-      var visible = sec.querySelectorAll(".entry[data-domain]:not(.dimmed)").length;
-      sec.classList.toggle("dimmed", visible === 0);
-    });
-  });
-})();
-</script>
 {% endblock %}
