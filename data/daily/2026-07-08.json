@@ -266,5 +266,37 @@
       "source": "Ars Technica",
       "summary_zh": "美国核管理委员会(NRC)正推动修改甚至事实上废止用了几十年的ALARA(「合理可行尽量低」)辐射安全标准,官方说法是这只是措辞上的澄清,不涉及实质性安全要求变化。但放在当下新一轮核电新建潮的背景下,这个时间点上的调整还是引来了不少审视的目光。"
     }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "把「模型自己当预测器」的推测式工具调用加速迁移到别的模型上测泛化",
+      "based_on": [{ "title": "SPORK: Self-Speculative Forking to Accelerate Agentic LLM Inference", "url": "https://arxiv.org/abs/2607.03333" }],
+      "why_now": "论文本周才提交,只在Qwen3-32B上验证了「用同一个模型forking出的probe预测自己接下来要调哪个工具」这一招,training-free、当天能部署,但换个模型家族还灵不灵没人试过,窗口期很短。",
+      "feasibility": "单卡A100(或消费级40GB卡跑量化后的模型)就够,不用训练只做推理侧改造,2–3周。",
+      "route": ["用官方代码(或按abstract描述自己实现probe forking)在Qwen3-32B上复现工具名预测准确率基线", "换一个不同家族/尺寸的开源模型(如Llama-3.1或Qwen2.5-7B)重复实验,看74%+的准确率是否还在", "扩展到多工具连续调用场景,测预测准确率随调用链变长的衰减曲线", "接vLLM测端到端真实延迟收益,不只是论文里的理论wait time占比", "开源复现代码和跨模型结果表"],
+      "risk": "官方代码如果没开源,probe forking的具体实现细节得靠猜;小一点的模型推理能力弱,预测准确率可能明显掉,得诚实报个负结果而不是硬凑正面结论。"
+    },
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "验证「部署时用世界模型给VLA策略掌舵、不用微调」这套能不能换个底座也成立",
+      "based_on": [{ "title": "DREAMSTEER: Latent World Models Can Steer VLA Policies During Deployment Without Any Finetuning", "url": "https://arxiv.org/abs/2607.02865" }],
+      "why_now": "论文本周刚挂出来,只在自己选的VLA底座上验证了「部署时用latent world model + value model挑动作,不用微调」这个思路,还没人拿去测别的开源VLA或别的仿真环境,是个干净的泛化验证空档。",
+      "feasibility": "全程仿真,不用真机,单卡40GB左右能跑一个7B级VLA加轻量世界模型,约3周。",
+      "route": ["复现DREAMSTEER官方代码,在原论文的VLA+benchmark组合上跑通基线", "换成另一个开源VLA底座(比如OpenVLA)接入同一套steering框架", "在LIBERO或SIMPLER里人为加部署时分布偏移(换光照、挪摄像头角度)测鲁棒性提升是否还在", "对比同一底座「传统微调」vs「DREAMSTEER免微调掌舵」的成功率和耗时", "开源适配代码和跨底座结果"],
+      "risk": "不同VLA底座的动作空间和latent接口八成对不上,需要写额外适配层;世界模型的效果本身依赖底座能力,如果底座换弱了可能测不出提升,反而说明这方法有底座依赖。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "把ToolFailBench那套「工具调用失败四分类」抽成能挂到任意agent框架的诊断小库",
+      "based_on": [{ "title": "ToolFailBench: Diagnosing Tool-Use Failures in LLM Agents", "url": "https://arxiv.org/abs/2607.04686" }],
+      "why_now": "论文提出的Tool-Skip / Result-Ignore / Output-Fabrication / Unnecessary-Tool-Use四分类诊断目前绑死在它自己那1000个任务上,agent产品越来越多,「工具调用哪里翻车了」这种可观测性需求在涨,但还没有一个能直接接别的框架日志的通用工具。",
+      "feasibility": "纯工程活,不用GPU训练,规则分类器+现成LLM API就能跑,2–4周出个v0.1。",
+      "route": ["把论文里的规则分类逻辑抽出来,定义一份通用trace格式(工具定义+调用记录+最终回答)", "写几个转换器,把LangChain / OpenAI function-calling / Claude tool use的日志转成这份格式", "在论文原本的1000个任务上复现一遍,验证分类结果跟论文报的数字对得上", "加一个类似classification_report的CLI输出,方便塞进CI", "开源出去,写篇博客投几个agent框架社区,引导大家提适配PR"],
+      "risk": "论文里规则分类器的具体判定逻辑可能没有完全公开,复现时要靠合理猜测并标注清楚;不同框架的日志格式差异比想象中大,适配层工作量容易被低估。"
+    }
   ]
 }
