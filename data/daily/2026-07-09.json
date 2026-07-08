@@ -1,0 +1,284 @@
+{
+  "date": "2026-07-09",
+  "editor_note": "今天HF热榜前三全是「世界模型」:RynnWorld-4D把RGB、深度、光流塞进一个扩散过程里同步生成,给机器人做规划用;RynnWorld-Teleop干脆让世界模型替代真机器人去生成遥操作训练数据;连游戏向的AlayaWorld也在同一天开源全套框架。凑巧的是TechCrunch今天有档播客专门在聊「游戏数据是不是AGI的秘密」,创业公司General Intuition也在同一天官宣要拿电子游戏录像训机器人基座模型——「拿游戏数据练具身智能」这条路子今天格外扎堆。Grok这边是冰火两重天的一天:一边发布4.5号称「Opus级」,一边被曝有用户拿它生成继女的性剥削图片、平台还被指瞒报,再叠上GitLost演示怎么骗GitHub的AI agent泄露私有仓库,agent和大模型安全这条线这周基本没消停过。具身智能今天两个亮点都是机械/工程巧思赢的,不是算法堆料:把机械臂塞进四足机器人的前腿里绕开「移动还是操作」的两难,给灵巧手RL探索加一个动作先验当护栏,都是换个思路比加大力度更管用的例子。AI4Science里那篇钙钛矿钝化倒是能跟今天空着的energy板块对个话——真正跟新能源材料沾边的研究其实在ai4s这边悄悄推进,energy又是被凝聚态物理淹没的一天。GitHub trending这边今天新鲜货不多,一半是这几天报过的老面孔,去重之后剩下的没几个,唯一让我意外的是superpowers这个agent技能框架一天涨了近千星,「给agent配技能包」这条赛道是真挤了。",
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "RynnWorld-4D: 4D Embodied World Models for Robotic Manipulation",
+      "title_zh": "用RGB+深度+光流同步生成未来场景,机器人操作有了自己的4D世界模型",
+      "url": "https://arxiv.org/abs/2607.06559",
+      "hf_url": "https://huggingface.co/papers/2607.06559",
+      "authors": "Haoyu Zhao, Xingyue Zhao, Siteng Huang 等",
+      "upvotes": 72,
+      "one_liner": "把「看得懂动作会怎么影响世界」这件事,做成单模型内RGB、深度、光流三路同步生成",
+      "summary_zh": "机器人在开放世界里操作物体,光靠2D视频预测未来画面还不够,得知道场景的三维结构会怎么随交互变化。RynnWorld-4D把RGB、深度图、光流这三路信号放进同一个扩散过程里同步生成,用跨模态注意力加逐帧3D RoPE保证外观、几何、运动三者演化一致,还配了一个2.54亿帧规模的自建数据集喂饱它。更实用的是配套的RynnWorld-4D-Policy,直接吃4D世界模型内部表征做逆动力学推断,一次前向就出动作,不用管几十步去噪,在真实双臂灵巧操作任务上刷到SOTA。数据集是自家攒的伪标签,泛化到没见过的场景效果如何还得打个问号,但把「预测世界」和「输出动作」拧到一起省掉的推理开销确实实在。",
+      "tags": ["世界模型", "机器人", "4D生成"]
+    },
+    {
+      "domain": "ai",
+      "title": "RynnWorld-Teleop: An Action-Conditioned World Model for Digital Teleoperation",
+      "title_zh": "不用真机器人,靠一段人手动作视频就能生成机器人遥操作训练数据",
+      "url": "https://arxiv.org/abs/2607.06558",
+      "hf_url": "https://huggingface.co/papers/2607.06558",
+      "authors": "Haoyu Zhao, Xingyue Zhao, Hangyu Li 等",
+      "upvotes": 67,
+      "one_liner": "拿人手的动作流喂给世界模型直接生成训练数据,单卡H100还能实时40帧",
+      "summary_zh": "机器人学习最大的瓶颈之一是采集示教数据得占用真实硬件和场地,一次只能录一台机器人的活。RynnWorld-Teleop换了个思路:操作者的手部姿态流驱动一个以机器人为中心的世界模型,从一张参考图直接生成第一视角高保真视频,姿态流本身跟具体机器人无关,配上标准重定向就能变成任意目标机器人的动作标签。工程上把生成过程压成单次前向,单张H100能实时跑40+帧,只用这套生成数据训出来的策略在双臂灵巧任务上做到了零样本sim2real迁移,拿真实数据做增强还能稳定提升成功率。本质是把「数据采集」从物理硬件里解耦出来,生成数据和真实数据的gap有多大还得看后续更大规模验证。",
+      "tags": ["世界模型", "遥操作", "数据生成"]
+    },
+    {
+      "domain": "ai",
+      "title": "Hierarchical Sparse Attention Done Right: Toward Infinite Context Modeling",
+      "title_zh": "稀疏注意力选块选不准的老问题,这篇让模型自己学怎么选",
+      "url": "https://arxiv.org/abs/2607.02980",
+      "hf_url": "https://huggingface.co/papers/2607.02980",
+      "authors": "Xiang Hu, Xinyu Wei, Hao Gu 等",
+      "upvotes": 35,
+      "one_liner": "训练长度往外推64倍还能保持90%检索准确率,检索和生成不再是两件分开的事",
+      "summary_zh": "chunk级稀疏注意力一直有个先天缺陷——选哪些块要独立算,选不准就直接拖累效果,离全注意力总差一截。HiLS的做法是把块检索得分直接纳入前向注意力计算,让检索本身也能跟着语言建模loss端到端学,而不是外挂一个独立的选择模块。效果上域内长度能打平甚至反超全注意力,训练长度往外推64倍还能维持90%的检索准确率,现有全注意力模型也能通过轻量续训转成HiLS,不用推翻重来。稀疏注意力「效率换效果」这个老权衡,这篇给出的答案挺干净:检索和生成一起训,别把两件事拆开。",
+      "tags": ["稀疏注意力", "长上下文", "LLM"]
+    },
+    {
+      "domain": "ai",
+      "title": "Vision as Unified Multimodal Generation",
+      "title_zh": "检测、分割、深度估计……CV这些任务不再需要专门模型头,统统塞进一个「生成」框架",
+      "url": "https://arxiv.org/abs/2607.06560",
+      "hf_url": "https://huggingface.co/papers/2607.06560",
+      "authors": "Xiaoyang Han, Jianhua Li, Kewang Deng 等",
+      "upvotes": 30,
+      "one_liner": "用自然语言指令定义任务,输出文本或图像就完事,一个模型顶替一堆任务专用头",
+      "summary_zh": "计算机视觉长期的痛点是每个任务(检测、OCR、分割、深度估计、位姿估计……)都得配一个专门的输出头和训练流程。SenseNova-Vision把这些异构任务统一表达成一个多模态生成模型原生的文本/图像生成空间:自然语言指令加可选视觉提示定义任务,符号类输出生成文本,稠密空间预测生成图像,复合任务就文本图像混着输出。团队把各种CV标注转成指令-响应样本攒出专用语料库,在一个现成的统一多模态模型上继续训练,不需要额外的任务专用头或架构改动。实验显示单一模型能在结构化理解、稠密几何预测、分割、多视角几何这些任务上打平专用系统,这个「用生成统一感知」的路子如果站得住,对CV这个碎片化的领域是个挺大的简化。",
+      "tags": ["统一多模态", "计算机视觉", "生成模型"]
+    },
+    {
+      "domain": "ai",
+      "title": "Gemma 4 Technical Report",
+      "title_zh": "Gemma出到第4代,新增原生音频输入、思考模式,最小2.3B也能用",
+      "url": "https://arxiv.org/abs/2607.02770",
+      "hf_url": "https://huggingface.co/papers/2607.02770",
+      "authors": "Gemma Team, Sherif El Abd, Vaibhav Aggarwal 等",
+      "upvotes": 24,
+      "one_liner": "12B版本干脆连视觉/音频编码器都省了,直接吃原始音频和图像patch",
+      "summary_zh": "Gemma系列这次更新覆盖2.3B到31B,dense和MoE架构都有,视觉和音频编码器全系升级,12B这一档更激进,用一个无编码器架构直接吃原始音频波形和图像patch。新加的「思考模式」能让模型先吐一段推理轨迹再回答,推理速度、显存、长上下文能力也都做了针对性优化。技术报告称STEM、多模态、长上下文这些基准上有明显提升,人工评测能打平更大的前沿开源模型。开源权重覆盖到2.3B这种消费级尺寸,配合思考模式和多模态原生支持,对想做下游适配的人是个新的低成本起点,具体好不好用还得看权重放出来后社区自己测。",
+      "tags": ["开源模型", "多模态", "基座模型"]
+    },
+    {
+      "domain": "ai",
+      "title": "DSpark: Confidence-Scheduled Speculative Decoding with Semi-Autoregressive Generation",
+      "title_zh": "投机解码新方案已经在DeepSeek-V4线上服务系统里跑,给真实用户提速六到八成",
+      "url": "https://arxiv.org/abs/2607.05147",
+      "hf_url": "https://huggingface.co/papers/2607.05147",
+      "authors": "Xin Cheng, Xingkai Yu, Chenze Shao 等",
+      "upvotes": 16,
+      "one_liner": "不是论文里的理论加速比,是接进生产环境扛着真实流量测出来的60%-85%",
+      "summary_zh": "现在做投机解码的并行草稿模型有个通病:一次吐一长串候选token,块越长接受率掉得越快,验证的时候还得平等对待所有token,把宝贵的批处理容量浪费在大概率会被拒绝的token上。DSpark用半自回归架构给草稿模型加了点块内依赖建模防止「结尾衰减」,再用置信度调度动态决定每个请求要验证多长,把验证成本用在刀刃上。这篇最实在的地方是没停留在离线benchmark,而是真的接进了DeepSeek-V4的线上服务,在真实用户流量下相比生产基线(MTP-1)把单用户生成速度提了60%到85%,还让原本因为交互性约束跑不起来的性能档位变得可用。生产系统里的真实验证,比一堆离线榜单数字更有说服力。",
+      "tags": ["投机解码", "LLM推理", "生产部署"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Calf-Integrated Arms for Bimanual Quadruped Loco-Manipulation",
+      "title_zh": "把机械臂塞进四足机器人的「小腿」里,不用后腿直立也能双手同时干活",
+      "url": "https://arxiv.org/abs/2607.06186v1",
+      "authors": "Yan Pan, Yuanchuan Ren, Chipui Chan 等",
+      "one_liner": "四脚全程着地、双臂同时抓取,绕开了移动和操作互相打架的老权衡",
+      "summary_zh": "四足机器人想干「移动+双手操作」这件事一直很别扭:机械臂架机身上重心高还通常只能装一只,拿腿当手臂就得抬腿没法走,腿装夹爪想两只手一起用还得后腿直立「作揖」才够得着。这篇干脆把带滑动关节、两个转动关节和夹爪的机械臂集成进Unitree Go2的两只前腿里,四脚全程贴地就能双手同时抓取操作,单臂拿东西时身体照样能走,再用视觉语言模型从预定义技能库里挑动作序列执行。机械设计上的取巧比算法堆料更容易讲清楚——这篇论文本身证明「移动和操作互相独立」这个物理限制换个机械结构就能绕开,只是技能库预定义、VLM只管调度不管学习,智能上限还在硬件设计之外。",
+      "tags": ["四足机器人", "双臂操作", "机械设计"]
+    },
+    {
+      "domain": "embodied",
+      "title": "LAMP: Latent Motion Prior-Guided Real-World Learning for Dexterous Hand Manipulation",
+      "title_zh": "灵巧手真机强化学习总爱把手弄坏,这篇给RL探索装了个「动作护栏」",
+      "url": "https://arxiv.org/abs/2607.06323v1",
+      "authors": "Xinye Yang, Zhiyuan Ma, Hongze Yu 等",
+      "one_liner": "把最近的手部动作历史压成一个隐向量当先验,约束RL探索别乱来",
+      "summary_zh": "灵巧手的自由度太高,模仿学习的误差会被放大,真机上直接放开手脚做RL探索又容易做出脱离接触、松手这类既低效又可能损伤硬件的动作。LAMP给这套探索装了个「护栏」:把最近一段手部动作历史压缩成一个紧凑的、条件化的隐向量,再从这个隐向量里解码出可执行的高维手部目标动作,用这个先验去圈定RL能探索的范围,配了一套三阶段真机训练流程。思路本质是让探索贴着「可行的运动模式」走而不是天马行空,对真机灵巧手学习这种硬件成本高、容错率低的场景挺对症,只是样本效率和成功率的具体数字还得看正文,是不是真能大幅省下真机试错次数还需要观察。",
+      "tags": ["灵巧手", "强化学习", "真机学习"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Epitaxial single T centres in silicon-on-insulator",
+      "title_zh": "用分子束外延把单个发光缺陷「种」进硅片里,量子光子接口的材料质量上了一个台阶",
+      "url": "https://arxiv.org/abs/2607.06272v1",
+      "authors": "Christian H. Christiansen, Kasper H. Nielsen, Alisha Nanwani 等",
+      "one_liner": "光学线宽窄到30MHz,均匀展宽被明显压住,材料质量的实打实提升",
+      "summary_zh": "T中心是硅里一种能发光的自旋缺陷,被视为构建可扩展量子网络里「自旋-光子接口」的重要候选,但过去靠离子注入制备,材料质量差、发光线宽宽,限制了相干光子的产生。这篇改用高纯度分子束外延方法,把单个T中心直接「长」进绝缘体上硅晶圆里,还耦合到了纳米光子波导上,光学线宽窄到30MHz,均匀展宽被明显压制。这不是参数调优式的改进,是材料制备工艺上的实质性突破,直接对准了这条技术路线最卡脖子的环节;局限是目前还是单中心层面的演示,离多比特联网还有距离,但材料质量这一步迈出去了,后面的路径更清楚了。",
+      "tags": ["量子光子学", "自旋光子接口", "硅基器件"]
+    },
+    {
+      "domain": "bio",
+      "title": "Rethinking Benchmarks and Models for Enzyme Specificity Prediction",
+      "title_zh": "一堆AI预测酶底物兼容性的模型都说自己刷榜很强,这篇过来「打假」",
+      "url": "https://arxiv.org/abs/2607.05084v1",
+      "authors": "Elizabeth H. Mahood, Natália Komorníková, Tomáš Pluskal 等",
+      "one_liner": "强性能是不是只是各用各的松benchmark堆出来的?这篇专门核查这件事",
+      "summary_zh": "这几年一堆预测酶-底物、酶-反应兼容性的AI模型扎堆出现,论文里个个都在各自选的benchmark上报出漂亮数字,但这些数字是不是真的反映了模型在实际场景里的能力——比如从大量结构相似的候选里挑出真正的催化剂——一直没人系统核查过。这篇论文就是干这个「打假」的活:重新审视现有benchmark和模型,质疑报出来的「强性能」到底是不是虚高。在AI+酶学这个被吹得挺热的方向上,这种揭示评测缺陷本身的批判性工作比又发一个刷榜模型稀缺得多,前提是它不只是列问题,而是给出了具体该怎么修benchmark的建议,这一点摘要没完全展开,得看正文。",
+      "tags": ["酶预测", "基准评测", "AI4Science"]
+    },
+    {
+      "domain": "chip",
+      "title": "Boosting FPGA Performance with Direct BRAM-DSP Paths",
+      "title_zh": "FPGA里数据在存储和计算单元之间来回跑要绕远路,这篇加了条近道",
+      "url": "https://arxiv.org/abs/2607.05756v1",
+      "authors": "Jiajun Hu, Ruthwik Reddy Sunketa, Andrew Boutros 等",
+      "one_liner": "不用推翻现有FPGA架构和CAD工具链,一条BRAM到DSP的专用直连就能省掉绕路开销",
+      "summary_zh": "FPGA跑深度学习负载时,数据在片上存储BRAM和计算单元DSP之间搬运得绕经全局布线网络,带来走线拥堵和关键路径延迟,这是个老问题。学界之前提出的「BRAM内/近BRAM计算」方案能解决问题,但往往要求推翻现有FPGA架构和CAD工具链,商业上很难落地。这篇的选择是加一条BRAM到DSP的专用直连通路,不用动现有整体架构和工具链就能拿到性能收益。创新幅度不算颠覆性,但「能被FPGA厂商实际采纳」这个务实取舍,在架构类论文里反而是加分项,是那种工程上真的可能被用起来的改进。",
+      "tags": ["FPGA", "芯片架构", "存算路径"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Data-driven atomistic modelling of hybrid halide perovskite passivation",
+      "title_zh": "训练力场也玩「持续微调」这套LLM式流程,钙钛矿太阳能电池的表面钝化机制被啃下来了",
+      "url": "https://arxiv.org/abs/2607.05321v1",
+      "authors": "Laura-Bianca Paşca, Henry J. Snaith, Volker L. Deringer",
+      "one_liner": "借用大模型微调的思路训练原子间势,专门啃钙钛矿表面这块难啃的骨头",
+      "summary_zh": "钙钛矿太阳能电池的光电性能很大程度上取决于表面缺陷的分子钝化,但背后具体的原子尺度机制一直没完全搞清楚。机器学习原子间势现在已经很常见,但用来模拟「分子配体吸附在钙钛矿表面」这种复杂、贴近真实实验条件的场景,一直不是件轻松事。这篇借用了大语言模型持续微调的思路,搭了套多阶段训练流程来喂这类原子间势,让它能扛住复杂界面场景。作者里有钙钛矿光伏的奠基人物Henry Snaith和机器学习原子势方向的Volker Deringer,实验和方法两头都硬,组合本身就是个可信度背书;摘要里具体钝化机制的新结论没完全展开,方法论上的跨界类比是目前看得到的最大亮点。",
+      "tags": ["钙钛矿", "机器学习力场", "光伏材料"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "TencentCloud/TencentDB-Agent-Memory",
+      "url": "https://github.com/TencentCloud/TencentDB-Agent-Memory",
+      "language": "TypeScript",
+      "stars": 7563,
+      "stars_today": "351",
+      "one_liner": "腾讯出品,给AI agent做本地长期记忆,不用调用任何外部API",
+      "summary_zh": "一套四层递进式的本地长期记忆管道,让AI agent在完全本地环境下就能维护跨会话的长期记忆,不依赖任何外部API服务。记忆一直是agent产品的短板,尤其对隐私敏感或离线场景,这种「零外部依赖」的本地方案填了个实际的空。"
+    },
+    {
+      "domain": "ai",
+      "name": "mvanhorn/last30days-skill",
+      "url": "https://github.com/mvanhorn/last30days-skill",
+      "language": "Python",
+      "stars": 50663,
+      "stars_today": "373",
+      "one_liner": "一个agent skill,喂个话题进去,自动扒Reddit、X、YouTube、HN、Polymarket吐出一份有依据的摘要",
+      "summary_zh": "做成能被Claude Code这类工具直接调用的skill,把「调研一个话题」自动化:跨多个信息源抓取内容,再综合成一份带出处的摘要。今天新增star数最猛的仓库之一,说明「用agent自动做跨源调研」这个需求确实有人买账。"
+    },
+    {
+      "domain": "ai",
+      "name": "obra/superpowers",
+      "url": "https://github.com/obra/superpowers",
+      "language": "Shell",
+      "stars": 249715,
+      "stars_today": "999",
+      "one_liner": "一套agent技能框架加软件开发方法论,主打「真的管用」",
+      "summary_zh": "定位是给编程agent配一整套可复用的技能和工作方法论,今天新增将近1000星,是这几天「agent技能包」这波里声量最大的一个。跟前几天陆续冒出来的dotnet/skills、agent-skills这些同类项目放一起看,「给agent配技能包」这个新格式正在从个人项目变成大家都想抢的标准。"
+    },
+    {
+      "domain": "ai",
+      "name": "wonderwhy-er/DesktopCommanderMCP",
+      "url": "https://github.com/wonderwhy-er/DesktopCommanderMCP",
+      "language": "TypeScript",
+      "stars": 6348,
+      "stars_today": "20",
+      "one_liner": "给Claude的MCP server,让它能直接操作终端、搜文件系统、做diff式编辑",
+      "summary_zh": "一个相对成熟的MCP server,给Claude这类工具接入终端控制、文件系统搜索、diff编辑能力,本质是把本地开发机变成agent能直接动手的工作台。今天增速不算猛,但一直稳定挂在trending榜上,说明这类「给agent配本地操作权限」的基础设施型工具有持续的真实需求。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "OpenAI上线GPT-Live-1语音模式,能一边说一边听",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/962856/chatgpt-upgraded-voice-mode-gpt-live",
+      "source": "The Verge",
+      "summary_zh": "OpenAI发布新一代语音模型GPT-Live-1,主打能同时说话和倾听,用户说话说到一半停顿时会耐心等着而不是抢话,官方将其形容为「更像在跟真人对话」。这类边听边说的能力对同声传译这类场景尤其关键,发布当天在TechCrunch和Hacker News上都引发不小讨论。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Grok 4.5发布,马斯克称之为「Opus级」模型",
+      "url": "https://techcrunch.com/2026/07/08/spacexai-releases-grok-4-5-which-elon-describes-as-an-opus-class-model/",
+      "source": "TechCrunch",
+      "summary_zh": "xAI发布最新版本Grok 4.5,主打比其他强力模型更便宜、更高效,马斯克把它形容为「Opus级」模型。这个说法本身挺大胆,直接把自家模型和Anthropic的旗舰型号放在同一个量级上比,具体跑分是否站得住脚还得看后续第三方评测。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Prime Intellect融了1.3亿美元A轮,想让企业不靠大厂自建AI agent",
+      "url": "https://techcrunch.com/2026/07/08/prime-intellect-raises-130m-series-a-to-help-enterprises-build-their-own-ai-agents/",
+      "source": "TechCrunch",
+      "summary_zh": "成立于2024年的Prime Intellect完成1.3亿美元A轮融资,目标是让企业获得训练自有agentic系统的能力,不用完全依赖前沿实验室。这类「帮企业自主掌握agent技术栈」的定位,是当前AI基础设施创业里一个持续有资本追捧的方向。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "GitLost:安全研究者演示怎么骗GitHub的AI agent把私有仓库泄露出去",
+      "url": "https://noma.security/blog/gitlost-how-we-tricked-githubs-ai-agent-into-leaking-private-repos/",
+      "source": "Hacker News",
+      "summary_zh": "安全团队Noma Security演示了一套针对GitHub AI agent的攻击手法,通过精心构造的输入诱导agent把原本私有的仓库内容泄露出来,在Hacker News上拿到476分的高讨论热度。这类针对生产环境agent的具体越权案例,又给「agent到底有多经得起攻击」这个问题添了一笔实锤。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "又一批女孩起诉X:用Grok生成继女性剥削图像,平台只上报了其中一起",
+      "url": "https://arstechnica.com/tech-policy/2026/07/lawsuit-grok-user-made-7k-child-sex-images-xai-only-reported-one-gang-rape-prompt/",
+      "source": "Ars Technica",
+      "summary_zh": "新一批未成年受害者起诉X平台,指控有用户利用Grok生成了继女的7000张性剥削图像,而X在知情的情况下只向执法部门上报了其中一起,被控涉嫌包庇。这是Grok内容安全问题持续发酵的最新一起,平台的审核和上报责任被推到聚光灯下。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "AI芯片厂商SambaNova五个月内估值翻倍,再融10亿美元到110亿估值",
+      "url": "https://techcrunch.com/2026/07/08/sambanova-draws-1b-at-11b-valuation-in-series-f-first-close/",
+      "source": "TechCrunch",
+      "summary_zh": "AI芯片公司SambaNova完成新一轮10亿美元融资,估值到110亿美元,这已是继5个月前上一轮「超级大轮」之后的又一次跳涨。几个月前还传出英特尔想以16亿美元收购SambaNova的消息,如今估值已经翻了将近7倍,AI芯片赛道的资本热度可见一斑。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "法国AI初创ZML发布免费推理加速工具,图灵奖得主Yann LeCun站台",
+      "url": "https://techcrunch.com/2026/07/08/hot-french-startup-zml-releases-free-product-to-speed-inference-across-lots-of-ai-chips/",
+      "source": "TechCrunch",
+      "summary_zh": "热门法国AI初创ZML发布免费产品ZML/LLMD,主打跨多种AI芯片加速模型推理、降低运行成本,背后有图灵奖得主Yann LeCun的背书。在算力成本持续高企的背景下,「硬件无关的推理加速层」这类基础设施型产品,正变成越来越多创业公司想抢的位置。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Mistral出手机器人导航,发布Robostral Navigate模型",
+      "url": "https://mistral.ai/news/robostral-navigate/",
+      "source": "Hacker News",
+      "summary_zh": "Mistral AI发布机器人导航模型Robostral Navigate,号称在该任务上做到了业界领先水平,在Hacker News上拿到330分的讨论热度。一家以开源语言模型起家的公司下场做机器人专用模型,也是「LLM厂商向下渗透具身智能」这个大趋势的又一个例证。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "创业公司押注电子游戏数据,想靠它训练机器人的基座模型",
+      "url": "https://techcrunch.com/2026/07/08/this-startup-thinks-robotics-is-about-to-have-its-chatgpt-moment/",
+      "source": "TechCrunch",
+      "summary_zh": "创业公司General Intuition的赌注是:数以百万小时计的电子游戏录像能拿来训练物理世界AI的基础模型,让机器人不需要海量真实世界数据也能学会应对物理环境。这个思路跟今天HF热榜上几篇拿游戏/合成数据训世界模型的论文遥相呼应,游戏数据当具身智能训练素材,今天格外扎堆。"
+    },
+    {
+      "domain": "energy",
+      "title_zh": "数据中心用电暴涨,挤压美国制造业电费,冲击「美国制造」计划",
+      "url": "https://arstechnica.com/tech-policy/2026/07/us-manufacturers-energy-costs-soar-because-of-ai-data-center-demand/",
+      "source": "Ars Technica",
+      "summary_zh": "AI数据中心对电力的旺盛需求正在推高美国「铁锈地带」制造业的电费成本,直接威胁特朗普政府的「美国制造」产业回流计划。算力扩张对电网和产业政策的外溢影响,正从抽象讨论变成具体的成本账单。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "把答案级的RAG幻觉检测拆到句子粒度,验证这套扰动打分法能不能迁移到别的模型",
+      "based_on": [{ "title": "GASP: Detecting Hallucinations in Retrieval-Augmented Generation through Grounding-Aware Sensitivity by Perturbation", "url": "https://arxiv.org/abs/2607.04223" }],
+      "why_now": "论文本周才提交,方法整个是推理时的扰动分析、不需要训练,复现门槛很低,但目前只在作者自己选的模型和数据集上验证过,换个模型或换个RAG场景是否一样好使还没人跟进。",
+      "feasibility": "单卡（或直接调用API做前向）就能跑,不用训练,核心开销是对每个候选chunk做逐个ablation打分,2-3周能出结果。",
+      "route": ["先在一个开源RAG pipeline(LangChain+开源检索器)上复现GASP在原论文场景下的检测效果", "换一个不同规模的开源LLM(比如从7B换到70B)重复实验,看句子级检测的准确率和校准是否稳定", "扩展到多跳RAG场景,测试chunk数变多时检测开销和精度的权衡", "针对chunk数量大的场景设计一个降采样/近似打分策略,量化精度损失", "开源复现代码和跨模型结果对比表"],
+      "risk": "逐chunk做ablation的计算开销随context长度线性增长,长文档场景可能跑不动;不同模型的置信度/似然校准差异较大,阈值可能需要重新标定,泛化性没有想象中稳。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "验证「3DGS近景渲染发糊是因为跨视图尺度失配」这个根因诊断,换个场景/换个baseline还成不成立",
+      "based_on": [{ "title": "MACRO: Training-free Multi-plane Attention for Closeup Render Optimization", "url": "https://arxiv.org/abs/2607.03875" }],
+      "why_now": "论文本周刚提交,把3DGS近景渲染质量下降这个开放问题的根因精确定位到「参考图和近景视图的尺度差异导致跨视图注意力失效」,这个诊断目前只在作者选定的几个baseline和场景上验证过,training-free意味着复现和迁移验证的成本都很低。",
+      "feasibility": "3DGS前馈渲染本身很轻,开销主要在diffusion增强模块,消费级24GB显卡可跑,全程用公开数据集(Mip-NeRF360/Tanks and Temples等),2-3周。",
+      "route": ["用标准3DGS pipeline在公开场景上复现原论文报告的近景渲染失效现象", "复现MACRO的多平面注意力模块并验证是否修复了该失效", "换另一个不同的diffusion增强baseline(而非原论文用的那个),测试尺度失配这个根因诊断是否同样成立", "在更极端的近景倍率下测试方法的失效边界", "开源复现代码和跨baseline对比结果"],
+      "risk": "原论文若未开源具体实现,复现多平面注意力模块的细节需要合理猜测;换成不同diffusion baseline之后失效模式可能不完全一致,需要谨慎判断是同一个根因还是新问题。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "把「三种深伪检测范式从没被放在同一协议下比过」这个空缺,做成一个能持续更新的评测工具",
+      "based_on": [{ "title": "VendorBench-100: A Unified Cross-Paradigm Benchmark for Deepfake Image Detection", "url": "https://arxiv.org/abs/2607.06254" }],
+      "why_now": "深伪检测目前商业API、zero-shot VLM、开源检测器三条路线互不打交道,论文本周刚提出统一协议评了36个模型,但只用了100张图的语料库——核心贡献如果只停留在「评了一次」,后续新模型跟不上就会很快过时,做成可持续维护的工具比论文本身更有长期价值。",
+      "feasibility": "纯推理任务不需要训练,开源检测器部分消费级显卡就能跑完,商业API走接口调用(只作参照基线,不作为核心贡献),2-4周出v0.1。",
+      "route": ["复现论文的统一评测协议(MCC为主、ROC-AUC为辅)和输出schema", "扩展开源检测器的覆盖面,收录近半年新出的开源deepfake检测模型", "把语料库从100张扩展到更大规模,加入更多扰动类型(压缩、社交媒体二次编码等)测协议的稳健性", "写一个能持续跑评测、自动更新排行榜到README的脚本", "开源发布,邀请检测器作者提交接入PR"],
+      "risk": "商业API的定价和调用限制会让「持续维护」的评测成本上升;仅100张图的对抗语料库扩展规模后,人工标注/质检工作量容易被低估。"
+    }
+  ]
+}
