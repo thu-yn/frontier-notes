@@ -1,3 +1,13 @@
 {
-  "items": []
+  "items": [
+    {
+      "id": "2026-07-09:papers:71d7272d2f",
+      "date": "2026-07-09",
+      "section": "papers",
+      "domain": "ai",
+      "title": "不用真机器人,靠一段人手动作视频就能生成机器人遥操作训练数据",
+      "url": "https://arxiv.org/abs/2607.06558",
+      "liked_at": "2026-07-09T03:23:08.709Z"
+    }
+  ]
 }
