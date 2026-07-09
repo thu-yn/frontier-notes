@@ -1,6 +1,15 @@
 {
   "items": [
     {
+      "id": "2026-07-09:papers:eb9cc52089",
+      "date": "2026-07-09",
+      "section": "papers",
+      "domain": "ai",
+      "title": "用RGB+深度+光流同步生成未来场景,机器人操作有了自己的4D世界模型",
+      "url": "https://arxiv.org/abs/2607.06559",
+      "liked_at": "2026-07-09T15:31:14.294Z"
+    },
+    {
       "id": "2026-07-09:papers:71d7272d2f",
       "date": "2026-07-09",
       "section": "papers",
