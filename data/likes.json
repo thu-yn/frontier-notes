@@ -1,6 +1,15 @@
 {
   "items": [
     {
+      "id": "2026-07-09:repos:01e478ba12",
+      "date": "2026-07-09",
+      "section": "repos",
+      "domain": "ai",
+      "title": "mvanhorn/last30days-skill",
+      "url": "https://github.com/mvanhorn/last30days-skill",
+      "liked_at": "2026-07-09T15:44:31.888Z"
+    },
+    {
       "id": "2026-07-09:papers:142a5763eb",
       "date": "2026-07-09",
       "section": "papers",
