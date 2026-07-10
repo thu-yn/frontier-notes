@@ -1,307 +1,354 @@
 {
   "date": "2026-07-10",
-  "editor_note": "今天HF榜单被灵犀(LingBot)一家占了两个位置——MoE视频预训练LingBot-Video和无限时长的交互世界模型LingBot-World 2.0同一天挂出来,配合SciReasoner这种科学结构推理基础模型冲到当日第一(74票),AI在往「更懂物理世界」和「更懂科学证据」这两头使劲的势头挺明显。今天还凑巧撞上两篇专门拆台的论文:一篇拿半经典分析证明QAOA在自旋玻璃优化上没体现出量子优势,一篇横评23个机器学习原子势发现SOTA模型比轻量款只多3-5meV/atom精度、吞吐量却差出几个数量级——都是给「越大越好」这类默认假设泼冷水的实证工作。OpenAI这边是信息量爆炸的一天:GPT-5.6终于拿到政府绿灯公开发布,顺带关停了不到一岁的Atlas浏览器,二号人物Fidji Simo又因病卸任全职工作,纽约时报还指控它在版权诉讼里藏证据,一天塞进四条大新闻不算夸张。embodied这边最扎眼的是外科医生遥操作人形机器人完成全球首例活猪手术,跟今天arXiv里那篇「训练无关agent接管VLA失败步骤」的Harness VLA放一起看,「让机器人在陌生场景不翻车」这件事正从算法和硬件两条线一起推进。GitHub trending这两天真没什么新面孔,倒是addyosmani/agent-skills和iOfficeAI/OfficeCLI这两个前两天报过的仓库涨速比首发时还猛,agent技能包和文档自动化这两条赛道看着还在加速,不是退烧。",
+  "editor_note": "今天最抓眼的其实不是 OpenAI 发 GPT-5.6 和 ChatGPT Work——那更像意料之中的年度更新,连上线不到一年的 Atlas 浏览器都顺手关了——而是一条隐线:算力和内存的经济账正在重画产业格局。RIKEN 的 Matsuoka 那篇 2026–2030 情景分析,把 HBM 涨价、开源前沿模型(GLM-5.2)、KV-cache 近香农极限压缩、Meta/xAI 下场卖算力四股力量摆一起算账,结论挺冷:靠折旧输送,新入场者和巨头的成本差到 2030 都合不上。巧的是今天 Meta 官宣自研 AI 芯片 9 月投产、英伟达被 TechCrunch 说成「自己造出的算力市场的受害者」,连那篇拿下 8 票的 SAO(单轨迹异步 RL)背后就是 750B 的开源 GLM-5.2——省算力这条主线今天从论文一路串到新闻。具身这边两条硬新闻都很实:外科医生遥控人形机器人给活猪做了世界首例手术,中国长征十号B 回收一子级、成了第二个做到的国家。要我挑一篇点开,是清华的 Vidu S1,消费级显卡上 42FPS、语音随时插话改画面,demo 直接能玩——这种「能上手」的东西,比刷榜的模型更让人有兴致。",
   "papers": [
     {
       "domain": "ai",
-      "title": "Accurate, Interdisciplinary and Transparent Structure-property Understanding with Deep Native Structural Reasoning",
-      "title_zh": "把蛋白质、小分子、晶体的结构都当「证据」来推理,这个科学基础模型说得出理由",
-      "url": "https://arxiv.org/abs/2607.07708",
-      "hf_url": "https://huggingface.co/papers/2607.07708",
-      "authors": "Chen Tang, Yizhou Wang, Jianyu Wu 等",
-      "upvotes": 74,
-      "one_liner": "结构不再是黑箱输入,而是能被模型指着说「因为这里」的推理证据",
-      "summary_zh": "结构-性质关系是生物、化学、材料科学的底层逻辑,但让AI在结构证据上讲道理、而不是黑箱吐结果,一直是个难题。SciReasoner把蛋白质、小分子、无机晶体的坐标、拓扑、周期连接性统一编码成一套结构感知词表,推理时把结构token当成可指认的证据单元来用。效果上挺扎实:低同源蛋白的功能注释F值从0.42提到0.55,逆合成准确率从0.63提到0.72,86个基准里67个刷到SOTA,双盲专家评审里推理过程98%的时候不输甚至打平顶级LLM。跨学科基础模型一抓一大把,但把「结构可解释」做到这个程度、还拿真实科学任务验证过的,确实不多见。",
-      "tags": ["科学基础模型", "结构推理", "多模态"]
-    },
-    {
-      "domain": "ai",
       "title": "Vidu S1: A Real-Time Interactive Video Generation Model",
-      "title_zh": "语音实时打断、无限时长不崩坏,这个视频生成模型能被你「聊」着改",
+      "title_zh": "Vidu S1:消费级显卡上实时、可语音打断的交互式视频生成",
       "url": "https://arxiv.org/abs/2607.03118",
       "hf_url": "https://huggingface.co/papers/2607.03118",
-      "authors": "Jintao Zhang, Kai Jiang, Jintao Chen 等",
-      "upvotes": 68,
-      "one_liner": "540p、42FPS,消费级GPU上跑,还能随时用语音打断改剧情",
-      "summary_zh": "现在的视频生成大多是一次性的——给个prompt等它吐一段,没法中途插手。Vidu S1做的是实时交互:用户随时用语音指令介入,控制接下来生成的内容,底层TurboDiffusion加TurboServe这套工程栈保证普通消费级GPU也能跑到540p、42FPS,还号称支持无限时长生成不模糊不漂移。能上传真人、二次元、宠物的自定义图片,配不同音色做个性化角色,更像是把生成做成了一个能实时对话的产品而不是一次性工具。有在线demo能直接玩,工程完成度看着挺高,长期稳定性(比如几十分钟连续生成会不会攒误差)还得实测验证。",
-      "tags": ["视频生成", "实时交互", "语音控制"]
+      "authors": "Jintao Zhang、Kai Jiang、Jintao Chen 等",
+      "affiliation": "清华大学",
+      "upvotes": 88,
+      "one_liner": "消费级显卡 42FPS、语音随时插话改画面,实时视频生成第一次像在玩直播",
+      "summary_zh": "清华团队做的实时交互式视频生成:上传一张真人/动漫/宠物的图,用语音随时下指令改内容,模型能无限时长往下生成还不糊、不漂移。靠自研的 TurboDiffusion+TurboServe,普通消费级 GPU 上能跑到 540p、42FPS。指标上号称全面最好,但真正的看点是「实时+可打断」这套交互,而不是画质本身——有在线 demo 直接能试,这比多数只放论文的工作诚意足。",
+      "tags": ["视频生成", "实时推理", "扩散模型"]
     },
     {
-      "domain": "ai",
+      "domain": "ai4s",
+      "title": "Accurate, Interdisciplinary and Transparent Structure-property Understanding with Deep Native Structural Reasoning",
+      "title_zh": "SciReasoner:把蛋白/分子/晶体的结构离散成「可寻址证据」,做有据可查的科学推理",
+      "url": "https://arxiv.org/abs/2607.07708",
+      "hf_url": "https://huggingface.co/papers/2607.07708",
+      "authors": "Chen Tang、Yizhou Wang、Jianyu Wu 等",
+      "affiliation": "上海AI实验室",
+      "upvotes": 76,
+      "one_liner": "把蛋白质、小分子、晶体的结构离散成一套「可寻址证据」,让科学推理有据可查",
+      "summary_zh": "上海AI实验室的多模态科学基座模型,想解决一个老问题:AI 做结构-性质预测时,既要保住领域原生的结构信息,又要说清楚是哪条结构证据支撑了结论。做法是把坐标、拓扑、周期连接统一离散成「结构 token」,推理时当成一个个可引用的证据单元。效果上在低同源蛋白的 GO 注释、单步逆合成、材料能带区分上都有实打实的提升,86 个 benchmark 里 67 个 SOTA,双盲专家评审说它的推理链在 98% 情况下不输前沿大模型。把结构做成「可检查的推理底座」这个方向挺对路,就看它开不开权重了。",
+      "tags": ["科学基座模型", "多模态", "结构推理"]
+    },
+    {
+      "domain": "embodied",
       "title": "Dual Latent Memory in Vision-Language-Action Models for Robotic Manipulation",
-      "title_zh": "VLA的记忆一直被晾在推理主干之外,这篇把历史经验直接编织进同一个隐空间",
+      "title_zh": "LaMem-VLA:把历史经验压成潜空间记忆 token,直接织进 VLA 的推理里",
       "url": "https://arxiv.org/abs/2607.07608",
       "hf_url": "https://huggingface.co/papers/2607.07608",
-      "authors": "Hongyu Qu, Jianzhe Gao, Xiaobin Hu 等",
-      "upvotes": 46,
-      "one_liner": "记忆不再是外挂的检索库,而是跟当前观察拼在一条embedding序列里一起推理",
-      "summary_zh": "主流VLA模型基本是看当下、做当下的马尔可夫式决策,长程、依赖历史的任务天然吃亏;就算有记忆增强方案,也大多把历史经验当外部检索结果拼进prompt,记忆本身游离在VLA的原生推理空间之外。LaMem-VLA换了个做法:用curator把历史经验存成短期/长期两个记忆库,seeker按当前多模态状态去两个库里查,condenser把查到的证据压缩成隐向量token,weaver再把这些token和当前观察、指令织成一条连续的embedding序列一起推理。在SimplerEnv和LIBERO上的实验证明这套记忆原生参与推理的方案比外挂检索确实管用。四个组件拆得挺细,工程复杂度不低,但把记忆和动作生成拧在同一个隐空间里这个设计思路值得记一笔。",
-      "tags": ["VLA", "记忆机制", "机器人操作"]
+      "authors": "Hongyu Qu、Jianzhe Gao、Xiaobin Hu 等",
+      "upvotes": 48,
+      "one_liner": "把历史经验压成潜空间记忆 token,直接织进 VLA 的推理里,而不是挂在外面当上下文",
+      "summary_zh": "主流 VLA(视觉-语言-动作模型)大多按马尔可夫假设只看当前观测,长时序任务容易翻车。已有的记忆增强要么硬扩观测窗口,要么从记忆库检索历史当「策略侧的旁挂上下文」,问题是记忆始终在 VLA 原生的潜空间之外,没法和多模态推理真正交融。这篇把历史重建成潜空间记忆 token(分短期/长期两个库,配 curator/seeker/condenser/weaver 四件套),让记忆在同一个连续潜空间里参与推理和动作生成。在 SimplerEnv 和 LIBERO 上验证有效——思路比「扩窗口」干净,不过仍以仿真为主,真机能不能扛住得再看。",
+      "tags": ["VLA", "机器人操作", "记忆机制"]
     },
     {
-      "domain": "ai",
+      "domain": "embodied",
       "title": "Scaling Mixture-of-Experts Video Pretraining for Embodied Intelligence",
-      "title_zh": "视频生成模型拿来做机器人不趁手,这个团队从头训了一个专门伺候具身智能的版本",
+      "title_zh": "LingBot-Video:第一个为「物理靠谱」而非「画面好看」训练的开源 MoE 视频基座",
       "url": "https://arxiv.org/abs/2607.07675",
       "hf_url": "https://huggingface.co/papers/2607.07675",
-      "authors": "Shuailei Ma, Jiaqi Liao, Xinyang Wang 等",
+      "authors": "Shuailei Ma、Jiaqi Liao、Xinyang Wang 等",
+      "affiliation": "Robbyant",
       "upvotes": 40,
-      "one_liner": "MoE架构从头训练,还是首个大规模开源的MoE视频基础模型",
-      "summary_zh": "现成的视频生成模型是给内容创作用的,天然重视觉效果和创意、轻计算效率和物理真实性,直接拿来做机器人视频预测水土不服。LingBot-Video从架构、数据、训练三头下手重新设计:用MoE代替dense架构从零训练,在容量和推理效率之间找平衡;数据上专门构建了一套画像引擎,把互联网视频和大量机器人视角的操作、导航、第一人称录像混在一起喂;训练上加了一套多维度奖励系统,专门约束物理合理性和任务完成度,而不只看画面好不好看。作为社区第一个开源的大规模MoE视频基础模型,算是给数字创意和物理执行这两条线拉了根桥,具体能不能打平专用视频预测模型还得看下游任务验证。",
-      "tags": ["MoE", "视频预训练", "具身智能"]
+      "one_liner": "第一个开源的 MoE 视频基座,专门为「物理靠谱」而不是「画面好看」训练",
+      "summary_zh": "Robbyant 把视频生成模型往具身智能这边掰:普通视频模型为内容创作服务,偏好视觉保真和创意,恰恰不管计算效率和物理真实。LingBot-Video 用 MoE(混合专家)而非稠密架构从头 scale,在建模能力和推理效率间找平衡;数据上给互联网视频掺进大量机器人操作/导航/第一视角素材;训练时加了一套多维奖励专门约束物理合理性和任务完成度,而不只是美学和运动一致性。它自称是第一个大规模开源的 MoE 视频基座——「数字创意」和「物理执行」之间搭桥,开源出来比 demo 有意义。",
+      "tags": ["视频基座", "MoE", "具身智能"]
     },
     {
       "domain": "ai",
-      "title": "Video-Oasis: Rethinking Evaluation of Video Understanding",
-      "title_zh": "55%的视频理解题不用看视频也能蒙对,这篇专门来拆现有benchmark的台",
-      "url": "https://arxiv.org/abs/2603.29616",
-      "hf_url": "https://huggingface.co/papers/2603.29616",
-      "authors": "Geuntaek Lim, Sungjune Park, Jaeyun Lee 等",
-      "upvotes": 33,
-      "one_liner": "先审计现有benchmark有多少题是「视觉捷径」,再看模型到底剩多少真本事",
-      "summary_zh": "Video-LLM的benchmark分数到底是靠看懂了视频,还是靠语言先验和知识蒙对的,一直说不清楚。Video-Oasis不是又造一个新benchmark,而是先做一套诊断工具去审计现有benchmark,结果发现55%的样本不需要视觉输入或时序信息就能解出来。把这些捷径题过滤掉之后,剩下真正需要视频理解的题目上,顶尖模型的表现只比瞎猜好一点点,能力缺口一下就露出来了。团队还拿这套过滤后的题目当测试床,反过来分析哪些架构设计选择真的有助于稳健的视频理解。这种先审计评测本身的工作比再堆一个新benchmark更戳中要害,前提是社区愿意采纳这套诊断标准而不是继续刷老榜。",
-      "tags": ["视频理解", "基准评测", "评测方法论"]
-    },
-    {
-      "domain": "ai",
-      "title": "Infinite Worlds with Versatile Interactions",
-      "title_zh": "无限时长互动世界模型升级,还第一次塞进了「导演agent」",
-      "url": "https://arxiv.org/abs/2607.07534",
-      "hf_url": "https://huggingface.co/papers/2607.07534",
-      "authors": "Zelin Gao, Qiuyu Wang, Jiapeng Zhu 等",
+      "title": "LLM-as-a-Tutor: Policy-Aware Prompt Adaptation for Non-Verifiable RL",
+      "title_zh": "LLM 当家教:RL 训练里别只改评分标准,把题目也随模型能力一起加难",
+      "url": "https://arxiv.org/abs/2607.04412",
+      "hf_url": "https://huggingface.co/papers/2607.04412",
+      "authors": "Yujin Kim、Namgyu Ho、Sangmin Hwang 等",
+      "affiliation": "KAIST",
       "upvotes": 22,
-      "one_liner": "14B主模型配1.3B轻量版,单卡就能部署,还支持多人同时进同一个世界",
-      "summary_zh": "LingBot-World 2.0在前代基础上做了四处升级:靠精心设计的因果预训练范式做到交互时长无上限还不掉质量;从基础模型蒸馏出实时版本,能拉着720p视频流跑到60帧;交互动作品类更丰富(攻击、射箭、施法……)配上更多文本驱动的事件;最有意思的是引入了agent化分工——pilot agent负责规划和执行角色行为,director agent负责随剧情推进合成新的环境元素。团队还配了个多人同屏的接口,让几个人能同时泡在同一个世界模拟器里。14B主模型之外配了个1.3B轻量版方便单卡部署,工程上诚意十足,但导演agent决定剧情走向这套东西是不是真的可控、会不会一本正经生成奇怪剧情,demo之外的长时段测试更能说明问题。",
-      "tags": ["世界模型", "交互式生成", "智能体"]
+      "one_liner": "RL 训练里别只改评分标准,把题目也随模型能力一起加难",
+      "summary_zh": "非可验证指令跟随的 RL,现在普遍用 LLM 当裁判、按题目定制 rubric 打分。这篇 KAIST 的工作点出一个被忽略的轴:rubric 会随策略进化调整,但训练题目本身是从固定语料里抽的、一直不变,导致题目难度和模型能力错位——题目太简单时,几条 rollout 之间拉不开质量差,裁判就给不出有区分度的奖励。他们让同一个模型既当「考官」(两两比 rollout 找出不够难的题),又当「出题人」(只往题目上追加原子约束、只加不改),难度就随能力单调往上走,不用外部难度表。三个指令跟随 benchmark 上稳定超过不感知策略、以及只改 rubric 的方法。",
+      "tags": ["强化学习", "指令跟随", "LLM裁判"]
+    },
+    {
+      "domain": "ai",
+      "title": "Ideas Have Genomes: Benchmarking Scientific Lineage Reasoning and Lineage-Grounded Idea Generation",
+      "title_zh": "IdeaGene-Bench:把科研 idea 当基因组,考 AI 能不能追溯它继承了谁、变异了什么",
+      "url": "https://arxiv.org/abs/2607.08758",
+      "hf_url": "https://huggingface.co/papers/2607.08758",
+      "authors": "Yifan Zhou、Qihao Yang、Yan Li 等",
+      "affiliation": "上海交大",
+      "upvotes": 17,
+      "one_liner": "把科研 idea 当基因组:能追溯它继承了谁、变异了什么,现在的 AI 科学家还不太会",
+      "summary_zh": "科学 idea 很少凭空来,多是继承机制、修补前作缺陷、重组旧零件——像生物基因组一样有谱系。这篇上海交大的 IG-Bench 把每篇论文表示成一组最小、带类型、有证据支撑的「Idea Genome」对象,用 GenomeDiff 记录继承、变异、丢失、外部引入、新插入,覆盖 10 个学科、近 2000 条谱系。结果挺打脸:最强的系统在谱系推理上只有 27.3% 的精确率,而且给了谱系上下文后各系统排名会重排、并非人人受益。这暴露了 AI 做科研创意时的组合推理短板——想让模型「站在巨人肩上」,先得让它看懂巨人是谁。",
+      "tags": ["科学发现", "Benchmark", "推理"]
+    },
+    {
+      "domain": "ai",
+      "title": "Single-Rollout Asynchronous Optimization for Agentic Reinforcement Learning",
+      "title_zh": "SAO:异步 RL 里每个 prompt 只跑一条 rollout,反而更稳——GLM-5.2 就是这么练的",
+      "url": "https://arxiv.org/abs/2607.07508",
+      "hf_url": "https://huggingface.co/papers/2607.07508",
+      "authors": "Zhenyu Hou、Yujiang Li、Jie Tang 等",
+      "affiliation": "Z.ai(智谱)",
+      "upvotes": 8,
+      "one_liner": "异步 RL 里每个 prompt 只跑一条 rollout,反而更稳——GLM-5.2 就是这么练的",
+      "summary_zh": "异步 RL(rollout 到了就更新)对长时序 agentic 任务效率高,但稳定性和有效性一直没人细究,尤其 GRPO 那套组内采样和异步天生不合。智谱这篇 SAO 干脆把组内采样换成「每个 prompt 单条 rollout」,配上价值模型训练设计和严格的双侧 token 级裁剪来稳住优化,能连稳跑一千步,在 SWE-Bench Verified、BeyondAIME、IMOAnswerBench 上超过 GRPO 及变体。更实在的是它已经用在开源 GLM-5.2(750B-A40B)的 agentic RL 流水线里——单 rollout 在模拟在线学习(环境会变)时尤其吃香。",
+      "tags": ["强化学习", "Agent", "训练系统"]
     },
     {
       "domain": "embodied",
-      "title": "DexVerse: A Modular Benchmark for Multi-Task, Multi-Embodiment Dexterous Manipulation",
-      "title_zh": "灵巧手benchmark又多一个,这次把任务、感知条件、机器人本体三个维度都做成可控变量",
-      "url": "https://arxiv.org/abs/2607.08751v1",
-      "authors": "Yunchao Yao, Zhuxiu Xu, Tianqi Zhang 等",
-      "one_liner": "100个任务、多种具身形态、可控视觉扰动,专门用来测跨任务跨本体的泛化能力",
-      "summary_zh": "通用灵巧操作策略要评测得系统,不能只看孤立任务——现有benchmark普遍在任务多样性、具身覆盖、视觉可控变化这几个维度上偏窄,很难研究跨任务、跨本体的泛化。DexVerse做的是一个大规模、模块化的灵巧操作benchmark,涵盖抓取搬运、铰接物体交互、工具使用、双手协作等一大批技能类型的100个任务。这类benchmark本身不解决算法问题,但没有统一的评测尺子,泛化能力就只能各说各话——DexVerse这种把变量拆开、能做受控对比的评测基础设施,价值往往在后续被大量引用时才真正显现。",
-      "tags": ["灵巧操作", "基准测试", "跨本体泛化"]
+      "title": "RoboDojo: A Unified Sim-and-Real Benchmark for Comprehensive Evaluation of Generalist Robot Manipulation Policies",
+      "title_zh": "RoboDojo:仿真+真机一体、还能云端复现的通用机器人操作评测擂台",
+      "url": "https://arxiv.org/abs/2607.04434",
+      "hf_url": "https://huggingface.co/papers/2607.04434",
+      "authors": "Tianxing Chen、Yue Chen、Zixuan Li 等",
+      "upvotes": 8,
+      "one_liner": "机器人操作策略终于有了一个「仿真+真机」都跑、还能云端复现的统一擂台",
+      "summary_zh": "通用机器人操作策略进展快,但 benchmark 一直短板:要么任务太短太窄,要么只在仿真或只在真机跑、难复现。RoboDojo 一口气给了 42 个仿真任务+18 个真机任务,仿真侧考泛化、记忆、精度、长时序、开放词表指令五个维度,真机侧用一套标准化硬件+场景复位+远程云访问(RoboDojo-RealEval)让真机评测也能复现。他们把 30 个策略接进来跑出公开榜单。「仿真-真机一体、云端可复现」这个基础设施价值,可能比多加几个任务更重要。",
+      "tags": ["机器人操作", "Benchmark", "Sim2Real"]
     },
     {
-      "domain": "embodied",
-      "title": "Harness VLA: Steering Frozen VLAs into Reliable Manipulation Primitives via Memory-Guided Agents",
-      "title_zh": "VLA一遇到没见过的场景就抓瞎,这篇干脆让LLM agent带着记忆去帮它兜底",
-      "url": "https://arxiv.org/abs/2607.08448v1",
-      "authors": "Yixian Zhang, Huanming Zhang, Feng Gao 等",
-      "one_liner": "不用重新训练VLA,agent接管失败步骤,把语义推理和精细操控分工做好",
-      "summary_zh": "端到端VLA模型局部视觉运动控制能力强,但都是在分布内的任务轨迹上训出来的,一遇到语义重定位、目标重新绑定、空间布局变化这类部署时的扰动就容易翻车;而LLM coding agent擅长语义和组合推理,但纯靠解析式的操作原语又搞不定不规则抓取、受限摆放这些精细活。Harness VLA的思路是各扬所长:用一个带记忆的agent框架去调度冻结不动的VLA,agent负责语义推理和任务分解,VLA负责执行具体的操控原语,记忆机制帮agent记住哪些策略在类似场景下管用。不用给VLA做任何微调就能提升部署鲁棒性,这种靠外部agent补台而不是重训底座的思路复现成本低,换个VLA底座测试是否一样好使是个现成的低风险扩展方向。",
-      "tags": ["VLA", "训练无关", "智能体框架"]
-    },
-    {
-      "domain": "bio",
-      "title": "UMA-Inverse: Ligand-Conditioned Protein Inverse Folding with a Distogram-Supervised Dense Pair Encoder",
-      "title_zh": "给蛋白质逆折叠模型换个「稠密」的骨架,330万参数就打平了更大的LigandMPNN",
-      "url": "https://arxiv.org/abs/2607.07866v1",
-      "authors": "William Sobolewski",
-      "one_liner": "把稀疏图换成稠密pair encoder,配体条件下的界面恢复率做到56%",
-      "summary_zh": "设计能结合特定配体的蛋白序列,需要逆折叠模型把配体的完整几何信息用起来。UMA-Inverse把LigandMPNN那种稀疏图骨架换成了稠密的pair表征编码器——六层PairMixer反复精化残基-残基、残基-配体原子对,再用一个distogram辅助目标监督,解码器通过学到的位置特异性读出去attend配体原子。模型只有大约330万参数,在LigandMPNN的测试集上做到56.1%/55.1%/35.3%的界面恢复率,量级不大但成绩不寒碜。稠密表征换稀疏图这个架构选择在蛋白设计这个方向上不算新招,但落到这么小的参数量还能打平,工程价值挺实在。",
-      "tags": ["蛋白质设计", "逆折叠", "配体结合"]
-    },
-    {
-      "domain": "chip",
-      "title": "Memory Scarcity, Open Models, and the Restructuring of the AI Industry, 2026-2030",
-      "title_zh": "内存涨价、开源模型追上来,这篇用美元/PB带宽给AI产业2026-2030算了笔账",
-      "url": "https://arxiv.org/abs/2607.07207v1",
-      "authors": "Satoshi Matsuoka",
-      "one_liner": "「后来者永远追不上」不是危言耸听,是DRAM涨价周期下折旧曲线算出来的结论",
-      "summary_zh": "这篇分析2026-2030年重塑AI产业格局的四股力量:DRAM/HBM涨价、GLM-5.2这类前沿级开源权重模型、KV cache压缩逼近香农极限带来的推理效率跃升,以及Meta和xAI下场转卖算力。作者用「每PB带宽交付成本」(美元/PB)这个跟具体模型无关、只盯带宽瓶颈解码环节的指标来算账,结论是后来者和先行者的成本差距不会缩小——已经折旧完的机队像传送带一样持续供货给在位者,2026年是3.2倍差距,2027年收窄到1.9倍,2029-2030年又重新拉开到3-4倍。硬件涨价周期里,先囤到便宜算力的人靠折旧曲线躺着扩大优势,这个视角比单纯讨论谁的模型更强更接近产业真实博弈。",
-      "tags": ["AI产业", "算力经济学", "存储涨价"]
+      "domain": "ai",
+      "title": "Sparse Delta Memory: Scaling the State of Linear RNNs through Sparsity",
+      "title_zh": "Sparse Delta Memory:给线性注意力的状态做稀疏寻址,容量涨几个数量级、FLOPs 不跟着涨",
+      "url": "https://arxiv.org/abs/2607.07386",
+      "hf_url": "https://huggingface.co/papers/2607.07386",
+      "authors": "Loïc Cabannes、Pierre-Emmanuel Mazaré、Gergely Szilvasy 等",
+      "affiliation": "Meta AI",
+      "upvotes": 6,
+      "one_liner": "给线性注意力的状态做稀疏寻址,容量涨几个数量级、FLOPs 不跟着涨",
+      "summary_zh": "线性注意力状态大小固定、每 token 计算量固定,代价是长上下文召回打不过 softmax transformer;直接放大状态能改善召回,但 FLOPs 也水涨船高。Meta 这篇 SDM 在 Gated DeltaNet 基础上,把稠密的 key-value 外积换成对一块大显式记忆的稀疏读写,等 FLOPs、同参数下把隐状态容量抬高几个数量级,in-context learning 和长上下文检索都明显变好。再把 SDM 记忆的初始状态学出来当参数化记忆,常识和推理任务也一并受益。给线性 RNN 补召回短板的一条务实路子。",
+      "tags": ["线性注意力", "长上下文", "高效架构"]
     },
     {
       "domain": "ai4s",
       "title": "Are Machine Learning Interatomic Potentials Truly Practical? A Benchmark of 23 Mainstream Models",
-      "title_zh": "23个主流机器学习原子势放一起测,SOTA模型的精度提升可能不值当那点吞吐损失",
-      "url": "https://arxiv.org/abs/2607.07647v1",
-      "authors": "Hanwen Kang, Tenglong Lu, Sheng Meng 等",
-      "one_liner": "大模型只比轻量模型准3-5meV/atom,吞吐量却能差出几个数量级",
-      "summary_zh": "机器学习原子间势(MLIP)的benchmark大多只看静态精度,不管推理效率和硬件可扩展性,结果就是模型越堆越大、实际能用的价值反而说不清楚。这篇在一台低成本的NVIDIA DGX Spark上(128GB内存但限制到80GB模拟普通实验室硬件),用统一的ASE pipeline在固定192原子体系上跑了23个主流开源MLIP,从预测精度、MD模拟吞吐、原子尺度可扩展性三个维度横评。结果是精度-效率的权衡相当扎眼:大型SOTA模型比轻量模型只多出3-5meV/atom的精度,吞吐量却能差出几个数量级,最差情况下大模型的实际收益已经边际到可以忽略。跟着精度榜单卷参数量这件事,这篇算是当头浇了盆冷水。",
-      "tags": ["机器学习原子势", "基准评测", "推理效率"]
+      "title_zh": "机器学习原子间势真能落地吗?23 个主流模型的一次「算总账」评测",
+      "url": "https://arxiv.org/abs/2607.07647",
+      "authors": "Hanwen Kang、Tenglong Lu、Sheng Meng 等",
+      "one_liner": "23 个机器学习势能模型放一张普通显卡上跑:大模型多的那 3-5 meV/atom 精度,吞吐可能掉几个数量级",
+      "summary_zh": "机器学习原子间势(MLIP,用神经网络替代第一性原理算原子受力)的 benchmark 大多只奖励静态精度,不管推理效率和硬件可扩展性,结果模型越堆越大、实际价值不明。这篇把 23 个主流开源 MLIP 放到一台低成本 DGX Spark(显存压到 80GB 模拟普通实验室机器)上,固定 192 原子体系、统一 ASE 流水线,同时量精度、MD 吞吐、原子规模可扩展性。结论很直白:SOTA 大模型比轻量模型也就多 3-5 meV/atom 精度,吞吐却可能差几个数量级。对真要跑分子动力学的人来说,这种「算总账」的评测比刷精度榜有用得多。",
+      "tags": ["机器学习势", "分子动力学", "Benchmark"]
     },
     {
-      "domain": "quantum",
-      "title": "Absence of quantum advantage for approximate spin glass optimization",
-      "title_zh": "QAOA在SK自旋玻璃模型上被半经典算法打平,量子优势这次没体现出来",
-      "url": "https://arxiv.org/abs/2607.08708v1",
-      "authors": "Dries Sels, Flaviano Morone",
-      "one_liner": "固定住已知最优的量子参数,经典的半经典近似还能追上甚至反超",
-      "summary_zh": "QAOA一直被寄望于在组合优化问题上体现量子优势,这篇拿Sherrington-Kirkpatrick自旋玻璃模型做了个半经典分析:用截断Wigner近似模拟大自旋S极限下的QAOA表现,固定住此前研究给出的S=1/2最优角度参数。结果发现最终能量对自旋S呈非单调依赖——S太小时被噪声主导,S太大又被初始涨落的指数增长限制,深度为p的QAOA在S约等于p时达到最优平衡,能量收敛到Parisi值的速度是log(p)/p。更扎心的是,半经典近似的表现还略微超过了真实的自旋系统。给量子优化算法泼冷水的论文不算多,这种拿严谨半经典分析来对照的拆台工作,对搞清楚QAOA的真实能力边界挺有价值。",
-      "tags": ["QAOA", "量子优化", "自旋玻璃"]
+      "domain": "bio",
+      "title": "UMA-Inverse: Ligand-Conditioned Protein Inverse Folding with a Distogram-Supervised Dense Pair Encoder",
+      "title_zh": "UMA-Inverse:3.3M 参数的配体条件反向折叠,用密集 pair 表征换掉 LigandMPNN 的稀疏图",
+      "url": "https://arxiv.org/abs/2607.07866",
+      "authors": "William Sobolewski",
+      "one_liner": "3.3M 参数的配体条件反向折叠,拿密集 pair 表征把 LigandMPNN 的稀疏图换掉",
+      "summary_zh": "设计能结合特定配体的蛋白序列,需要一个吃完整配体几何、做反向折叠(从结构反推序列)的模型。UMA-Inverse 把 LigandMPNN 的稀疏图骨架换成密集的 pair 表征编码器:六层 PairMixer 用三角乘法精修所有残基-残基、残基-配体原子对,再加一个 distogram 辅助监督,解码器通过学到的位置相关读出去 attend 配体原子。模型只有约 330 万参数,却在 LigandMPNN 测试集上把界面回收率做到 56.1%/55.1%/35.3%。单作者、参数极小,想复现或接着改的门槛都很低——蛋白设计里「小而准」的一个好例子。",
+      "tags": ["蛋白质设计", "反向折叠", "配体结合"]
+    },
+    {
+      "domain": "chip",
+      "title": "Memory Scarcity, Open Models, and the Restructuring of the AI Industry, 2026-2030",
+      "title_zh": "内存稀缺、开源模型与 AI 产业重构 2026–2030:把四股力量算进一张账",
+      "url": "https://arxiv.org/abs/2607.07207",
+      "authors": "Satoshi Matsuoka",
+      "affiliation": "RIKEN",
+      "one_liner": "把 HBM 涨价、开源前沿模型、KV-cache 压缩、巨头卖算力算进一张账:成本差到 2030 都合不上",
+      "summary_zh": "RIKEN 的 Matsuoka 做的 2026–2030 产业情景分析,把四股力量放一起量化:DRAM/HBM 价格暴涨、前沿级开源权重模型(GLM-5.2)、推理效率飞涨(近香农极限的 KV-cache 压缩、轻量本地运行时),以及 Meta/xAI 拿涨价前买的机队下场转卖算力。他用「每 PB 带宽多少美元」这个对带宽瓶颈解码更中性的口径算账,结论是新入场者和巨头的成本差从没真正收敛:折旧输送让巨头拿到新摊销机队的速度,比硬件降价还快(2026 年 3.2 倍、2027 年 1.9 倍,到 2029-30 又重新拉到 3-4 倍)。观点性很强、当参考模型看,但把内存经济学摆到台面上这件事本身就值得一读。",
+      "tags": ["算力经济", "HBM", "开源模型"]
     }
   ],
   "repos": [
     {
       "domain": "ai",
-      "name": "anthropics/claude-cookbooks",
-      "url": "https://github.com/anthropics/claude-cookbooks",
-      "language": "Jupyter Notebook",
-      "stars": 47276,
-      "stars_today": "194",
-      "one_liner": "Anthropic官方出品的Claude使用手册,一堆能直接跑的notebook示例",
-      "summary_zh": "Anthropic官方维护的一套notebook合集,展示怎么把Claude用得更巧——从基础调用到复杂的agent、RAG、工具调用场景都有现成示例。跟社区攒的教程比,官方背书的好处是不用担心示例过时或踩坑,想系统学怎么调Claude API的人可以直接抄作业。"
-    },
-    {
-      "domain": "ai",
-      "name": "vxcontrol/pentagi",
-      "url": "https://github.com/vxcontrol/pentagi",
-      "language": "Go",
-      "stars": 19585,
-      "stars_today": "535",
-      "one_liner": "全自主AI agent系统,专门干渗透测试这种需要多步骤推理的活",
-      "summary_zh": "一套定位为完全自主的AI agent系统,目标是让agent自己规划、执行复杂的渗透测试任务,而不是当个辅助工具。渗透测试本身就需要多步骤推理、根据环境反馈调整策略,是agent能力的一块硬骨头,这类项目值得授权测试和安全研究团队关注,但也得提防被拿去干坏事。"
-    },
-    {
-      "domain": "ai",
-      "name": "unclecode/crawl4ai",
-      "url": "https://github.com/unclecode/crawl4ai",
-      "language": "Python",
-      "stars": 71977,
-      "stars_today": "215",
-      "one_liner": "专给LLM用的网页爬虫,爬完直接吐干净的Markdown",
-      "summary_zh": "开源网页爬虫/抓取工具,主打对LLM友好——抓下来的内容直接整理成干净的Markdown或结构化数据,省掉后续自己写清洗逻辑的功夫。RAG、agent联网这类场景天天要处理网页,这种专门优化过输出格式的爬虫算是个基础设施刚需。"
-    },
-    {
-      "domain": "ai",
       "name": "addyosmani/agent-skills",
       "url": "https://github.com/addyosmani/agent-skills",
       "language": "JavaScript",
-      "stars": 76138,
-      "stars_today": "2,554",
-      "one_liner": "前Chrome团队工程师做的agent技能包,这几天涨势比刚发布时还猛",
-      "summary_zh": "前Google Chrome团队工程师Addy Osmani做的生产级coding agent技能合集,三天前刚报过一次,当时一天涨1114星;今天单日涨了2554星,比首发时还快。给agent配技能包这条赛道这几天持续升温,这个仓库的加速度算是个信号。"
+      "stars": 76264,
+      "stars_today": "2554",
+      "one_liner": "把工程最佳实践打包成 agent 的「技能包」,Addy Osmani 出品,一天涨两千五百星",
+      "summary_zh": "面向 AI 编码 agent 的一套生产级工程技能集合——把代码审查、调试、重构这类工程套路写成 agent 能直接调用的技能。Addy Osmani(Google Chrome 团队)背书,发布即冲榜。想给自家 coding agent 补「工程素养」的人可以直接拿来抄。"
     },
     {
       "domain": "ai",
       "name": "iOfficeAI/OfficeCLI",
       "url": "https://github.com/iOfficeAI/OfficeCLI",
       "language": "C#",
-      "stars": 13751,
-      "stars_today": "1,929",
-      "one_liner": "不装Office也能读写Word/Excel/PPT的CLI,这两天涨速又翻了一倍多",
-      "summary_zh": "单文件、不依赖安装Office环境的命令行工具,让AI agent直接读取、编辑、自动化操作Word/Excel/PowerPoint文件。两天前报过一次时单日涨802星,今天涨到1929星,文档自动化这个agent工作流里的老短板,看着是真被越来越多人盯上了。"
+      "stars": 13867,
+      "stars_today": "1929",
+      "one_liner": "不装 Office 也能让 AI 读写 Word/Excel/PPT,单文件二进制",
+      "summary_zh": "专门给 AI agent 用的 Office 套件:读、改、自动化 Word/Excel/PowerPoint,免装 Office、开源、单个二进制文件。定位是让 agent 处理办公文档这件高频刚需变简单。做办公自动化、文档处理 agent 的人挺实用。"
+    },
+    {
+      "domain": "ai",
+      "name": "wonderwhy-er/DesktopCommanderMCP",
+      "url": "https://github.com/wonderwhy-er/DesktopCommanderMCP",
+      "language": "TypeScript",
+      "stars": 6707,
+      "stars_today": "185",
+      "one_liner": "给 Claude 一套终端+文件系统+diff 编辑能力的 MCP server",
+      "summary_zh": "一个 MCP server,让 Claude 拿到终端控制、文件系统搜索和 diff 式文件编辑能力,相当于把桌面操作权限规范地开放给模型。想让 Claude 直接动手改本地文件、跑命令的可以装它。"
+    },
+    {
+      "domain": "ai",
+      "name": "vxcontrol/pentagi",
+      "url": "https://github.com/vxcontrol/pentagi",
+      "language": "Go",
+      "stars": 6889,
+      "stars_today": "535",
+      "one_liner": "全自动的 AI agent 渗透测试系统,Go 写的",
+      "summary_zh": "一套号称能自主完成复杂渗透测试任务的 AI agent 系统,Go 实现,把侦察、利用、报告这些环节交给多 agent 编排跑。给做安全研究、授权渗透评估的团队当自动化底座——当然只该用在有授权的场景。"
+    },
+    {
+      "domain": "ai",
+      "name": "unclecode/crawl4ai",
+      "url": "https://github.com/unclecode/crawl4ai",
+      "language": "Python",
+      "stars": 72031,
+      "stars_today": "215",
+      "one_liner": "为 LLM 友好而生的开源爬虫,7 万多星的老牌选手今天又上榜",
+      "summary_zh": "开源、专为喂给 LLM 设计的网页爬虫和抓取器,输出干净、结构化、好直接进 RAG/训练管线。7 万多总星,今天又回到 trending。做检索增强、数据管线的基本都绕不开这类工具。"
     },
     {
       "domain": "ai",
       "name": "bradautomates/claude-video",
       "url": "https://github.com/bradautomates/claude-video",
       "language": "Python",
-      "stars": 6846,
+      "stars": 6889,
       "stars_today": "718",
-      "one_liner": "让Claude能「看」视频的小工具,涨势比三天前刚出现时还稳",
-      "summary_zh": "一个/watch命令搞定下载视频、抽帧、转写字幕再喂给Claude的全流程,让Claude具备看视频总结内容的能力。三天前刚报过,当时单日涨539星;今天涨718星,持续被发现和使用,说明给agent配感知能力这类小而实用的工具确实有持续需求。"
+      "one_liner": "一句 /watch 让 Claude 看任意视频:下载、抽帧、转录,全喂给它",
+      "summary_zh": "给 Claude 加「看视频」能力的小工具:/watch 自动下载视频、抽关键帧、转录语音,再把这些一起交给 Claude,用工程手段补上模型原生不支持长视频的短板。想让 Claude 帮你过一遍长视频/会议录像的可以试。"
+    },
+    {
+      "domain": "ai",
+      "name": "kyutai-labs/pocket-tts",
+      "url": "https://github.com/kyutai-labs/pocket-tts",
+      "language": "Python",
+      "stars": 7117,
+      "stars_today": "235",
+      "one_liner": "塞进 CPU(和口袋)的 TTS,Kyutai 出品",
+      "summary_zh": "Kyutai Labs 的语音合成模型,主打小到能在 CPU 上跑、不吃 GPU,走的是端侧、轻量路线,和今天几篇「上消费级设备/端侧推理」的工作一个调子。想在本地或边缘设备做离线 TTS 的可以关注。"
     }
   ],
   "news": [
     {
       "domain": "ai",
-      "title_zh": "GPT-5.6拿到政府「绿灯」正式公开,OpenAI顺带发布企业向的ChatGPT Work",
+      "title_zh": "OpenAI 发布 GPT-5.6 与 ChatGPT Work,拿到政府放行才公开推开",
       "url": "https://www.theverge.com/ai-artificial-intelligence/963464/openai-gpt-5-6-codex-chatgpt-work",
       "source": "The Verge",
-      "summary_zh": "GPT-5.6两周前曾因监管风波只对政府认证机构做限量预览,如今拿到特朗普政府批准正式面向公众开放,Altman称其为「我们做过最好的模型」。同一波发布里OpenAI还带出了企业向新品ChatGPT Work;巧的是微软同一天表态,称GPT-5.6是Copilot 365的首选模型,给两家分手传闻降了降温。"
+      "summary_zh": "OpenAI 推出新一代模型 GPT-5.6,Altman 称是「我们做过最好的模型」,宣称在网络安全等方面都有提升,同时发布面向职场的 ChatGPT Work。此前 GPT-5.6 因监管卡在「限量预览」、只对政府批准的机构开放,这次拿到特朗普政府绿灯才公开推开。新模型也继续作为微软 Copilot 365 的「首选模型」——尽管两家「分手」传闻不断。"
     },
     {
       "domain": "ai",
-      "title_zh": "OpenAI关停不到一岁的Atlas浏览器",
-      "url": "https://www.theverge.com/ai-artificial-intelligence/963654/openai-chatgpt-atlas-ai-browser-shut-down-sunset",
-      "source": "The Verge",
-      "summary_zh": "去年10月才发布的AI浏览器ChatGPT Atlas,不到一年就被官宣日落下线,原本能替用户执行任务的agentic浏览能力会转移到桌面应用和一个Chrome扩展里延续。独立产品线砍掉、能力并回主产品的打法,说明OpenAI对浏览器这个入口本身没那么执着,真正想留住的是agentic browsing这项能力。"
-    },
-    {
-      "domain": "ai",
-      "title_zh": "Fidji Simo因病卸任OpenAI「AGI负责人」全职工作",
-      "url": "https://www.theverge.com/ai-artificial-intelligence/963738/openai-fidji-simo-steps-down-ceo-advisor",
-      "source": "The Verge",
-      "summary_zh": "OpenAI二号人物Fidji Simo从全职的AGI负责人岗位卸任,转为兼职顾问,原因是今年4月披露的神经免疫系统疾病导致的医疗休假比预期更长。这次人事变动发生在OpenAI筹备IPO、同时在企业市场追赶Anthropic的关键节点,留下的领导层空缺不算小。"
-    },
-    {
-      "domain": "ai",
-      "title_zh": "纽约时报称OpenAI在版权诉讼中隐瞒证据",
-      "url": "https://techcrunch.com/2026/07/09/new-york-times-says-openai-hid-evidence-in-chatgpt-copyright-trial/",
+      "title_zh": "OpenAI 关停上线不到一年的 Atlas 浏览器",
+      "url": "https://techcrunch.com/2026/07/09/openai-is-shutting-down-atlas-but-its-ai-browser-ambitions-are-still-growing/",
       "source": "TechCrunch",
-      "summary_zh": "新闻出版商指控OpenAI隐瞒了能识别ChatGPT输出中版权新闻内容的工具和数据集,以此为由提交了新的制裁动议,把这场版权诉讼进一步升级。如果指控坐实,这不只是输赢问题,还可能牵出OpenAI在诉讼中的举证诚信问题。"
+      "summary_zh": "OpenAI 宣布「日落」其 AI 浏览器 Atlas——去年 10 月才发布、主打替用户在网上自动办事,如今不到一年就关。不过浏览器野心没停:agentic 浏览能力被挪进桌面 App 和一个 Chrome 扩展里继续做。"
     },
     {
       "domain": "ai",
-      "title_zh": "前美联储主席伯南克加入Anthropic监督信托",
-      "url": "https://www.anthropic.com/news/ben-bernanke",
-      "source": "Hacker News",
-      "summary_zh": "诺贝尔经济学奖得主、前美联储主席Ben Bernanke宣布加入Anthropic的监督信托——负责监督公司使命是否偏离的独立治理机构。经济学界重量级人物下场做AI公司的治理监督,某种程度上也是AI行业规模已经大到需要宏观经济级别监督视角的一个信号。"
+      "title_zh": "Meta 用 Muse Spark 1.1 挤进 AI 编码战场",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/963193/meta-muse-spark-model-api",
+      "source": "The Verge",
+      "summary_zh": "Meta 4 月靠首个自研 Muse Spark 模型重回大模型竞赛,这次放出 Muse Spark 1.1 并开了 Meta Model API,能接进各家 AI 编码软件。卖点是处理大型 agentic 工作负载、修 bug、做大规模代码迁移,称比一代是「阶跃式」提升。企业级编码自动化这条赛道又多一个大厂玩家。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Fidji Simo 因病卸任 OpenAI 二号位",
+      "url": "https://techcrunch.com/2026/07/09/fidji-simo-steps-down-from-openais-no-2-role/",
+      "source": "TechCrunch",
+      "summary_zh": "OpenAI 二号人物 Fidji Simo 医疗休假比预期更长,正式卸下全职角色,原本负责应用与 AGI 相关工作。这个领导真空来得不巧——公司正盯着可能的 IPO,又在企业市场追赶 Anthropic。"
     },
     {
       "domain": "chip",
-      "title_zh": "Meta自研AI芯片9月投产",
+      "title_zh": "Meta 自研 AI 芯片 9 月投产,走模块化路线",
       "url": "https://techcrunch.com/2026/07/09/metas-new-ai-chips-will-begin-production-in-september/",
       "source": "TechCrunch",
-      "summary_zh": "Meta自研AI芯片将于9月投产,公司采用模块化设计思路,考虑到从设计到量产这段时间里AI需求本身也在快速变化。跟这几天SambaNova融资、ZML发布推理加速工具这些消息放一块看,大厂和创业公司都在算力这条供应链上找自己的位置。"
+      "summary_zh": "Meta 的新款 AI 芯片将于 9 月开始生产。公司走模块化设计路线,理由是 AI 迭代太快,等芯片真正量产时需求可能已经变了,模块化好随时调整。大厂自研算力、减少对英伟达依赖的又一步。"
     },
     {
-      "domain": "embodied",
-      "title_zh": "外科医生远程操控人形机器人,完成全球首例活猪手术",
-      "url": "https://arstechnica.com/ai/2026/07/humanoid-robots-controlled-by-surgeons-did-world-first-operation-on-live-pigs/",
-      "source": "Ars Technica",
-      "summary_zh": "UC San Diego的一项临床前试验里,外科医生通过遥操作人形机器人在活猪身上完成了全球首例此类手术,验证人形机器人用于外科手术的可行性。跟达芬奇这类专用手术机器人不同,人形形态理论上更通用——但灵活性换来的操控难度和安全冗余要求也更高,这次只是可行性验证,离真正上临床还早。"
-    },
-    {
-      "domain": "embodied",
-      "title_zh": "英伟达和Hugging Face给LeRobot带来新模型和框架",
-      "url": "https://www.therobotreport.com/nvidia-hugging-face-bring-new-models-frameworks-lerobot/",
-      "source": "The Robot Report",
-      "summary_zh": "Hugging Face的开源机器人库LeRobot迎来英伟达联合更新的新模型和框架,继续巩固它作为机器人数据集、模型、策略共享枢纽的地位。开源机器人学习基础设施这条线,LeRobot目前基本没什么直接对手。"
+      "domain": "chip",
+      "title_zh": "英伟达成了自己一手造出的算力市场的「受害者」",
+      "url": "https://techcrunch.com/2026/07/09/nvidia-is-a-victim-of-the-compute-marketplace-it-created/",
+      "source": "TechCrunch",
+      "summary_zh": "TechCrunch 的一篇分析:英伟达证明了算力有多值钱,却也把自己架在了一个人人都想进的市场中心——更简单的技术、更不起眼的公司在旁边闷声发财。配合今天 Meta 自研芯片投产、以及那篇「内存稀缺」情景论文,巨头绕开英伟达、重排算力格局的信号今天格外集中。"
     },
     {
       "domain": "space",
-      "title_zh": "Blue Origin寻求融资100亿美元",
+      "title_zh": "中国长征十号B 成功回收一子级,成第二个做到的国家",
+      "url": "https://spacenews.com/china-becomes-second-country-to-recover-orbital-booster-with-long-march-10b/",
+      "source": "SpaceNews",
+      "summary_zh": "长征十号B 周五凌晨发射并成功回收第一级,是中国可重复使用火箭的一大步,也让中国成为继美国之后第二个实现轨道级火箭一子级回收的国家。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "Blue Origin 拟对外融资 100 亿美元",
       "url": "https://spacenews.com/blue-origin-seeks-to-raise-10-billion-in-outside-capital/",
       "source": "SpaceNews",
-      "summary_zh": "贝索斯旗下Blue Origin计划进行公司历史上首次外部融资,目标金额高达100亿美元,用于支撑发射服务和卫星星座业务的扩张。一直靠贝索斯自掏腰包的公司这次主动找外部资本,说明烧钱规模已经大到需要拉外部投资人分摊了。"
+      "summary_zh": "Blue Origin 计划进行公司首次外部融资、规模 100 亿美元,用于支撑发射服务和卫星星座的野心。对一家长期靠贝索斯自掏腰包的公司来说,首次大规模引入外部资本是个转折。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "外科医生遥控人形机器人,给活猪完成世界首例手术",
+      "url": "https://arstechnica.com/ai/2026/07/humanoid-robots-controlled-by-surgeons-did-world-first-operation-on-live-pigs/",
+      "source": "Ars Technica",
+      "summary_zh": "一项临床前试验里,由外科医生遥控的人形机器人在活猪身上完成了世界首例手术,目的是验证人形机器人上手术台的可行性。配合今天 ForSight 全机器人白内障手术、「下一代手术机器人是通用人形」的讨论,手术机器人从专用臂走向通用人形这条线在升温。"
     },
     {
       "domain": "bio",
-      "title_zh": "GSK终止与Alector的7亿美元阿尔茨海默病合作",
-      "url": "https://www.fiercebiotech.com/biotech/gsk-cuts-losses-700m-upfront-alzheimers-collab-alector-following-two-clinical-failures",
+      "title_zh": "罗氏砍掉两个亨廷顿舞蹈症项目,含与 Ionis 合作的 tominersen",
+      "url": "https://www.fiercebiotech.com/biotech/roche-ends-2-huntingtons-disease-programs-including-ionis-partnered-tominersen",
       "source": "Fierce Biotech",
-      "summary_zh": "GSK宣布退出与Alector价值22亿美元里程碑付款的神经退行性疾病合作,此前双方合作的两款下一代候选药物先后在临床试验中失败。阿尔茨海默病药物研发的高失败率又添一笔案例,大药厂在这个领域的合作也在变得更谨慎。"
+      "summary_zh": "罗氏停掉两个亨廷顿舞蹈症在研药,其中包括与 Ionis 合作的 tominersen,对长期等新药的患者群体又是一击。叠加今天 GSK 因两次临床失败退出与 Alector 的阿尔茨海默合作,神经退行性疾病这边坏消息扎堆。"
     }
   ],
   "research_ideas": [
     {
       "domain": "embodied",
       "type": "paper",
-      "title": "两条「训练无关纠偏VLA」的路子横向对比,再换个底座测泛化",
+      "title": "把「免微调、部署时引导 VLA」的 DREAMSTEER 迁到另一个开源 VLA 上,验证它到底泛不泛化",
       "based_on": [
-        { "title": "Harness VLA: Steering Frozen VLAs into Reliable Manipulation Primitives via Memory-Guided Agents", "url": "https://arxiv.org/abs/2607.08448v1" },
-        { "title": "DREAMSTEER: Latent World Models Can Steer VLA Policies During Deployment Without Any Finetuning", "url": "https://arxiv.org/abs/2607.02865v1" }
+        { "title": "DREAMSTEER: Latent World Models Can Steer VLA Policies During Deployment Without Any Finetuning", "url": "https://arxiv.org/abs/2607.02865" },
+        { "title": "Harness VLA: Steering Frozen VLAs into Reliable Manipulation Primitives via Memory-Guided Agents", "url": "https://arxiv.org/abs/2607.08448" }
       ],
-      "why_now": "两篇论文本周内先后挂出来,都在解决同一个问题——部署时VLA遇到分布外场景就翻车,但一个用带记忆的LLM agent接管失败步骤,一个用latent world model重打分候选动作,路子完全不同,还没人做过跨方法的横向对比。",
-      "feasibility": "单卡(24-40GB)、全程仿真(LIBERO/SimplerEnv),不需要训练,3周左右能出结果。",
-      "route": ["用开源VLA(如OpenVLA)+LIBERO跑通baseline,收集一批失败case", "复现Harness VLA的memory-guided agent接管模块", "复现(或近似)DREAMSTEER的latent world model重打分机制", "同一套失败case下横向对比两种方法的成功率提升和计算开销/延迟", "换一个架构不同的VLA底座测试两种方法的迁移性,开源对比代码"],
-      "risk": "两篇论文核心实现可能都未开源,复现细节需要合理猜测;DREAMSTEER的world model rollout计算开销可能拖慢实时性,需要明确报告延迟数字而不只是成功率。"
-    },
-    {
-      "domain": "ai",
-      "type": "paper",
-      "title": "验证「3DGS训练无关加速靠时序先验」这个假设,换到动态场景还成不成立",
-      "based_on": [{ "title": "TemporalGS: Training-Free Plug-and-Play Acceleration for 3D Gaussian Splatting Rendering via Temporal Priors", "url": "https://arxiv.org/abs/2607.03390v1" }],
-      "why_now": "论文本周提交,是第一个训练无关、即插即用的3DGS渲染加速方法,目前只在标准静态多视角数据集上验证过,时序先验这个假设放到真正有连续运动的动态场景下是否依然成立,还没人跟进。",
-      "feasibility": "3DGS渲染本身很轻,消费级24GB显卡可跑,不需要训练,2-3周。",
-      "route": ["在标准benchmark(Mip-NeRF360等)上复现TemporalGS报告的加速比", "换到连续帧、有真实运动的场景(比如机器人第一视角录像重建)测试时序先验假设是否成立", "对比静态vs动态场景下加速比和画质的权衡曲线", "针对动态场景暴露的失效模式做一版轻量修正", "开源复现代码和跨场景对比结果"],
-      "risk": "论文若未开源实现,复现时序几何/外观基函数的细节需要合理猜测;动态场景下几何变化过快可能让时序先验直接失效,这本身也是有意义的负面结果。"
+      "why_now": "DREAMSTEER 这周才提交,核心是部署时用潜世界模型+价值模型给冻结的 VLA 选动作、不改一个参数,但只在作者自己的设置上验证过;「免微调」意味着复现极便宜,换个开源 VLA 基座测泛化性本身就是一个低风险、可发表的扩展,而且目前没有公开实现。",
+      "feasibility": "单张 24–40GB 卡、纯推理:在 LIBERO/SimplerEnv 仿真里跑,VLA(OpenVLA/π0 一档)冻结不训,潜世界模型尽量复用已有权重或训一个小的。约 3 周能出跨基座对比结果。",
+      "route": [
+        "先在 LIBERO 上跑通一个开源 VLA 的官方推理与评测,拿到 baseline 成功率",
+        "复现 DREAMSTEER 的部署时引导:采样候选动作块 + 潜世界模型 rollout + 价值模型打分,复刻原文场景确认能涨点",
+        "把同一套引导原封不动接到另一个 VLA 基座上,测成功率增量是否还在(泛化性主实验)",
+        "做消融:世界模型质量、候选动作数、价值模型来源分别影响多少",
+        "整理成一个可复用的「给任意冻结 VLA 加部署时引导」的小仓库并开源结果表"
+      ],
+      "risk": "增益上限被潜世界模型/价值模型的质量卡死,若原作者不放权重、自己训的小世界模型不够好,提升可能消失;结论只在仿真里成立,真机迁移未验证。"
     },
     {
       "domain": "ai",
       "type": "repo",
-      "title": "把「训练无关长期记忆」做成能挂在开源推理框架上的插件库",
-      "based_on": [{ "title": "TF-Engram: A Train-Free Engram with SSD-Backed Memory for Large Language Models", "url": "https://arxiv.org/abs/2607.07388v1" }],
-      "why_now": "TF-Engram这种GPU-DRAM-SSD三级存储的train-free记忆方案本周才提出,核心思路——不用微调就能扩展LLM的知识存取——其实可以脱离原论文的具体实现,做成一个直接挂在vLLM这类主流推理框架上的通用插件,目前没人做这件事。",
-      "feasibility": "核心是写存储引擎和推理框架的挂钩层,不需要训练,消费级显卡可跑7B-14B模型做验证,3-4周出v0.1。",
-      "route": ["复现TF-Engram的offline语义记忆构建流程(不含GPU专用优化)", "设计一个跟推理框架解耦的memory injection接口,挂到vLLM的生成流程里", "在一个知识密集型QA数据集上验证接入前后的效果差异", "加一个简单的memory table管理CLI(增删查、导入导出)", "开源发布,写清楚和RAG的差异定位——engram是隐藏状态级注入,不是检索拼prompt"],
-      "risk": "论文核心的Early-Exit Guided Prediction细节可能没完全公开,复现效果可能打折扣;跟vLLM这类框架生成循环耦合的工程量容易被低估,需要先验证接口可行性再动手写完整插件。"
+      "title": "做一个「免训练 3DGS 渲染加速」的一键 benchmark 与插件库",
+      "based_on": [
+        { "title": "TemporalGS: Training-Free Plug-and-Play Acceleration for 3D Gaussian Splatting Rendering via Temporal Priors", "url": "https://arxiv.org/abs/2607.03390" },
+        { "title": "MACRO: Training-free Multi-plane Attention for Closeup Render Optimization", "url": "https://arxiv.org/abs/2607.03875" }
+      ],
+      "why_now": "TemporalGS 自称是第一个「免训练、即插即用」的 3DGS 渲染加速算法(利用时序先验、不做任何后训练/后处理),这类方法正在冒头但缺一个统一实现和横评;把它们收进一个 drop-in 库 + 一键 benchmark,是典型的「攒 star」型空位。",
+      "feasibility": "单张消费级 GPU、纯推理,不训练:在 Mip-NeRF360、Tanks&Temples 等标准场景上跑,统一报 FPS/延迟/PSNR。约 2–3 周能出第一版可用工具。",
+      "route": [
+        "先在一个主流 3DGS 光栅化实现(如 gsplat/原版)上复现 TemporalGS 的时序先验加速,确认能加速且画质不掉",
+        "把加速逻辑封成一个与场景无关的插件接口(输入训练好的高斯,输出加速后的渲染器)",
+        "接入 2–3 种标准场景做统一 benchmark,一条命令产出 FPS/延迟/PSNR 对比表",
+        "再纳入 MACRO 等其它免训练技巧,统一到同一套评测口径下横评",
+        "写清楚每种方法的适用场景与失效条件,发布 README + 复现脚本"
+      ],
+      "risk": "免训练加速常和具体光栅化器实现耦合,移植到不同后端要改不少工程;加速收益强依赖场景(高斯数量、视角变化),某些场景可能几乎无提升。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个把大模型蒸馏成小模型 Text-to-SQL 的开源复现套件",
+      "based_on": [
+        { "title": "SQuaD-SQL: Efficient Text-to-SQL with Small Language Models via LLM-Guided Knowledge Distillation", "url": "https://arxiv.org/abs/2607.08161" }
+      ],
+      "why_now": "SQuaD-SQL 用 LLM 引导的知识蒸馏 + 合成数据,让小模型在 Text-to-SQL 上逼近大模型、但推理便宜很多,方法清楚却没放开源实现;本地可部署的 SQL agent 需求很实,把这套蒸馏管线做成可一键复现的 repo 正好补位。",
+      "feasibility": "合成数据靠调用大模型 API 生成,小模型(≤3B)SFT 用 1–2 张卡就够,评测走 Spider/BIRD 现成集。约 3–4 周能出一版能复现论文量级效果的管线。",
+      "route": [
+        "先在 Spider 上跑通一个小模型(如 3B 级)的 Text-to-SQL baseline,量出与大模型的差距",
+        "实现 LLM 引导的合成数据生成:让大模型按 schema 造 (问题, SQL) 对并做质量过滤",
+        "两步蒸馏:先监督微调、再按论文思路加一轮 RL/偏好优化,复现精度提升",
+        "在 BIRD 等更难的集上测跨库泛化,记录小模型 vs 大模型的精度/延迟/成本三角",
+        "把数据生成、训练、评测打包成一键脚本,连同结果表开源"
+      ],
+      "risk": "合成数据质量直接决定上限,schema 多样性不足会让小模型只在见过的库上好使;不同数据库方言和复杂嵌套查询上,小模型的泛化可能明显掉。"
     }
   ]
 }
