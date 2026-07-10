@@ -1,6 +1,15 @@
 {
   "items": [
     {
+      "id": "2026-07-10:papers:eb03328ecc",
+      "date": "2026-07-10",
+      "section": "papers",
+      "domain": "embodied",
+      "title": "RoboDojo:仿真+真机一体、还能云端复现的通用机器人操作评测擂台",
+      "url": "https://arxiv.org/abs/2607.04434",
+      "liked_at": "2026-07-10T08:35:21.006Z"
+    },
+    {
       "id": "2026-07-09:repos:01e478ba12",
       "date": "2026-07-09",
       "section": "repos",
