@@ -41,7 +41,7 @@ jobs:
           # 用 Claude 订阅额度:本地跑 `claude setup-token` 后存入仓库 secrets
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: "请阅读 prompts/summarize.md 并严格按其中要求完成今天的编辑任务。"
-          claude_args: '--allowedTools "Read,Glob,Grep,Write,Edit,Bash(python3 scripts/build.py)"'
+          claude_args: '--model claude-opus-4-8 --allowedTools "Read,Glob,Grep,Write,Edit,Bash(python3 scripts/build.py)"'
 
       - name: 构建站点
         run: python scripts/build.py
