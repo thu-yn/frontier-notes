@@ -108,6 +108,7 @@ def fetch_hf_papers(limit: int = 40) -> list[dict]:
     for item in r.json():
         p = item.get("paper") or {}
         arxiv_id = p.get("id", "")
+        org = p.get("organization") or {}
         papers.append(
             {
                 "arxiv_id": arxiv_id,
@@ -115,6 +116,8 @@ def fetch_hf_papers(limit: int = 40) -> list[dict]:
                 "abstract": (p.get("summary") or "").strip(),
                 "upvotes": p.get("upvotes", 0),
                 "authors": [a.get("name", "") for a in (p.get("authors") or [])][:8],
+                # HF 标注的提交机构,约八成论文有;供 Claude 填 affiliation 字段
+                "affiliation": (org.get("fullname") or org.get("name") or "").strip(),
                 "url": f"https://arxiv.org/abs/{arxiv_id}" if arxiv_id else "",
                 "hf_url": f"https://huggingface.co/papers/{arxiv_id}" if arxiv_id else "",
             }

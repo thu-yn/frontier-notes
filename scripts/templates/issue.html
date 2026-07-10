@@ -64,6 +64,7 @@
     <p class="summary">{{ p.summary_zh }}</p>
     <p class="meta">
       {{ p.authors }}
+      {% if p.affiliation %} · <span class="affil">{{ p.affiliation }}</span>{% endif %}
       {% if p.upvotes %} · ▲ {{ p.upvotes }}{% endif %}
       {% for t in p.tags %} <span class="tag">#{{ t }}</span>{% endfor %}
       · <a href="{{ p.url }}">arXiv</a>{% if p.hf_url %} / <a href="{{ p.hf_url }}">HF</a>{% endif %}
