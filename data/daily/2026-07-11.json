@@ -1,0 +1,315 @@
+{
+  "date": "2026-07-11",
+  "editor_note": "今天最顺的一条暗线还是「内存」:SK 海力士在美股融了 265 亿美元、创外国公司最大 IPO,转头就被喊话来美国本土建厂;同一天 arXiv 上冒出一篇《谁还要 DRAM?我们有光纤》,正经提议把大模型权重塞进循环跑的光纤里当延迟线内存。一个在华尔街拿钱扩产,一个在实验室脑洞绕开 DRAM,再配上微软碳排放涨 25% 的账单,AI 的内存和能耗焦虑今天从产业一路写到论文。另一条我更喜欢的线是「评测开始自我拆台」:NAVER 的 Video-Oasis 审了一圈视频理解 benchmark,发现 55% 的题闭着眼也能蒙对;港大的 UniClawBench 干脆把 agent 扔进活的 Docker 里按步骤卡点——刷榜刷出来的高分,正在被这些工具挤水分。要挑一篇点开,我选 Video-Oasis,那句「滤掉捷径题后 SOTA 只比瞎猜高一点」挺让人清醒。哦对,HN 上还传着一份 GPT-5.6 给圈双覆盖猜想做的「证明」,先按住兴奋、等数学界逐行核验再说。",
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Video-Oasis: Rethinking Evaluation of Video Understanding",
+      "title_zh": "Video-Oasis:先别急着出新评测——现有视频理解 benchmark,一半样本不看视频也能答对",
+      "url": "https://arxiv.org/abs/2603.29616",
+      "hf_url": "https://huggingface.co/papers/2603.29616",
+      "authors": "Geuntaek Lim、Sungjune Park、Jaeyun Lee 等",
+      "affiliation": "NAVER",
+      "upvotes": 42,
+      "one_liner": "审了一圈视频理解 benchmark,55% 的题闭着眼(不看画面、不看时序)就能蒙对",
+      "summary_zh": "NAVER 这篇没再造一个新 benchmark,而是回头审现有的视频理解评测到底在考什么。他们做了个诊断套件 Video-Oasis 去逐条体检,发现 55% 的样本不给视觉输入、不给时序也能答对——靠语言常识或知识先验就够了。把这些「捷径题」滤掉后,真正需要看视频的那部分,SOTA 模型的正确率只比瞎猜高一点点。结论有点扫兴但很有用:很多刷出来的高分是评测漏的,不是模型真会看视频。代码已开源。",
+      "tags": ["视频理解", "Benchmark", "评测方法"]
+    },
+    {
+      "domain": "ai",
+      "title": "Infinite Worlds with Versatile Interactions",
+      "title_zh": "LingBot-World 2.0:能无限交互下去的世界模型,720p/60fps,还塞了俩 agent 当导演",
+      "url": "https://arxiv.org/abs/2607.07534",
+      "hf_url": "https://huggingface.co/papers/2607.07534",
+      "authors": "Zelin Gao、Qiuyu Wang、Jiapeng Zhu 等",
+      "affiliation": "Robbyant",
+      "upvotes": 26,
+      "one_liner": "无限时长交互的世界模型,720p 60fps,还配了个 1.3B 小号单卡能跑,像个能玩的游戏引擎",
+      "summary_zh": "Robbyant 世界模型的第二代(又叫 LingBot-World-Infinity),四个升级:靠因果预训练做到交互时长无上限、画质还不塌;蒸出一个实时版能驱动 720p、60fps 的视频流;动作从走动扩到攻击、射箭、施法、射击,还能文本触发事件。最有意思的是引入一套 agentic harness——一个 pilot agent 负责规划角色行为,一个 director agent 边推进边生成新的环境元素。主力 14B、另配 1.3B 轻量版单卡就能部署,还支持多人同时进同一个世界。世界模型往「可玩、可导演」这个方向走,比单纯拼画质有意思。",
+      "tags": ["世界模型", "实时生成", "Agent"]
+    },
+    {
+      "domain": "ai",
+      "title": "UniClawBench: A Universal Benchmark for Proactive Agents on Real-World Tasks",
+      "title_zh": "UniClawBench:让主动型 agent 在真·活的 Docker 里干活,按五种能力拆开考",
+      "url": "https://arxiv.org/abs/2607.08768",
+      "hf_url": "https://huggingface.co/papers/2607.08768",
+      "authors": "Zhekai Chen、Chengqi Duan、Kaiyue Sun 等",
+      "affiliation": "香港大学",
+      "upvotes": 21,
+      "one_liner": "不再拿录好的标准答案打分,把 agent 扔进活的 Docker 容器、按步骤卡点验收",
+      "summary_zh": "现有 agent 评测大多在沙盒里、单轮问答,还把多种能力混在一个任务里,出了错都不知道栽在哪。港大这套 UniClawBench 按五项基础能力(技能调用、探索、长上下文推理、多模态理解、跨平台协调)拆开,设计了 400 个中英双语真实任务,在真实运行的 Docker 容器里、用细粒度分步检查点验收,而不是比对预录答案。还配了个「执行 agent + 隐藏监督 agent + 用户 agent」的闭环来模拟多轮人类反馈、又不泄露评分标准。他们把同批模型套进不同 agent 框架跑,好拆清楚「底座模型能力」和「框架设计」各占多少。benchmark 和代码都开源了。",
+      "tags": ["Agent", "Benchmark", "多轮评测"]
+    },
+    {
+      "domain": "ai",
+      "title": "Jet-Long: Efficient Long-Context Extension with Dynamic Bifocal RoPE",
+      "title_zh": "Jet-Long:免调参把上下文窗口撑长,短文不掉分、长文不崩,还几乎不加推理开销",
+      "url": "https://arxiv.org/abs/2607.07740",
+      "hf_url": "https://huggingface.co/papers/2607.07740",
+      "authors": "Haozhan Tang、Zerui Wang、Yuxian Gu 等",
+      "affiliation": "NVIDIA",
+      "upvotes": 7,
+      "one_liner": "一个随序列长度动态调整的双焦 RoPE,免训练把开源模型的窗口拉长、短文照样准",
+      "summary_zh": "长上下文部署最常见的做法是给开源模型零样本扩窗口,但多数方法一上来就固定一个缩放系数——放太狠伤短文本,放太保守长文本又崩。英伟达这篇 Jet-Long 是免训练方案:一个忠于原始 RoPE 的局部窗口,配一个缩放系数随当前序列长度动态变的远程窗口,短输入时精确还原基座、长输入时干净外推。靠容斥式的注意力合并和即时 RoPE 校正,双焦结构在推理时几乎零成本,融进一个 CuTe kernel 后 H100 上长文预填吞吐还比 FA2 高。在 Qwen3-1.7B/4B/8B 上到 128K,RULER、HELMET-RAG、PG-19 都领先。要在自己机器上把开源模型的窗口撑大又不想重训,这类活很实用。",
+      "tags": ["长上下文", "RoPE", "推理优化"]
+    },
+    {
+      "domain": "ai",
+      "title": "CineMobile: On-Device Image-to-Video Diffusion for Cinematic Camera Motion Generation",
+      "title_zh": "CineMobile:把电影运镜的图生视频压到 1GB 以下,手机上也能跑",
+      "url": "https://arxiv.org/abs/2607.03803",
+      "hf_url": "https://huggingface.co/papers/2607.03803",
+      "authors": "Xuyao Huang、Zelai Deng、Xu Wang 等",
+      "affiliation": "上海交大 DENG Lab",
+      "upvotes": 8,
+      "one_liner": "蒸馏+剪枝+量化三连,把图生视频模型压到 <1GB、比老师快 40 倍,塞进手机 SoC",
+      "summary_zh": "手机上做图生视频、还想要子弹时间、移轴、慢动作这类电影运镜,难点是 DiT 参数大、多步去噪太重。上海交大 DENG Lab 的 CineMobile 三招压模型:蒸馏引导的剪枝砍出一个紧凑模型、扩散蒸馏+RL 把去噪压到 4 步、混合后训练量化把体积压到 1GB 以下。相比 Wan 2.1 架构的教师模型提速 40 倍、画质基本持平;在联发科天玑 8400 上生成 49 帧 480p、峰值显存 1.8GB。和今天几篇「往端上塞」的工作一个调子——模型能力往消费级设备下沉,比追新 SOTA 更接地气。",
+      "tags": ["图生视频", "端侧推理", "模型压缩"]
+    },
+    {
+      "domain": "embodied",
+      "title": "FabriVLA: A Lightweight Vision-Language-Action Model for Precise Multi-Task Manipulation",
+      "title_zh": "FabriVLA:1B 级的小 VLA,在 Meta-World 50 个任务上做到 90% 成功率",
+      "url": "https://arxiv.org/abs/2607.08575",
+      "authors": "Shiyuan Yang、Borong Zhang、Jizheng Zhang 等",
+      "one_liner": "不靠几十亿参数的大 VLA,1B 底座 + flow-matching 动作头也能打到 90%",
+      "summary_zh": "主流 VLA(视觉-语言-动作模型)越堆越大,FabriVLA 反着来:用 1B 规模的 InternVL3.5 当视觉-语言骨干,配一个 flow-matching 动作头(动作 token 间加门控自注意力、再浅层融合 VLM 特征补空间信息),从预训练 VLM 和随机初始化的动作头单阶段联合训练。在 Meta-World MT50 的 50 个操作任务上拿到 90% 的分档平均成功率。它想说明的点很直接:紧凑的 1B VLA 不靠几十亿参数也能有强表现——对算力有限、又想上手 VLA 的人是个不错的起点。目前是仿真结果,真机还得再看。",
+      "tags": ["VLA", "机器人操作", "轻量模型"]
+    },
+    {
+      "domain": "bio",
+      "title": "DrugGen 2: A disease-aware language model for enhancing drug discovery",
+      "title_zh": "DrugGen 2:给分子生成加上「疾病语境」,不只盯着靶点设计药",
+      "url": "https://arxiv.org/abs/2607.08404",
+      "hf_url": "https://huggingface.co/papers/2607.08404",
+      "authors": "Ali Motahharynia、Mohammadreza Ghaffarzadeh-Esfahani 等",
+      "upvotes": 12,
+      "one_liner": "把疾病本体也喂进去,让生成的分子既贴合靶点、又照顾疾病背景",
+      "summary_zh": "计算药物设计通常只按靶点或通用分子性质来生成分子,忽略了疾病语境会改变靶点行为和疗效。DrugGen 2 在预训练 GPT-2 上微调,同时用疾病本体和靶点蛋白序列做条件生成小分子,训练走「监督微调 + GRPO 强化学习」两步,奖励函数管化学有效性、新颖性、多样性和预测结合亲和力。在糖尿病肾病相关的五个靶点上,生成分子的独特性、与已上市药的结构相似度、预测亲和力都超过 DrugGPT/DrugGen 这些基线,对接分析里有几个候选配体的预测亲和力甚至强过依那普利这类参考药。把「疾病-靶点相互作用」纳进来这个思路对路,不过还都停在预测和分子对接层面,离真湿实验验证还远。",
+      "tags": ["药物设计", "生成模型", "分子对接"]
+    },
+    {
+      "domain": "chip",
+      "title": "Who Needs DRAM? We Have Fiber",
+      "title_zh": "《谁还要 DRAM?我们有光纤》:把大模型权重塞进光纤当延迟线内存",
+      "url": "https://arxiv.org/abs/2607.08407",
+      "authors": "Hannah Atmer、Thiemo Voigt、Yuan Yao 等",
+      "one_liner": "DRAM 又贵又缺,那就把 LLM 权重放进循环跑的光纤里当「延迟线内存」",
+      "summary_zh": "生成式 AI 对高性能内存的胃口叠加超大规模数据中心扩张,把 DRAM 的供货和合约价一起顶上了天。这篇干脆脑洞另一条路:Fiber Memory——把光纤重新定位成数据中心里一种「主动、循环」的延迟线内存,专门存那些几乎不变的数据,比如 LLM 权重。他们设计了一套数据并行的光广播延迟线内存架构,还认真考虑了光纤的物理现实(用空分复用的多芯光纤等)。想法很激进、离落地还远,但放在今天 SK 海力士上市、Meta 自研芯片这堆「内存稀缺」新闻旁边看,这类绕开 DRAM 的另类方案格外应景。",
+      "tags": ["内存架构", "光互连", "数据中心"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Plaquette: A hardware-aware design platform for fault-tolerant quantum computers",
+      "title_zh": "Plaquette:直接从真实器件噪声算容错量子架构的逻辑性能,而不是套简化模型",
+      "url": "https://arxiv.org/abs/2607.08767",
+      "authors": "Raul Conchello Vendrell、Carlos Díaz López、Ish Dhand 等",
+      "one_liner": "别再拿理想化的 Pauli 噪声估容错性能,直接吃器件的真实物理噪声来算",
+      "summary_zh": "造容错量子计算机的硬件团队得决定优先压哪些缺陷,而这要看架构在器件真实噪声下的逻辑性能。问题是真实噪声常常不符合那套可扩展 stabilizer 模拟器爱用的随机 Pauli 模型:超导 transmon 会漏出计算子空间、中性原子经中间态散射、离子阱吸收声子发热、控制失准会相干过转。Plaquette 提出一套理论框架加软件套件,直接从物理层噪声算出容错架构的逻辑性能,把硬件缺陷和纠错表现连起来。对做量子纠错(QEC)架构、要在有限预算里权衡「先修哪块」的团队,这类工具比又一篇纠错码论文实用。",
+      "tags": ["量子纠错", "容错计算", "仿真工具"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Pic2Spec: Generative Modeling Reconstructs Single Cell Raman Fingerprints from Brightfield Images",
+      "title_zh": "Pic2Spec:用普通明场显微图,生成单细胞的拉曼光谱「指纹」",
+      "url": "https://arxiv.org/abs/2607.07651",
+      "authors": "Srilakshmi Premachandran、Amit Kumar Bhuyan、Loza F. Tadesse",
+      "one_liner": "不用拉曼仪、不打标记,从一张明场显微图生成单细胞的化学指纹光谱",
+      "summary_zh": "单细胞分子表征一直卡在通量上:要么得打标记、复用度低,要么试剂会扰动细胞生理。拉曼光谱(靠分子振动给出化学特异的「指纹」)能做到无标记表征,但采集慢、还要专门仪器。Pic2Spec 用生成模型直接从明场显微图重建拉曼光谱指纹,学一个把图像形态和振动光谱结构连起来的共享隐表征,实现「虚拟拉曼」。等于用最普通的显微成像换来化学信息,如果重建可靠,对高通量单细胞分析是条便宜路子——当然生成出来的光谱到底能不能替代真测,还得看它在下游任务上顶不顶用。",
+      "tags": ["拉曼光谱", "单细胞", "生成模型"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "obra/superpowers",
+      "url": "https://github.com/obra/superpowers",
+      "language": "Shell",
+      "stars": 251694,
+      "stars_today": "969",
+      "one_liner": "把一整套软件开发方法论打包成 agent 技能,25 万星,「Agent Skills」热潮的领头羊",
+      "summary_zh": "一个 agentic 技能框架 + 一套「真能用」的软件开发方法论,把工程流程写成 agent 能直接调的技能。25 万星的体量放在今天 trending 里格外扎眼——连同 Google Labs 的 stitch-skills、各路个人 .claude 目录,「给 coding agent 装技能包」这两天成了 GitHub 上最热的一股风。想给自己的 agent 补方法论的可以来抄作业。"
+    },
+    {
+      "domain": "ai",
+      "name": "google-labs-code/stitch-skills",
+      "url": "https://github.com/google-labs-code/stitch-skills",
+      "language": "TypeScript",
+      "stars": 6672,
+      "stars_today": "101",
+      "one_liner": "Google Labs 出的 Agent Skills 库,跟着开放标准走,Gemini CLI、Claude Code、Cursor 都能用",
+      "summary_zh": "Google Labs 给自家 Stitch MCP server 配的一套 Agent Skills,每个技能都遵循 Agent Skills 开放标准,号称能跨 Antigravity、Gemini CLI、Claude Code、Cursor 等多家 coding agent 用。看点不在技能本身,而在「技能」正从各家私有格式往一个跨厂商开放标准收敛——Google 亲自下场是个信号。"
+    },
+    {
+      "domain": "ai",
+      "name": "TencentCloud/TencentDB-Agent-Memory",
+      "url": "https://github.com/TencentCloud/TencentDB-Agent-Memory",
+      "language": "TypeScript",
+      "stars": 8171,
+      "stars_today": "134",
+      "one_liner": "给 AI agent 的全本地长期记忆,四层渐进管线,零外部 API 依赖",
+      "summary_zh": "腾讯云开源的 agent 长期记忆方案:用一套四层渐进管线做完全本地的长期记忆,不依赖任何外部 API。和今天几篇「给模型补记忆」的论文呼应——记忆这块正从挂外部检索往「本地、自包含」走。做本地部署 agent、又不想把数据发出去的可以关注。"
+    },
+    {
+      "domain": "ai",
+      "name": "oven-sh/bun",
+      "url": "https://github.com/oven-sh/bun",
+      "language": "Rust",
+      "stars": 94140,
+      "stars_today": "307",
+      "one_liner": "一个人当运行时、打包器、测试器、包管理器的「快到离谱」JS 工具链",
+      "summary_zh": "把 JavaScript 运行时、打包、测试、包管理集于一身的工具链,主打一个字快。9 万多星的老牌明星今天又回到 trending。做前端/Node 工程、被 npm+webpack+jest 一堆工具折腾烦了的,值得试试一把梭到底顺不顺手。"
+    },
+    {
+      "domain": "ai",
+      "name": "davila7/claude-code-templates",
+      "url": "https://github.com/davila7/claude-code-templates",
+      "language": "Python",
+      "stars": 28728,
+      "stars_today": "104",
+      "one_liner": "配置和监控 Claude Code 的 CLI 工具,模板一键套",
+      "summary_zh": "一个配置、监控 Claude Code 的命令行工具,把常用配置打包成模板方便一键套用,还能盯着 agent 的运行情况。围绕 Claude Code 的周边生态越做越厚——想快速起步、或统一团队 CC 配置的可以用它省事。"
+    },
+    {
+      "domain": "ai",
+      "name": "zeux/meshoptimizer",
+      "url": "https://github.com/zeux/meshoptimizer",
+      "language": "C++",
+      "stars": 8003,
+      "stars_today": "86",
+      "one_liner": "让网格更小、渲染更快的老牌几何优化库,3D/图形管线的常客",
+      "summary_zh": "一个把三维网格做小、做快渲染的几何优化库:顶点缓存优化、简化、压缩这些活它都干,和引擎、glTF 管线搭得很熟。放在今天一堆 3DGS、城市级重建的研究旁边看,这类底层几何工具是把成果真正跑进实时渲染的基础件。做图形、游戏、可视化的基本绕不开。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "chip",
+      "title_zh": "SK 海力士美股 IPO 融资 265 亿美元,创外国公司在美最大规模,还被喊话来建厂",
+      "url": "https://techcrunch.com/2026/07/10/sk-hynix-raises-26-5b-in-the-biggest-foreign-ipo-in-us-history-is-urged-to-build-new-us-fabs/",
+      "source": "TechCrunch",
+      "summary_zh": "SK 海力士在美股上市融到 265 亿美元,成为美国史上规模最大的外国公司 IPO——AI 芯片热潮迄今最大的一场华尔街时刻。与此同时,SK 海力士和三星正被敦促在美国本土建晶圆厂。HBM 是这轮 AI 算力的关键瓶颈,存储厂的资本动作和产能落点,直接牵着上游算力的价格与供给。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Hugging Face CEO:企业正从「租 AI」转向「拥有 AI」,开源模型在爆发",
+      "url": "https://techcrunch.com/2026/07/10/hugging-faces-ceo-on-why-companies-are-done-renting-their-ai/",
+      "source": "TechCrunch",
+      "summary_zh": "Hugging Face CEO Clem Delangue 说开源 AI 正在爆发,他们已经长成了「AI 界的 GitHub」,开放模型和数据集被大约一半的世界五百强用上。他反复看到同一个剧本:公司一开始租用闭源 API,之后越来越想把模型握在自己手里。这和今天那篇「谁还要 DRAM」以及最近的开源前沿模型潮是一条线——自主可控这件事,从权重一路蔓延到算力和内存。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "深圳 AI² Robotics 融资 7.35 亿美元,估值近 30 亿,做轮式人形机器人",
+      "url": "https://www.therobotreport.com/ai%c2%b2-robotics-raises-735m-3b-valuation-wheeled-humanoid-robots/",
+      "source": "The Robot Report",
+      "summary_zh": "深圳的 AI² Robotics(Ai2 Robotics)完成 7.35 亿美元融资,估值约 28 亿美元,背后是国资、产业和金融巨头一起下注,主攻轮式人形机器人。这个体量的单笔融资说明资本对人形机器人的押注还在加码;轮式底盘这条路线在成本和稳定性上更务实,是当下量产落地里被看好的一支。"
+    },
+    {
+      "domain": "energy",
+      "title_zh": "微软去年碳排放涨 25%,数据中心扩张是主因",
+      "url": "https://www.theverge.com/tech/963728/microsoft-sustainability-report-2026",
+      "source": "The Verge",
+      "summary_zh": "微软 2026 可持续发展报告显示,2025 年其碳排放在「不计部分干预措施」口径下涨了 25%,总量达 3400 万吨,主要由数据中心扩张推动。又一次跟自己定的气候目标脱节。AI 算力狂扩的账单,正实打实记在能耗和排放这一栏上。"
+    },
+    {
+      "domain": "ai4s",
+      "title_zh": "有人贴出 GPT-5.6「Sol Ultra」给圈双覆盖猜想做的证明,数学界正在审",
+      "url": "https://cdn.openai.com/pdf/04d1d1e4-bc75-476a-97cf-49055cd98d31/cdc_proof.pdf",
+      "source": "Hacker News",
+      "summary_zh": "Hacker News 上热传一份 PDF,称 OpenAI 的 GPT-5.6「Sol Ultra」产出了图论里圈双覆盖猜想(Cycle Double Cover Conjecture)的一份证明,文件挂在 OpenAI 的 CDN 上。这类「AI 证明未解猜想」的说法向来要等数学界逐行核验才算数,眼下更该当成一个待验证的信号看,而不是已成定论。真假之外,它至少说明大模型在长链形式化推理上的野心又往前探了一步。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "中国官方公布国家商业航天联盟成员名单,罕见亮出「谁是正规军」",
+      "url": "https://spacenews.com/china-unveils-members-of-state-backed-commercial-space-consortium/",
+      "source": "SpaceNews",
+      "summary_zh": "中国一家政府机构公布了国家商业航天联盟的成员名单,罕见地透露了官方认可哪些企业是行业里的既有玩家。这类名单在中国语境里是一种「站队」信号,能看出资源和政策会往哪些公司倾斜,对判断商业航天格局有参考价值。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "欧洲航天业销售额回升,对地观测首次超过通信卫星",
+      "url": "https://spacenews.com/earth-observation-satellites-pass-telecom-in-european-space-industry-sales/",
+      "source": "SpaceNews",
+      "summary_zh": "Eurospace 最新的《事实与数据》报告显示,欧洲航天业销售额在 2024 年收缩后于 2025 年反弹,增长主要由对地观测拉动——对地观测的销售额首次超过了传统的通信卫星板块。这个此消彼长,反映需求正从通信转向遥感和地球数据这块。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "美国 ARPA-H 拨款至多 1.6 亿美元,资助定制化基因药物研发",
+      "url": "https://www.fiercebiotech.com/research/arpa-h-awards-160m-scientists-developing-custom-genetic-medicines",
+      "source": "Fierce Biotech",
+      "summary_zh": "美国先进健康研究计划署(ARPA-H)发放新一批资金、总额至多 1.6 亿美元,资助开发个性化基因药物的公司和机构,受资助名单里挤满了这个热门领域的高知名度玩家。政府定向砸钱,是给定制化基因疗法这条仍然烧钱、周期长的赛道续力。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "GSK 与翰森合作的 ADC 在中国拿下三期成功,印证其「优先资产」判断",
+      "url": "https://www.fiercebiotech.com/biotech/gsk-sees-phase-3-win-hansoh-partnered-adc-china-justifying-hype",
+      "source": "Fierce Biotech",
+      "summary_zh": "翰森制药一对备受期待的抗体偶联药物(ADC)持续兑现数据,让合作方 GSK 当初把它们列为优先项目的决定显得没押错。ADC(把抗体当「导弹」精准递送细胞毒药物)是近两年肿瘤药最热的方向之一,中国 biotech 的资产被跨国药企高价拿下、又跑出临床数据,这条「中国创新药出海」的线还在走强。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "欧盟警告 Meta:关掉自动播放和无限滚动,否则面临巨额罚款",
+      "url": "https://arstechnica.com/tech-policy/2026/07/disable-auto-play-and-infinite-scroll-or-risk-massive-fines-eu-tells-meta/",
+      "source": "Ars Technica",
+      "summary_zh": "依据《数字服务法》(DSA),欧盟要求 Meta 对其平台上的自动播放、无限滚动等「成瘾性设计」做出改动,否则可能被处以巨额罚款。这是监管开始直接对产品交互机制下手,而不只是盯着内容或数据——对整个信息流产品的设计范式都有牵连。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "把「免训练、SSD 存储」的 LLM 外挂记忆做成 drop-in 库,横评长上下文召回",
+      "based_on": [
+        { "title": "TF-Engram: A Train-Free Engram with SSD-Backed Memory for Large Language Models", "url": "https://arxiv.org/abs/2607.07388" },
+        { "title": "Towards Efficient Large Language Model Serving: A Survey on System-Aware KV Cache Optimization", "url": "https://arxiv.org/abs/2607.08057" }
+      ],
+      "why_now": "DRAM 涨价、内存稀缺这两天是明线(SK 海力士 IPO、还有那篇「谁还要 DRAM」),把 LLM 的记忆/KV 往 SSD 这种廉价存储上搬的 train-free 方案(TF-Engram)刚出,但没有可复用的通用实现;做成 drop-in 库正好补位,也容易攒 star。",
+      "feasibility": "单卡纯推理、不训练;在 RULER/LongBench 上跑一个开源 7B 模型即可,普通 24GB 卡够用。约 2–3 周出第一版可用工具。",
+      "route": [
+        "先跑通一个开源 LLM 的长上下文推理与 baseline 召回(RULER/LongBench)",
+        "实现 TF-Engram 的核心:把历史 engram 写到 SSD、检索时按需读回,封成与模型解耦的读写接口",
+        "接 2–3 个开源模型,统一测长上下文召回、延迟、显存占用三条曲线",
+        "加一个标准 RAG 作为对照,产出「SSD 记忆 vs KV 扩窗 vs RAG」的横评表",
+        "把接口打包成 drop-in 库,连同复现脚本和结果开源"
+      ],
+      "risk": "SSD 的 I/O 延迟可能把召回收益吃掉,得靠预取/批处理才划算;不同模型的注意力与 KV 结构不一,适配接口有工程量。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "给视频理解 benchmark 做「捷径体检」的开源工具:自动揪出不看视频也能答对的题",
+      "based_on": [
+        { "title": "Video-Oasis: Rethinking Evaluation of Video Understanding", "url": "https://arxiv.org/abs/2603.29616" },
+        { "title": "TimeThink: Reasoning with Time for Video LLMs", "url": "https://arxiv.org/abs/2607.05089" }
+      ],
+      "why_now": "Video-Oasis 刚指出现有视频评测里 55% 的样本不看画面也能答对,但它只发了诊断结论,没给一个任意 benchmark 都能跑的通用审计工具;把这套体检做成一条命令的 harness,既有用又容易攒 star。",
+      "feasibility": "单卡纯推理,不训练;用「盲文本 LLM」和「单帧」两条对照基线跑任意视频 QA 数据集即可。约 2–3 周出第一版。",
+      "route": [
+        "选 2–3 个主流视频 QA benchmark,统一成一套读取格式",
+        "实现两条捷径基线:去掉视频只喂文本、以及只喂单帧,统计各自能答对多少",
+        "给每个样本打「捷径可解」标签,产出每个 benchmark 的捷径率报告",
+        "把过滤后的『真·视频原生』子集拿出来,重测几个开源 Video-LLM 看掉多少分",
+        "打包成一条命令的审计工具,附标准报告模板开源"
+      ],
+      "risk": "捷径判定依赖所选基线模型的强弱,阈值和结论有主观性;想覆盖闭源模型会有 API 成本和不可复现问题,尽量只用开源模型来锚定。"
+    },
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "复现 FabriVLA 的 1B 轻量 VLA,换底座、换 benchmark 后看 90% 成功率还剩多少",
+      "based_on": [
+        { "title": "FabriVLA: A Lightweight Vision-Language-Action Model for Precise Multi-Task Manipulation", "url": "https://arxiv.org/abs/2607.08575" }
+      ],
+      "why_now": "FabriVLA 刚发,主打「1B 小 VLA 不靠几十亿参数也能到 90%」,但只在 Meta-World MT50 上验证过、也没放公开实现;换个同量级 VLM 底座、或迁到 LIBERO/SimplerEnv 测泛化,是便宜、低风险又可发表的扩展。",
+      "feasibility": "单张 24–40GB 卡,纯仿真;1B 级 VLM + flow-matching 动作头单阶段联合训练,算力在个人可承受范围。约 3–4 周出跨底座/跨 benchmark 的对比。",
+      "route": [
+        "先跑通一个开源 1B 级 VLM 的推理,搭好 flow-matching 动作头",
+        "在 Meta-World MT50 上复现 FabriVLA 的训练与评测,拿到接近论文的 baseline",
+        "把 InternVL3.5 换成另一个同量级 VLM,看 90% 成功率是否还保得住",
+        "迁到 LIBERO 或 SimplerEnv 测跨 benchmark 泛化,记录掉点幅度",
+        "消融动作头设计(门控自注意力、浅层特征融合),整理成可复现仓库开源"
+      ],
+      "risk": "单阶段联合优化对超参和初始化敏感,换底座后可能训不稳;跨 benchmark 的动作空间和相机设置差异,可能让迁移效果明显打折。"
+    }
+  ]
+}
