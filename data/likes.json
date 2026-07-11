@@ -1,6 +1,15 @@
 {
   "items": [
     {
+      "id": "2026-07-11:ideas:5853d25015",
+      "date": "2026-07-11",
+      "section": "ideas",
+      "domain": "ai",
+      "title": "把「免训练、SSD 存储」的 LLM 外挂记忆做成 drop-in 库,横评长上下文召回",
+      "url": "",
+      "liked_at": "2026-07-11T03:05:37.294Z"
+    },
+    {
       "id": "2026-07-10:papers:eb03328ecc",
       "date": "2026-07-10",
       "section": "papers",
