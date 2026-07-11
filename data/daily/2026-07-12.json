@@ -1,0 +1,330 @@
+{
+  "date": "2026-07-12",
+  "editor_note": "今天翻下来有点「泼冷水」的味道,我挺喜欢。慕尼黑工大一篇论文把世界模型的长时程翻车说穿了:别再笼统甩锅「误差累积」,它其实是在按运动学瞎想、压根没学会动力学,还给了个能一眼看出来的诊断指标。这种「先把话说清楚再谈改进」的活,比又刷高一档 SOTA 耐读。另一条暗线还是「记忆」:Meta 让一个记忆 agent 盯着长任务、只在关键时刻插一句提醒;ETH 把四种线性注意力的循环记忆摆同一张表横评;芯片这边 CRIMP 干脆把权重塞进存算一体的忆阻器阵列——从算法到硬件,大家都在跟「状态往哪放」较劲。产业面更热闹:苹果一纸诉状告到 OpenAI 头上,说前员工把硬件机密带走了;华尔街那边有人扒 Nvidia-CoreWeave-Nebius 的「循环融资」,提醒这轮 GPU 热里有多少是自己人左手倒右手。要挑一篇点开,我选那篇「运动学不是动力学」。哦对,今天新能源和商业航天没有值得选的论文,但 Reflect Orbital 拿到 FCC 首张反射卫星牌照这条新闻够科幻——往地面「加派」阳光,天文学家怕是要头疼。",
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Remember When It Matters: Proactive Memory Agent for Long-Horizon Agents",
+      "title_zh": "该记的时候才记:给长任务 agent 配个「记忆管家」,只在关键时刻插一句",
+      "url": "https://arxiv.org/abs/2607.08716",
+      "hf_url": "https://huggingface.co/papers/2607.08716",
+      "authors": "Yifan Wu、Lizhu Zhang、Yuhang Zhou 等",
+      "affiliation": "Meta",
+      "upvotes": 7,
+      "one_liner": "不做被动检索,派一个记忆 agent 盯着轨迹,该提醒时才塞回一条,不该说就闭嘴",
+      "summary_zh": "长任务里,决定成败的信息常常散在越拉越长的轨迹里——任务要求、环境事实、之前试过啥、诊断、没做完的子目标,慢慢被挤出上下文窗口,到用的时候反而想不起来,作者管这叫「行为状态衰减」。他们的做法是把记忆当成一种主动干预:一个独立的记忆 agent 跟在原封不动的执行 agent 旁边,从近期轨迹里更新一个结构化记忆库,并自己判断「现在要不要塞一条提醒进去」。模块即插即用,套在前沿 agent 和现成 harness 上就能用,在 Terminal-Bench 2.0 和 τ²-Bench 上分别把 pass@1 提了 8.3 和 6.8 个点。消融也说得很干脆:有选择地插话,比被动摆着记忆库、一直硬塞、或只给建议都强。还顺手用 SFT+GRPO 训了个开源权重的记忆策略(Qwen3.5-27B)。",
+      "tags": ["Agent", "记忆", "长任务"]
+    },
+    {
+      "domain": "ai",
+      "title": "OpenCoF: Learning to Reason Through Video Generation",
+      "title_zh": "OpenCoF:让视频生成模型「用一帧帧画面推理」,数据集和模型都开源",
+      "url": "https://arxiv.org/abs/2607.08763",
+      "hf_url": "https://huggingface.co/papers/2607.08763",
+      "authors": "Xinyan Chen、Ziyu Guo、Renrui Zhang 等",
+      "affiliation": "字节跳动 Seed",
+      "upvotes": 10,
+      "one_liner": "推理不一定要写字:让模型在连续帧里把因果「演」出来,叫 Chain-of-Frame",
+      "summary_zh": "跟传统写文字的思维链(CoT)不同,视频生成模型可以让推理在时间上连续的一帧帧画面里展开,作者叫它 Chain-of-Frame(CoF)。问题是现有视频生成模型都在通用视频语料上训,缺针对 CoF 的监督和设计。OpenCoF 补两块:一个覆盖 11 类任务的推理视频数据集 OpenCoF-17K,和在它上面微调出的 Wan-CoF,在四个视频推理 benchmark 上都比 Wan2.2-I2V-A14B 基线有明显提升。他们还试着给模型加「视觉 + 文本推理 token」分别抓低层视觉线索和高层语义,并用注意力分析看这些 token 在网络深度、去噪步、时空上各自起什么作用。数据、模型、代码都放了出来。想法有点意思——把「生成」当「推理」用,不过目前还是在专门造的数据上验证,泛化性得再看。",
+      "tags": ["视频生成", "推理", "多模态"]
+    },
+    {
+      "domain": "ai",
+      "title": "Linear Attention Architectures: Mechanisms, Trade-offs, and Cross-Layer Routing",
+      "title_zh": "线性注意力横评:四个循环架构 + softmax 摆同一张表,谁在长上下文里更划算",
+      "url": "https://arxiv.org/abs/2607.07953",
+      "hf_url": "https://huggingface.co/papers/2607.07953",
+      "authors": "Tommaso Cerruti、Tim Rieder、George Rowlands 等",
+      "affiliation": "ETH Zurich",
+      "upvotes": 9,
+      "one_liner": "把 DeltaNet 一系四个新架构和 softmax 注意力放一起比,顺带试了个跨层路由",
+      "summary_zh": "softmax 注意力让每个 token 都能翻遍全上下文,但长序列下二次方开销顶不住。这篇把 softmax 和四种循环式线性注意力(DeltaNet、Gated DeltaNet、Kimi Delta Attention、Gated DeltaNet-2)统一写成一套「循环记忆」记号,把它们在表达力、记忆衰减、擦写控制、训练吞吐、实现复杂度上的差别摊开讲。实验主要在 350M 参数、15B token 的规模上做,也跑了 1.3B/3B 的 DeltaNet:Kimi Delta 配 Muon 优化器验证 loss 最低,纯 Gated DeltaNet 配 AdamW 训练吞吐最高,混合堆栈能降 loss 但要付吞吐代价。他们还提了个轻量跨层路由 CLVR,把写入值转发到对齐的隐藏流里,能小幅降 loss。要提醒的是它量的是训练吞吐、不是推理速度。当作「选线性注意力底座」的参考读物挺实用。",
+      "tags": ["线性注意力", "架构", "长上下文"]
+    },
+    {
+      "domain": "ai",
+      "title": "WildCity: A Real-World City-Scale Testbed for Rendering, Simulation, and Spatial Intelligence",
+      "title_zh": "WildCity:自动驾驶车队跑出来的城市级数据集,平均每条轨迹 83 公里",
+      "url": "https://arxiv.org/abs/2607.06838",
+      "hf_url": "https://huggingface.co/papers/2607.06838",
+      "authors": "Xiangyu Han、Mengyu Yang、Jiaqi Li 等",
+      "affiliation": "NVIDIA",
+      "upvotes": 8,
+      "one_liner": "人能在陌生城市攒出几十平方公里的心理地图,AI 能吗?先给它一座真城市当考场",
+      "summary_zh": "人在陌生城市转两圈就能在脑子里拼出一张跨几十平方公里的连贯地图,AI 想到同样的尺度还差得远,卡点之一是缺城市级数据。WildCity 是英伟达用自动驾驶车队在复杂城区采的多模态数据集:18 条轨迹、平均每条 83.7 公里,保留了真实感知里那些恼人的东西——动态物体、光照变化、相机位姿不准。他们在上面搭了个面向城市的重建 baseline,再把重建环境转成闭环仿真器,并系统分析了通往「城市数字孪生」路上的三道坎:可扩展性、外推、不确定性。这类工作偏「铺基建」,对做城市级重建、渲染、空间智能的人是个能上手的真实考场。",
+      "tags": ["空间智能", "城市重建", "数据集"]
+    },
+    {
+      "domain": "ai",
+      "title": "CausalDS: Benchmarking Causal Reasoning in Data-Science Agents",
+      "title_zh": "CausalDS:考数据科学 agent 会不会做因果推理,还把「该弃权时弃权」当正经分数",
+      "url": "https://arxiv.org/abs/2607.08093",
+      "hf_url": "https://huggingface.co/papers/2607.08093",
+      "authors": "Andrej Leban、Yuekai Sun",
+      "affiliation": "University of Michigan",
+      "upvotes": 1,
+      "one_liner": "每道题都是采样出来的因果结构模型,连「这题没有正当答案」都算一种答对",
+      "summary_zh": "LLM 越来越多地当「集成的数据科学 agent」用,既要抽象推理又要熟练调工具。可现有 benchmark 要么是纯符号的因果推理、没有真实数据分析,要么是数据分析、又没有讲究的因果生成结构。CausalDS 每个实例是一个采样出来的结构因果模型(SCM)配上生成的观测数据,再套一个扎根真实领域的合成故事;还能可选地用真实数据集的经验分布来锚定,既保留真实结构、又靠全合成规避「因果鹦鹉」(模型只是背下了训练里见过的因果说法)。任务覆盖 Pearl 因果阶梯的三层,大多要写代码、用几样工具去对付带噪声的观测。最有意思的是它把「识别出这题没有正当答案、并选择弃权」当成一等公民来打分——同时考因果推理、数据科学、不确定性量化、弃权和工具使用。",
+      "tags": ["因果推理", "数据科学", "Benchmark"]
+    },
+    {
+      "domain": "embodied",
+      "title": "OmniTacTune: Policy-Agnostic Real-World RL for Tactile Residual Adaptation of Visual Policies",
+      "title_zh": "OmniTacTune:给现成视觉策略贴一层「触觉残差」,真机 40-80 分钟把成功率从个位数拉到 85%+",
+      "url": "https://arxiv.org/abs/2607.03723",
+      "hf_url": "https://huggingface.co/papers/2607.03723",
+      "authors": "Kelin Yu、Haode Zhang、Harish Ravichandar 等",
+      "affiliation": "马里兰大学",
+      "upvotes": 5,
+      "one_liner": "视觉策略在接触密集的活儿上老失手,补一个轻量触觉残差、在线学一小会儿就补上了",
+      "summary_zh": "从人类视频、遥操作、机器人示范里学来的视觉策略能提供可扩展的动作先验,但一到接触密集的操作(成败取决于局部力和接触几何)就掉链子;触觉信号正好补这块,可惜触觉数据贵、还难跨传感器/机器人/任务泛化。OmniTacTune 是个策略无关的真机 RL 管线,用「残差修正」把触觉反馈叠到预训练视觉策略上:先从基础策略自己跑出来的 rollout 里引导出触觉感知,再通过在线交互学一个轻量触觉残差策略。四个真实接触密集任务上,它把视觉基础策略从 5-40% 的成功率、在 40-80 分钟内拉到 85-100%,而且能跨不同视觉底座和触觉表征泛化。要真机、要触觉传感器,但这个「几十分钟在线补一层」的效率对做接触操作的人很有吸引力。",
+      "tags": ["VLA", "触觉", "残差策略"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Imagined Rollouts are Kinematic, Not Dynamic: A Diagnosis of Long-Horizon World-Model Failure",
+      "title_zh": "世界模型的想象是「运动学」不是「动力学」:一个诊断说清它到底错在哪",
+      "url": "https://arxiv.org/abs/2607.05966",
+      "hf_url": "https://huggingface.co/papers/2607.05966",
+      "authors": "Finn Rasmus Schäfer、Korbinian Moller、Yuan Gao 等",
+      "affiliation": "慕尼黑工业大学(自动驾驶车辆系统教席)",
+      "upvotes": 2,
+      "one_liner": "别再笼统说「误差累积」——世界模型其实在按运动学瞎想,根本没学会动力学",
+      "summary_zh": "世界模型跑长时程会崩,通常被归到「误差累积」这个万金油说法上,可它没说清到底是哪种误差在累积。这篇换了个视角:世界模型倾向于按运动学、而不是按动力学去想象。他们把这一点做成一个可测的指标——想象态的运动学一致性误差(iKCE),逐步量一条 rollout 偏离「闭式运动学零解」有多远,再配一套扰动协议,看当物理条件跨过某个临界(比如摩擦变到步态崩溃的边界)时这个指标会不会响应。在一个公开的 DreamerV3(DMC walker-walk)检查点上,想象态的 iKCE 比真实物理 rollout 高了大约两个数量级;而在跨过步态崩溃边界的摩擦扫描里,哪怕训练好的策略回报一路崩,iKCE 却统计上纹丝不动——这就是「只学了运动学、没学动力学」的签名。一篇不刷分、专门把问题诊断清楚的论文,读着痛快。",
+      "tags": ["世界模型", "诊断", "长时程"]
+    },
+    {
+      "domain": "chip",
+      "title": "CRIMP: Compact & Reliable DNN Inference on In-Memory Processing via Crossbar-Aligned Compression and Non-ideality Adaptation",
+      "title_zh": "CRIMP:让存算一体的 DNN 推理甩掉浮点包袱,还扛得住忆阻器阵列的写入漂移",
+      "url": "https://arxiv.org/abs/2607.08015",
+      "authors": "Shuo Huai、Hao Kong、Xiangzhong Luo 等",
+      "one_liner": "把 DNN 塞进存算一体的交叉阵列,量化、剪枝、抗噪三个坑一起填",
+      "summary_zh": "基于交叉阵列的存算一体(把计算直接放进存储阵列里做,省下搬数据的能耗)能给 DNN 推理带来高速低功耗,但有三道坎:一是浮点运算和交叉阵列不兼容,现有量化方案还得留个浮点处理器算缩放系数,徒增硬件开销;二是冗余参数占太多阵列,现有的存算感知剪枝又要求跨阵列对齐数据,带来额外内存和计算开销;三是写入变化这类非理想行为会把部署后的精度拖下来,补偿方法本身开销也不小。CRIMP 用「交叉阵列对齐的压缩」加「非理想性适配」把这三块一起解决。放在今天从算法到硬件都在跟「状态/权重往哪放」较劲的背景里看,这类把权重直接搬进存储、绕开数据搬运的硬件路子很应景。",
+      "tags": ["存算一体", "DNN 推理", "模型压缩"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Low-latency FPGA-based electronic control system for fast preparation of defect-free atom arrays",
+      "title_zh": "把 PC 踢出反馈回路:FPGA 控制系统 282 微秒内摆好「无缺陷」中性原子阵列",
+      "url": "https://arxiv.org/abs/2607.08687",
+      "authors": "Ya-Dong Hu、Dong-Qi Ma、Tian-Yang Zhang 等",
+      "one_liner": "中性原子量子计算要扩规模,先让控制系统快到能实时把原子一个个排整齐",
+      "summary_zh": "中性原子路线要往大规模走,得有低延迟、模块化、能实时反馈的集成控制系统。这篇做了个基于 FPGA 的电子控制系统,把 PC 从反馈回路里彻底拿掉,在一套统一的 PXIe 架构里把光子计数、实时决策和波形生成整合到一起,总反馈延迟压到 282 微秒。他们用它从 24 个随机装载的光镊里实际组装出无缺陷原子阵列:单轮重排就能到约 96% 的填充率,配上反馈控制的迭代重排还能更高。偏工程,但是那种实打实推进硬件可扩展性的活——中性原子想扩到成百上千个 qubit,这类「快到能实时纠位」的控制系统是绕不开的底座。",
+      "tags": ["中性原子", "量子控制", "FPGA"]
+    },
+    {
+      "domain": "bio",
+      "title": "AbICL: In-Context Learning for Antigen-Specific Antibody Affinity Ranking",
+      "title_zh": "AbICL:用「上下文学习」给抗体排亲和力,把手头零星的实验对照当范例喂进去",
+      "url": "https://arxiv.org/abs/2607.05846",
+      "authors": "Zhiyuan Chen、Jing Hu、Junzhe Wang 等",
+      "one_liner": "别再孤立地比每对抗体,把已知的少量亲和力对照当上下文,让模型现学这个抗原的排序规律",
+      "summary_zh": "按结合亲和力给候选抗体排序,是治疗性抗体发现里的关键一步。现有方法大多把每次亲和力比较当孤立事件处理,忽略了其他已标注对照里藏着的上下文信息,抓不住某个抗原特有的结合规律。而对很多目标抗原,手头往往就有少量实验测过的亲和力对照。AbICL 的问法很直接:模型能不能利用这些已有对照、现学出该抗原的排序模式,来帮后续的亲和力排序?这其实就是「从已标注范例里学」的上下文学习(in-context learning)那一套。思路对路——把抗体发现里稀缺但宝贵的少量实验数据当范例用,而不是每次从零判断,值得关注它在真实抗原上的排序稳不稳。",
+      "tags": ["抗体设计", "上下文学习", "亲和力预测"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "TESSERA v2: Scaling Pixel-wise Earth Foundation Models",
+      "title_zh": "TESSERA v2:把地球观测基础模型的 scaling 摸了个透,395 次训练换一条省算力配方",
+      "url": "https://arxiv.org/abs/2607.03949",
+      "hf_url": "https://huggingface.co/papers/2607.03949",
+      "authors": "Zhengpeng Feng、Sadiq Jaffer、Ira Shokar 等",
+      "affiliation": "TESSERA(剑桥大学 EO 组,ucam-eo)",
+      "upvotes": 2,
+      "one_liner": "预训练 loss 几乎预测不了下游表现,选模型别只看 loss——顺手蒸出个 2100 万参数小号打赢所有大模型",
+      "summary_zh": "逐像素的地球观测(EO)基础模型靠生成空间嵌入已经能拿 SOTA,但它们怎么 scaling、预训练预算该怎么花,一直没人说清。这篇做了迄今 EO 领域最大的受控 scaling 研究:在 1024 块 GH200 上、固定一套逐像素 Barlow Twins 家族跑了 395 次训练,每次都在 15 个下游任务上评。两条结论很实用:一是预训练 loss 几乎预测不了下游表现(|Pearson r| < 0.2),按 loss 选模型是在浪费算力;二是预算变大时,编码器和数据要一起长、投影头保持不变。照这个规则,他们训了 0.5B/1B(2B 在训),再蒸成小学生模型——2100 万参数的蒸馏版 TESSERA v2-1B-M 综合表现居然打赢了所有测过的开源和闭源模型,有的还大它几个数量级。学生模型给的是 Matryoshka 表征,取 16 维前缀就能保住 128 维 92% 的性能、只占 1/8 存储。代码在 ucam-eo/tessera。",
+      "tags": ["地球观测", "Scaling", "模型蒸馏"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "wonderwhy-er/DesktopCommanderMCP",
+      "url": "https://github.com/wonderwhy-er/DesktopCommanderMCP",
+      "language": "TypeScript",
+      "stars": 7739,
+      "stars_today": "900",
+      "one_liner": "给 Claude 装上终端和文件系统的 MCP server,今天一口气涨了 900 星",
+      "summary_zh": "一个 MCP server,把终端控制、文件系统搜索、diff 式改文件的能力交给 Claude,等于让模型能直接在你机器上跑命令、翻代码、改文件。今天单日 +900 星,是 trending 上最猛的一个。想让 coding agent 从「只会聊」变成「能动手」的可以试,但也提醒一句:给 AI 终端权限这事,沙箱和权限边界得先想清楚。"
+    },
+    {
+      "domain": "ai",
+      "name": "malisper/pgrust",
+      "url": "https://github.com/malisper/pgrust",
+      "language": "Rust",
+      "stars": 1970,
+      "stars_today": "789",
+      "one_liner": "用 Rust 重写 Postgres,已经 100% 通过 Postgres 官方回归测试",
+      "summary_zh": "一个把 Postgres 用 Rust 从头重写的项目,最扎眼的是它已经 100% 通过了 Postgres 的回归测试套件——意味着行为对齐做得相当到位。今天 +789 星。这类「用 Rust 重写经典系统软件」的尝试年年有,能把整套回归测试跑绿的不多,值得做数据库、系统、Rust 的人关注它到底怎么啃下兼容性这块硬骨头。"
+    },
+    {
+      "domain": "ai",
+      "name": "anthropics/claude-cookbooks",
+      "url": "https://github.com/anthropics/claude-cookbooks",
+      "language": "Jupyter Notebook",
+      "stars": 47862,
+      "stars_today": "322",
+      "one_liner": "Anthropic 官方的 Claude 用法食谱,一堆能直接抄的 notebook",
+      "summary_zh": "Anthropic 官方维护的一套 notebook 合集,把用 Claude 的各种玩法(工具调用、检索、多模态、agent 等)做成能跑的示例。今天 +322 星。想上手 Claude API、又懒得从文档啃起的,照着食谱抄一遍是最省事的起点;和这两天 Agent Skills、MCP 的热度连在一起看,官方示例仓库被翻牌也不意外。"
+    },
+    {
+      "domain": "ai",
+      "name": "DayuanJiang/next-ai-draw-io",
+      "url": "https://github.com/DayuanJiang/next-ai-draw-io",
+      "language": "TypeScript",
+      "stars": 33259,
+      "stars_today": "74",
+      "one_liner": "用自然语言画 draw.io 图:说一句话,AI 帮你生成、改、优化流程图",
+      "summary_zh": "一个 Next.js 网页应用,把 AI 接进 draw.io:你用自然语言描述,它就帮你创建、修改、增强图表。3 万多星的老项目今天又回 trending。对经常要画架构图、流程图、又嫌手动拖框累的人是个顺手的小工具,也是「LLM + 现成生产力软件」这条产品线的一个不错样板。"
+    },
+    {
+      "domain": "ai",
+      "name": "home-assistant/core",
+      "url": "https://github.com/home-assistant/core",
+      "language": "Python",
+      "stars": 88619,
+      "stars_today": "169",
+      "one_liner": "把本地控制和隐私放第一位的开源智能家居中枢,8 万多星的老牌明星",
+      "summary_zh": "开源智能家居平台,主打「本地控制、隐私优先」——设备联动和自动化尽量在自己家的机器上跑,不把数据交给云端。今天 +169 星。放在这两天「企业想把 AI 握在自己手里」的调子旁边看,消费端「把智能家居攥在本地」也是同一种自主可控的诉求;想脱离各家云平台、自建家庭自动化的基本绕不开它。"
+    },
+    {
+      "domain": "ai",
+      "name": "openai/plugins",
+      "url": "https://github.com/openai/plugins",
+      "language": "JavaScript",
+      "stars": 4372,
+      "stars_today": "75",
+      "one_liner": "OpenAI 的 Plugins 仓库,官方下场做插件这件事本身是个信号",
+      "summary_zh": "OpenAI 官方的 Plugins 仓库。仓库本身信息不多,但赶在这两天各家「给 coding agent 装技能包」的热潮里冒出来,信号意味更重:继 Anthropic 的 Skills、Google Labs 的 stitch-skills 之后,OpenAI 也在往「可插拔扩展」这个方向使劲。想跟进各家插件/技能生态怎么收敛的可以盯着看。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "苹果起诉 OpenAI,指控前员工偷走硬件商业机密",
+      "url": "https://techcrunch.com/2026/07/10/apple-sues-openai-over-alleged-trade-secret-theft/",
+      "source": "TechCrunch",
+      "summary_zh": "苹果对 OpenAI 提起诉讼,指控几名离职员工把公司的硬件/设备机密带去了 OpenAI。TechCrunch、The Verge 与多家媒体同步跟进,焦点都在「硬件商业秘密」这几个字上——这暗示 OpenAI 在往设备形态走的野心,已经踩到了苹果最敏感的地盘。两家本就从合作滑向竞争,如今直接对簿公堂,是大厂 AI 竞赛外溢到知识产权战的一个标志性事件。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "顶不住舆论,Meta 关掉 Instagram 上能生成公众账号 AI 换脸的功能",
+      "url": "https://www.theverge.com/tech/964416/meta-instagram-ai-muse-image-deepfakes",
+      "source": "The Verge",
+      "summary_zh": "在一片反对声中,Meta 关停了 Instagram 上一个允许用户对公众账号做 AI 换脸/深度伪造的功能。就在前脚,Instagram 负责人 Adam Mosseri 还放话「你要是不喜欢 AI,那就别让它出现在你的 feed 里」,结果这功能没撑几天就被撤下。生成式 AI 塞进社交产品的边界正被一次次现场试探,而这次是用户和舆论把它按了回去。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "OpenAI 押注家庭场景,ChatGPT 进一步往家里钻",
+      "url": "https://techcrunch.com/2026/07/11/openai-bets-on-families-as-chatgpt-goes-deeper-into-households/",
+      "source": "TechCrunch",
+      "summary_zh": "OpenAI 正把 ChatGPT 往家庭场景里推,想让它从个人工具变成一家人都在用的入口。结合这两天苹果诉讼里「硬件机密」的指控看,OpenAI 显然不满足于停在对话框里——从家庭账户到设备形态,它在往用户日常生活更深处铺。走进客厅这一步,隐私和未成年人使用会是绕不开的问题。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "扒一扒 Nvidia、CoreWeave、Nebius 之间的「循环融资」",
+      "url": "https://io-fund.com/ai-stocks/nvidia-coreweave-nebius-circular-financing-gpu-boom",
+      "source": "I/O Fund",
+      "summary_zh": "一篇分析拆解了 Nvidia 与 CoreWeave、Nebius 等云厂之间的资金闭环:Nvidia 一边投资/绑定这些公司,它们再回头大买 Nvidia 的 GPU,钱在圈内左手倒右手,把这轮 GPU 热的账面撑得更漂亮。文章提醒,这种循环融资会让需求看起来比实际更旺,也放大了一旦某一环收紧时的连锁风险。配上前阵子 SK 海力士上市、内存涨价的新闻,算力这门生意的融资结构本身,正成为该被认真审视的一环。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "SpaceX 申请再发 10 万颗星链卫星,目标是 100 倍带宽",
+      "url": "https://www.zdnet.com/home-and-office/networking/spacex-wants-to-launch-100000-more-starlink-satellites/",
+      "source": "ZDNet",
+      "summary_zh": "SpaceX 提出还要再发射多达 10 万颗星链卫星,号称把总带宽拉到现在的约 100 倍。这个数字量级相当激进,一旦推进,近地轨道的拥挤程度、碰撞风险和对天文观测的干扰都会成倍放大。低轨巨型星座的扩张和它带来的轨道治理难题,正在同步升级。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "FCC 批准 Reflect Orbital 首颗卫星,要从轨道往地面「加派」阳光",
+      "url": "https://spacenews.com/fcc-approves-first-reflect-orbital-satellite/",
+      "source": "SpaceNews",
+      "summary_zh": "美国 FCC 批准了 Reflect Orbital 的首颗卫星——这家公司想用在轨反射镜把阳光反射到地面,给太阳能电站等目标在夜里「补光」。牌照到手意味着这个听着很科幻的点子要真上天验证了。但把额外阳光打向地面,天文观测和夜间生态几乎肯定要付代价,争议不会小。"
+    },
+    {
+      "domain": "quantum",
+      "title_zh": "研究显示:量子纠错能顺手给处理器做持续标定",
+      "url": "https://arstechnica.com/science/2026/07/quantum-error-correction-can-constantly-recalibrate-a-processor/",
+      "source": "Ars Technica",
+      "summary_zh": "一项研究指出,量子纠错过程中不断产生的测量数据,可以顺带用来持续追踪并标定处理器的漂移,而不必停下计算专门去校准。硬件参数会随时间和温度漂,传统标定要打断运行,这个思路等于让「纠错」和「标定」同时进行。对要长时间稳定运行的容错量子机器来说,是个能省不少停机时间的实用方向。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "AI 药企 MindRank 融资 5200 万美元,推进已进入三期的口服 GLP-1",
+      "url": "https://www.fiercebiotech.com/biotech/fierce-biotech-fundraising-tracker-26",
+      "source": "Fierce Biotech",
+      "summary_zh": "据 Fierce Biotech 的融资追踪,AI 驱动的药物发现公司 MindRank(明度智云)融到 5200 万美元,用于推进一款已进入三期临床的口服 GLP-1。GLP-1 是当下减重/降糖最热的靶点,能把 AI 设计的口服候选药推到三期,是「AI 制药」少见地走到后期临床的一个实例。资本仍愿意在这条赛道加注,但真正的考验还在三期读数上。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "两次临床失败后,GSK 放弃与 Alector 的 7 亿美元阿尔茨海默合作",
+      "url": "https://www.fiercebiotech.com/biotech/gsk-cuts-losses-700m-upfront-alzheimers-collab-alector-following-two-clinical-failures",
+      "source": "Fierce Biotech",
+      "summary_zh": "在接连两次临床失败之后,GSK 决定止损,终止了与 Alector 那笔预付款高达 7 亿美元的阿尔茨海默病合作。神经退行性疾病一向是新药坟场,这类高价合作说黄就黄,又给整个 AD 领域泼了盆冷水。和今天 MindRank 拿钱的乐观放一起看,新药研发的冰火两重天在同一天摆到了台面上。"
+    },
+    {
+      "domain": "energy",
+      "title_zh": "欧洲要迎来一场空调革命吗?",
+      "url": "https://arstechnica.com/science/2026/07/is-an-air-conditioning-revolution-coming-to-europe/",
+      "source": "Ars Technica",
+      "summary_zh": "Ars 这篇探讨随着热浪常态化,一向空调普及率偏低的欧洲会不会迎来一波制冷设备普及潮,以及随之而来的用电和能耗压力。制冷需求上来,电网负荷、峰值用电和更高效热泵/空调技术的分量都会跟着变重。气候变化把「装不装空调」从生活选择变成了能源系统要认真应对的题目。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "把 Localized LoRA-MoE 做成 drop-in PEFT 插件:多任务微调不再互相打架",
+      "based_on": [
+        { "title": "Localized LoRA-MoE: Block-wise Low-Rank Experts With Adaptive Routing", "url": "https://arxiv.org/abs/2607.05114" }
+      ],
+      "why_now": "标准 LoRA 是一个「单瓶颈」结构,交替喂多任务时容易「梯度打架」,把 adapter 权重塌成没特长的平均值;Localized LoRA-MoE 用分块低秩专家 + 自适应路由来治这个病,刚发出来、还没有可复用实现。做成和 HuggingFace PEFT 接口兼容的 drop-in 插件正好补位,也容易攒 star。",
+      "feasibility": "单张 24GB 卡、只做 LoRA 微调不预训练;拿一个开源 7B 模型在 2-3 个任务上跑即可。约 2-3 周出第一版可用插件。",
+      "route": [
+        "先复现 baseline:用标准 LoRA 在 2-3 个任务上做交替多任务微调,把「梯度打架」(adapter 塌成平均值)这个现象跑出来",
+        "实现分块低秩专家 + 自适应路由,封成与 HF PEFT 接口兼容的模块",
+        "在同一批任务上对比 LoRA / 静态分块 / LoRA-MoE 三者的分任务表现",
+        "加一个「任务突变或传感器失效」的扰动场景,看动态路由是否真比静态强(这是论文卖点)",
+        "打包成 pip 可装的 drop-in 插件,连复现脚本和结果一起开源"
+      ],
+      "risk": "路由本身的开销可能吃掉一部分收益;多任务「打架」现象在小模型或太简单的任务上不一定明显,得挑对任务组合才显得出差距。"
+    },
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "把「运动学 vs 动力学」诊断推广到更多世界模型,看这个失败签名是不是普遍的",
+      "based_on": [
+        { "title": "Imagined Rollouts are Kinematic, Not Dynamic: A Diagnosis of Long-Horizon World-Model Failure", "url": "https://arxiv.org/abs/2607.05966" }
+      ],
+      "why_now": "原文只在一个公开的 DreamerV3 检查点(DMC walker-walk)上算了 iKCE、给了一个例子,没验证换个世界模型、换个 embodiment 这个「只学运动学」的签名还成不成立;把它当通用探针跑一圈,是便宜、低风险又可发表的扩展。",
+      "feasibility": "纯分析、只跑已发布 checkpoint 的推理,单卡够,不用训练。约 3-4 周出跨模型的诊断对比。",
+      "route": [
+        "先跑通论文的 iKCE 计算和扰动协议,在 DreamerV3 walker-walk 上复现「想象比真实物理高约两个数量级」",
+        "换 2-3 个公开的世界模型 checkpoint(不同任务/embodiment),用统一口径算 iKCE",
+        "设计跨物理临界(摩擦/质量/接触)的扰动,看 iKCE 是否总是「该响应时不响应」",
+        "试一个便宜的缓解:在想象 rollout 上加一项运动学一致性正则,量长时程回报有没有回来",
+        "整理成跨模型的诊断报告 + 复现代码开源"
+      ],
+      "risk": "不同世界模型的状态/动作接口不一,统一诊断有适配工程量;「缓解」这一步不一定见效,可能只能停在「把问题诊断清楚」这一层。"
+    },
+    {
+      "domain": "ai4s",
+      "type": "repo",
+      "title": "给机器学习原子间势(MLIP)做一个「能在实验室显卡上跑」的效率横评 harness",
+      "based_on": [
+        { "title": "Are Machine Learning Interatomic Potentials Truly Practical? A Benchmark of 23 Mainstream Models", "url": "https://arxiv.org/abs/2607.07647" }
+      ],
+      "why_now": "这篇刚指出大多数 MLIP benchmark 只奖励静态精度、不看推理效率和硬件可扩展性,导致模型越堆越大、实际价值不明;但它本身是一次性评测,没留下一个人人可复现、可持续加新模型的开源 harness——补这个正好,也容易攒 star。",
+      "feasibility": "纯推理、单卡(原文就在显存上限 80GB 的 DGX Spark 上跑);固定体系跑 MD 吞吐即可,不训练。约 2-3 周出第一版。",
+      "route": [
+        "选定固定体系(如 192 原子)和统一的 ASE 管线,先复现论文里几个代表性 MLIP 的精度和吞吐",
+        "把「加一个模型」做成配置化:填权重和调用接口就能进榜",
+        "同时量三条线——精度(meV/atom)、MD 吞吐、原子数可扩展性,产出一张对照表",
+        "画一张「精度-效率帕累托前沿」图,直接告诉用户在自己的显存预算下该选谁",
+        "打包成一条命令的 harness + 在线榜单开源,征集社区提交"
+      ],
+      "risk": "不同 MLIP 的依赖和调用接口差异大,统一起来有工程量;吞吐结果对硬件和批大小敏感,得固定环境并讲清口径,否则横评不可比。"
+    }
+  ]
+}
