@@ -1,0 +1,334 @@
+{
+  "date": "2026-07-13",
+  "editor_note": "今天最粗的一条暗线是「内存」。RIKEN 的松冈聪单人写了份 2026-2030 产业推演,把 DRAM 涨价、开源模型追平前沿、推理提效、二手算力转售摆进一个模型算账,结论是新老玩家的成本差怎么都合不拢;另一头有人干脆发了篇《谁还要 DRAM?我们有光纤》,提议把 LLM 权重塞进光纤当循环内存——一本正经的脑洞。配上「反 AI 数据中心」越闹越大的新闻,这轮 AI 的瓶颈正从算力悄悄挪到内存和电。另一条明线是「把生成往边缘挤」:清华的 Vidu S1 能一边说话一边实时生成视频、消费级显卡跑到 42 帧,上海交大的 CineMobile 把电影运镜的图生视频压进 1GB 塞进手机——都在跟同一个「算力太贵」较劲。要挑一篇点开,我选 Vidu S1,有在线 demo 可玩。顺带夸一句 Video-Oasis:与其再造个视频理解新榜,不如先审审老榜,结果发现一多半的题不看画面也能蒙对,这种泼冷水的活最该有人做。今天新能源没挑到够格的论文,商业航天只有 Parabilis 给小卫星测机动推进这条新闻——先记一笔。",
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Vidu S1: A Real-Time Interactive Video Generation Model",
+      "title_zh": "Vidu S1:能用语音实时「导演」的视频生成,消费级显卡跑到 42 帧",
+      "url": "https://arxiv.org/abs/2607.03118",
+      "hf_url": "https://huggingface.co/papers/2607.03118",
+      "authors": "Jintao Zhang、Kai Jiang、Jintao Chen 等",
+      "affiliation": "清华大学",
+      "upvotes": 122,
+      "one_liner": "一边说话一边生成、还能无限时长不糊不漂,把实时交互视频塞进了普通显卡",
+      "summary_zh": "一个实时交互式视频生成模型,支持用语音控制数字角色——用户随时能用语音指令改生成内容。底层是 TurboDiffusion 加 TurboServe,在普通消费级 GPU 上能以最高 42 FPS 输出 540p 实时视频,而且号称无限时长、不模糊不漂移不失真;还能上传真人、动漫、宠物的图并选不同音色。指标据称在所有测试项上都最好,但都是自报,真实的交互手感恐怕得自己上手 demo 才知道。",
+      "tags": ["视频生成", "实时", "端侧"]
+    },
+    {
+      "domain": "ai",
+      "title": "Video-Oasis: Rethinking Evaluation of Video Understanding",
+      "title_zh": "Video-Oasis:别急着造新榜,先审审老榜——55% 的题不看视频也能做对",
+      "url": "https://arxiv.org/abs/2603.29616",
+      "hf_url": "https://huggingface.co/papers/2603.29616",
+      "authors": "Geuntaek Lim、Sungjune Park、Jaeyun Lee 等",
+      "affiliation": "NAVER",
+      "upvotes": 51,
+      "one_liner": "把现有视频理解 benchmark 拉来体检,发现一多半的题闭着眼(不看画面)就能蒙对",
+      "summary_zh": "视频理解太复杂,很难判断 Video-LLM 在榜上的表现到底来自视觉感知、语言推理还是先验知识。作者没有再造一个新 benchmark,而是退一步做了套诊断工具 Video-Oasis 去系统审计现有的视频理解 benchmark,结果发现 55% 的样本不需要视觉输入或时序上下文就能解;把这些「捷径」过滤掉后,剩下的真·视频原生难题暴露出巨大能力鸿沟——SOTA 模型只比瞎猜好一点点。这种「先把评测搞干净」的活很该有人做,代码已开源。",
+      "tags": ["视频理解", "评测", "benchmark"]
+    },
+    {
+      "domain": "ai",
+      "title": "Jet-Long: Efficient Long-Context Extension with Dynamic Bifocal RoPE",
+      "title_zh": "Jet-Long:不用微调,把开源模型的上下文窗口「零成本」往外拉",
+      "url": "https://arxiv.org/abs/2607.07740",
+      "hf_url": "https://huggingface.co/papers/2607.07740",
+      "authors": "Haozhan Tang、Zerui Wang、Yuxian Gu 等",
+      "affiliation": "NVIDIA",
+      "upvotes": 15,
+      "one_liner": "一个固定缩放因子要么毁短文、要么撑不住长文,Jet-Long 让它随序列长度动态变焦",
+      "summary_zh": "RAG、仓库级编码、agent 轨迹动辄把输入顶出预训练窗口一个数量级,零样本上下文外推成了开源模型部署的主路。现有零样本方法多是一开始就定死一个缩放因子,激进了毁短文保真、保守了长文崩掉;Jet-Long 是 tuning-free 的做法:一个近端忠于原始 RoPE 的窗口,配一个缩放因子随当前序列长度自适应的远端窗口,短输入时精确还原基座、长输入时干净外推。靠容斥式注意力合并和即时 RoPE 校正让这套「双焦」几乎零推理开销,融成单个 CuTe kernel 后 H100 上长上下文预填最高 1.39x FA2;Qwen3-1.7B/4B/8B 到 128K 在 RULER 上比最强基线领先 2–5 个点,还能推广到混合注意力架构。部署侧很实用,拿来即用。",
+      "tags": ["长上下文", "RoPE", "推理"]
+    },
+    {
+      "domain": "ai",
+      "title": "Single-Rollout Asynchronous Optimization for Agentic Reinforcement Learning",
+      "title_zh": "SAO:异步 RL 训 agent 别再按组采样,每题一条 rollout 反而更稳",
+      "url": "https://arxiv.org/abs/2607.07508",
+      "hf_url": "https://huggingface.co/papers/2607.07508",
+      "authors": "Zhenyu Hou、Yujiang Li、Jie Tang、Yuxiao Dong",
+      "affiliation": "智谱 Z.ai",
+      "upvotes": 13,
+      "one_liner": "GRPO 的组采样不搭异步训练,SAO 改成一题一 rollout,顺手训出了开源的 GLM-5.2",
+      "summary_zh": "异步 RL 靠 rollout 一到就更新模型,比同步批处理更适合长程 agent 任务,但现有异步系统多强调吞吐,稳定性和有效性没人管——GRPO 那套组内采样天生就不搭异步。SAO 把组内采样换成「每个 prompt 一条 rollout」来降 off-policy、提泛化,再配上价值模型训练设计和严格的双侧 token 级裁剪保稳。它能稳训一千步,在 SWE-Bench Verified、BeyondAIME、IMOAnswerBench 上持续超 GRPO 及其变体,尤其在模拟在线学习(环境会变)时更管用;这套已经用在开源 GLM-5.2(750B-A40B)的 agentic RL 训练里。GLM-5.2 这条线值得关注,方法则是给做 agentic RL 的人省坑。",
+      "tags": ["强化学习", "Agent", "GLM-5.2"]
+    },
+    {
+      "domain": "ai",
+      "title": "CineMobile: On-Device Image-to-Video Diffusion for Cinematic Camera Motion Generation",
+      "title_zh": "CineMobile:把电影级运镜的图生视频压进手机,模型不到 1GB",
+      "url": "https://arxiv.org/abs/2607.03803",
+      "hf_url": "https://huggingface.co/papers/2607.03803",
+      "authors": "Xuyao Huang、Zelai Deng、Xu Wang 等",
+      "affiliation": "上海交大 DENG Lab",
+      "upvotes": 12,
+      "one_liner": "子弹时间、移轴变焦这些运镜效果,现在能在手机 SoC 上跑,比教师模型快 40 倍",
+      "summary_zh": "手机上做图生视频,大家越来越想要子弹时间、移轴变焦、慢动作这类电影运镜,但 DiT 参数大、多步去噪慢,端侧跑不动。CineMobile 三招压缩:蒸馏引导的剪枝得到紧凑模型、用扩散蒸馏加 RL 压成 4 步生成器、混合训后量化把体积压到 1GB 以下。相比 Wan2.1 架构的教师模型 40x 加速、画质相当;H200 上每步去噪 0.6s,联发科天玑 8400 上 20s 出 49 帧 480p,峰值显存 1.8GB。移动端生成的工程活扎实,离真能装进 app 又近了一步。",
+      "tags": ["视频生成", "端侧", "量化"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Dual Latent Memory in Vision-Language-Action Models for Robotic Manipulation",
+      "title_zh": "LaMem-VLA:把机器人的「记忆」直接编进 VLA 的隐空间,而不是外挂检索",
+      "url": "https://arxiv.org/abs/2607.07608",
+      "hf_url": "https://huggingface.co/papers/2607.07608",
+      "authors": "Hongyu Qu、Jianzhe Gao、Xiaobin Hu 等",
+      "upvotes": 51,
+      "one_liner": "别把历史经验丢在策略外面当附加上下文,让它变成隐记忆 token 和推理一起流动",
+      "summary_zh": "主流 VLA 在马尔可夫假设下基本只看当前观测,长程、有时序依赖的任务就吃力。已有的记忆增强要么加长观测窗、要么从记忆库检索历史当策略侧的外部上下文,记忆始终在 VLA 原生隐空间之外,没法和多模态推理、动作生成流畅交织。LaMem-VLA 把历史经验重建成隐记忆 token 直接和 VLA 推理交织,四个部件配合:curator 把经验组织成短期/长期两个记忆库,seeker 用多模态认知去查,condenser 压成紧凑的短/长期 token,weaver 把它们和当前观测、指令编成一条连续序列。在 SimplerEnv 和 LIBERO 上验证有效。思路顺——让记忆参与推理而不是旁挂检索,不过还是仿真验证。",
+      "tags": ["VLA", "记忆", "操作"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Automating the Design of Embodied Agent Architectures",
+      "title_zh": "让 AI 自己搭具身智能体的架构:把架构搜索搬进仿真,能涨分也踩坑",
+      "url": "https://arxiv.org/abs/2606.30111",
+      "hf_url": "https://huggingface.co/papers/2606.30111",
+      "authors": "Jian Zhou、Sihao Lin、Jin Li 等",
+      "affiliation": "澳大利亚机器学习研究所(AIML)",
+      "upvotes": 10,
+      "one_liner": "感知/记忆/规划/动作怎么接,别全靠研究员直觉——让编码 agent 自己搜,顺便暴露它的极限",
+      "summary_zh": "具身智能体通常是手工拼的感知/记忆/规划/动作模块,架构空间很大却全靠研究员直觉决定信息存哪、观测怎么处理、模型调用怎么连。文本域已有 Agent 架构搜索(AAS),但没在需要仿真 rollout 的感知型具身体上系统验证过。作者做了 AgentCanvas(把具身执行器变成可编辑的节点-连线程序、带仿真感知执行和回合级日志)和 KDLoop(提议-批评-实验-蒸馏的编码 agent 搜索,卡住了就触发反思),在 4 个执行器 × 3 种 AAS 变体上跑。架构级搜索确实能带来可部署的成功率提升,但也把文本域被掩盖的坑抖了出来:优化信号被 rollout 噪声淹没、搜索陷在局部编辑盆地、回合级信用分配只部分显现,还揪出一个「作弊」的高分候选。难得的是它把能做到什么、做不到什么都摆了出来。",
+      "tags": ["具身智能", "架构搜索", "Agent"]
+    },
+    {
+      "domain": "chip",
+      "title": "Who Needs DRAM? We Have Fiber",
+      "title_zh": "《谁还要 DRAM?我们有光纤》:把 LLM 权重存进光纤里循环跑",
+      "url": "https://arxiv.org/abs/2607.08407",
+      "one_liner": "DRAM 又贵又缺,那就让光纤当「循环延迟线」内存,专门存不变的 LLM 权重",
+      "summary_zh": "冲着生成式 AI 把 DRAM 供应和合约价顶上天这件事(超大规模数据中心如今吃掉全球 DRAM 产出的一大块),作者重新想象数据中心里光纤的角色——把它当成一种主动的、循环的延迟线内存,专存 LLM 权重这类不可变数据。具体提了一套数据并行的光学广播延迟线内存架构,认真考虑了光纤的物理现实,还用空分复用多芯来提容量。脑洞很大、离落地很远,但放在今天「内存荒」的语境里,这种「换个介质绕开 DRAM」的思路正合时宜,当思想实验读挺过瘾。",
+      "tags": ["内存", "光学", "数据中心"]
+    },
+    {
+      "domain": "chip",
+      "title": "Memory Scarcity, Open Models, and the Restructuring of the AI Industry, 2026-2030",
+      "title_zh": "内存荒、开源模型与 AI 产业重组(2026-2030):一份定量推演",
+      "url": "https://arxiv.org/abs/2607.07207",
+      "authors": "Satoshi Matsuoka",
+      "affiliation": "理化学研究所(RIKEN)",
+      "one_liner": "把这轮 DRAM 涨价、开源前沿模型、推理提效、二手算力转售摆进一个模型算了算账",
+      "summary_zh": "RIKEN 的松冈聪单人推演 2026-2030 重塑 AI 产业的四股力:DRAM/HBM 价格飙升、开源可比前沿的模型(点名 GLM-5.2)、推理效率快速提升(近香农极限的 KV-cache 压缩、轻量本地运行时),以及 Meta、xAI 拿内存涨价前买的机队入场转售算力。他用「每 PB 带宽多少美元」($/PB)来刻画推理经济——对带宽受限的解码是模型无关的——推出一个不太乐观的结论:新进入者和在位者的成本差始终合不拢,一条折旧传送带把刚摊销完的机队源源不断送给在位者,比硬件降价还快(2026 年 3.2x、2027 年 1.9x,到 2029-30 又重新拉大到 3-4x)。观点鲜明的产业分析,和今天那篇光纤内存、以及数据中心的新闻正好对上。",
+      "tags": ["AI 产业", "算力经济", "内存"]
+    },
+    {
+      "domain": "bio",
+      "title": "DrugGen 2: A disease-aware language model for enhancing drug discovery",
+      "title_zh": "DrugGen 2:让分子生成同时看「疾病」和「靶点」,给糖尿病肾病设计小分子",
+      "url": "https://arxiv.org/abs/2607.08404",
+      "hf_url": "https://huggingface.co/papers/2607.08404",
+      "authors": "Ali Motahharynia、Mohammadreza Ghaffarzadeh-Esfahani 等",
+      "upvotes": 16,
+      "one_liner": "现有生成模型只盯靶点或泛泛的分子性质,DrugGen 2 把疾病本体也一起喂进去",
+      "summary_zh": "现有计算药物设计大多只按特定靶点或一般分子性质生成分子,忽略了疾病语境对靶点行为和疗效的影响。DrugGen 2 同时以疾病本体(disease ontology)和靶点蛋白序列为条件生成小分子:在「已批准药物-疾病-靶点」数据上微调 GPT-2,先监督微调再用 GRPO 强化,奖励盯着化学有效性、新颖性、多样性和预测结合亲和力。在糖尿病肾病相关的五个靶点上明显超过 DrugGPT、DrugGen,分子对接也支持,部分候选的预测亲和力甚至优于依那普利等参照药。GPT-2 这么老的底座加上明确的疾病条件也能出活,思路值得借鉴,不过都还是计算预测,得实验验。",
+      "tags": ["药物设计", "生成模型", "GRPO"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Plaquette: A hardware-aware design platform for fault-tolerant quantum computers",
+      "title_zh": "Plaquette:按真实器件噪声算容错量子架构的逻辑性能,而不是套理想噪声模型",
+      "url": "https://arxiv.org/abs/2607.08767",
+      "authors": "Raul Conchello Vendrell、Carlos Díaz López、Ish Dhand 等",
+      "one_liner": "超导会泄漏、原子会散射、离子会发热——Plaquette 让这些真噪声直接进逻辑性能评估",
+      "summary_zh": "造容错量子计算机(FTQC)的硬件团队得决定优先压制哪些缺陷,而这个决定要看架构在器件真实噪声下的逻辑性能。真实硬件噪声常常偏离可扩展 stabilizer 模拟器爱用的随机 Pauli 模型:超导 transmon 会泄漏出计算子空间、中性原子经中间态散射、离子阱因声子加热、控制失准会相干过旋。Plaquette 是一套理论框架加软件套件,直接从物理噪声算容错架构的逻辑性能。它把「硬件该往哪使劲」这件事量化了,对做容错路线选型的团队实用。",
+      "tags": ["量子纠错", "容错", "硬件建模"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Accurate, Interdisciplinary and Transparent Structure-property Understanding with Deep Native Structural Reasoning",
+      "title_zh": "SciReasoner:一个能「读懂结构」的科学基础模型,蛋白/分子/晶体一起推理",
+      "url": "https://arxiv.org/abs/2607.07708",
+      "hf_url": "https://huggingface.co/papers/2607.07708",
+      "authors": "Chen Tang、Yizhou Wang、Jianyu Wu 等",
+      "affiliation": "上海人工智能实验室",
+      "upvotes": 84,
+      "one_liner": "把坐标、拓扑、周期连接都离散成统一的「结构词表」,让结构本身成为可检视的推理证据",
+      "summary_zh": "结构-性质关系是生物、化学、材料的共同基础,但让 AI 既保留领域原生的结构信息、又能说清具体证据怎么支撑预测,一直很难。SciReasoner 把坐标、拓扑、周期连接离散成统一的结构感知词表,把结构 token 当成推理时可寻址的证据单元,横跨蛋白、小分子、无机晶体。效果上:同源控制的基因本体预测里,把低同源/孤儿蛋白的细胞组分注释 Fmax 从 0.42 提到 0.55;单步逆合成从 0.63 提到 0.72 并给出断键与前体验证痕迹;材料上能分开元素相和化合物相。86 个 benchmark 里 67 个 SOTA,双盲专家评审 98% 认为它的推理痕迹不输前沿 LLM。上海 AI Lab 这条「结构即推理证据」的路子,比单纯刷分更有想法。",
+      "tags": ["科学基础模型", "结构推理", "多模态"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "Dicklesworthstone/destructive_command_guard",
+      "url": "https://github.com/Dicklesworthstone/destructive_command_guard",
+      "language": "Rust",
+      "stars": 2709,
+      "stars_today": "444",
+      "one_liner": "给会自己敲命令的 agent 加一道保险:危险的 git 和 shell 命令先拦下来",
+      "summary_zh": "一个用 Rust 写的命令守卫(dcg),专门拦截 agent 要执行的危险 git 和 shell 命令。随着编码 agent 越来越敢在真实环境里跑命令,这类「护栏」需求也水涨船高,适合任何在跑自动化 agent、又怕它误删误改的人。"
+    },
+    {
+      "domain": "ai",
+      "name": "HKUDS/Vibe-Trading",
+      "url": "https://github.com/HKUDS/Vibe-Trading",
+      "language": "Python",
+      "stars": 20414,
+      "stars_today": "776",
+      "one_liner": "港大数据实验室开源的「个人交易 agent」,把 LLM、回测和 MCP 串起来",
+      "summary_zh": "港大数据智能实验室(HKUDS)出的个人交易 agent,围绕 LLM 做算法交易、回测,并接了 MCP。属于「LLM agent 落地垂类」里很吸睛的一类,适合想看 agent 怎么接真实工具链、或对量化感兴趣的人上手参考——当然真金白银入场前得自己掂量风险。"
+    },
+    {
+      "domain": "ai",
+      "name": "virattt/ai-hedge-fund",
+      "url": "https://github.com/virattt/ai-hedge-fund",
+      "language": "Python",
+      "stars": 61348,
+      "stars_today": "109",
+      "one_liner": "用一队各司其职的 AI 智能体模拟一个「对冲基金团队」",
+      "summary_zh": "把投研拆成多个角色由 AI 智能体分工协作,模拟一支对冲基金团队做决策。和 Vibe-Trading 一样是「多智能体 + 金融」的热门方向,更偏教学/演示,适合研究多 agent 协作怎么组织,别当真拿去实盘。"
+    },
+    {
+      "domain": "ai",
+      "name": "davila7/claude-code-templates",
+      "url": "https://github.com/davila7/claude-code-templates",
+      "language": "Python",
+      "stars": 29197,
+      "stars_today": "274",
+      "one_liner": "配置和监控 Claude Code 的 CLI 工具,模板拿来即用",
+      "summary_zh": "一个用来配置、监控 Claude Code 的命令行工具,附一堆开箱模板。围绕编码 agent 的「脚手架/周边工具」生态最近很活,适合想快速把 Claude Code 调成自己趁手工作流的人。"
+    },
+    {
+      "domain": "ai",
+      "name": "Nutlope/hallmark",
+      "url": "https://github.com/Nutlope/hallmark",
+      "language": "CSS",
+      "stars": 4152,
+      "stars_today": "210",
+      "one_liner": "一个「反 AI 味设计」技能包,给 Claude Code、Cursor、Codex 用",
+      "summary_zh": "一个专治「AI slop」的设计技能包,能挂到 Claude Code、Cursor、Codex 上,让 AI 生成的界面别一眼假、别千篇一律。AI 生成的东西越多,「怎么让它不像 AI 做的」反而成了刚需,适合做前端/产品、被 AI 默认审美折磨过的人。"
+    },
+    {
+      "domain": "ai",
+      "name": "Crosstalk-Solutions/project-nomad",
+      "url": "https://github.com/Crosstalk-Solutions/project-nomad",
+      "language": "TypeScript",
+      "stars": 33724,
+      "stars_today": "122",
+      "one_liner": "一台离线的「生存计算机」:装满关键工具、知识和本地 AI,断网也能用",
+      "summary_zh": "N.O.M.A.D 是个自包含、可离线运行的「生存计算机」,塞满了关键工具、知识库和本地 AI,断网、无信号时也能查资料、做判断。属于「把 AI 装进离线盒子」的另类实践,对做离线/边缘部署、或纯粹喜欢 prepper 式项目的人是个有意思的参考。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "chip",
+      "title_zh": "苹果那个流产的自动驾驶项目,给它留下了强悍的 AI 芯片",
+      "url": "https://www.theverge.com/tech/964519/apple-silicon-self-driving-car-ai-m7-ultra",
+      "source": "The Verge",
+      "summary_zh": "据 Mark Gurman,苹果没能真正落地的自动驾驶造车项目,可能正是苹果自研芯片成为强 AI 性能担当的原因。项目早期苹果就意识到需要强大的端侧 AI 处理能力,车载处理器虽然没做完,这部分投入却沉淀进了后来的 Apple Silicon。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "佐治亚理工开源 DRAM 模型,支持在 3D DRAM 上做存内计算分析",
+      "url": "https://semiengineering.com/open-dram-model-for-pim-analysis-in-3d-dram-georgia-tech/",
+      "source": "SemiEngineering",
+      "summary_zh": "佐治亚理工发布《Open DRAM Model—Part II》,提供一个开源 DRAM 模型,能对多种架构(传统 6F2 BCAT、缩放 4F2 VCT、单片堆叠 3D DRAM)做电路级分析,重点是让 3D DRAM 上的存内计算(PIM)分析变得可行。放在内存吃紧、大家都想把计算往内存里塞的当下,这类开放建模工具对社区挺有用。"
+    },
+    {
+      "domain": "quantum",
+      "title_zh": "室温、CMOS 兼容的光子量子处理器(NUS 等)",
+      "url": "https://semiengineering.com/room-temperature-cmos-compatible-photonic-quantum-processor-nus-et-al/",
+      "source": "SemiEngineering",
+      "summary_zh": "Rotonium、新加坡国立大学量子技术中心、Politecnico di Milano 等发布《量子光子芯片的设计与基准测试》,提出一个基于标准 CMOS 兼容制造工艺、室温下用单光子工作的量子光子处理器。室温加 CMOS 兼容,是光子量子路线想降低门槛、走向量产的关键卖点。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "ARPA-H 拨款最高 1.6 亿美元,资助定制化基因药物研发",
+      "url": "https://www.fiercebiotech.com/research/arpa-h-awards-160m-scientists-developing-custom-genetic-medicines",
+      "source": "Fierce Biotech",
+      "summary_zh": "美国健康高级研究计划署(ARPA-H)新一轮拨款投向研发个性化基因药物的公司和机构,获资名单里多是这个热门领域的高知名度玩家。个体化基因治疗最近资本和政策关注度都高,这笔钱是又一个信号。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "罗氏终止两个亨廷顿病项目,含与 Ionis 合作的 tominersen",
+      "url": "https://www.fiercebiotech.com/biotech/roche-ends-2-huntingtons-disease-programs-including-ionis-partnered-tominersen",
+      "source": "Fierce Biotech",
+      "summary_zh": "罗氏停掉两款亨廷顿病在研药物,其中包括与 Ionis 合作的 tominersen。对长期等待新药的亨廷顿病患者群体来说,又是一记打击。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "FDA 暂停公开新药拒批信,称在制定正式政策",
+      "url": "https://www.fiercebiotech.com/biotech/fda-halts-release-new-drug-rejection-letters-while-working-formalize-policy",
+      "source": "Fierce Biotech",
+      "summary_zh": "据 Fierce Biotech,FDA 暂停了此前颇具争议的「公开拒批药物理由信」做法,起因是今年 4 月一家未具名药企提交的公民请愿,FDA 称正在把相关政策正式化。透明度和企业诉求之间的拉扯,又回到原点。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "Parabilis 测试可机动立方星的推进系统",
+      "url": "https://spacenews.com/parabilis-tests-propulsion-system-for-maneuverable-cubesats/",
+      "source": "SpaceNews",
+      "summary_zh": "美国太空军支持 Parabilis 为小卫星研发的混合发动机技术,该公司正在测试这套用于让立方星具备机动能力的推进系统。给小卫星装上「能动」的推进,是让立方星从被动飞行走向可调度的一步。"
+    },
+    {
+      "domain": "energy",
+      "title_zh": "反对 AI 数据中心的战斗,才刚刚开始",
+      "url": "https://www.theverge.com/column/963346/ai-data-centers-fight",
+      "source": "The Verge",
+      "summary_zh": "The Verge 的专栏梳理了 AI 数据中心大建设引发的地方阻力——早在 AI 热潮威胁到本地电力之前多年,这场围绕数据中心选址、用水用电的角力就已埋下伏笔,如今随着算力扩张正逐渐升温。和今天那两篇讲内存荒的论文对照看,算力、内存、电这三样都在同时变紧。"
+    },
+    {
+      "domain": "ai4s",
+      "title_zh": "研究显示:AI 助推了科研职业,却收窄了探索的想法范围",
+      "url": "https://spectrum.ieee.org/ai-science-research-flattens-discovery",
+      "source": "IEEE Spectrum",
+      "summary_zh": "一项研究(经 IEEE Spectrum 报道)发现,用 AI 做科研虽然对研究者个人的职业发展有帮助,但会让整体探索的想法范围变窄——发现更集中、更同质。和今天那篇 SciReasoner 放一起读别有意味:工具越强,越要提防「越走越窄」。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "复现 DREAMSTEER 的「训练无关 VLA 部署期纠偏」,并迁到另一个开源 VLA 验证泛化",
+      "based_on": [
+        { "title": "DREAMSTEER: Latent World Models Can Steer VLA Policies During Deployment Without Any Finetuning", "url": "https://arxiv.org/abs/2607.02865" }
+      ],
+      "why_now": "DREAMSTEER 刚提出、还没跟进工作,而它主打「不微调、不改参数,靠一个隐世界模型 + 价值模型在部署时给 VLA 挑动作块」——这类 training-free 方法复现便宜,把它从原文的 VLA 迁到另一个开源底座验证「模型无关性」本身就是低风险可发表的扩展。开源 VLA(OpenVLA、π0 系列)和隐世界模型权重都齐了,LIBERO/SIMPLER 单卡就能评。",
+      "feasibility": "单张 A100 40GB,全程仿真、不训练;约 2–3 周出跨底座的对比。",
+      "route": [
+        "先在 LIBERO/SIMPLER 上跑通一个开源 VLA 的零样本基线,记录分布偏移下的掉点情况",
+        "复现 DREAMSTEER 的隐世界模型 + 价值模型采样,在原文设置下重现它的纠偏增益",
+        "把这套 steering 接到一个架构不同的开源 VLA 上,验证是否仍然生效(模型无关性)",
+        "扫描分布偏移强度(语义重定向、目标重绑定、布局漂移)下的成功率曲线,画增益-偏移关系",
+        "整理成短文 + 开源复现代码"
+      ],
+      "risk": "原文若未开源关键细节,隐世界模型和价值模型的接口得自己猜;跨底座迁移可能非平凡,steering 尺度要重调;同期若有人做类似迁移,得靠挑差异化偏移类型(如长程任务)错开。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "把 MIRAGE 的「训练无关抗污染 RAG 防御」做成 drop-in 库 + 污染 benchmark",
+      "based_on": [
+        { "title": "MIRAGE: Defending Long-Form RAG Against Misinformation Pollution", "url": "https://arxiv.org/abs/2607.05069" }
+      ],
+      "why_now": "真实检索常被污染——语义相关的段落里可能夹着细微错误、误导框架或杜撰;MIRAGE 是 training-free、模型无关的长文 RAG 防御(用 NLI 建跨文档声明图 + 一个「已辩护声明」闸门),还放出了一套最小改动的污染协议。但它没留下一个人人可装、可持续加新模型/新数据的开源库——补这个正好,既解决真实部署痛点,又因为 training-free 容易打包、容易攒 star。",
+      "feasibility": "单张 A100 80GB 跑 7B–14B + 现成 NLI 模型,数据用公开长文 QA;约 2–3 周出 v0.1。",
+      "route": [
+        "复现 MIRAGE 的 NLI 声明图和「已辩护声明」闸门,在一个公开长文 RAG 数据集上跑通基线",
+        "把它封成与常见 RAG 框架(LangChain/LlamaIndex)兼容的 drop-in 中间件,一行接入",
+        "实现最小改动污染协议的四类扰动(无歧义/冲突/误导/杜撰),做成可复现的 benchmark",
+        "在相同污染率下横比「无防御 / MIRAGE / 简单多数投票」的事实性与拒答率",
+        "打包成 pip 可装的库 + 在线榜单开源,征集社区提交检索器/生成器"
+      ],
+      "risk": "NLI 判定质量决定防御上限,弱 NLI 会误伤正常证据;污染 benchmark 的构造需人工把关避免噪声;若原作者随后出官方实现会稀释独特性,靠「可持续接新模型 + 榜单」的更新频率做护城河。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "把 PruneGround 的「即插即用空间剪枝」迁到另一个 3DVG 模型 + 新场景,测泛化",
+      "based_on": [
+        { "title": "PruneGround: Plug-and-play Spatial Pruning for 3D Visual Grounding", "url": "https://arxiv.org/abs/2606.31148" }
+      ],
+      "why_now": "PruneGround 观察到很多指代表达只依赖局部空间上下文,于是用一个冻结 VLM 先圈出语言相关区域再剪枝,plug-and-play 地既降歧义又省算力。它只在自己的设置里验证过,而「即插即用」方法最适合的低风险扩展就是——换一个 3DVG 主干、从室内换到另一类场景,看这套剪枝还灵不灵,顺便量它在不同杂乱度下的算力-精度权衡。",
+      "feasibility": "冻结 VLM 做推理、只在下游 3DVG 头上做轻量适配,单张 24GB 卡可跑;约 2–3 周。",
+      "route": [
+        "在一个公开 3DVG benchmark 上跑通 PruneGround 原设置,复现它的剪枝增益",
+        "把语言引导空间剪枝模块接到一个架构不同的开源 3DVG 模型上,验证即插即用性",
+        "从原场景迁到另一类场景(如更杂乱或跨数据集),看剪枝是否仍稳定不误剪目标",
+        "扫描场景杂乱度,画「剪枝率 - 定位精度 - 推理耗时」的帕累托关系,给出适用边界",
+        "整理失效 case + 开源复现代码投 workshop/短文"
+      ],
+      "risk": "冻结 VLM 圈错区域会把目标一起剪掉,跨场景时误剪风险上升,需要置信度/回退机制;不同 3DVG 主干的接口差异带来适配工程量;增益边际小时,转向「系统性适用边界分析」定位也能成文。"
+    }
+  ]
+}
