@@ -1,6 +1,17 @@
 {% extends "base.html" %}
 {% block title %}前沿手记 · 归档{% endblock %}
 {% block stamp %}往期归档 · 共 {{ issues | length }} 期{% endblock %}
+{% block nav_active %}archive{% endblock %}
+
+{% block masthead %}
+<header class="masthead">
+  <div class="masthead__brand">
+    <a class="seal" href="{{ root }}index.html" aria-label="前沿手记"><span>前</span><span>沿</span><span>手</span><span>记</span></a>
+    <h1 class="masthead__title">归档</h1>
+  </div>
+  <p class="masthead__dash"><span class="masthead__dot" aria-hidden="true"></span>ARCHIVE · 共 {{ issues | length }} 期</p>
+</header>
+{% endblock %}
 
 {% block content %}
 <section class="column">

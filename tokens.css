@@ -1,0 +1,35 @@
+/* Hallmark · tokens — 前沿手记 · theme: Cobalt (CJK adaptation)
+ * Portable copy. Live copy lives in scripts/templates/base.html :root — keep in sync. */
+:root {
+  --color-paper:        oklch(98.5% 0.004 250);
+  --color-paper-2:      oklch(96.5% 0.006 250);
+  --color-ink:          oklch(24% 0.02 258);
+  --color-ink-2:        oklch(34% 0.018 257);
+  --color-muted:        oklch(50% 0.015 257);
+  --color-rule:         oklch(91% 0.008 255);
+  --color-rule-2:       oklch(85% 0.01 255);
+  --color-accent:       oklch(58% 0.20 256);
+  --color-accent-ink:   oklch(98.5% 0.004 250);
+  --color-graphite:     oklch(22% 0.016 260);
+  --color-graphite-ink: oklch(90% 0.01 255);
+  --color-focus:        oklch(58% 0.20 256);
+  --color-accent-bright: oklch(76% 0.12 256); /* 暗底(石墨带)上的钴蓝文字,保 4.5:1 */
+  --mark-wash:          oklch(93% 0.045 256);
+
+  --font-display: "Space Grotesk", -apple-system, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  --font-body:    "Inter", -apple-system, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, "PingFang SC", "Noto Sans SC", monospace;
+
+  --space-3xs: 0.25rem;  --space-2xs: 0.5rem;  --space-xs: 0.75rem;
+  --space-sm:  1rem;     --space-md:  1.5rem;  --space-lg: 2rem;
+  --space-xl:  3rem;     --space-2xl: 4.5rem;  --space-3xl: 7rem;
+
+  --text-xs: 0.75rem;  --text-sm: 0.875rem; --text-md: 1.125rem;
+  --text-lg: 1.375rem; --text-xl: 1.75rem;  --text-2xl: 2.25rem;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-short: 180ms;
+  --radius-xs: 3px;
+  --radius-control: 6px;
+  --radius-card: 10px;
+}

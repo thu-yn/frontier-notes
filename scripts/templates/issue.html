@@ -2,8 +2,32 @@
 {% from "macros.html" import like_button %}
 {% block title %}前沿手记 · 第 {{ issue.issue_no }} 期 · {{ issue.date }}{% endblock %}
 {% block stamp %}第 {{ issue.issue_no }} 期 · {{ issue.date_cn }}{% if not is_latest %} · 往期{% endif %}{% endblock %}
+{% block nav_active %}issue{% endblock %}
+
+{% block masthead %}
+<header class="masthead">
+  <div class="masthead__brand">
+    <a class="seal" href="{{ root }}index.html" aria-label="前沿手记"><span>前</span><span>沿</span><span>手</span><span>记</span></a>
+    <h1 class="masthead__title">前沿手记</h1>
+  </div>
+  <p class="masthead__dash"><span class="masthead__dot" aria-hidden="true"></span>ISSUE {{ "%03d" % issue.issue_no }} · {{ issue.date }} · {{ issue.date_cn.split("·")[-1] | trim }}{% if not is_latest %} · 往期{% endif %}</p>
+  <p class="masthead__kanji">{{ issue.date_cn_kanji }}</p>
+  <p class="tagline">每天早晨的 AI 前沿摘录 —— 论文、开源与资讯,读过再挑给你。</p>
+</header>
+{% endblock %}
 
 {% block content %}
+{% set present = issue_domains(issue) %}
+<div class="dashboard" role="group" aria-label="本期速览">
+  <span class="dashboard__tick dashboard__tick--tl" aria-hidden="true">+</span>
+  <span class="dashboard__tick dashboard__tick--br" aria-hidden="true">+</span>
+  {% if issue.research_ideas %}<span class="dashboard__stat">研究点 {{ "%02d" % (issue.research_ideas | length) }}</span>{% endif %}
+  {% if issue.papers %}<span class="dashboard__stat">论文 {{ "%02d" % (issue.papers | length) }}</span>{% endif %}
+  {% if issue.repos %}<span class="dashboard__stat">开源 {{ "%02d" % (issue.repos | length) }}</span>{% endif %}
+  {% if issue.news %}<span class="dashboard__stat">资讯 {{ "%02d" % (issue.news | length) }}</span>{% endif %}
+  <span class="dashboard__domains" aria-hidden="true">{% for d in present %}<i style="--dot: {{ DOMAINS[d][1] }}"></i>{% endfor %}</span>
+</div>
+
 {% if issue.editor_note %}
 <aside class="editor-note">
   <span class="label">编者按</span>
@@ -15,13 +39,14 @@
 <section class="column" id="ideas">
   <div class="column-head">
     <h2>今日可做的研究点</h2>
+    <span class="column-head__latin" aria-hidden="true">IDEAS/{{ "%02d" % (issue.research_ideas | length) }}</span>
     <span class="count">{{ issue.research_ideas | length }} 条 · 单人可上手</span>
   </div>
   {% for idea in issue.research_ideas %}
   {% set d = idea.domain | default("ai") %}
   <article class="entry idea" data-domain="{{ d }}">
     {{ like_button(idea, "ideas", issue.date) }}
-    <h3>{{ idea.title }}<span class="domain-chip" style="color: {{ DOMAINS[d][1] }}">{{ DOMAINS[d][0] }}</span></h3>
+    <h3>{{ idea.title }}<span class="domain-chip" style="--dot: {{ DOMAINS[d][1] }}">{{ DOMAINS[d][0] }}</span></h3>
     {% if idea.why_now %}<p class="idea-line"><b>为什么现在:</b>{{ idea.why_now }}</p>{% endif %}
     {% if idea.feasibility %}<p class="idea-line"><b>可行性:</b>{{ idea.feasibility }}</p>{% endif %}
     {% if idea.route %}
@@ -32,13 +57,12 @@
     {% if idea.based_on %}
     <p class="meta">出发点:{% for b in idea.based_on %}<a href="{{ b.url }}">{{ b.title }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</p>
     {% endif %}
-    {% if idea.risk %}<p class="idea-risk">风险:{{ idea.risk }}</p>{% endif %}
+    {% if idea.risk %}<p class="idea-risk"><span class="risk-tag">风险</span>{{ idea.risk }}</p>{% endif %}
   </article>
   {% endfor %}
 </section>
 {% endif %}
 
-{% set present = issue_domains(issue) %}
 {% if present | length > 1 %}
 <div class="filter-bar" role="group" aria-label="按领域筛选">
   <button type="button" data-domain="all" aria-pressed="true">全部</button>
@@ -52,13 +76,14 @@
 <section class="column" id="papers">
   <div class="column-head">
     <h2>论文</h2>
+    <span class="column-head__latin" aria-hidden="true">PAPERS/{{ "%02d" % (issue.papers | length) }}</span>
     <span class="count">{{ issue.papers | length }} 篇 · 来自 HF Daily Papers</span>
   </div>
   {% for p in issue.papers %}
   {% set d = p.domain | default("ai") %}
   <article class="entry" data-domain="{{ d }}">
     {{ like_button(p, "papers", issue.date) }}
-    <h3><a href="{{ p.url }}">{{ p.title_zh }}</a><span class="domain-chip" style="color: {{ DOMAINS[d][1] }}">{{ DOMAINS[d][0] }}</span></h3>
+    <h3><a href="{{ p.url }}">{{ p.title_zh }}</a><span class="domain-chip" style="--dot: {{ DOMAINS[d][1] }}">{{ DOMAINS[d][0] }}</span></h3>
     <p class="orig">{{ p.title }}</p>
     {% if p.one_liner %}<p class="oneliner"><mark>{{ p.one_liner }}</mark></p>{% endif %}
     <p class="summary">{{ p.summary_zh }}</p>
@@ -78,13 +103,14 @@
 <section class="column" id="repos">
   <div class="column-head">
     <h2>开源</h2>
+    <span class="column-head__latin" aria-hidden="true">REPOS/{{ "%02d" % (issue.repos | length) }}</span>
     <span class="count">{{ issue.repos | length }} 个 · 来自 GitHub Trending</span>
   </div>
   {% for r in issue.repos %}
   {% set d = r.domain | default("ai") %}
   <article class="entry" data-domain="{{ d }}">
     {{ like_button(r, "repos", issue.date) }}
-    <h3 class="repo-name"><a href="{{ r.url }}">{{ r.name }}</a><span class="domain-chip" style="color: {{ DOMAINS[d][1] }}">{{ DOMAINS[d][0] }}</span></h3>
+    <h3 class="repo-name"><a href="{{ r.url }}">{{ r.name }}</a><span class="domain-chip" style="--dot: {{ DOMAINS[d][1] }}">{{ DOMAINS[d][0] }}</span></h3>
     {% if r.one_liner %}<p class="oneliner"><mark>{{ r.one_liner }}</mark></p>{% endif %}
     <p class="summary">{{ r.summary_zh }}</p>
     <p class="meta">
@@ -101,13 +127,14 @@
 <section class="column" id="news">
   <div class="column-head">
     <h2>资讯</h2>
+    <span class="column-head__latin" aria-hidden="true">NEWS/{{ "%02d" % (issue.news | length) }}</span>
     <span class="count">{{ issue.news | length }} 条</span>
   </div>
   {% for n in issue.news %}
   {% set d = n.domain | default("ai") %}
   <article class="entry news" data-domain="{{ d }}">
     {{ like_button(n, "news", issue.date) }}
-    <h3><a href="{{ n.url }}">{{ n.title_zh }}</a><span class="domain-chip" style="color: {{ DOMAINS[d][1] }}">{{ DOMAINS[d][0] }}</span><span class="source-chip">{{ n.source }}</span></h3>
+    <h3><a href="{{ n.url }}">{{ n.title_zh }}</a><span class="domain-chip" style="--dot: {{ DOMAINS[d][1] }}">{{ DOMAINS[d][0] }}</span><span class="source-chip">{{ n.source }}</span></h3>
     <p class="summary">{{ n.summary_zh }}</p>
   </article>
   {% endfor %}

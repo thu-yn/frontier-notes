@@ -234,7 +234,7 @@
     }
     var chip = document.createElement("span");
     chip.className = "domain-chip";
-    chip.style.color = dm[1];
+    chip.style.setProperty("--dot", dm[1]);
     chip.textContent = dm[0];
     h.appendChild(chip);
     art.appendChild(h);

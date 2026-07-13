@@ -7,3 +7,6 @@ data/raw/
 __pycache__/
 .DS_Store
 .venv/
+
+# Hallmark 设计工具的本地项目记忆,不入库
+.hallmark/

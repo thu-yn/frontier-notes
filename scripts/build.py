@@ -18,6 +18,18 @@ SITE = ROOT / "site"
 STATIC = ROOT / "scripts" / "static"
 
 WEEKDAYS = "一二三四五六日"
+KANJI_DIGITS = "〇一二三四五六七八九"
+
+
+def _kanji_md(n: int) -> str:
+    """月/日数字转汉字纪年写法(1-31,不带前导零),如 7→七、10→十、21→二十一。"""
+    if n < 10:
+        return KANJI_DIGITS[n]
+    if n == 10:
+        return "十"
+    tens, ones = divmod(n, 10)
+    s = ("十" if tens == 1 else KANJI_DIGITS[tens] + "十")
+    return s + (KANJI_DIGITS[ones] if ones else "")
 
 # 领域 id → (显示名, 标签色)。与 prompts/summarize.md 的领域体系保持一致
 DOMAINS = {
@@ -70,6 +82,10 @@ def load_issues() -> list[dict]:
 
         wd = datetime.date(int(y), int(m), int(d)).weekday()
         issue["date_cn"] = f"{y} 年 {int(m)} 月 {int(d)} 日 · 星期{WEEKDAYS[wd]}"
+        issue["date_cn_kanji"] = (
+            "".join(KANJI_DIGITS[int(c)] for c in y)
+            + "年" + _kanji_md(int(m)) + "月" + _kanji_md(int(d)) + "日"
+        )
     return issues
 
 
