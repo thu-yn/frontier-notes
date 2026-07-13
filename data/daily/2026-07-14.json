@@ -1,0 +1,329 @@
+{
+  "date": "2026-07-14",
+  "editor_note": "今天最扎眼的是「视觉/视频当底座」这条线:GenCeption 直接拿视频扩散模型去做深度、分割、相机位姿,还有一篇干脆论证视觉预训练比纯文本更能学到语言智能——大家开始怀疑「语言模型只能吃文本」这个默认设定了。评测这边正好泼盆冷水,Video-Oasis 发现过半的视频理解题不看画面也能答对,提醒你刷分别高兴太早。硬件和 AI 的呼应也很典型:SK 海力士的 StreamDQ 把权重反量化塞进 HBM 基底片,arXiv 论文和产业新闻同一天撞上,都是冲着大模型推理的访存墙去的。最想让你点开的是那篇 B-spline Policy,改一点动作表示就白捡执行加速,今天的「研究点」也从它出发。另外商业航天今天挺热闹:Voyager 并购 Astrobotic、长征十号 C 定商业主力、星舰又要飞,爱看火箭的别错过。",
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Vidu S1: A Real-Time Interactive Video Generation Model",
+      "title_zh": "Vidu S1:实时可交互的视频生成模型",
+      "url": "https://arxiv.org/abs/2607.03118",
+      "hf_url": "https://huggingface.co/papers/2607.03118",
+      "authors": "Jintao Zhang、Kai Jiang 等",
+      "affiliation": "清华大学",
+      "upvotes": 128,
+      "one_liner": "能一边说话一边改画面的视频生成,消费级显卡跑到 42 FPS",
+      "summary_zh": "一个主打「实时交互」的视频生成模型:用户随时用语音指令控制画面内容,支持无限长实时生成而不糊、不漂移。靠自研的 TurboDiffusion + TurboServe,在普通消费级 GPU 上能出 540p、最高 42 FPS,还能上传真人、动漫、宠物的图并挑不同音色。这种「边生成边操控」的形态比一次性出片更接近可玩的产品。不过论文给的多是自家指标,真实观感还得看它放出来的在线 demo。",
+      "tags": ["视频生成", "实时推理"]
+    },
+    {
+      "domain": "ai",
+      "title": "Video-Oasis: Rethinking Evaluation of Video Understanding",
+      "title_zh": "Video-Oasis:重新审视视频理解的评测",
+      "url": "https://arxiv.org/abs/2603.29616",
+      "hf_url": "https://huggingface.co/papers/2603.29616",
+      "authors": "Geuntaek Lim、Sungjune Park 等",
+      "affiliation": "NAVER",
+      "upvotes": 58,
+      "one_liner": "55% 的视频理解测试题,不看视频也能答对",
+      "summary_zh": "作者没有再堆一个新 benchmark,而是做了套「诊断工具」去审计现有的视频理解评测。结果挺尴尬:55% 的题目不用看画面、不用时序也能做对,靠语言先验或知识就够了。把这些捷径题筛掉后,最强模型在真正需要看视频的题上也就比瞎猜好一点点。对做 Video-LLM 的人是记警钟——很多高分其实是刷在了假题上。",
+      "tags": ["视频理解", "评测"]
+    },
+    {
+      "domain": "ai",
+      "title": "Video Generation Models are General-Purpose Vision Learners",
+      "title_zh": "视频生成模型就是通用视觉学习器",
+      "url": "https://arxiv.org/abs/2607.09024",
+      "hf_url": "https://huggingface.co/papers/2607.09024",
+      "authors": "Letian Wang、Andrew Zisserman、Kaiming He 等",
+      "affiliation": "Google DeepMind",
+      "upvotes": 39,
+      "one_liner": "拿视频生成模型当底座,深度、法线、分割一把抓",
+      "summary_zh": "提出 GenCeption:把预训练好的视频扩散模型改造成一个前馈感知模型,用文字指令就能去做深度、法线、相机位姿、指代分割、3D 关键点一大堆视觉任务,常常追平甚至超过专用模型。作者的观点是,大规模文生视频天然带来了时空先验和视觉-语言对齐,是比 V-JEPA、Video MAE 更好的视觉预训练范式,数据效率也高。有意思的是只用合成人像视频训练也能泛化到真实画面和动物、机器人。和今天另一篇「视觉预训练胜过纯文本」放一起看,拿视觉/视频当底座这条线最近很热。",
+      "tags": ["视频生成", "视觉预训练"]
+    },
+    {
+      "domain": "ai",
+      "title": "Long-Horizon-Terminal-Bench: Testing the Limits of Agents on Long-Horizon Terminal Tasks with Dense Reward-Based Grading",
+      "title_zh": "Long-Horizon-Terminal-Bench:把 Agent 丢进长任务里压测",
+      "url": "https://arxiv.org/abs/2607.08964",
+      "hf_url": "https://huggingface.co/papers/2607.08964",
+      "authors": "Zongxia Li、Zhongzhi Li 等",
+      "affiliation": "腾讯混元",
+      "upvotes": 43,
+      "one_liner": "平均每题烧 990 万 token,最强模型也只有 15% 通过",
+      "summary_zh": "一个专测「长时程终端任务」的 benchmark:46 个任务、9 大类(复现实验、软件工程、多模态分析、交互游戏、科学计算),每个都拆成细粒度打分的子任务,给密集的中间奖励和部分分,而不是只看最后成没成。任务动辄要几百个 episode、跑几十分钟到几小时。测了 15 个前沿模型,平均每题吃掉约 990 万 token,最强的 pass@1 在 0.95 阈值下也才 15.2%。说明长时程规划、长上下文管理、反复调试这些能力还差得远。",
+      "tags": ["Agent", "评测"]
+    },
+    {
+      "domain": "ai",
+      "title": "Jet-Long: Efficient Long-Context Extension with Dynamic Bifocal RoPE",
+      "title_zh": "Jet-Long:动态双焦 RoPE 的零样本长上下文扩展",
+      "url": "https://arxiv.org/abs/2607.07740",
+      "hf_url": "https://huggingface.co/papers/2607.07740",
+      "authors": "Haozhan Tang、Song Han、Han Cai 等",
+      "affiliation": "NVIDIA",
+      "upvotes": 16,
+      "one_liner": "不调参就把上下文窗口撑大,短文本还不掉点",
+      "summary_zh": "针对零样本长上下文外推的老矛盾:缩放因子给猛了短文本掉点,给保守了长文本又崩。Jet-Long 用一个「局部忠实 + 长程自适应」的双焦窗口,缩放因子随当前序列长度动态变,短输入时精确还原原模型、长输入时平滑外推;再靠一个融合 CuTe kernel 把开销压到几乎为零(H100 上长上下文预填最高 1.39× FA2 吞吐)。在 Qwen3 系列上到 128K 都稳定领先,还能迁到 Jet-Nemotron 这类混合注意力架构。工程味重、能直接用在开源权重上。",
+      "tags": ["长上下文", "推理加速"]
+    },
+    {
+      "domain": "ai",
+      "title": "Remember When It Matters: Proactive Memory Agent for Long-Horizon Agents",
+      "title_zh": "Remember When It Matters:给长任务 Agent 配个主动记忆体",
+      "url": "https://arxiv.org/abs/2607.08716",
+      "hf_url": "https://huggingface.co/papers/2607.08716",
+      "authors": "Yifan Wu、Lizhu Zhang 等",
+      "affiliation": "Meta",
+      "upvotes": 10,
+      "one_liner": "一个旁挂的记忆 Agent,该提醒时才提醒",
+      "summary_zh": "长任务里,关键信息常被淹没在越滚越长的轨迹中,导致 Agent「该想起来的时候想不起来」(作者叫它「行为状态衰减」)。做法是让一个独立的记忆 Agent 陪跑在不动的行动 Agent 旁边,维护一个结构化记忆库,并自己决定「插一句提醒还是闭嘴」。即插即用,在 Terminal-Bench 2.0 和 τ²-Bench 上给强、弱 Agent 都涨了 6–8 个点。消融显示「有选择地干预」比「一直塞记忆」或「纯被动检索」都好。",
+      "tags": ["Agent", "记忆"]
+    },
+    {
+      "domain": "embodied",
+      "title": "B-spline Policy: Accelerating Manipulation Policies via B-spline Action Representations",
+      "title_zh": "B-spline Policy:用 B 样条曲线加速机器人操作策略",
+      "url": "https://arxiv.org/abs/2607.09648",
+      "authors": "Xiaoshen Han、Antonio Torralba、Yuke Zhu 等",
+      "one_liner": "把动作从离散块换成连续曲线,策略执行能提速",
+      "summary_zh": "一个换「动作表示」的小改动:不再预测离散的时间动作块,而是把动作参数化成连续的 B 样条曲线(几个 knot 加控制点),得到平滑、可按时间缩放的轨迹,底层控制器能以更高频率、更快速度执行。它能无缝塞进现有策略学习管线——直接预测样条参数就行。仿真和真机都验证了能明显缩短任务时间。属于那种「改一点点就能白捡加速」的干净工作,也是今天最值得点开的一篇。",
+      "tags": ["机器人操作", "策略学习"]
+    },
+    {
+      "domain": "chip",
+      "title": "StreamDQ: Near-Memory Weight DeQuantization in Custom HBM for Scalable AI Inference Acceleration",
+      "title_zh": "StreamDQ:把权重反量化搬进 HBM 近存做",
+      "url": "https://arxiv.org/abs/2607.08993",
+      "authors": "Minki Jeong、Daegun Yoon 等",
+      "affiliation": "SK hynix",
+      "one_liner": "权重反量化不再占用 GPU 计算核心,塞进 HBM 基底片",
+      "summary_zh": "大批量 LLM 推理时,低比特权重要先反量化回来,而在当下 GPU 上这步由 CUDA core 来做,会带来大量指令开销和流水线停顿。StreamDQ 把紧凑的反量化模块(DQB)直接集成进 HBM 的基底 die,让内存在往外吐数据的路上就地把权重解好,省掉 GPU 侧这道瓶颈。它对着 AI 服务的访存墙下手,和今天 SemiEngineering 那条 SK 海力士近存反量化的新闻是同一件事——号称最高 7 倍加速、能耗降约九成。",
+      "tags": ["HBM", "LLM 推理", "存内计算"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Confinement drives valley splitting above 4K in buried silicon quantum wells",
+      "title_zh": "限域效应把硅量子阱的能谷分裂顶到 4K 以上",
+      "url": "https://arxiv.org/abs/2607.09570",
+      "authors": "Davide Degli Esposti、Mark Friesen、Giordano Scappucci 等",
+      "one_liner": "硅自旋量子比特想在 4K 上工作,靠的是把电子关得更紧",
+      "summary_zh": "硅自旋量子比特要规模化,一个卡点是「能谷分裂」(valley splitting,即导带两个近简并谷之间的能量差)太小又不稳——它太小时电子会从计算基态漏走。这篇在一个协同设计过、低无序的四量子点硅阵列上测到平均 0.40 meV 的能谷分裂,并给出单-三重态分裂数据,说明用更强的电子限域能把这个数值顶到 4K 以上。4K 意味着可以用更便宜、更好扩展的制冷,是往「和控制电子学同片集成」方向走的实在一步。",
+      "tags": ["硅自旋量子比特", "能谷分裂"]
+    },
+    {
+      "domain": "bio",
+      "title": "DrugGen 2: A disease-aware language model for enhancing drug discovery",
+      "title_zh": "DrugGen 2:懂疾病语境的分子生成模型",
+      "url": "https://arxiv.org/abs/2607.08404",
+      "hf_url": "https://huggingface.co/papers/2607.08404",
+      "authors": "Ali Motahharynia、Mohammadreza Ghaffarzadeh-Esfahani 等",
+      "upvotes": 18,
+      "one_liner": "生成分子时,不只看靶点还看「这是哪种病」",
+      "summary_zh": "现在的分子生成大多只盯着靶点或通用理化性质,忽略了疾病语境会改变靶点行为。DrugGen 2 在 GPT-2 上做微调(先监督再用 GRPO 强化学习),让分子同时以疾病本体和靶点蛋白序列为条件生成。在糖尿病肾病相关的五个靶点上,它生成的分子更独特、更接近已上市药,预测结合亲和力也更好,对接分析里有几个候选甚至强过依那普利这类参照药。思路对「老药新用」和从头设计都友好,不过还停在计算预测阶段,离实验验证尚远。",
+      "tags": ["药物设计", "生成模型"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Ortho2CAD: 3D CAD generation from orthographic drawings using vision language models",
+      "title_zh": "Ortho2CAD:让视觉语言模型看三视图生成 3D CAD",
+      "url": "https://arxiv.org/abs/2607.08891",
+      "authors": "Aditya Joglekar、Kenji Shimada、Levent Burak Kara 等",
+      "one_liner": "把工程三视图直接读成可编辑的参数化 CAD 代码",
+      "summary_zh": "工程师画的正交三视图(前视/俯视/侧视)信息很密,但要变回能改的 3D 模型很麻烦。Ortho2CAD 用一个视觉语言模型把光栅化的三视图翻译成 CadQuery 代码(等价于可参数化编辑的 CAD),训练上是监督微调加一个「几何对齐」的强化学习来保证生成的形状对得上原图。这是把 LLM 的代码生成能力接进 CAD 工作流的一个具体尝试,对制造业里「照着图纸补数字模型」这种活挺实用。",
+      "tags": ["CAD", "视觉语言模型"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "OpenCut-app/OpenCut",
+      "url": "https://github.com/OpenCut-app/OpenCut",
+      "language": "TypeScript",
+      "stars": 65772,
+      "stars_today": "1,077",
+      "one_liner": "开源版剪映,浏览器里就能剪",
+      "summary_zh": "一个开源视频剪辑器,定位是 CapCut/剪映的免费替代,浏览器和桌面端都能用。适合不想被订阅费和水印绑住的创作者。增长很猛,一天涨一千多星。"
+    },
+    {
+      "domain": "ai",
+      "name": "HKUDS/Vibe-Trading",
+      "url": "https://github.com/HKUDS/Vibe-Trading",
+      "language": "Python",
+      "stars": 21592,
+      "stars_today": "1,148",
+      "one_liner": "能回测的 LLM 炒股 Agent",
+      "summary_zh": "港大数据智能实验室出的个人交易 Agent,基于 LLM 和 MCP,带回测和算法交易。给想把大模型接进量化/自动交易的人练手用。今天涨幅榜靠前,出自学术实验室,比一般「量化玄学」repo 靠谱些——不过真金白银上场前还得自己掂量风险。"
+    },
+    {
+      "domain": "ai",
+      "name": "github/spec-kit",
+      "url": "https://github.com/github/spec-kit",
+      "language": "Python",
+      "stars": 120505,
+      "stars_today": "508",
+      "one_liner": "GitHub 官方的「规格驱动开发」工具箱",
+      "summary_zh": "GitHub 官方推的 Spec-Driven Development 工具包,配合 Copilot 等 AI 编码 Agent,把「先写规格再让 AI 实现」这套流程标准化。适合想把 AI 辅助工程做得更可控、可审计的团队。"
+    },
+    {
+      "domain": "ai",
+      "name": "Nutlope/hallmark",
+      "url": "https://github.com/Nutlope/hallmark",
+      "language": "CSS",
+      "stars": 4989,
+      "stars_today": "802",
+      "one_liner": "给 AI 生成的界面「去 AI 味」的设计技能",
+      "summary_zh": "一个给 Claude Code / Cursor / Codex 用的设计 skill,专治 AI 生成 UI 那股塑料味,让界面更耐看。体量不大但踩中了当下的痛点,一天涨八百星。爱折腾 AI 编码工具的可以试。"
+    },
+    {
+      "domain": "ai",
+      "name": "moeru-ai/airi",
+      "url": "https://github.com/moeru-ai/airi",
+      "language": "TypeScript",
+      "stars": 41817,
+      "stars_today": "57",
+      "one_liner": "能语音聊天、还会打游戏的自托管 AI 伴侣",
+      "summary_zh": "一个自托管的 AI 伴侣项目,支持实时语音对话、Live2D 形象,甚至能自己玩 Minecraft、Factorio。属于 AI 伴侣/虚拟主播这个小众但活跃的方向,想研究把 Agent 接进实时交互和游戏的可以看看。"
+    },
+    {
+      "domain": "ai",
+      "name": "Shubhamsaboo/awesome-llm-apps",
+      "url": "https://github.com/Shubhamsaboo/awesome-llm-apps",
+      "language": "Python",
+      "stars": 119473,
+      "stars_today": "1,006",
+      "one_liner": "100+ 个能直接跑的 Agent / RAG 示例",
+      "summary_zh": "一个 LLM 应用合集,收了一百多个可运行的 AI Agent 和 RAG 示例。虽然挂着 awesome-list 的名头,但里面是有代码能跑、能改的,更像上手教程而不是纯链接堆。想照着搭 Agent 的适合翻。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "苹果起诉 OpenAI:指控前员工用漏洞窃取商业机密",
+      "url": "https://arstechnica.com/tech-policy/2026/07/apple-sues-openai-after-ex-engineer-allegedly-used-bug-to-steal-trade-secrets/",
+      "source": "Ars Technica",
+      "summary_zh": "苹果起诉 OpenAI,指控其与多名前苹果员工合谋挖角、窃取硬件机密,其中一人据称利用一个漏洞把机密外泄。诉状里还有更劲爆的说法:OpenAI 的硬件负责人被指要求来面试的苹果员工带上未发布的样机。这是当天 AI 行业最大的一条,几家媒体都在追。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Anthropic 为印度市场推出本地化 Claude 定价",
+      "url": "https://techcrunch.com/2026/07/13/anthropic-starts-localizing-claude-pricing-for-india-its-biggest-market-after-the-us/",
+      "source": "TechCrunch",
+      "summary_zh": "Anthropic 开始在印度推出以卢比计价的 Claude 订阅方案。印度被它称作仅次于美国的第二大市场,本地化定价是很直接的抢占动作。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "防守方也开始用提示注入了:用「上下文轰炸」反制恶意 AI",
+      "url": "https://arstechnica.com/security/2026/07/now-defenders-are-embracing-the-prompt-injection-too/",
+      "source": "Ars Technica",
+      "summary_zh": "提示注入一直被当成攻击手段,现在防守方反过来用它:通过「上下文轰炸」去瘫痪自动化的恶意黑客 Agent。攻防都在薅同一个弱点,这种角色反转本身就说明 Agent 安全还很原始。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "SK 海力士 StreamDQ:在定制 HBM 里做近存反量化",
+      "url": "https://semiengineering.com/near-memory-dequantization-architecture-in-custom-hbm-for-llm-inference-sk-hynix/",
+      "source": "SemiEngineering",
+      "summary_zh": "SK 海力士的 StreamDQ 方案,把权重反量化搬进 HBM 基底片就地完成,给大批量 LLM 推理省掉 GPU 侧的这道开销,号称最高 7.08 倍加速、能耗降约九成。和今天 arXiv 上那篇同名论文是一回事,是存储厂往「访存墙」下手的又一招。"
+    },
+    {
+      "domain": "quantum",
+      "title_zh": "NUS 等:室温、兼容 CMOS 的光子量子处理器",
+      "url": "https://semiengineering.com/room-temperature-cmos-compatible-photonic-quantum-processor-nus-et-al/",
+      "source": "SemiEngineering",
+      "summary_zh": "新加坡国立大学等团队展示了一个兼容 CMOS 工艺、能在室温下用单光子运行的光子量子处理器。不用极低温制冷、又能沿用成熟半导体产线,是光量子路线在「可制造性」上的一个信号。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "ARPA-H 拨款最高 1.6 亿美元,资助定制基因药物",
+      "url": "https://www.fiercebiotech.com/research/arpa-h-awards-160m-scientists-developing-custom-genetic-medicines",
+      "source": "Fierce Biotech",
+      "summary_zh": "美国 ARPA-H 拨出最高 1.6 亿美元,资助一批知名团队开发个性化基因药物。这类「为个体量身定制」的疗法一直卡在成本和流程上,政府这笔钱是想把它往可规模化推。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "FDA 恢复公开药品拒批信,一次放出 14 封",
+      "url": "https://www.fiercebiotech.com/biotech/fda-releases-14-new-drug-rejection-letters-after-transparency-policy-paused-april",
+      "source": "Fierce Biotech",
+      "summary_zh": "FDA 在 4 月暂停三个月后,重新开始公开完整回应函(即药品拒批信),一次性放出 14 封。把拒批理由摆到台面上,对整个药企研发是有参考价值的透明度进展。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "Voyager 完成对月球着陆器公司 Astrobotic 的收购",
+      "url": "https://spacenews.com/voyager-completes-acquisition-of-astrobotic/",
+      "source": "SpaceNews",
+      "summary_zh": "Voyager Technologies 完成对月球着陆器公司 Astrobotic 的收购,就在后者拿下两个 NASA 任务几周之后。商业航天里又一起把月面能力并进大平台的整合。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "首次回收助推器后,长征十号 C 被定为商业主力火箭",
+      "url": "https://spacenews.com/china-lines-up-methalox-long-march-10c-as-commercial-workhorse-after-first-booster-recovery/",
+      "source": "SpaceNews",
+      "summary_zh": "中国在首次成功回收助推器后,把甲烷/液氧的长征十号 C 定位为商业发射主力,同时有新的火箭创业公司拿到融资。可回收这条线在国内商业航天明显在提速。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "SpaceX 备战星舰第 13 次试飞,瞄准 7 月 16 日",
+      "url": "https://spacenews.com/spacex-gears-up-for-starship-flight-13/",
+      "source": "SpaceNews",
+      "summary_zh": "SpaceX 计划在 7 月 16 日前后进行星舰第 13 次试飞,验证一系列修复,并尝试部署可用的星链卫星。就在这几天,值得盯一下结果。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "给轻量 VLA 装上 B 样条动作表示,在仿真基准里测速度与泛化",
+      "based_on": [
+        { "title": "B-spline Policy: Accelerating Manipulation Policies via B-spline Action Representations", "url": "https://arxiv.org/abs/2607.09648" },
+        { "title": "DexVerse: Modular Benchmark for Multi-Task, Multi-Embodiment Dexterous Manipulation", "url": "https://arxiv.org/abs/2607.08751" }
+      ],
+      "why_now": "B-spline Policy 刚提出,是个即插即用的动作表示,但作者主要在自己的任务上验证;还没人在多任务、多本体的公开仿真基准上系统评估它对执行速度和跨任务泛化到底有多大帮助。",
+      "feasibility": "单张 24–40GB 显存 GPU、纯仿真(Meta-World / LIBERO / DexVerse),不需要真机,几周内能出对比结果。",
+      "route": [
+        "先跑通一个开源轻量策略(如 Diffusion Policy 或小型 VLA)在 Meta-World / LIBERO 上的官方训练与评测,拿到 baseline",
+        "按 B-spline Policy 的做法,把动作头换成预测 B 样条 knot + 控制点,复现其平滑、可时间缩放的轨迹",
+        "在同一批任务上对比原表示与 B 样条表示的成功率、执行时长、控制频率",
+        "扩到 DexVerse 这类多本体基准,看跨任务/跨本体时优势是否还在",
+        "整理成可复现脚本和对比表,把「什么场景下值得换」讲清楚"
+      ],
+      "risk": "B-spline Policy 若未开源代码,动作头细节(时间缩放、和底层控制器对接)得自行还原,可能有坑。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个 RAG「实体张冠李戴」检测库,把 Deceptive Grounding 变成通用工具",
+      "based_on": [
+        { "title": "Deceptive Grounding: Entity Attribution Failure in Clinical RAG", "url": "https://arxiv.org/abs/2607.09349" }
+      ],
+      "why_now": "这篇刚指出 RAG 会「引用对了、但把证据安到错误实体头上」,而且能骗过现有的 faithfulness / citation 检查(错误率 8–87%);目前只在临床场景做了基准,还没有一个通用、开箱即用的检测器或评测库。",
+      "feasibility": "以评测为主、几乎不用训练,单卡甚至纯 API 就能做;做成一个小而聚焦的开源库,适合攒 star,几周可成型。",
+      "route": [
+        "复现论文构造 Deceptive Grounding 样本的方式,先在临床数据上跑通它的 DG 指标",
+        "把「实体-证据对齐」检查抽象成与领域无关的接口(输入:问题 + 检索片段 + 答案,输出:是否张冠李戴及定位)",
+        "扩到金融、法律、百科等 2–3 个非临床语料验证泛化",
+        "封装成带 CLI、依赖少的开源库,配几个主流 RAG 框架的适配层",
+        "写清 README 和一个失败案例画廊,方便别人直接接进自己的 pipeline"
+      ],
+      "risk": "判定「归因错误」本身需要可靠的实体对齐标注,全自动判定会引入噪声,得设计好弱标注/人审兜底。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "训练-free 的 3DGS 近景伪影修复插件",
+      "based_on": [
+        { "title": "MACRO: Training-free Multi-plane Attention for Close-up Render Optimization", "url": "https://arxiv.org/abs/2607.03875" },
+        { "title": "SSA-3DGS: Unsupervised Removal of Screen-Space Artifacts", "url": "https://arxiv.org/abs/2607.05598" }
+      ],
+      "why_now": "3DGS 拉近看常出现尺度错配的伪影,MACRO 在不重训的情况下用多平面注意力修好了这个问题;这类 training-free、单场景就能验证的方法特别适合复现并做成通用插件,目前还缺一个好用的开源实现。",
+      "feasibility": "单卡、单场景优化量级,不需要大规模数据或预训练;做成能挂到主流 3DGS 实现上的插件,几周可交付。",
+      "route": [
+        "先跑通一个主流 3DGS 训练/渲染实现(如 gsplat 或官方 3DGS),复现近景伪影现象",
+        "按 MACRO 复现 training-free 的多平面注意力修复,量化近景 PSNR 和观感提升",
+        "把它做成与训练解耦的推理期/后处理插件接口",
+        "再把 SSA-3DGS 那类无监督屏幕空间伪影去除接进来,凑成一套「渲染清理」工具",
+        "在多组真实采集场景上对比,发布可复现 demo 和权重无关的用法说明"
+      ],
+      "risk": "MACRO / SSA-3DGS 若无公开代码,注意力和伪影判定的细节需自行还原;不同 3DGS 实现接口差异会增加适配成本。"
+    }
+  ]
+}
