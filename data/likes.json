@@ -1,6 +1,15 @@
 {
   "items": [
     {
+      "id": "2026-07-13:papers:1d7a294ccc",
+      "date": "2026-07-13",
+      "section": "papers",
+      "domain": "ai",
+      "title": "Vidu S1:能用语音实时「导演」的视频生成,消费级显卡跑到 42 帧",
+      "url": "https://arxiv.org/abs/2607.03118",
+      "liked_at": "2026-07-13T05:47:59.952Z"
+    },
+    {
       "id": "2026-07-11:ideas:5853d25015",
       "date": "2026-07-11",
       "section": "ideas",
