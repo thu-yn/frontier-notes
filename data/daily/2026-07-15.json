@@ -1,0 +1,336 @@
+{
+  "date": "2026-07-15",
+  "editor_note": "今天最集中的一条线是「把东西塞回端上」:LightMem-Ego 想在 AI 眼镜上跑第一视角记忆,HeteroMosaic 教边缘芯片的 iGPU 和 NPU 一起伺候大模型,再加上 SemiEngineering 的《AI Models On The Edge》和 HN 上「27B 模型跑手机」的 Bonsai——端侧推理这两天很热闹。另一头是「视觉当一等公民」:有篇干脆论证同一批语料当图看比抽成纯文本训得更好,和昨天「视频生成当视觉底座」接得上。最想让你点开的是字节×清华那篇 Weak-to-Strong——在便宜的小模型上跑 RL,再把学到的策略变化搬给大模型,四小时就把 Qwen3-1.7B 的 AIME 提了十个点,今天第一条研究点也顺着 VLA 提速这类「改一点就白捡」的思路。产业面两条值得留意:纽约成了全美第一个叫停数据中心的州,AI 的算力饥渴正撞上电网;xAI 的 Grok 编程工具被曝把用户整个代码库上传云端,正好给今天走红的 destructive-command-guard 这类 agent 护栏工具做了注脚。量子这边也有回声——昨天讲硅自旋靠强限域把能谷分裂顶到 4K,今天就有人算「到底多冷才最省电」,整条硅路线都在往高温、可量产使劲。",
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Weak-to-Strong Generalization via Direct On-Policy Distillation",
+      "title_zh": "弱到强:用直接同策略蒸馏把小模型的 RL 收益搬给大模型",
+      "url": "https://arxiv.org/abs/2607.05394",
+      "hf_url": "https://huggingface.co/papers/2607.05394",
+      "authors": "Shiyuan Feng、Huan-ang Gao 等",
+      "affiliation": "字节跳动 × 清华 SIA",
+      "upvotes": 93,
+      "one_liner": "在小模型上跑 RL,再把「RL 学到的策略变化」迁给大模型,省掉大模型自己跑 RL",
+      "summary_zh": "RLVR(带可验证奖励的强化学习)能提升推理,但每换一个更强的模型就得重跑一遍,越来越贵。这篇的思路是在便宜的小模型上跑 RL,再把它「被 RL 改变了什么」迁移到大模型身上——具体做法是拿 RL 后的小老师和它 RL 前的自己比,用两者的对数比当作给学生的稠密隐式奖励,施加在大模型自己的同策略状态上,等于复用了小模型的 RL 监督信号,而不用在大模型上跑稀疏奖励的 RL。实测把 Qwen3-1.7B 在 AIME 2024 上从 48.3% 提到 58.3%,只花了 8×A100 四小时,还能把多次策略迁移串起来。把「RL 的结果」当成可跨规模复用的信号,这个角度挺省钱。",
+      "tags": ["RL", "蒸馏", "后训练"]
+    },
+    {
+      "domain": "ai",
+      "title": "Scalable Visual Pretraining for Language Intelligence",
+      "title_zh": "用「看文档」代替「读文本」:可扩展的视觉预训练",
+      "url": "https://arxiv.org/abs/2607.09657",
+      "hf_url": "https://huggingface.co/papers/2607.09657",
+      "authors": "Yiming Zhang、Zhonghan Zhao 等",
+      "upvotes": 49,
+      "one_liner": "同一批语料,直接当图看比抽成纯文本训得更好",
+      "summary_zh": "现在的基座模型几乎都在纯文本语料上预训练,但图表、排版公式、页面布局里的很多信息,转成纯文本就丢了。这篇挑战「语言模型必须吃文本」的默认假设:不做文字抽取,直接把文档、网页当成图像做无监督视觉预训练。在多个骨干和 benchmark 上,同一批底层语料,视觉预训练稳定优于纯文本预训练,而且更省数据。和昨天那篇「视频生成当视觉底座」放一起看,「拿视觉当一等公民」这条线这两天很集中。",
+      "tags": ["视觉预训练", "多模态"]
+    },
+    {
+      "domain": "ai",
+      "title": "LightMem-Ego: Your AI Memory for Everyday Life",
+      "title_zh": "LightMem-Ego:给手机和 AI 眼镜配的轻量多模态记忆",
+      "url": "https://arxiv.org/abs/2607.11487",
+      "hf_url": "https://huggingface.co/papers/2607.11487",
+      "authors": "Yijun Chen、Boyi Xiao 等",
+      "affiliation": "浙江大学 ZJUNLP",
+      "upvotes": 33,
+      "one_liner": "边走边记的第一视角记忆,能在手机和 AI 眼镜上跑",
+      "summary_zh": "戴在身上的 AI 助手一直在看、在听,但要回答「我上周把钥匙放哪了」这种问题,得有个能持续攒、能组织、能检索的多模态记忆。LightMem-Ego 把第一视角的画面和声音按同一条时间线对齐,分成当前/短期/长期三层;来了问题就动态选合适的层去检索,再拿多模态证据生成答案。demo 能在智能手机和 AI 眼镜上跑,支持找东西、回忆对话、总结一天、发现日常规律。这类端上记忆是可穿戴助手的刚需,代码已开源。",
+      "tags": ["多模态记忆", "端侧"]
+    },
+    {
+      "domain": "ai",
+      "title": "AdvancedMathBench: A Benchmark Suite for Advanced Mathematical Proof Generation and Verification",
+      "title_zh": "AdvancedMathBench:测大模型能不能写「高等数学证明」",
+      "url": "https://arxiv.org/abs/2607.11849",
+      "hf_url": "https://huggingface.co/papers/2607.11849",
+      "authors": "Lingkai Kong、Zijian Wu 等",
+      "affiliation": "上海 AI 实验室(书生)",
+      "upvotes": 20,
+      "one_liner": "最强模型在博士资格考级别的证明上也就 66 分",
+      "summary_zh": "大模型在高中和奥赛数学上刷得很高,但到本科、博士资格考这种高等数学就不好说了。现有 benchmark 覆盖窄、还常只看最终答案对不对,不管证明过程站不站得住。AdvancedMathBench 的核心是 ProverBench,296 道从本科到博士资格考的证明题,并配了一个在大量专家标注上训练的自动判分流水线,能给对错判定和细粒度的错误定位,和人类专家一致性很高;另有 VerifierBench 专测「模型能不能判断一个证明对不对」。结果依旧硬:最强的 GPT-5.5-xhigh 在本科/资格考两档也只有 75.8 和 66.1,而证明验证上最好模型 Balanced F1 才 65.1,尤其抓不出关键错误。",
+      "tags": ["数学推理", "评测"]
+    },
+    {
+      "domain": "ai",
+      "title": "Self-Guided Test-Time Training for Long-Context LLMs",
+      "title_zh": "Self-Guided TTT:让长上下文模型先挑证据再临时训一下",
+      "url": "https://arxiv.org/abs/2607.09415",
+      "hf_url": "https://huggingface.co/papers/2607.09415",
+      "authors": "Xinyu Zhu、Zhe Xu 等",
+      "upvotes": 9,
+      "one_liner": "长文本别整段拿去测试时训练,先让模型自己挑该学的段落",
+      "summary_zh": "上下文窗口拉长不等于真能用好长输入,长了准确率反而掉。测试时训练(TTT)——把当前这条长文本当训练样本临时微调一下——是个提升思路,但对整段长文做 TTT 太贵,随机采样又会引入大量无关噪声,反而把模型训坏。作者发现 TTT 对「训练片段质量」极其敏感:在随机片段上会掉点,在 oracle 证据片段上则大涨。于是 S-TTT 让模型自己先挑出该学的证据片段,只在这些片段上做标准语言建模微调。在 LongBench-v2/Pro 上,对 Qwen3-4B 和 Llama-3.1-8B 都涨,最高相对提升 15%。做法干净、能直接用在开源权重上。",
+      "tags": ["长上下文", "测试时训练"]
+    },
+    {
+      "domain": "embodied",
+      "title": "ABot-N1: Toward a General Visual Language Navigation Foundation Model",
+      "title_zh": "ABot-N1:想做通用视觉语言导航的基座模型",
+      "url": "https://arxiv.org/abs/2607.10383",
+      "hf_url": "https://huggingface.co/papers/2607.10383",
+      "authors": "Ruiyan Gong、Yingnan Guo 等",
+      "affiliation": "阿里巴巴高德 CV Lab",
+      "upvotes": 81,
+      "one_liner": "慢脑推理给出「像素目标」,快脑照着生成路点,导航更稳也更可解释",
+      "summary_zh": "视觉语言导航想同时要「深度推理」和「多任务通用」,但主流的一体化策略(观测直接映射到动作)容易坐标漂移、长尾语义处理差,还是个黑箱。ABot-N1 把认知和控制拆开:一个慢速的视觉语言推理器显式做思维链,并吐出一个「像素目标」(图像空间里的锚点),作为点目标、物体目标、POI、指令跟随、跟人等各种任务的统一接口;再由一个快速动作专家结合文字线索和像素引导,按原生控制频率生成连续路点。在城市尺度导航上提升明显(POI 到达率提到 77.3%),室内外复杂场景成功率 95.4%/92.9%,并开源了新的 Point-Goal/POI-Goal benchmark。",
+      "tags": ["视觉语言导航", "VLA"]
+    },
+    {
+      "domain": "embodied",
+      "title": "EgoSteer: A Full-Stack System Towards Steerable Dexterous Manipulation from Egocentric Videos",
+      "title_zh": "EgoSteer:从第一视角人类视频学「可听指令」的灵巧操作",
+      "url": "https://arxiv.org/abs/2607.09701",
+      "hf_url": "https://huggingface.co/papers/2607.09701",
+      "authors": "Yifan Zhong、Zhang Chen 等",
+      "upvotes": 8,
+      "one_liner": "把 9600 小时第一视角视频洗成预训练数据,真机少样本就能上手",
+      "summary_zh": "灵巧手策略一直缺「能听懂自由指令」的能力,根子在于缺大规模、语言对齐、动作精确的示范数据。这套全栈系统里,EgoSmith 数据流水线把野生第一视角视频整理成 9600 小时高质量预训练数据,吞吐比之前 SOTA 高 9 倍且更准;再配一套遥操作加人在环纠正的机器人栈,和一个带世界模型的 VLA(EgoSteer)。人类数据预训练给了它语言引导的操作先验,再用真机后训练和 DAgger 打磨落地。40+ 任务上能执行自由指令、会失败恢复,还能在两种本体上少样本适配叠箱等长任务(75%+ 成功)。系统、数据、模型都开源。",
+      "tags": ["灵巧操作", "第一视角视频"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Optimal operating temperature for industry-compatible silicon spin quantum computing: colder is not necessarily better",
+      "title_zh": "硅自旋量子计算的最佳工作温度:未必越冷越好",
+      "url": "https://arxiv.org/abs/2607.11846",
+      "authors": "Paul Steinacker、Amanda E. Seedhouse 等",
+      "one_liner": "提温省了制冷、却掉了门保真度,让总功耗最低的甜点温度才是关键",
+      "summary_zh": "硅自旋量子比特因为能沿用半导体产线被看好,但真要做到容错规模,散热会超过毫开尔文级制冷机的能力。提高工作温度能省制冷,却会降低门保真度、抬高纠错开销——所以「让总功耗最低的那个温度」才是商用化要找的点。作者用门集层析(gate set tomography,一种精细刻画量子门误差的方法)基准测了工业和学术两种工艺的硅双量子比特芯片,去回答这个权衡。和昨天那篇「靠更强限域把能谷分裂顶到 4K 以上」正好接上:整条硅自旋路线都在往「能在更高温、和控制电子学同片」的方向使劲。",
+      "tags": ["硅自旋量子比特", "工作温度"]
+    },
+    {
+      "domain": "bio",
+      "title": "Vilya-1: An all-atom foundation model for macrocycle structure prediction and design",
+      "title_zh": "Vilya-1:面向大环肽的全原子基座模型",
+      "url": "https://arxiv.org/abs/2607.09998",
+      "authors": "Pascal Sturmfels、Milad Salem 等",
+      "affiliation": "Vilya",
+      "one_liner": "一个模型既采样大环肽构象、又预测膜透过性这类成药性质",
+      "summary_zh": "大环肽(macrocyclic peptide,一类环状多肽,介于小分子和抗体之间、越来越重要的药物形态)难在现有计算方法覆盖窄、跨化学空间泛化差。Vilya-1 用统一的全原子表示,在覆盖多种拓扑和化学类别的异构结构数据上训练,同时解决两件事:在任意化学结构上采样生物学相关的构象,以及预测膜透过性这类关键的成药性质。等于把「结构预测」和「性质预测」放进一个基座里,对这类不好建模的形态挺对症。目前是计算模型,离湿实验验证还有距离。",
+      "tags": ["大环肽", "蛋白质结构"]
+    },
+    {
+      "domain": "chip",
+      "title": "HeteroMosaic: Exposing and Exploiting Heterogeneous Execution Opportunities for Energy-Efficient Edge LLM Inference",
+      "title_zh": "HeteroMosaic:把边缘芯片的 CPU/iGPU/NPU 一起喂给端侧大模型",
+      "url": "https://arxiv.org/abs/2607.12839",
+      "authors": "Gregory Hyegang Jun、Wesley Pang 等",
+      "one_liner": "别只挑一个器件跑,拆成微批让 iGPU 和 NPU 协同,省电又提速",
+      "summary_zh": "现在的边缘 SoC 都是 CPU + 集成 GPU + NPU 一堆异构算力,但主流 LLM 运行时要么粗粒度地整体选一个器件,要么孤立地优化单个算子,在共享内存的平台上白白浪费资源。HeteroMosaic 是个「异构优先」的调度框架:先用异构 roofline 模型判断什么时候 iGPU + NPU 一起上才划算,再把推理拆成保留依赖关系的微批,让不同加速器交错协同。对着端侧大模型的能效痛点下手,和今天 SemiEngineering 那篇《AI Models On The Edge》、HN 上「27B 模型跑在手机上」的 Bonsai 是同一股端侧推理的劲。",
+      "tags": ["边缘推理", "异构调度", "端侧大模型"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Amorphous materials as a frontier challenge for universal interatomic potentials",
+      "title_zh": "通用原子间势的下一道坎:非晶态材料",
+      "url": "https://arxiv.org/abs/2607.11384",
+      "authors": "Natascia L. Fragapane、Volker L. Deringer",
+      "one_liner": "预训练势模型在晶体上很行,一到无序的非晶态就露怯",
+      "summary_zh": "预训练的「基础」机器学习原子间势(MLIP,用来在原子尺度上算能量和受力的模型)已经在材料模拟里普及,但早期模型和基准几乎只盯着有序晶体,能不能迁到非晶(无序)固体一直没底。这篇系统评测了当下主流模型,结论是:非晶态正是未来通用 MLIP 的核心挑战。作者建了一个基于精选非晶体系参考数据集的基准框架,连结构带性质一起验证,指出很多现有模型在这块的迁移性有明显短板。给做通用势模型的人指了个具体、可衡量的改进靶子。",
+      "tags": ["机器学习势", "非晶材料", "基准"]
+    },
+    {
+      "domain": "energy",
+      "title": "Capturing the calendering U-shape in lithium-ion electrode thermal conductivity",
+      "title_zh": "锂电极辊压的「U 形」导热之谜",
+      "url": "https://arxiv.org/abs/2607.11521",
+      "authors": "Julius Störk",
+      "one_liner": "辊压先让电极导热变差、压到更实又回升,老模型算不出这条 U 形",
+      "summary_zh": "辊压(calendering,用辊子把电极压实的工序)是锂电极制造的关键一步,靠压实降孔隙率来提升体积能量密度。但它对「厚度方向有效导热率」的影响是非单调的:石墨负极在辊压早期导热先降,压到更高致密度又回升——传统只看孔隙率的等效介质模型算不出这条 U 形曲线。作者给 Zehner–Bauer–Schlünder 模型做了个「考虑辊压」的扩展,把 Knudsen 修正的多孔基线和一个随压缩变化的接触项结合起来,复现了石墨电极的这一行为。对电池热管理和产线工艺这种细活是实打实的建模改进。",
+      "tags": ["锂电池", "电极制造", "热管理"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "mattpocock/skills",
+      "url": "https://github.com/mattpocock/skills",
+      "language": "Shell",
+      "stars": 170249,
+      "stars_today": "1,679",
+      "one_liner": "把 .claude 目录里那套工程师技能直接开源",
+      "summary_zh": "Matt Pocock 把自己 .claude 目录里的一堆实用 skill 直接开源,主打「给真干活的工程师用」,装上就能给 Claude Code、Cursor 之类的编码 agent 扩能力。一天涨一千六百多星,是这两天 skill 生态火热的又一个信号。想抄现成 skill、或研究怎么组织 skill 的可以直接翻。"
+    },
+    {
+      "domain": "ai",
+      "name": "Graphify-Labs/graphify",
+      "url": "https://github.com/Graphify-Labs/graphify",
+      "language": "Python",
+      "stars": 86387,
+      "stars_today": "1,851",
+      "one_liner": "把一整个代码库变成能查询的知识图谱",
+      "summary_zh": "一个给编码 agent(Claude Code、Codex、Cursor 等)用的 skill,能把一个文件夹里的代码、SQL schema、脚本、文档、论文甚至图片视频,统一转成可查询的知识图谱——应用代码、数据库结构、基础设施放进同一张图。适合想让 agent 更「懂」整个项目上下文、或做代码理解与检索的人。涨得很猛。"
+    },
+    {
+      "domain": "ai",
+      "name": "Dicklesworthstone/destructive_command_guard",
+      "url": "https://github.com/Dicklesworthstone/destructive_command_guard",
+      "language": "Rust",
+      "stars": 4407,
+      "stars_today": "473",
+      "one_liner": "拦住 AI agent 手里的危险 git/shell 命令",
+      "summary_zh": "一个叫 dcg 的小工具(Rust 写的),专门拦截 agent 要执行的危险 git 和 shell 命令,比如 rm -rf、强推、reset --hard 这类。随着编码 agent 越来越敢自己动手,这种「护栏」需求变得很实在——今天 xAI 的 Grok 编程工具被曝上传整个代码库,正是这类工具走红的大背景。体量不大但踩中痛点。"
+    },
+    {
+      "domain": "ai",
+      "name": "HenryNdubuaku/maths-cs-ai-compendium",
+      "url": "https://github.com/HenryNdubuaku/maths-cs-ai-compendium",
+      "language": "TypeScript",
+      "stars": 5242,
+      "stars_today": "112",
+      "one_liner": "冲「能打的 AI/ML 研究工程师」的自学合集",
+      "summary_zh": "一份面向「想成为过硬的 AI/ML 研究工程师」的数学-计算机-AI 知识合集,把该补的基础串成一条学习路径。适合想系统补底子、而不是零散刷教程的人。属于学习资源型的仓库,当路线图用不错。"
+    },
+    {
+      "domain": "ai",
+      "name": "OpenCut-app/OpenCut",
+      "url": "https://github.com/OpenCut-app/OpenCut",
+      "language": "TypeScript",
+      "stars": 69204,
+      "stars_today": "4,276",
+      "one_liner": "开源版剪映今天又爆了,一天涨四千多星",
+      "summary_zh": "浏览器和桌面端都能用的开源视频剪辑器,定位是 CapCut/剪映的免费替代。前两天就在涨,今天直接冲到单日 +4276 星、逼近 7 万。对不想被订阅费和水印绑住的创作者依然是最省心的一个选择,这波热度说明需求是真实的。"
+    },
+    {
+      "domain": "ai",
+      "name": "penpot/penpot",
+      "url": "https://github.com/penpot/penpot",
+      "language": "Clojure",
+      "stars": 56160,
+      "stars_today": "395",
+      "one_liner": "开源的 Figma 替代,面向要协作的产品团队",
+      "summary_zh": "一个开源的设计与原型协作平台,主打可规模化的团队协作,是 Figma 这类工具的自托管替代。数据自己掌握、不锁定厂商,适合对设计工具有合规或自主可控要求的团队。增长稳,是开源设计工具这条线里最成熟的一个。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "纽约成全美首个「数据中心禁建」州,一次叫停一年",
+      "url": "https://www.theverge.com/policy/965110/new-york-ai-data-center-moratorium",
+      "source": "The Verge",
+      "summary_zh": "纽约成为美国第一个对新建数据中心下禁令的州,暂停期为一年,给正疯狂扩张的 AI 数据中心行业当头一棒。争议点集中在电力、用水和电价——大模型的算力饥渴正撞上地方电网和居民的承受力。多家媒体都在追这条,别的州会不会跟进值得看。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "哈萨比斯呼吁设立全球 AI 监管机构,还主张由美国牵头",
+      "url": "https://www.theverge.com/tech/965270/google-deepmind-demis-hassabis-global-ai-watchdog",
+      "source": "The Verge",
+      "summary_zh": "DeepMind CEO 哈萨比斯公开呼吁成立一个独立的国际标准机构来监管前沿 AI,并主张由美国牵头。前沿实验室的老板亲自喊「快来管我们」,一面是安全焦虑,一面也是在抢定规则的话语权。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "诉讼指控 Meta 的裁员决定是 AI 做的,不是人",
+      "url": "https://arstechnica.com/tech-policy/2026/07/lawsuit-claims-metas-layoff-decisions-were-made-by-ai-not-humans/",
+      "source": "Ars Technica",
+      "summary_zh": "一起诉讼称 Meta 近期的裁员实际上是由 AI 系统而非人来决定的,还指控其目标算法带有偏见。不管官司结果如何,「用模型定谁下岗」这件事本身会把 AI 决策的问责和歧视问题推到台前。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "xAI 的 Grok 编程工具把用户整个代码库上传到了云端",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/965600/spacexai-grok-build-repository-upload",
+      "source": "The Verge",
+      "summary_zh": "有人发现 xAI 的 Grok Build 会把用户的整个代码仓库上传到云存储。对把私有代码交给编码 agent 的人来说这是实打实的隐私和安全隐患,也是今天 destructive-command-guard 这类「给 agent 加护栏」工具走红的大背景。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "OpenAI 首款硬件据称是一台「会动」的无屏音箱",
+      "url": "https://techcrunch.com/2026/07/14/openais-first-hardware-device-is-reportedly-a-screenless-speaker-that-can-move/",
+      "source": "TechCrunch",
+      "summary_zh": "多家爆料指向 OpenAI 的首款硬件:一台没有屏幕、还能自己移动的智能音箱,今年可能就发。和它此前挖苹果硬件团队的传闻对上,OpenAI 想把 ChatGPT 从屏幕里搬进客厅的意图越来越明显。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "AI 制药继续吸金:Chai 融 4 亿美元,OpenAI 研究员另起 20 亿美元新局",
+      "url": "https://www.fiercebiotech.com/biotech/chai-brews-400m-series-c-fuel-ai-used-lilly-novartis-and-pfizer",
+      "source": "Fierce Biotech",
+      "summary_zh": "Chai 拿下 4 亿美元 C 轮,给礼来、诺华、辉瑞都在用的 AI 分子模型加码;与此同时,OpenAI 研究员 Miles Wang 据传正在筹一家估值 20 亿美元的 AI 药物发现公司。大药厂用模型、明星研究员下场创业,AI 制药这波热度还在往上走。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "AAIC:渤健抗 tau 药减缓认知衰退,阿尔茨海默押注加码",
+      "url": "https://www.fiercebiotech.com/biotech/aaic-biogen-bolsters-hopes-pivotal-push-anti-tau-oligo-slows-cognitive-decline",
+      "source": "Fierce Biotech",
+      "summary_zh": "在 AAIC 大会上,渤健(Biogen)公布其抗 tau 反义寡核苷酸药物能减缓认知衰退的数据,为推进关键试验加了底气——尽管读出后股价一度下滑、公司出面辩护。tau 这条路线区别于已上市的抗淀粉样蛋白药,是阿尔茨海默治疗里另一个被长期看的方向。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "EDA/IP 收入同比涨 12.7%,亚太强势反弹",
+      "url": "https://semiengineering.com/eda-revenue-up-12-7-apac-roars-back/",
+      "source": "SemiEngineering",
+      "summary_zh": "最新数据显示 EDA 和半导体 IP 收入同比增长 12.7%,其中亚太区反弹明显。芯片设计工具的景气度是产业上游的一个先行指标——设计端在花钱,往往意味着后面还有一波流片和产能需求。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "L3Harris 与 Sierra Space 将造 36 颗卫星,扩充美国导弹跟踪网",
+      "url": "https://spacenews.com/l3harris-sierra-space-to-build-36-satellites-to-expand-u-s-missile-tracking-network/",
+      "source": "SpaceNews",
+      "summary_zh": "L3Harris 联手 Sierra Space,将建造 36 颗卫星来扩充美国的导弹跟踪星座。这是军事航天订单流向商业卫星制造商的又一例,近地轨道的「导弹预警层」正在快速铺开。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "美军首次把爆炸型无人艇投入实战",
+      "url": "https://arstechnica.com/ai/2026/07/us-military-sent-explosive-drone-boats-into-combat-for-the-first-time/",
+      "source": "Ars Technica",
+      "summary_zh": "美军首次在实战中动用了爆炸型无人艇。自主/半自主的水面无人平台从演习走向真实作战,是无人化装备扩散的一个标志性节点,也把这类系统的自主程度和交战规则问题重新摆上桌。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "把「时间冗余」推理加速迁到另一个开源 VLA,在 LIBERO/SIMPLER 上量成功率与延迟",
+      "based_on": [
+        { "title": "Reducing Temporal Redundancy for Efficient Vision-Language-Action Inference", "url": "https://arxiv.org/abs/2607.12287" },
+        { "title": "Jetson-PI: Towards Onboard Real-Time Robot Control via Foresight-Aligned Asynchronous Inference", "url": "https://arxiv.org/abs/2607.12659" }
+      ],
+      "why_now": "这篇刚提出一套系统级的 VLA 加速(视觉端只增量更新动态区域的 token、策略端把扩散采样压到 2 步),是训练-free 的即插即用改动,但只在自己的设置里验证;还没人把它迁到 OpenVLA / π0 这类主流开源 VLA、在公开仿真基准上系统量「提速多少、成功率掉不掉」。",
+      "feasibility": "单张 24–40GB GPU、纯仿真(LIBERO / SIMPLER),不用真机,几周能出对比曲线。",
+      "route": [
+        "先跑通一个开源 VLA(如 OpenVLA 或 π0)在 LIBERO / SIMPLER 上的官方推理与评测,拿到 baseline 的成功率和单步延迟",
+        "复现论文的两招:视觉端只增量编码动态区域的 token,策略端把扩散采样压到 2 步",
+        "在同一批任务上画「延迟 vs 成功率」的权衡曲线,找出开始掉点的临界点",
+        "换到另一种架构的 VLA 上重跑,看加速幅度和掉点行为能不能迁移",
+        "整理成可复现脚本 + 一张「哪种任务/模型上值得开加速」的对照表"
+      ],
+      "risk": "若原文未开源代码,动态 token 更新和 2 步采样蒸馏的细节需自行还原;不同 VLA 的视觉编码器接口差异会增加适配成本。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个即插即用的 KV cache 张量压缩库,在多款开源模型上跑长上下文基准",
+      "based_on": [
+        { "title": "A JoLT for the KV Cache: Near-Lossless KV Cache Compression via Joint Tucker and JL-Residual Allocation for LLMs", "url": "https://arxiv.org/abs/2607.12550" }
+      ],
+      "why_now": "KV cache 已是长上下文推理的主要显存瓶颈,JoLT 刚提出把每层 cache 当成「头×token×特征」的三阶张量、按三个轴冗余度不同分别压缩,比只做低秩或只做量化更省;但目前还没有一个不挑模型、装上就能用的开源实现。",
+      "feasibility": "以推理为主、几乎不用训练,单张 24GB 卡就能测;做成 HuggingFace transformers 的 drop-in 包装层,几周可成型,是典型的攒 star 型小库。",
+      "route": [
+        "先在一个开源模型(如 Qwen3 或 Llama-3.1)上跑通长上下文推理,量出 KV cache 显存和吞吐 baseline",
+        "按 JoLT 复现「张量视角」的压缩:对头/token/特征三个轴分别分配低秩与残差",
+        "封装成透明的 KVCache 包装层,支持一行接入、压缩率可调",
+        "在 2–3 款不同架构的开源模型上跑 LongBench 等基准,量「显存省多少、精度掉多少」",
+        "写清 README 和一键 demo,给出「压缩率 vs 精度」的推荐档位"
+      ],
+      "risk": "JoLT 若未开源,张量分解的具体分配策略需自行还原;不同模型的注意力实现(GQA/MLA 等)会让通用包装层的适配变复杂。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "把「视频 LLM 到底看没看画面」做成一个开源诊断 harness",
+      "based_on": [
+        { "title": "Do Video-LLMs Actually Watch? Diagnosing Character-Tracking Failures in Long-Form Video", "url": "https://arxiv.org/abs/2607.11078" }
+      ],
+      "why_now": "这篇用九种条件的诊断协议发现,开源 Video-LLM 在「长视频里追一个人」这类任务上的高分并不来自真正的角色追踪,而是走了捷径;这种「诊断而非刷榜」的思路正缺一个通用、开箱即用的开源实现,能一键测出某个 Video-LLM 是不是在「假看」。和昨天的 Video-Oasis(过半视频题不看画面也能答对)是同一条问题线。",
+      "feasibility": "以评测为主、不用训练,单卡甚至纯推理 API 就能跑;做成一个聚焦、依赖少的开源库,几周可交付,适合攒 star。",
+      "route": [
+        "复现论文的九条件诊断协议,先在一个开源 Video-LLM 上重现「打乱/遮挡画面后分数不掉」的现象",
+        "把「是否真的依赖视觉/时序」的探针抽象成与模型无关的接口(输入:视频+问题,输出:走捷径的可疑度)",
+        "接 2–3 个架构不同的开源 Video-LLM,验证探针的判别力",
+        "封装成带 CLI 的库,配几个主流 benchmark 的适配层,自动生成「捷径体检报告」",
+        "写一个失败案例画廊,方便别人把自己的模型接进来自查"
+      ],
+      "risk": "「走捷径」的判定需要精心设计的对照条件,全自动判定会有噪声,得留人审兜底;不同 Video-LLM 的视频输入接口差异会增加适配成本。"
+    }
+  ]
+}
