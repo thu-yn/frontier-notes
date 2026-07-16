@@ -42,6 +42,8 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: "请阅读 prompts/summarize.md 并严格按其中要求完成今天的编辑任务。"
           claude_args: '--model claude-opus-4-8 --allowedTools "Read,Glob,Grep,Write,Edit,Bash(python3 scripts/build.py)"'
+          # TODO: 诊断用,定位到具体是哪些 Bash 调用被拒绝(2026-07-15 那次跑出 permission_denials_count:7 导致 is_error:true)后移除
+          show_full_output: true
 
       - name: 构建站点
         run: python scripts/build.py
