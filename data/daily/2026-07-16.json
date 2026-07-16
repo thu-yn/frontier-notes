@@ -1,0 +1,327 @@
+{
+  "date": "2026-07-16",
+  "editor_note": "先说个坏消息:今天 HF Daily Papers 榜抓取超时挂了(ReadTimeout),所以 AI 这块的论文都是从 arXiv 各领域直接捞的,没有社区投票数也没有机构标注,选题更靠眼力,凑合看。今天最贯穿的一条线是「agent 真去干专业活、还得干得省」:E3 教 agent 先估工作量再动手别把一行编辑做成代码库审计,「带记忆的投机执行」让 agent 越跑越快,连中子星物理(NNStar)和 Shor 算法的 Lean 形式化都被做成了 LLM agent 的一个 skill——这股劲在 GitHub 上也对得上,Nutlope 的 hallmark、mattpocock 的 skills 一天涨好几千星。另一头是开源集中放货:Thinking Machines 憋一年半交出首个开源模型 Inkling(HN 900 多分),xAI 顺手把 Grok Build 开源,Boogu-Image 想追 Nano-Banana 那类闭源统一多模态。最想让你点开的是那台 5564 比特的量子退火机——真硬件上把 Kibble-Zurek 之后的非平衡动力学也拿捏了,是退火机当量子模拟器的一次有分量的展示。产业面留意两条对照:卫星投资半年破 81 亿美元创纪录,SpaceX 却在 Starship 发射前跌回发行价,航天资本冷热并存。",
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Do AI Agents Know When a Task Is Simple? Toward Complexity-Aware Reasoning and Execution",
+      "title_zh": "Agent 会判断「这活儿有多难」吗:E3 让它先估工作量再动手",
+      "url": "https://arxiv.org/abs/2607.13034",
+      "authors": "Junjie Yin、Xinyu Feng",
+      "one_liner": "一行小改却要重读整个代码库——先估「够用就好」的执行范围能省一大截",
+      "summary_zh": "LLM agent 自动化多步工程任务时,几乎从不先问「这活儿到底要多少功夫」,往往一上来就最大化上下文、把已经看过的文件和依赖再读一遍,把一行编辑做成一次小型代码库审计。作者把这个缺的能力形式化成「最小充分执行」和 Agent 认知冗余比(ACRR),提出 E3(Estimate、Execute、Expand):先估初始操作范围,不够再逐步扩。思路很实在——省 token,也省无谓的绕路。",
+      "tags": ["Agent", "推理效率"]
+    },
+    {
+      "domain": "ai",
+      "title": "Data-Efficient Adaptation of LLMs via Attention Head Reweighting",
+      "title_zh": "AHR:每个注意力头只学一个标量,就把大模型微调到新任务",
+      "url": "https://arxiv.org/abs/2607.13425",
+      "authors": "Tuomas Oikarinen、Zixiao Chen 等",
+      "one_liner": "少样本场景下,只给每个注意力头学一个缩放系数就够",
+      "summary_zh": "安全这类领域标注样本极少,常规的参数高效微调在难任务的极少样本下也吃力。AHR(Attention Head Reweighting)的做法极简:适配新的文本分类任务时,只给每个注意力头学一个标量权重,靠的是「不同注意力头本就有功能分工」这一点,把要学的参数量压到极低。在多个文本分类任务上比常见的少样本适配更稳。参数少、复现门槛低,拿开源权重就能直接试。",
+      "tags": ["PEFT", "少样本", "注意力"]
+    },
+    {
+      "domain": "ai",
+      "title": "Speculate with Memory: Lossless Acceleration for LLM Agents",
+      "title_zh": "带记忆的投机执行:让 Agent 越跑越快且不掉精度",
+      "url": "https://arxiv.org/abs/2607.12236",
+      "authors": "Yu Li、Qinyuan Ye 等",
+      "one_liner": "给投机执行加三种在线记忆,越跑越准地预测下一步",
+      "summary_zh": "投机执行能在环境空闲时,用一个更小更便宜的模型预测并预启动下一步来加速 agent。但现有投机器是「无状态」的,任务之间把信息全丢了,预测质量没法随经验提升。这篇给投机器加了三套在线记忆:记录动作序列统计的对比转移表、检索相似片段的情景记忆、压制重复错误的混淆追踪器,让它从过去的轨迹里学。六个 benchmark、三类投机(动作/观测/续写)上都验证了,而且是无损加速。",
+      "tags": ["Agent", "投机执行", "推理加速"]
+    },
+    {
+      "domain": "ai",
+      "title": "Boogu-Image-0.1: Boosting Open-Source Unified Multimodal Understanding and Generation",
+      "title_zh": "Boogu-Image-0.1:一套开源的统一「看图 + 生图」模型",
+      "url": "https://arxiv.org/abs/2607.13125",
+      "authors": "Guoxuan Chen、Chufeng Xiao 等",
+      "one_liner": "开源版统一多模态,想追 Nano-Banana / GPT-Image 那类闭源系统",
+      "summary_zh": "一个开源的统一多模态理解与生成模型家族(Base/Turbo/Edit/Edit-Turbo),覆盖高质量文生图、快速推理、指令编辑和中英双语文字渲染。作者点名:Nano-Banana-Pro、GPT-Image-2 这类闭源系统的强,更多来自系统级集成而非单个模型,而它们内部怎么做的基本没公开;这篇想证明,靠理解、数据质量、训练流程上的针对性改进,再加上 agentic 的推理时优化,也能追上去。开源统一多模态这条线今天又添一员。",
+      "tags": ["多模态", "开源模型", "图像生成"]
+    },
+    {
+      "domain": "embodied",
+      "title": "GigaWorld-Policy-0.5: A Faster and Stronger WAM Empowered by AutoResearch",
+      "title_zh": "GigaWorld-Policy-0.5:训练时看未来、推理时只解动作的世界动作模型",
+      "url": "https://arxiv.org/abs/2607.13960",
+      "authors": "GigaWorld Team、Angen Ye 等",
+      "one_liner": "世界动作模型别在推理时真去生成未来视频,只解动作才能实时闭环",
+      "summary_zh": "世界动作模型(WAM,同时建模动作和未来观测,用场景演化当动作生成的稠密监督)能提升机器人策略学习,但常见做法是在推理时也显式生成未来视频,开销大、难做实时闭环。GigaWorld-Policy 改成「以动作为中心」:训练时用未来视觉动态,推理时只解码动作。0.5 版在此基础上做得更快更强,还借了 AutoResearch 自动调优。冲实时部署的方向对,就看开不开权重。",
+      "tags": ["世界模型", "VLA", "机器人"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Industrial Dexterity Benchmark: A Hardware-Software Benchmarking Platform for Industrial Dexterous Manipulation",
+      "title_zh": "Industrial Dexterity Benchmark:给工业灵巧操作立一套软硬件基准",
+      "url": "https://arxiv.org/abs/2607.14021",
+      "authors": "Honglu He、Jacob Laufer 等",
+      "one_liner": "排线、插接头、装齿轮箱——工业灵巧操作缺一套能对齐的真实基准",
+      "summary_zh": "线缆布线、连接器插接、精密装配这些工业活儿,几十年了还高度依赖人工。这篇从经典模块化流水线一路走到端到端多模态模仿学习,给出三样东西:一组模仿数据中心线缆管理、汽车线束、齿轮箱装配的 IDB 基准板;一个可扩展的模仿学习框架 DAG-ROS;和一个多模态扩散的操作策略。把工业灵巧操作从「各做各的」拉到一套可比的软硬件平台上,落地味儿很足。",
+      "tags": ["灵巧操作", "工业", "基准"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Post-Critical Meson Dynamics of Kibble-Zurek Excitations in a 5,564-Qubit Quantum Annealer",
+      "title_zh": "在 5564 比特量子退火机上看「临界点之后」的介子动力学",
+      "url": "https://arxiv.org/abs/2607.13842",
+      "authors": "Francis A. Bayocboc、Jacek Dziarmaga 等",
+      "one_liner": "用五千多比特的退火机,把 Kibble-Zurek 之后的非平衡动力学也拿捏了",
+      "summary_zh": "量子相变是可控制造多体激发的路子,但过了临界点之后的动力学,和最初的缺陷生成一样重要。作者用一台 5564 个超导量子比特的可编程退火机,研究带纵向偏置的量子伊辛链:Kibble-Zurek 机制先造出缺陷,随后非可积的「后临界」动力学把 kink-antikink 激发束缚成介子态,最终的自旋组态同时编码了缺陷产生和束缚动力学。真硬件、这么大规模地看相干非平衡动力学,是退火机作为量子模拟器的一次有分量的展示。",
+      "tags": ["量子退火", "量子模拟", "Kibble-Zurek"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Building Shor's Algorithm in Lean: An Agentic Formalization of Quantum Attacks on RSA-2048 and P-256",
+      "title_zh": "用 Lean 形式化 Shor 算法:让 AI agent 帮着写机器可验证的证明",
+      "url": "https://arxiv.org/abs/2607.14082",
+      "authors": "Lei Zhang、Yusheng Zhao 等",
+      "one_liner": "软件 agent 找资料、写 Lean、修证明,把攻击 RSA-2048/P-256 的 Shor 族形式化",
+      "summary_zh": "大模型越来越能帮着做繁重的形式化定理证明,尤其接上 Lean 这类机器可验证的库时。这篇用「agentic 形式化」把 Shor 算法族(包括对 RSA-2048 和 P-256 的量子攻击)在 Lean 里形式化:软件 agent 分析来源、写 Lean 代码、修复证明,科学论断由人审、证明由机器验。把 AI agent、形式化数学和量子密码攻击缝在一起,是这两天「agent 干真活」这条线在很硬核角落里的一个注脚。",
+      "tags": ["形式化验证", "Shor 算法", "AI agent"]
+    },
+    {
+      "domain": "bio",
+      "title": "Screening of Biosecurity Features in Metagenomic Data with Evo 2 Probes",
+      "title_zh": "拿 Evo 2 的表征做生物安全筛查:冻结主干、只训线性探针",
+      "url": "https://arxiv.org/abs/2607.14070",
+      "authors": "Jeremy Guntoro、Alexander Dack 等",
+      "one_liner": "不微调基因组大模型,只在它冻结的表征上训个小探针就能查抗药基因",
+      "summary_zh": "Evo 2 这类基因组基础模型学到了丰富的序列表征,但拿来做生物安全筛查一直没怎么被探索。作者不微调模型,只在冻结的第 26 层激活上训极简的线性/注意力探针,看这里面有多少「生物安全相关信号」是线性可读的。结果:检测抗菌素抗性(AMR)判别力很强——线性探针的区域级 ROC-AUC 有 0.888,换单头注意力探针升到 0.977,还能进一步分出耐药药物子类。用现成大模型加轻探针做安全筛查,便宜也对症。",
+      "tags": ["基因组大模型", "生物安全", "探针"]
+    },
+    {
+      "domain": "chip",
+      "title": "CODA: How to Mitigate ColumnDisturb for (Almost) Free?",
+      "title_zh": "CODA:近乎免费地缓解 DRAM 的新型「列扰动」错误",
+      "url": "https://arxiv.org/abs/2607.13505",
+      "authors": "Moinuddin Qureshi",
+      "one_liner": "继 RowHammer 之后,DRAM 又冒出隔着几百行的「列扰动」比特翻转",
+      "summary_zh": "ColumnDisturb 是一种新的 DRAM 数据扰动错误:对一个 aggressor 行的激活,会让隔着几百行的 victim 行、乃至相邻子阵列里的行发生比特翻转。子阵列粒度的现有方案能挡住子阵列内的扰动,但要挡跨子阵列的,得给相邻子阵列额外做计数器自增,开销不小。CODA 想把这块的代价压到「几乎免费」。单作者是内存可靠性领域的熟面孔,延续着 RowHammer 之后对 DRAM 扰动机制的持续挖掘。",
+      "tags": ["DRAM", "可靠性", "ColumnDisturb"]
+    },
+    {
+      "domain": "energy",
+      "title": "Role of small-radius and high-electronegativity A-Site dopants in enhancing proton transport and stability of perovskite electrolytes",
+      "title_zh": "给质子导体电解质选掺杂:小半径、高电负性的 A 位掺杂一举两得",
+      "url": "https://arxiv.org/abs/2607.13657",
+      "authors": "Hang Ma、Ying Liang 等",
+      "one_liner": "BaCeO₃ 质子陶瓷燃料电池的老大难——稳定性和质子传导难兼得",
+      "summary_zh": "BaCeO₃ 基电解质用在质子导体固体氧化物燃料电池里,卡点是化学稳定性差;常用的 B 位掺杂能提质子传导,却难同时改善稳定性。近来实验发现 A 位掺 Ca 能两头都改善。作者用第一性原理算 Ca 掺杂的 BaCeO₃,理出「小半径、高电负性的 A 位掺杂」为什么能同时管好质子传导和化学稳定——A 位掺杂电负性更高,会削弱 A-O 离子键。给挑选质子陶瓷燃料电池材料给了个可操作的判据。",
+      "tags": ["燃料电池", "质子导体", "第一性原理"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "NNStar: An end-to-end AI agent for nuclear matter and neutron star physics",
+      "title_zh": "NNStar:把核物质与中子星物理做成 LLM agent 的一个「技能」",
+      "url": "https://arxiv.org/abs/2607.13930",
+      "authors": "Yao Ma、Yong-Liang Ma 等",
+      "one_liner": "不是又一个专用程序,而是给开源 LLM agent 装的一个自描述 skill",
+      "summary_zh": "约束致密物质的状态方程,得拿有效模型去对一大堆跨若干量级的数据(从亚饱和核物质性质到中子星的质量、半径、潮汐形变),手工在高维耦合空间里调参又慢又累。NNStar 把这套工作流自动化成一个端到端 AI agent;关键是它不是一个专用应用,而是交付成一个「技能(skill)」,插进开源 LLM agent 平台就能用。和今天 GitHub 上的 skills 生态、Shor-in-Lean 那种「agent 干专业活」是同一股劲,只是搬到了中子星物理。",
+      "tags": ["AI4Science", "中子星", "AI agent"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "Nutlope/hallmark",
+      "url": "https://github.com/Nutlope/hallmark",
+      "language": "CSS",
+      "stars": 9585,
+      "stars_today": "1,277",
+      "one_liner": "专治 AI 生成的「设计塌房」,给编码 agent 的一套审美 skill",
+      "summary_zh": "Nutlope 出的一个「反 AI slop」设计 skill,给 Claude Code、Cursor、Codex 这些编码 agent 用,目标是让 AI 生成的界面别一眼看出是 AI 做的、少点廉价感。趁着 skill 生态火热一天涨一千多星。做 AI 辅助前端、又嫌默认产出丑的人可以直接装。"
+    },
+    {
+      "domain": "ai",
+      "name": "openinterpreter/openinterpreter",
+      "url": "https://github.com/openinterpreter/openinterpreter",
+      "language": "Rust",
+      "stars": 65687,
+      "stars_today": "299",
+      "one_liner": "老牌 Open Interpreter 用 Rust 重写,主打低成本模型的编码 agent",
+      "summary_zh": "Open Interpreter 换血:用 Rust 重写,定位「给低成本模型用的编码 agent」,支持 ACP,标签里点名 DeepSeek、Kimi、Qwen 这些便宜的开源模型。在闭源编码 agent 越来越贵的当下,押注「便宜模型 + 好 harness」是条务实的路。老项目转型,值得看它能不能接住性价比这波需求。"
+    },
+    {
+      "domain": "ai",
+      "name": "HKUDS/Vibe-Trading",
+      "url": "https://github.com/HKUDS/Vibe-Trading",
+      "language": "Python",
+      "stars": 23987,
+      "stars_today": "915",
+      "one_liner": "把「氛围交易」做成个人交易 agent,自带回测和 MCP",
+      "summary_zh": "港大数据智能实验室(HKUDS)出的个人交易 agent,主打「Vibe-Trading」——用自然语言驱动策略,内置算法交易、回测、MCP 接入。适合想拿 LLM agent 玩量化、又不想从零搭回测框架的人。HKUDS 这一系列 agent 项目挺会蹭热点、也确实能跑。提醒一句:真金白银上场前先在回测里验透。"
+    },
+    {
+      "domain": "ai",
+      "name": "HKUDS/DeepTutor",
+      "url": "https://github.com/HKUDS/DeepTutor",
+      "language": "Python",
+      "stars": 26542,
+      "stars_today": "172",
+      "one_liner": "终身个性化 AI 家教,记得你学过啥、往哪补",
+      "summary_zh": "同样出自 HKUDS 的 AI 家教 agent,主打「终身个性化辅导」——顺着你的进度和薄弱点持续调整,带 deep-research 和交互式学习。相比一次性问答,它想做的是能记住长期学习轨迹的陪学。想搭个人学习助手、或研究 agent 记忆怎么用在教育场景的可以翻。"
+    },
+    {
+      "domain": "ai",
+      "name": "injaneity/pi-computer-use",
+      "url": "https://github.com/injaneity/pi-computer-use",
+      "language": "TypeScript",
+      "stars": 1342,
+      "stars_today": "103",
+      "one_liner": "让 Pi 直接操作你 Mac/Windows 上的应用",
+      "summary_zh": "一个让 AI(Pi)接管桌面、直接操作 macOS 和 Windows 上应用的 computer-use 工具。体量还小,但踩的是「agent 从聊天走向动手操作真实软件」这个正热的方向,和今天 OpenAI 发 Codex 硬件、各家推 GUI/computer-use agent 是同一股潮。想上手玩桌面自动化的可以试。"
+    },
+    {
+      "domain": "ai",
+      "name": "OpenCut-app/OpenCut",
+      "url": "https://github.com/OpenCut-app/OpenCut",
+      "language": "TypeScript",
+      "stars": 72922,
+      "stars_today": "1,664",
+      "one_liner": "开源版剪映热度不减,冲到近 7.3 万星",
+      "summary_zh": "浏览器和桌面都能用的开源视频剪辑器,定位 CapCut/剪映的免费替代。连着几天霸榜,今天又是单日 +1664、总数逼近 7.3 万。对不想被订阅费和水印绑住的创作者,它依然是最省心的选择——这种持续热度说明需求是真的。"
+    },
+    {
+      "domain": "ai",
+      "name": "mattpocock/skills",
+      "url": "https://github.com/mattpocock/skills",
+      "language": "Shell",
+      "stars": 173041,
+      "stars_today": "2,130",
+      "one_liner": "「给真干活工程师的 skills」继续猛涨,已 17 万星",
+      "summary_zh": "Matt Pocock 把自己 .claude 目录里的一套工程 skill 开源,装上就能给 Claude Code、Cursor 之类扩能力。热度没退,今天又 +2130、总数已过 17 万。配合今天的 hallmark(设计 skill),skill 生态这两天是真热闹——想抄现成 skill、或学怎么组织 skill 的直接来这翻。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "Thinking Machines 放出首个开源模型 Inkling",
+      "url": "https://techcrunch.com/2026/07/15/thinking-machines-amps-up-its-bet-against-one-size-fits-all-ai-with-its-first-open-model-inkling/",
+      "source": "TechCrunch",
+      "summary_zh": "Mira Murati 的 Thinking Machines 憋了一年半,终于交出第一个公开成果——开源权重模型 Inkling,官方博客同时在 HN 冲到 900 多分。公司一直低调搭基础设施,这是它第一个能上手的产品级证据,也延续着「反对一刀切大模型」的路线。开源权重这条线今天格外热闹。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "xAI 把 Grok Build 开源了",
+      "url": "https://github.com/xai-org/grok-build",
+      "source": "Hacker News",
+      "summary_zh": "xAI 将其编码工具 Grok Build 开源,HN 上 400 多分、400 多评论。就在前两天,Grok Build 还因为「把用户整个代码库上传云端」被曝隐私问题——这次开源多少能让外界看清它到底怎么处理代码。和 Inkling 一起,今天是开源模型/工具集中放出的一天。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "泄露数据显示 Suno 大规模抓了 YouTube、Deezer、Genius 的歌",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/966072/suno-ai-music-training-scraping-youtube-hack",
+      "source": "The Verge",
+      "summary_zh": "一次黑客事件泄露的数据显示,AI 音乐生成器 Suno 是靠从 YouTube Music、Deezer、Genius 等平台抓取数百万首歌曲和歌词训练出来的(据 404 Media)。Suno 一直不肯公开训练数据的来源和获取方式,这次算是被动曝光。又一桩生成式 AI 训练数据来源的版权争议。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "OpenAI 首款品牌硬件是个发光键盘 Codex Micro,音箱也在路上",
+      "url": "https://techcrunch.com/2026/07/15/amid-hardware-legal-battle-openai-releases-a-230-keyboard-for-codex/",
+      "source": "TechCrunch",
+      "summary_zh": "在和苹果打硬件官司的当口,OpenAI 发了首款品牌硬件——一块方形按键设备 Codex Micro,专门配它的编码工具 Codex、用来一眼监控多个 agent 线程。另据彭博,OpenAI 首款「正经」设备将是一台无屏、能感知环境的 ChatGPT 智能音箱。把 AI 从屏幕里搬出来的意图越来越清楚。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Apple Intelligence 获批在华落地,搭阿里巴巴 Qwen",
+      "url": "https://techcrunch.com/2026/07/15/apple-intelligence-approved-for-launch-in-china-with-alibabas-qwen-ai/",
+      "source": "TechCrunch",
+      "summary_zh": "传闻已久的合作落地:Apple Intelligence 获批在中国市场推出,底层搭阿里巴巴的 Qwen 模型。这是苹果 AI 在关键市场迈出的重要一步,也是本土大模型拿下顶级终端入口的又一例。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Walden Robotics 以 11 亿美元估值出山,做通用机器人",
+      "url": "https://www.therobotreport.com/walden-robotics-launches-1-1b-valuation-general-purpose-robots/",
+      "source": "The Robot Report",
+      "summary_zh": "通用机器人公司 Walden Robotics 结束隐身、以 11 亿美元估值亮相,多家头部科技公司投了钱,主打全栈「物理 AI」。人形/通用机器人赛道的融资热度还在高位,又一家一出场就是独角兽。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "卫星投资半年破 81 亿美元,已超此前任何全年",
+      "url": "https://spacenews.com/satellite-investment-sets-annual-record-halfway-through-2026/",
+      "source": "SpaceNews",
+      "summary_zh": "据早期投资机构 Space Capital,2026 上半年卫星公司融资达 81 亿美元,已经超过此前追踪到的任何一个完整年度。资本正加速涌入卫星制造与服务——今天 Swissto12 又拿了 7000 万美元扩小型 GEO 卫星产能,是这股热钱的一个具体落点。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "Starship 发射前,SpaceX 股价跌回 135 美元发行价",
+      "url": "https://techcrunch.com/2026/07/15/spacex-falls-to-135-ipo-price-ahead-of-starship-launch/",
+      "source": "TechCrunch",
+      "summary_zh": "SpaceX 股价从 IPO 后的高点一路回落,在新一轮 Starship 发射前跌回 135 美元的发行价。市场似乎在给马斯克上市前后的种种承诺「冷静定价」。一边是卫星投资创纪录,一边是龙头估值降温,航天资本面这半年冷热并存。"
+    },
+    {
+      "domain": "energy",
+      "title_zh": "Applied Computing 融 2000 万美元,要给油气化工厂做一个「整厂 AI 模型」",
+      "url": "https://techcrunch.com/2026/07/15/applied-computing-wants-to-give-oil-and-gas-operators-an-ai-model-for-the-entire-plant/",
+      "source": "TechCrunch",
+      "summary_zh": "Applied Computing 拿下 2000 万美元 A 轮,目标是为石油、天然气和石化行业造一个基础 AI 模型,覆盖整座工厂。把基础模型的思路搬进重工业流程,是「行业垂类基座」这波里少见的能源侧案例。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "Summit 把一款失败抗生素卖给 OpenAI 投资的初创,首付仅 50 万美元",
+      "url": "https://www.fiercebiotech.com/biotech/summit-sells-failed-antibiotic-openai-backed-startup-105m-deal",
+      "source": "Fierce Biotech",
+      "summary_zh": "Summit Therapeutics 清掉一笔历史资产,把抗生素候选药 ridinilazole 以 50 万美元首付(交易总额约 1.05 亿美元)卖给了 OpenAI 投资的初创公司 Biossil。一款临床失败的老药,到了 AI 药物发现公司手里被重新捡起——AI 制药继续在便宜资产上找机会。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "给开源编码 agent 挂一个「执行范围估计器」,量化能省多少无谓读取",
+      "based_on": [
+        { "title": "Do AI Agents Know When a Task Is Simple? Toward Complexity-Aware Reasoning and Execution", "url": "https://arxiv.org/abs/2607.13034" }
+      ],
+      "why_now": "E3 刚把「最小充分执行」和 Agent 认知冗余比(ACRR)形式化,指出 agent 普遍在简单任务上过度读取上下文;但它主要在自家设置里验证,还没人把「先估范围再动手」这套做成能挂到主流开源编码 agent(如 OpenHands / SWE-agent)上的即插件、在公开基准上量真实 token 节省。",
+      "feasibility": "以推理/调 API 为主,单卡或纯 API 就能跑;在 SWE-bench-lite 这类子集上做对照,几周出结果。",
+      "route": [
+        "先在一个开源编码 agent(如 OpenHands 或 SWE-agent)上跑通 SWE-bench-lite 子集,记录每题读取的文件数、token 和成功率作 baseline",
+        "复现 E3 的 Estimate 步:让 agent 先对任务难度与所需信息量给个估计,产出初始操作范围",
+        "把 Estimate→Execute→Expand 封成一个与底层 agent 解耦的中间件,不改 agent 本体",
+        "在同一批任务上量 ACRR、token 与成功率的变化,画「省了多少 vs 掉不掉分」曲线",
+        "整理成可复现脚本 + 一张「哪类任务开启范围估计最划算」的对照表"
+      ],
+      "risk": "难度自估本身可能不准、把简单任务估成复杂反而更费;不同 agent 的上下文管理接口差异会增加中间件适配成本。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个稀疏视角前馈式 3DGS 的统一评测 harness,一键横评多款模型",
+      "based_on": [
+        { "title": "SalientGS: Unified SfM-to-3DGS with Importance-Guided MCMC Gaussian Allocation", "url": "https://arxiv.org/abs/2607.11285" },
+        { "title": "AsySplat: Efficient Asymmetric 3D Gaussian Splatting for Long-Sequence Scene Modeling", "url": "https://arxiv.org/abs/2607.10995" }
+      ],
+      "why_now": "前馈/可泛化 3DGS 这两天新论文一串(SalientGS、AsySplat、MAC-Splat、StereoSplat+……),但各用各的数据切分和 metric,像 lm-evaluation-harness 那样的统一评测工具还没有;这些方法的推理代码和权重大多已公开,做接入层门槛低,是典型攒 star 的工程空白。",
+      "feasibility": "核心是写 wrapper 而非训练,消费级卡(24GB)即可,2–4 周出 v0.1。",
+      "route": [
+        "列出近期开源了推理代码/权重的前馈 3DGS 方法并确认各自 license",
+        "设计统一 I/O 接口,先给 2–3 款模型(如 SalientGS、AsySplat)写 wrapper",
+        "接入公认数据集与标准指标(PSNR/SSIM/LPIPS),校验能复现各论文自报数字",
+        "脚本定期跑全量评测、自动生成 README 内嵌 leaderboard",
+        "发布后邀请原作者提交接入 PR,靠更新频率做护城河"
+      ],
+      "risk": "各模型 CUDA/torch 依赖冲突需容器隔离;复现数字对不上要诚实标注「实测 vs 自报」;稀疏视角设定下不同方法的输入假设不一致,统一接口要留扩展位。"
+    },
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "把训练无关的 PruneGround 空间剪枝迁到另一个 3D 视觉定位模型,验证泛化",
+      "based_on": [
+        { "title": "PruneGround: Plug-and-play Spatial Pruning for 3D Visual Grounding", "url": "https://arxiv.org/abs/2606.31148" }
+      ],
+      "why_now": "PruneGround 是个即插即用、训练无关的 3D 视觉定位(3DVG)加速法——用冻结 VLM 先框出语言相关的空间区域再推理,省算力也减歧义;但它只在自家设置里验证,把这种 training-free 模块迁到另一种 3DVG 骨干/数据集验证泛化性,本身就是低风险、可发表的扩展。",
+      "feasibility": "训练无关、以推理为主,单张 24GB 卡就能在 ScanRefer/Nr3D 这类公开数据集上跑,几周出对比。",
+      "route": [
+        "先在原论文的 3DVG 骨干和数据集上跑通 PruneGround,复现「加了剪枝后精度不掉、算力下降」",
+        "把「语言引导的空间剪枝」抽象成与骨干无关的即插件接口(输入:场景点云 + 指令,输出:保留区域)",
+        "挂到另一种架构的开源 3DVG 模型上,在 ScanRefer / Nr3D 上量精度与算力变化",
+        "扫不同剪枝强度,画「保留比例 vs 定位精度」的权衡曲线,找安全档位",
+        "整理成可复现脚本与一张跨模型/数据集的迁移效果表"
+      ],
+      "risk": "冻结 VLM 的区域框选在杂乱场景可能误剪掉目标;不同 3DVG 模型的点云/特征接口差异会增加适配成本。"
+    }
+  ]
+}
