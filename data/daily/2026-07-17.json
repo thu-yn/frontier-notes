@@ -1,0 +1,338 @@
+{
+  "date": "2026-07-17",
+  "editor_note": "今天最扎眼的一条线是「agent 开始向内看」:Harness Handbook 教人怎么在越改越大的 agent 外壳里找到该动的那几行,Ring-Zero 干脆把无标注 RL 推到 1T 参数、让模型自己长出自我验证和并行推理,连图像生成都不训奖励模型了——SpectraReward 让 MLLM「读回 prompt」就当分数,统一多模态模型还能自己给自己打分。另一头是几篇很诚实的泼冷水:SynthDocBench 发现 VLM 在长文档的中间三分之一集体掉链子,多智能体 LLM 根本不会试探彼此,这类负面发现比又一个 SOTA 有用。最想让你点开的是那篇更省比特的 ECDLP 量子算法:256 位椭圆曲线破解从一千多个逻辑比特压到 835——评估「后量子迁移还有多久」时,这种数字比宏大叙事实在。产业面留意一个对照:能源公司 IPO 井喷都是冲着 AI 用电来的,卫星投资半年又破 81 亿美元刷新纪录,算力、电力、轨道,资本正沿着 AI 的上下游一路铺过去。",
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Harness Handbook: Making Evolving Agent Harnesses Readable, Navigable, and Editable",
+      "title_zh": "Harness Handbook:给不断改的 Agent 框架配一本「行为地图」",
+      "url": "https://arxiv.org/abs/2607.13285",
+      "hf_url": "https://huggingface.co/papers/2607.13285",
+      "authors": "Ruhan Wang、Yucheng Shi 等",
+      "affiliation": "腾讯混元",
+      "upvotes": 161,
+      "one_liner": "改 agent 框架最难的不是写代码,是找到该改哪几行",
+      "summary_zh": "现在一个 agent 强不强,一半看基座模型,一半看它的 harness(拼 prompt、管状态、调工具、编排流程那套外壳)。问题是 harness 一旦大起来就高度耦合,想改某个行为得先手动翻遍代码找到所有相关位置,作者管这叫「行为定位」瓶颈。他们用静态分析加 LLM 自动生成一份 Harness Handbook,把每个行为链到对应源码,再配一套由粗到细、会拿当前源码核对的渐进式披露(BGPD)。在两个开源 harness 的改动任务上,定位准确率和改动方案质量都涨了,规划用的 token 反而更少,尤其在那种散落多处、少走的分支上收益最大。",
+      "tags": ["Agent", "代码理解"]
+    },
+    {
+      "domain": "ai",
+      "title": "Function-Aware Fill-in-the-Middle as Mid-Training for Coding Agent Foundation Models",
+      "title_zh": "把「填空」当中期训练:让编码 agent 学会接住工具返回值",
+      "url": "https://arxiv.org/abs/2607.12463",
+      "hf_url": "https://huggingface.co/papers/2607.12463",
+      "authors": "Yubo Wang、Jiarong Liang 等",
+      "affiliation": "TIGER-Lab / 滑铁卢大学",
+      "upvotes": 90,
+      "one_liner": "函数调用和 agent 的「动作-观察-续写」是同构的,拿这个信号做自监督白捡几分",
+      "summary_zh": "编码 agent 得把工具返回的东西接回推理里继续想,可标准的从左到右预训练只练了「往前写」这一个方向。作者发现 agent 的「动作-观察-续写」循环,结构上跟一个函数调用点是同构的:调用方绑参数、被调方在别处算出返回值、后面的代码消费它——而这种结构在普通代码里到处都是。于是他们用「函数感知的填空(FIM)」做中期训练,按程序依赖图挑函数来遮盖。在 Qwen2.5-Coder(7B/14B)和 Qwen3-8B 上,SWE-Bench-Verified 涨了 2.8~3.2 分,还顺带缓解了 agentic 后训练常见的「非 agent 编码能力被侵蚀」。语料只有 Python,但这个函数调用的归纳偏置能扛过后训练留下来。",
+      "tags": ["编码 Agent", "预训练"]
+    },
+    {
+      "domain": "ai",
+      "title": "Ring-Zero: Scaling Zero RL to a Trillion Parameters for Emergent Reasoning",
+      "title_zh": "把 Zero RL 推到一万亿参数:大模型自己长出了「推理习惯」",
+      "url": "https://arxiv.org/abs/2607.12395",
+      "hf_url": "https://huggingface.co/papers/2607.12395",
+      "authors": "Xinyu Tang、Gangqiang Cao 等",
+      "affiliation": "蚂蚁 inclusionAI",
+      "upvotes": 78,
+      "one_liner": "1T 规模上无标注 RL,模型自发学会自我验证、并行推理,手写的启发式全成了多余",
+      "summary_zh": "Zero RL(用可验证奖励、不要人工标注就激发链式思考)之前基本只在小模型上跑过,大规模到底怎样没人知道。作者把它推到 1T 参数,先治好了朴素放大后的可读性差、token 冗余、推理深度不自适应,靠 clipped 重要性采样、训练-推理比校正、混合精度控制稳住训练。三个发现挺有意思:规模上到 1T 显著提升样本效率和性能上限;训练会先「发现」再「锐化」两段式推进;模型自发冒出自我验证、并行推理甚至「上下文焦虑」这类行为,手工设计的花招反而变多余。数学七个 benchmark 上 Ring-2.5-1T-Zero 表现能打,是验证「苦涩教训」的一份大规模实证。",
+      "tags": ["RL", "推理", "大模型"]
+    },
+    {
+      "domain": "ai",
+      "title": "Read It Back: Pretrained MLLMs Are Zero-Shot Reward Models for Text-to-Image Generation",
+      "title_zh": "让预训练 MLLM 零样本当图像生成的奖励模型:看能不能「读回」原 prompt",
+      "url": "https://arxiv.org/abs/2607.11886",
+      "hf_url": "https://huggingface.co/papers/2607.11886",
+      "authors": "Runhui Huang、Qihui Zhang 等",
+      "affiliation": "字节跳动 Seed",
+      "upvotes": 70,
+      "one_liner": "不训奖励模型、不要偏好标注,一次前向就给图打分——自己给自己打分反而更准",
+      "summary_zh": "图像生成做 RL 通常要单独训一个奖励模型,费数据。作者的 SpectraReward 换了个思路:拿预训练 MLLM,在生成图的条件下用 teacher-forcing 跑一次前向,看原始 prompt 能被「读回」多少,直接用图像条件下的平均 prompt 对数似然当奖励,零训练、零偏好标注。对统一多模态模型还有个 Self-SpectraReward:让模型自己的理解分支给自己的生成分支打分,形成闭环自改进。跨两个扩散模型、三种 RL 算法、四个 MLLM 家族(4B 到 235B)都稳定涨点,而且更大的奖励 MLLM 不一定更好,自打分能追平甚至超过大得多的外部奖励模型——说明奖励和策略对齐比模型大小更关键。",
+      "tags": ["图像生成", "RL", "奖励模型"]
+    },
+    {
+      "domain": "ai",
+      "title": "SynthDocBench: Controlled Benchmark for Long-Context Visual Document Understanding",
+      "title_zh": "SynthDocBench:用全合成文档,把 VLM 到底栽在哪拆开看",
+      "url": "https://arxiv.org/abs/2607.10400",
+      "hf_url": "https://huggingface.co/papers/2607.10400",
+      "authors": "Abhigya Verma、Khyati Mahajan 等",
+      "affiliation": "ServiceNow",
+      "upvotes": 63,
+      "one_liner": "文档长度、版式、模态各自独立变量——一测,多数模型都栽在文档「中间那三分之一」",
+      "summary_zh": "VLM 在 DocVQA、ChartQA 这些榜上分很高,但真实文档是长度、版式、模态、题目难度混在一起,failure 归因不清。作者做了个全合成的长文档理解 benchmark,用组合设计让每个因素独立变化,还加了 40% 随机覆盖防止模型钻数据集捷径。测七个前沿 VLM,挖出三个现有 benchmark 看不见的失效:随文档变长急剧掉分;有系统性的位置敏感——六个模型里五个在文档「中间三分之一」最吃力;长文档里图表理解直接崩。结论有点扎心:现在的模型可能是在过拟合 benchmark 的痕迹,而不是真会读长文档。",
+      "tags": ["多模态", "文档理解", "评测"]
+    },
+    {
+      "domain": "ai",
+      "title": "Multi-Agent LLMs Fail to Explore Each Other",
+      "title_zh": "多智能体 LLM 不会「摸底」彼此:一个被忽视的协作短板",
+      "url": "https://arxiv.org/abs/2607.11250",
+      "hf_url": "https://huggingface.co/papers/2607.11250",
+      "authors": "Hyeong Kyu Choi、Jiatong Li 等",
+      "affiliation": "威斯康星大学麦迪逊分校",
+      "upvotes": 11,
+      "one_liner": "让一堆 LLM agent 互相配合,它们却懒得试探对方能干啥,近视又极化",
+      "summary_zh": "多智能体系统里,agent 得先试探同伴、摸清各自能力才能配合好,可作者发现现在的 LLM agent 根本不会这么做,交互往往近视又极化,导致协调次优、后悔值升高。他们把这形式化成「多智能体探索」问题(部分可观测随机博弈),并提出一个轻量框架 MACE,用结构化的同伴选择显式鼓励探索,在多样性设置下都改善了探索行为和下游表现。还从理论上说明:同伴越多样,探索的价值越大。是那种指出「大家默认能行、其实不行」的负面发现,提醒别把单体 agent 的能力想当然搬到多体。",
+      "tags": ["多智能体", "Agent"]
+    },
+    {
+      "domain": "embodied",
+      "title": "S-squared-VLA: Decoupling Semantic and Spatial Streams in Vision-Language-Action Models for Autonomous Driving",
+      "title_zh": "S²-VLA:把自动驾驶 VLA 的「语义流」和「空间流」拆开",
+      "url": "https://arxiv.org/abs/2607.13926",
+      "authors": "Jianguo Yu、Rukang Wang 等",
+      "one_liner": "VLA 想一手包办感知和控制,结果空间表征塌了——那就分开走两条流",
+      "summary_zh": "VLM 在自动驾驶里做高层推理很行,但生成精确的低层控制动作老不行,根子在离散语言 token 和连续轨迹规划之间的语义-物理鸿沟。VLA 想用一个策略把感知和控制统一起来,反而带来新瓶颈:标准 VLA 会出现严重的「空间表征塌缩」,把安全驾驶必需的细粒度空间和几何先验不可逆地磨掉。作者的 S²-VLA 干脆把语义流和空间流解耦成两条通道,各管各的,避免互相干扰。切口很具体——不是又堆一个大模型,而是针对 VLA 落到驾驶控制时的一个实打实的结构毛病下手。",
+      "tags": ["VLA", "自动驾驶"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Quantum Algorithm for Elliptic Curve Discrete Logarithms with Space-Efficient Point Addition",
+      "title_zh": "更省比特的椭圆曲线离散对数量子算法:256 位曲线只要 835 个逻辑比特",
+      "url": "https://arxiv.org/abs/2607.13816",
+      "authors": "Han Luo、Ziyi Yang 等",
+      "one_liner": "破 ECC 的量子资源又降了一档——256 位曲线从一千多压到 835 个逻辑比特",
+      "summary_zh": "椭圆曲线离散对数(ECDLP)是 ECC 公钥密码的安全根基,Shor 类量子算法能解它,但要多少量子资源一直是「量子威胁还有多远」的关键数字。这份工作给素域上的 ECDLP 做了个空间高效的量子算法,靠更省比特的椭圆曲线点加法,把逻辑比特压到 3n+6⌊log₂n⌋+O(1)、Toffoli 门约 919n³/log₂n。折算到 256 位素域曲线只要 835 个逻辑比特,比此前 EUROCRYPT 2026 的 1098 和 Babbush 等人的 1175 又降了一截。对评估后量子密码迁移的时间表,这是实打实的参考。",
+      "tags": ["量子算法", "密码学"]
+    },
+    {
+      "domain": "bio",
+      "title": "Vilya-1: An all-atom foundation model for macrocycle structure prediction and design",
+      "title_zh": "Vilya-1:面向大环肽的全原子基础模型,顺带预测膜透性",
+      "url": "https://arxiv.org/abs/2607.09998",
+      "authors": "Vilya Research 等",
+      "affiliation": "Vilya Research",
+      "one_liner": "大环肽这类「难算」的药物,一套全原子表示既采构象又估成药性",
+      "summary_zh": "大环肽(环状多肽,一类越来越重要的药物形态)介于小分子和蛋白之间,既不好合成也不好建模,现有计算方法覆盖窄、跨化学空间泛化差。Vilya-1 用统一的全原子表示,想同时啃下两块硬骨头:在任意化学结构上采样有生物意义的构象,以及预测膜透性这类关键的成药性质。模型在覆盖多种拓扑和化学类别的异构结构数据上训练。能有一个跨化学空间、把构象和性质一起管起来的基础模型,对做环肽药物设计的人是省事的工具——就看它在真实候选分子上的泛化到底有多稳。",
+      "tags": ["蛋白质设计", "药物发现", "基础模型"]
+    },
+    {
+      "domain": "chip",
+      "title": "CIMERA: Compute-in-Interconnect and Memory with Reconfigurable Precision for LLM Inference",
+      "title_zh": "CIMERA:把计算塞进互连和存储,做可变精度的 LLM 推理加速器",
+      "url": "https://arxiv.org/abs/2607.13649",
+      "authors": "Yue Jiet Chong、Yimin Wang 等",
+      "one_liner": "撞「内存墙」的 LLM 推理,靠计算-在-互连 + 可重构精度,对比 H100 能效号称 25 倍",
+      "summary_zh": "LLM 推理对算力和显存都很吃,从数据中心到边缘设备都难做到能效高。权重精度是平衡精度、吞吐、能耗的关键,而 LLM 负载本身对精度有明显的异质性和容忍度,天然适合自适应精度。CIMERA 是个可重构精度的推理加速器,把计算融进互连和存储(compute-in-interconnect and memory)来绕开内存墙、按需切精度。文中给的数字是相对 Nvidia H100 能效最高 25 倍、吞吐 10 倍。属于「算法-硬件协同」这条线上针对 LLM 推理的一次架构尝试,数字漂亮,但要看真实流片和端到端验证。",
+      "tags": ["AI 芯片", "存算一体", "LLM 推理"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Spectral-Informed Neural Networks Outperform Spectral Methods in High-dimensional PDEs",
+      "title_zh": "高维 PDE 上,谱信息神经网络反超传统谱方法",
+      "url": "https://arxiv.org/abs/2607.13566",
+      "authors": "Tianchi Yu、Ivan Oseledets",
+      "one_liner": "低维靠谱方法封神、高维就维数灾难——SINN 在 d≫10 时把精度和效率都拿回来",
+      "summary_zh": "解偏微分方程(PDE),低维(d≤3)谱方法精度极高,中维靠稀疏网格还能撑,但高维(d≫10)就撞维数灾难。物理信息神经网络(PINN)能扩到高维,却常常精度和效率都不够。这份工作里,把谱方法和 PINN 结合、直接在谱空间里操作的谱信息神经网络(SINN),在高维 PDE 上不仅扩得上去,精度还超过了传统谱方法。对做高维科学计算(量子多体、金融、控制这些天然高维的场景)的人,是个值得试的方向。",
+      "tags": ["PDE", "科学计算", "PINN"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "Graphify-Labs/graphify",
+      "url": "https://github.com/Graphify-Labs/graphify",
+      "language": "Python",
+      "stars": 88812,
+      "stars_today": "1,138",
+      "one_liner": "把一堆代码/SQL/脚本/文档甚至图片视频,变成能查询的知识图谱",
+      "summary_zh": "一个给编码助手用的 skill(Claude Code、Codex、Cursor、Gemini CLI 都能挂),把任意一个文件夹——代码、SQL schema、R 脚本、shell、文档、论文、图片、视频——转成可查询的知识图谱,应用代码、数据库结构、基础设施放进同一张图里查。跟着 skill 生态的热度一天又涨一千多星,已近 9 万星。想让 AI 助手真正「看懂」整个仓库上下文、而不是零散 grep 的人可以试。"
+    },
+    {
+      "domain": "ai",
+      "name": "apache/ossie",
+      "url": "https://github.com/apache/ossie",
+      "language": "Python",
+      "stars": 846,
+      "stars_today": "81",
+      "one_liner": "给分析/AI/BI 平台之间交换「语义元数据」立个厂商中立的标准",
+      "summary_zh": "Apache 新孵的一个行业标准化尝试,想统一分析、AI、BI 平台之间怎么交换语义元数据,做一个厂商中立、单一事实来源的语义层。现在指标口径、维度定义在各家平台各写一套,数据一跨工具就对不上,ossie 想在这上面立个共同规范。刚起步(800 多星),但 Apache 背书加上「语义层」正是 AI 数据栈的痛点,值得看它能不能拉到足够多厂商。"
+    },
+    {
+      "domain": "ai",
+      "name": "github/copilot-sdk",
+      "url": "https://github.com/github/copilot-sdk",
+      "language": "Java",
+      "stars": 9612,
+      "stars_today": "62",
+      "one_liner": "官方 SDK,把 GitHub Copilot Agent 塞进你自己的 app 和服务里",
+      "summary_zh": "GitHub 官方出的多平台 SDK,让你把 Copilot Agent 集成进自己的应用和服务,而不只是在 IDE 里用。用 Java 写的,意味着企业后端场景是重点。想在自家产品里嵌一个编码/自动化 agent、又不想从零搭 harness 的团队,可以拿它当现成底座。"
+    },
+    {
+      "domain": "ai",
+      "name": "PostHog/posthog",
+      "url": "https://github.com/PostHog/posthog",
+      "language": "Python",
+      "stars": 35769,
+      "stars_today": "146",
+      "one_liner": "老牌产品分析平台一路加码 AI:可观测、会话回放、实验、错误追踪全塞进来",
+      "summary_zh": "PostHog 是做产品分析起家的开源平台,现在把自己定位成「给 AI 产品用的一站式」:AI 可观测性、分析、会话回放、feature flag、实验、错误追踪、日志都在一套里,还能从 Slack、桌面或 MCP 里操作。对做 AI 应用、需要看清 agent/模型在生产里到底发生了什么的团队实用。开源自托管,数据自己留着。"
+    },
+    {
+      "domain": "ai",
+      "name": "ibelick/ui-skills",
+      "url": "https://github.com/ibelick/ui-skills",
+      "language": "TypeScript",
+      "stars": 4148,
+      "stars_today": "141",
+      "one_liner": "给「设计工程师」的一套 skills——让 AI 产出的界面不那么将就",
+      "summary_zh": "面向设计工程师(design engineer)的一组 skills,思路跟最近火的各种 .claude skill 一样,把审美和交互规范打包给编码 agent 用,让 AI 生成的 UI 更像人做的。跟 Nutlope 的 hallmark 是一路的,反映「skill 生态 + 对抗 AI 廉价感」这个小趋势还在发酵。做 AI 辅助前端的人可以顺手装。"
+    },
+    {
+      "domain": "ai",
+      "name": "lobehub/lobehub",
+      "url": "https://github.com/lobehub/lobehub",
+      "language": "TypeScript",
+      "stars": 80088,
+      "stars_today": "51",
+      "one_liner": "把一堆 AI agent 组织成「7×24 运营团队」的平台(原 LobeChat 一脉)",
+      "summary_zh": "LobeHub(LobeChat 团队的延续)把产品重心从聊天前端挪到「agent 编排」:招募、调度、汇报,把一堆 agent 当成一支 7×24 运营的 AI 团队来管。8 万星的老项目,今天涨得慢,更多是个转型信号——从「一个好用的聊天 UI」往「agent 运营平台」走。适合想自托管、集中管多 agent 的人先观望,方向能不能立住还要看。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "传闻:月之暗面 Kimi K3 或将是中国最大开源模型,对标 Opus 4.8",
+      "url": "https://techcrunch.com/2026/07/16/moonshots-upcoming-kimi-3-is-expected-to-close-the-gap-with-anthropics-opus-4-8/",
+      "source": "TechCrunch",
+      "summary_zh": "据 FT 报道,月之暗面即将发布的 Kimi K3 将是中国最大的开源 AI 模型,参数量在 2 万亿到 3 万亿之间,被认为要缩小与 Anthropic Opus 4.8 的差距。若属实,又是一款万亿级、走开源路线的旗舰,和今天 Ring-Zero 把 RL 推到 1T 是同一股「规模 + 开源」的劲。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Apple Intelligence 获批在华上线,合作方为阿里与百度",
+      "url": "https://techcrunch.com/2026/07/16/apple-intelligence-approved-for-launch-in-china-with-alibabas-qwen-ai/",
+      "source": "TechCrunch",
+      "summary_zh": "苹果的 Apple Intelligence 获批在中国上线,由阿里(Qwen)和百度提供本地大模型支持。这桩去年就在传的合作落地,是苹果在中国这个关键市场推进 AI 的重要一步——监管要求用本地模型,苹果只能找本土伙伴。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "欧盟裁定:Google 须向竞品开放 Android 与搜索的关键接口",
+      "url": "https://www.theverge.com/policy/966438/eu-google-android-ai-interoperability-search-data-dma",
+      "source": "The Verge",
+      "summary_zh": "欧盟依据数字市场法(DMA)裁定,Google 必须让竞争对手的 AI 助手和搜索引擎更多地接入 Android 和 Google 搜索的关键部分。两项决定可能削弱 Google 对这两个核心平台的控制,给对手的 AI 助手一条上桌的路。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "OpenAI 发了个 230 美元的发光键盘,配 Codex 用",
+      "url": "https://techcrunch.com/2026/07/15/amid-hardware-legal-battle-openai-releases-a-230-keyboard-for-codex/",
+      "source": "TechCrunch",
+      "summary_zh": "OpenAI 发布了一款 230 美元的发光键盘,专为搭配它的 agentic 编码应用 Codex 设计,也是它第一件自有品牌硬件。背景是 OpenAI 正和苹果打一场硬件商业秘密窃取的官司,这个时点出硬件颇有意味。The Verge、Ars 也都报了,基本就这一件事。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "泄露代码显示:AI 音乐生成器 Suno 疑抓取 YouTube 做训练数据",
+      "url": "https://techcrunch.com/2026/07/15/hack-suggests-ai-music-generator-suno-scraped-youtube-for-training-data/",
+      "source": "TechCrunch",
+      "summary_zh": "一名黑客用员工凭证拿到了 Suno 的源代码,内容显示 Suno 曾抓取 YouTube 上数十年的音频用于训练。The Verge 进一步称其还从 Genius、Deezer 等抓了数百万首歌。又一起把训练数据来源摆到台面上的版权争议。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "诺奖得主 Jennifer Doudna 入局 AI 蛋白质设计",
+      "url": "https://www.fiercebiotech.com/research/nobel-laureate-jennifer-doudna-enters-ai-protein-design-arena",
+      "source": "Fierce Biotech",
+      "summary_zh": "因共同发明 CRISPR 基因编辑而获诺奖的 Jennifer Doudna,开始涉足 AI 驱动的蛋白质设计。基因编辑的旗帜人物转向计算蛋白设计,是这波「AI+生物」热度的又一个分量级信号,和今天 Vilya-1 那类全原子基础模型算是同一条河。"
+    },
+    {
+      "domain": "energy",
+      "title_zh": "投资者借能源股押注 AI:能源公司 IPO 井喷,融资速度本世纪最快",
+      "url": "https://arstechnica.com/information-technology/2026/07/energy-ipos-surge-as-investors-hunt-for-ways-to-play-ai-boom/",
+      "source": "Ars Technica",
+      "summary_zh": "为了押注 AI 带来的用电需求,大量能源公司扎堆上市,募资速度创下本世纪最快。数据中心的电从哪来成了 AI 叙事绕不开的一环,资本干脆从「卖铲子」顺藤摸到了「发电」这一端。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "细间距混合键合能不能量产?先进封装的下一道坎",
+      "url": "https://semiengineering.com/can-fine-pitch-hybrid-bonding-go-high-volume/",
+      "source": "SemiEngineering",
+      "summary_zh": "混合键合(hybrid bonding,不用焊球、直接铜对铜把两片芯片贴合)在生产上已经跑通,但要把更细间距的「芯片对晶圆」集成做到后段大批量,还得在量产成本下守住晶圆级的表面平整和对准精度。这正是 HBM 和 chiplet 堆叠往更高密度走时的关键工艺瓶颈。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "卫星投资半年破 81 亿美元,刷新历年全年纪录",
+      "url": "https://spacenews.com/satellite-investment-sets-annual-record-halfway-through-2026/",
+      "source": "SpaceNews",
+      "summary_zh": "据早期投资机构 Space Capital 统计,2026 上半年投向卫星公司的资金已达 81 亿美元,超过此前任何一个完整年度的总额。同一天 Swissto12 也宣布融资 7000 万美元扩产小型 GEO 卫星,资本正快速涌入太空基础设施这一端。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "通用机器人公司 Walden Robotics 以 11 亿美元估值出场",
+      "url": "https://www.therobotreport.com/walden-robotics-launches-1-1b-valuation-general-purpose-robots/",
+      "source": "The Robot Report",
+      "summary_zh": "做全栈「物理 AI」的 Walden Robotics 结束隐身状态,以 11 亿美元估值亮相,已获多家头部科技公司投资,目标是通用机器人。同一天 TerraFirma 也拿了 1.15 亿美元做建筑机器人——具身智能这波融资热度没退。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "把训练无关的 VLA 时序冗余加速迁到另一个底座,验证「模型无关」",
+      "based_on": [
+        {
+          "title": "Reducing Temporal Redundancy for Efficient Vision-Language-Action Inference",
+          "url": "https://arxiv.org/abs/2607.12287"
+        }
+      ],
+      "why_now": "这篇刚提交、还没跟进工作;它靠「只增量更新动态区域的视觉 token」+「把扩散采样压到两步」来降 VLA 推理延迟,全是推理侧改造、不用微调数据。开源 VLA 权重(OpenVLA、π0)和 LIBERO/SIMPLER 仿真都齐,把这套加速迁到另一个架构验证泛化,本身就是能发 workshop 的低风险小贡献。",
+      "feasibility": "全程仿真,单张 40GB 卡够用;复现加迁移大约 2–3 周。",
+      "route": [
+        "先用 OpenVLA 官方权重在 LIBERO 或 SIMPLER 上跑通基线,记录逐帧延迟和成功率",
+        "实现「只增量更新动态区域 token」+「扩散采样压到 2 步」两个模块,复现原文加速比",
+        "把同一套改造迁到架构不同的 VLA(如 π0),看加速是否与底座无关",
+        "扫任务复杂度,画「加速比 vs 成功率」的帕累托边界,标出哪些任务不能压",
+        "整理成可复现脚本发出去"
+      ],
+      "risk": "原文若没开源,增量 token 更新和两步采样的实现细节要靠猜;跨架构迁移可能非平凡,长程任务上加速可能掉分,得挑差异化角度。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个「结构角色感知」的 KV cache 剪枝小库 + 在 JSON/agent 负载上的统一横评",
+      "based_on": [
+        {
+          "title": "Adaptive Filtering of the KV Cache: Diagnosing and Correcting Structural-Role Bias in LLM Inference",
+          "url": "https://arxiv.org/abs/2607.13205"
+        },
+        {
+          "title": "A JoLT for the KV Cache: Near-Lossless KV Cache Compression via Joint Tucker and JL-Residual Allocation for LLMs",
+          "url": "https://arxiv.org/abs/2607.12550"
+        }
+      ],
+      "why_now": "这篇指出 H2O 这类按注意力能量剪 KV 的方法,在 schema 密集的 JSON 流上会疯狂保留分隔符这类「噪声」token,5% 预算下精确匹配直接从 88% 掉到 0%。今天同期还有 JoLT 等好几种 KV 压缩新法,但它们在「结构化 / agent 多轮」负载上谁强谁弱没有公平横评,正是转成 repo 的工程空白。",
+      "feasibility": "单张 A100 跑 7B–14B + vLLM,trace 用公开 agent / JSON QA 数据即可,2–4 周出 v0.1。",
+      "route": [
+        "用 vLLM 复现 H2O / SnapKV 等基线,在一个 JSON 密集或多轮 agent trace 上量精确匹配随预算的塌陷曲线",
+        "实现论文的「按结构角色(分隔符 / KEY / VALUE)自适应过滤」,把 VALUE token 的保留率提上来",
+        "把 JoLT 等低秩 / 量化方法也接进同一接口,做相同压缩率下的成功率 / 延迟 / 显存横评",
+        "封成一个统一 harness,一条命令跑全量对比、自动出 leaderboard",
+        "发布加一篇短博客,harness 本身就是攒 star 的工具"
+      ],
+      "risk": "部分方法无官方实现要标注复现版本;trace 统一格式工程量不小;定位靠「公平评测 + 一个小改进」而非「最优方法」。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "把「读回 prompt」当奖励,做一个训练无关的文生图 best-of-N 选图小工具",
+      "based_on": [
+        {
+          "title": "Read It Back: Pretrained MLLMs Are Zero-Shot Reward Models for Text-to-Image Generation",
+          "url": "https://arxiv.org/abs/2607.11886"
+        }
+      ],
+      "why_now": "SpectraReward 证明:不训奖励模型、不要偏好标注,拿预训练 MLLM 在生成图条件下跑一次前向、看原 prompt 的对数似然,就是个能打的奖励。这天然适合做成一个即插即用的 best-of-N 选图器——生成 N 张、用这个分数挑最贴 prompt 的一张,复现门槛极低,却还没有现成开箱库。",
+      "feasibility": "纯推理,单张 24–40GB 卡跑一个开源 MLLM(4B–8B 级)即可;做一个能接任意扩散模型输出的 CLI / 库,1–3 周。",
+      "route": [
+        "复现 SpectraReward 打分:给定图 + prompt,用开源 MLLM 做一次 teacher-forcing 前向,取平均 prompt 对数似然",
+        "包成一个跟生成模型解耦的 reranker,输入 N 张候选图,输出打分与 top-1",
+        "在几个公开 T2I prompt 集上,对比它与 CLIPScore、PickScore 的选图一致性和人评相关性",
+        "加统一多模态模型的 Self-SpectraReward 变体(自己给自己打分),省掉外部模型",
+        "发布成 pip 装的小库 + demo,主打「零训练、一行接入」"
+      ],
+      "risk": "对数似然打分有长度 / 措辞偏置,得做归一化;不同 MLLM 家族分数不可直接比,需各自校准;若原作者先放官方实现会稀释独特性。"
+    }
+  ]
+}
