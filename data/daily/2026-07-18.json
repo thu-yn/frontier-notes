@@ -1,0 +1,333 @@
+{
+  "date": "2026-07-18",
+  "editor_note": "今天两条「泼冷水」的论文比又一个 SOTA 更值得点开:BadWAM 证明那些「能想象未来、看起来更安全」的世界-动作模型,一点视觉扰动就能让它想得对、做得错,成功率从 96.5% 掉到 43%;Bridge Evidence 则用「删掉某篇文档再重跑轨迹」的办法讲清一件事——静态检索有用,不等于对多步 agent 真有用。开源这头依旧热闹:VideoChat3 把视频多模态从模型到数据全放出来,SAR 说 RL 后训练真正管用的更新几乎都躺在基座的谱空间里、拿 0.58% 的参数就能抠出来,再加上 Kimi K3 要冲万亿级开源的传闻。产业面我最在意一条对照:苹果起诉 OpenAI、SpaceX 一个月蒸发万亿、能源公司 IPO 井喷、GPU 玩家转投推理芯片——资本正沿着 AI 的上下游来回洗牌,算力、电力、上市窗口都在同一张牌桌上。还有个有意思的并置:Weave 发布家用人形机器人的同一天,现代汽车的工人正因为怕被 2.5 万台机器人取代而罢工。",
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "VideoChat3: Fully Open Video MLLM for Efficient and Generalist Video Understanding",
+      "title_zh": "VideoChat3:一个真·全开源的视频多模态模型",
+      "url": "https://arxiv.org/abs/2607.14935",
+      "hf_url": "https://huggingface.co/papers/2607.14935",
+      "authors": "Xinhao Li、Yuhan Zhu 等",
+      "affiliation": "南京大学多媒体计算组",
+      "upvotes": 107,
+      "one_liner": "4B 参数、从模型到数据全放出来,把通用/长视频/流式一锅端",
+      "summary_zh": "现在开源视频多模态模型的通病是:要么只在某类视频上灵、要么算力吃不消,而且大多「半开源」——训练代码、策略、数据集藏着,别人没法复现。VideoChat3 把这些都放出来:用 I3D-ViT 和自适应帧分辨率压低视频输入的处理成本,再配一条数据合成管线造了三份分别覆盖通用、长视频、流式的训练集。结果 4B 参数就在多类 benchmark 上压过参数量相当甚至更大的开源模型。对想在有限算力下做视频理解、又需要完整可复现的人,是难得的「全开」底座。",
+      "tags": ["多模态", "视频理解", "开源"]
+    },
+    {
+      "domain": "ai",
+      "title": "SEED: Self-Evolving On-Policy Distillation for Agentic Reinforcement Learning",
+      "title_zh": "SEED:让 agent 把自己跑过的轨迹总结成「技能」再蒸回策略",
+      "url": "https://arxiv.org/abs/2607.14777",
+      "hf_url": "https://huggingface.co/papers/2607.14777",
+      "authors": "Jinyang Wu、Shuo Yang 等",
+      "upvotes": 65,
+      "one_liner": "结果导向 RL 只有稀疏奖励,SEED 用「事后诸葛亮」补上 token 级的中间监督",
+      "summary_zh": "把 LLM 训成多轮 agent 时,结果导向的 RL 只有轨迹级的稀疏奖励,对中间每一步几乎没指导。SEED 让策略自己回看已完成的轨迹,提炼成自然语言「技能」(可复用流程、关键观察、避坑规则),再把这些技能带来的概率变化转成 token 级的稠密蒸馏信号,和 RL 一起优化;分析者就是策略本身,所以监督随策略一起进化。文本和视觉 agent 任务上样本效率和性能都涨,还能泛化到没见过的场景,代码已开源。思路清爽:把「回头看」变成训练时能用的稠密信号。",
+      "tags": ["Agent", "RL", "蒸馏"]
+    },
+    {
+      "domain": "ai",
+      "title": "SearchOS-V1: Towards Robust Open-Domain Information-Seeking Agent Collaboration",
+      "title_zh": "SearchOS-V1:给搜索 agent 一个显式共享的「进度状态」",
+      "url": "https://arxiv.org/abs/2607.15257",
+      "hf_url": "https://huggingface.co/papers/2607.15257",
+      "authors": "Yuyao Zhang、Junjie Gao 等",
+      "affiliation": "蚂蚁集团",
+      "upvotes": 48,
+      "one_liner": "别一搜不到就在死循环里烧预算——把搜索进度外化成能查的状态",
+      "summary_zh": "联网搜索的 agent 一旦交互变长就容易丢失任务进度,搜不到有用证据时还会陷在重复循环里空耗预算。SearchOS 把「搜索进度」从隐式变成显式、持久、可共享的状态:它把开放域信息检索建成「带证据引用的关系表补全」,再用一套上下文管理把状态外化成前沿任务、证据图、覆盖图和失败记忆,配流水线并行调度不断把空出来的算力填到还没覆盖的缺口上。WideSearch、GISA 上各项指标领先单/多 agent 基线。是把 deep research 那套「别重复踩坑」工程化的一次系统尝试。",
+      "tags": ["Agent", "搜索", "多智能体"]
+    },
+    {
+      "domain": "ai",
+      "title": "LongStraw: Long-Context RL Beyond 2M Tokens under a Fixed GPU Budget",
+      "title_zh": "LongStraw:固定 GPU 预算下,把 RL 后训练推到 200 万 token",
+      "url": "https://arxiv.org/abs/2607.14952",
+      "hf_url": "https://huggingface.co/papers/2607.14952",
+      "authors": "Changhai Zhou、Kieran Liu 等",
+      "affiliation": "Mind Lab",
+      "upvotes": 38,
+      "one_liner": "推理都摸到百万 token 了,后训练还卡在 256K——靠「不存梯度、分支重放」补上",
+      "summary_zh": "推理侧快摸到百万 token,RL 后训练却还卡在 256K 以下,靠部署时的长度外推硬撑,对上下文越滚越长的 agent 尤其别扭。LongStraw 是一套架构感知的执行栈:共享 prompt 只前向、不建自动求导图,只保留后面 token 真正要用的状态,再把回复分支一段段重放,用额外的重放时间换掉庞大的训练图。8 张 H20 上能在 210 万 token 位置跑通 Qwen3.6-27B 的分组打分与反传,组从 2 加到 8 峰值显存只多 0.21GB。作者自己讲得很清楚:这验证的是「跑得动」的执行能力,不等于完整训练正确性——这份诚实值得点个赞。",
+      "tags": ["长上下文", "RL", "系统"]
+    },
+    {
+      "domain": "ai",
+      "title": "Spectral Rewiring for Exploration, Purification, and Model Merging",
+      "title_zh": "谱空间重连:RL 后训练真正管用的更新,几乎都躺在基座的谱空间里",
+      "url": "https://arxiv.org/abs/2607.03065",
+      "hf_url": "https://huggingface.co/papers/2607.03065",
+      "authors": "Zhilong Zhang、Hongli Yu 等",
+      "upvotes": 18,
+      "one_liner": "拿 0.58% 的参数抠出「推理核」,训练无关,还能顺手做模型融合",
+      "summary_zh": "给大模型做 RL 后训练时,全参数密集更新有两个副作用:推理能力过早饱和、多能力合并或模型融合时互相打架。作者发现「对推理真正有效」的更新几乎集中在基座模型的谱空间,于是提出训练无关的后处理编辑 SAR:保留这块谱核、砍掉正交方向。用不到约 0.58% 的参数就能抠出紧凑的「推理核」,保住 99% 以上的后训练性能、还改善了数学上的高-k 探索;它还能给混合领域训练「提纯」,给多专家模型融合,融合效果甚至超过最好的单领域专家。等于说:从参数几何里就能把「有用的推理更新」挑出来,不用再训。",
+      "tags": ["RL", "模型融合", "推理"]
+    },
+    {
+      "domain": "embodied",
+      "title": "RoboTTT: Context Scaling for Robot Policies",
+      "title_zh": "RoboTTT:把机器人策略的视觉动作上下文拉到 8K 步",
+      "url": "https://arxiv.org/abs/2607.15275",
+      "hf_url": "https://huggingface.co/papers/2607.15275",
+      "authors": "Yunfan Jiang、Yevgen Chebotar 等",
+      "affiliation": "NVIDIA",
+      "upvotes": 12,
+      "one_liner": "比 SOTA 长三个数量级的上下文,延迟却不涨——上下文成了机器人新的 scaling 轴",
+      "summary_zh": "现在的机器人基础模型基本只看单步或很短的历史。RoboTTT 把测试时训练(TTT)塞进 VLA 类策略:让循环状态变成一组「快权重」——在训练和推理时都用梯度下降即时更新,把长历史压进权重里,从而把视觉动作上下文拉到 8K 步而推理延迟不增。这样解锁了从人类视频一次性模仿、在线自我改进、抗扰动、以及长程多阶段任务的能力,还首次观察到「预训练上下文越长、闭环表现越好」。真机操作上比单步基线整体提升 87%,能独立完成一个五分钟、十阶段的装配任务(没有基线做得到)。",
+      "tags": ["机器人", "VLA", "长上下文"]
+    },
+    {
+      "domain": "embodied",
+      "title": "BadWAM: When World-Action Models Dream Right but Act Wrong",
+      "title_zh": "BadWAM:世界-动作模型「想得对却做得错」",
+      "url": "https://arxiv.org/abs/2607.15207",
+      "hf_url": "https://huggingface.co/papers/2607.15207",
+      "authors": "Qi Li、Xingyi Yang、Xinchao Wang",
+      "upvotes": 36,
+      "one_liner": "一点视觉扰动就能撬开「想象」和「执行」的对齐,成功率从 96.5% 打到 43%",
+      "summary_zh": "世界-动作模型(WAM,既生成动作又预测未来画面)常被认为更安全:机器人的动作可以拿它「想象的未来」来核对。BadWAM 说这个假设很脆——用很小的视觉扰动就能打断「想象」和「执行」之间的对齐。它给出两类攻击:只冲着破坏去的,直接把模型推向会失败的动作;要隐蔽的,则在保持预测未来接近正常的同时,悄悄让动作跑偏。实验里纯动作攻击把成功率从 96.5% 打到 43.1%,而「保想象」攻击揭出 WAM 专有的漏洞:模型看起来在想象一个合理未来,执行的却是另一回事。给「想象即安全网」泼的一盆有用冷水。",
+      "tags": ["机器人", "世界模型", "对抗攻击"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Dynamic Entanglement Distribution for Multi-User and Multi-Protocol Quantum Networking",
+      "title_zh": "面向多用户多协议的动态纠缠分发:城域量子网络实测",
+      "url": "https://arxiv.org/abs/2607.15262",
+      "authors": "Rui Wang、Marcus J. Clark 等",
+      "one_liner": "一台「量子可重构光分插复用器」,把纠缠光子按需分给六个用户、还能切子网",
+      "summary_zh": "要做能扩展的多用户量子网络,得能动态地把纠缠分发给不同用户。这份工作用一台量子可重构光分插复用器(q-ROADM),把一个宽带源产生的偏振纠缠光子对,通过已铺设的校园和城域光纤动态分给六个用户。网络支持可编程的全连接、部分连接、以及切片子网多种配置,能按链路状况和业务需求灵活分配纠缠资源,并在 150 公里级光纤上稳定跑通六用户全连接。是量子组网从点对点走向「像调度带宽一样调度纠缠」的一步实测,难得是在真实部署光纤上做的。",
+      "tags": ["量子网络", "纠缠分发"]
+    },
+    {
+      "domain": "bio",
+      "title": "A vision foundation model for single-cell biology via spatial gene cartography",
+      "title_zh": "scVision:把一个细胞画成一张图来做单细胞基础模型",
+      "url": "https://arxiv.org/abs/2607.14163",
+      "authors": "Ridvan Yesiloglu、Sakib Mostafa 等",
+      "one_liner": "共表达的基因排成空间邻居,基因程序就成了图上的局部纹理",
+      "summary_zh": "大多数单细胞基础模型是从语言模型改的,把每个细胞当成一串基因 token,丢掉了基因间的关系和表达量。scVision 换成「视觉」路线:用最优传输把所有基因固定排在一张跨组织的共享版图上,让共表达的基因成为空间邻居,于是一个细胞的转录组就变成一张图、基因程序表现为局部纹理。作者用掩码图像建模在 7200 万个人类细胞上预训练一个 ViT,再冻结编码器、不微调直接做零样本下游。把单细胞数据「图像化」这个切口挺新;能不能在细分任务上稳过语言模型路线,还要看更多评测。",
+      "tags": ["单细胞", "基础模型", "视觉Transformer"]
+    },
+    {
+      "domain": "chip",
+      "title": "Differentiable Routability-Driven Package Floorplanning with Pin Assignment",
+      "title_zh": "可微的、以布线可达性为目标的先进封装布局与引脚分配",
+      "url": "https://arxiv.org/abs/2607.15005",
+      "authors": "Yiqi Huang、Zepeng Li 等",
+      "one_liner": "先进封装里最卡的是布线可达性——把布局和引脚一起做成可微优化",
+      "summary_zh": "先进封装的重布线层(RDL,把芯片的密集引脚重新扇出布线的金属层)互连密度越来越高,布线可达性成了封装布局的关键;而电源完整性又要在扇入区留给供电网络,逼着信号走扇出区,让可达性更难估。现有的均匀网格拥塞模型算不准扇出拥塞,老的引脚分配又难评估网络交叉。作者提出一套可微的、以可达性为目标的布局加引脚分配算法,针对带扇出布线的先进封装,把线长最小化等目标做成可微优化一起解。切口很具体:不是泛泛的布局,而是盯着 chiplet / 扇出封装里「信号被挤到扇出区」这个真问题。",
+      "tags": ["先进封装", "EDA", "布局布线"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Neural operators solve inverse problems for constitutive model discovery",
+      "title_zh": "用神经算子直接从实验数据「读出」材料本构模型",
+      "url": "https://arxiv.org/abs/2607.15049",
+      "authors": "Moritz Flaschel、Burigede Liu、Ellen Kuhl",
+      "one_liner": "不再反复解优化标定参数,让神经算子把实验数据直接映射到本构函数",
+      "summary_zh": "刻画材料的力学响应,传统上要解优化问题、反复标定模型参数去逼近实验数据,又慢又贵。这份工作提出两种神经算子(PANO 和 CANO),直接把实验测到的数据映射到支配材料力学响应的本构函数(描述材料受力如何变形的那组关系),跳过每次都要重解的反演。属于「用一次训练换掉反复反演」的思路,对做材料表征、本构建模的人是个能省很多计算的方向——关键看它在没见过的材料和加载路径上泛化得如何。",
+      "tags": ["神经算子", "材料力学", "科学计算"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "tirth8205/code-review-graph",
+      "url": "https://github.com/tirth8205/code-review-graph",
+      "language": "Python",
+      "stars": 19694,
+      "stars_today": "57",
+      "one_liner": "给 AI 编码工具建一张持久的代码知识图谱,让它「只读该读的那部分」",
+      "summary_zh": "一个本地优先的代码智能图谱,给 MCP 和 CLI 用:把整个仓库建成一张持久的地图,让 AI 编码工具不用把代码全塞进上下文,而是按需只读相关部分,官方给了在代码审查和大仓库场景下上下文用量大幅下降的基准。跟最近「让 agent 真正看懂整仓上下文」这条线是一路的,想给编码助手省 token、又不牺牲理解范围的人可以试。"
+    },
+    {
+      "domain": "ai",
+      "name": "RyanCodrai/turbovec",
+      "url": "https://github.com/RyanCodrai/turbovec",
+      "language": "Python",
+      "stars": 13250,
+      "stars_today": "280",
+      "one_liner": "一个建在 TurboQuant 上的向量索引,Rust 内核 + Python 绑定",
+      "summary_zh": "向量检索的底层库,用 Rust 写核心、给 Python 绑定,底子是 TurboQuant 这套量化方法,主打索引又快又省内存。对自建 RAG / 检索、想要一个轻量高效的向量索引而不想上重型向量库的人合适。刚起步就冲上 trending,值得看它的召回-延迟-内存权衡到底如何。"
+    },
+    {
+      "domain": "ai",
+      "name": "openinterpreter/openinterpreter",
+      "url": "https://github.com/openinterpreter/openinterpreter",
+      "language": "Rust",
+      "stars": 66284,
+      "stars_today": "431",
+      "one_liner": "面向开源模型(比如 Kimi K3)的编码 agent,老牌项目改用 Rust 重做",
+      "summary_zh": "Open Interpreter 是很早就火的「让模型在你本地跑代码、操作电脑」的项目,如今定位成专门服务开源模型(描述里直接点名 Kimi K3)的编码 agent,并用 Rust 重写。正好接上今天月之暗面 Kimi 3 要发万亿级开源模型的传闻——开源旗舰多了,配套的开源 agent 壳也跟着热。想在本地用开源模型跑 agentic 编码的人可以盯着。"
+    },
+    {
+      "domain": "ai",
+      "name": "Nutlope/hallmark",
+      "url": "https://github.com/Nutlope/hallmark",
+      "language": "CSS",
+      "stars": 11875,
+      "stars_today": "1,486",
+      "one_liner": "一个「反 AI 廉价感」的设计 skill,给 Claude Code / Cursor / Codex 用",
+      "summary_zh": "一个打包好的设计 skill,挂给 Claude Code、Cursor、Codex 这类编码 agent,让它们生成的界面不那么「一眼 AI 廉价货」。今天涨了近 1500 星,是榜上最猛的,和前几天的 ui-skills 是同一股劲——「skill 生态 + 对抗 AI 千篇一律的审美」这个小趋势还在发酵。做 AI 辅助前端、受够了默认 UI 的人可以顺手装。"
+    },
+    {
+      "domain": "ai",
+      "name": "codecrafters-io/build-your-own-x",
+      "url": "https://github.com/codecrafters-io/build-your-own-x",
+      "language": "Markdown",
+      "stars": 527179,
+      "stars_today": "1,070",
+      "one_liner": "「从零重造你最爱的技术」——52 万星的自学清单常年霸榜",
+      "summary_zh": "一份汇总「从零手写各种技术」教程的清单:自己实现数据库、Git、Docker、编程语言、神经网络……用重造轮子的方式吃透原理。52 万星的老牌项目,今天又涨一千多。虽是清单型,但含金量够高,是那种想真正搞懂底层、而不是只会调库的人反复回来的资源。"
+    },
+    {
+      "domain": "ai",
+      "name": "docusealco/docuseal",
+      "url": "https://github.com/docusealco/docuseal",
+      "language": "Ruby",
+      "stars": 17786,
+      "stars_today": "152",
+      "one_liner": "开源版 DocuSign,自己托管做电子签",
+      "summary_zh": "一个开源的电子文档签署平台:创建、填写、签署数字文档,定位是自托管的 DocuSign 替代。跟 AI 关系不大,但属于「把付费 SaaS 做成开源自托管」的实用工具,想把签署流程和数据留在自己服务器上的团队可以直接上。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "苹果起诉 OpenAI 窃取商业秘密,还向数十名员工发去法律函",
+      "url": "https://www.ft.com/content/1b8c9d52-88a9-426b-ba47-f1811f859166",
+      "source": "Financial Times",
+      "summary_zh": "苹果上周五对 OpenAI 提起商业秘密诉讼,指控其存在一整套挖角和窃密行为、牵连到 OpenAI 的首席硬件官,并称已有 400 多名前苹果员工在 OpenAI 任职;如今苹果又向 OpenAI 数十名员工直接发去法律函。时点很微妙——OpenAI 正传要 IPO,这场围绕硬件的官司可能给上市添堵。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "欧盟裁定:Google 须向竞品 AI 助手、搜索开放 Android 并共享搜索数据",
+      "url": "https://www.theverge.com/policy/966438/eu-google-android-ai-interoperability-search-data-dma",
+      "source": "The Verge",
+      "summary_zh": "依据数字市场法(DMA),欧盟裁定 Google 必须让竞争对手的 AI 助手和搜索引擎更多接入 Android 与 Google 搜索的关键部分,并共享搜索数据。Google 抗辩称这会危及用户隐私和安全,但两项决定一旦落地,会明显松动它对这两个核心平台的控制,给对手的 AI 助手一条上桌的路。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "传闻:月之暗面 Kimi K3 或成中国最大开源模型,参数 2–3 万亿",
+      "url": "https://techcrunch.com/2026/07/16/moonshots-upcoming-kimi-3-is-expected-to-close-the-gap-with-anthropics-opus-4-8/",
+      "source": "TechCrunch",
+      "summary_zh": "据 FT 报道,月之暗面即将发布的 Kimi K3 将是中国迄今最大的开源 AI 模型,参数量在 2 万亿到 3 万亿之间,目标是缩小与 Anthropic Opus 4.8 的差距。又一款走开源路线的万亿级旗舰,和今天 VideoChat3「全开」、SAR 这类开放研究算是同一股开源劲。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "首批 GPU 融资玩家转向推理芯片:一笔 4 亿美元芯片抵押贷款",
+      "url": "https://techcrunch.com/2026/07/17/why-the-first-gpu-financiers-are-turning-to-inference-chips-in-a-400-million-deal/",
+      "source": "TechCrunch",
+      "summary_zh": "最早靠 GPU 做融资的一批玩家,如今把钱押到推理芯片上——一笔 4 亿美元、以芯片作抵押的贷款,被看作 AI 基础设施下一波交易的信号。训练之外,推理侧的算力和资本正在单独成盘。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Weave Robotics 发布首款移动人形机器人 Isaac",
+      "url": "https://www.therobotreport.com/weave-robotics-launches-isaac-first-mobile-humanoid-robot/",
+      "source": "The Robot Report",
+      "summary_zh": "Weave Robotics 公布了旗下 Isaac——一款带轮式底盘、双臂操作的人形机器人,面向家庭和办公室场景。轮式加双臂的路线避开了双足的稳定性难题,主打室内实用操作。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "怕被人形机器人取代,现代汽车工人罢工",
+      "url": "https://arstechnica.com/ai/2026/07/fear-of-humanoid-robots-spurs-human-workers-to-strike-at-hyundai-auto-factory/",
+      "source": "Ars Technica",
+      "summary_zh": "对人形机器人上线的担忧,促使现代汽车工厂的工人发起罢工。现代计划部署 2.5 万台 Atlas 机器人,并从 2028 年起先在美国工厂铺开。和同一天 Weave 发布家用人形机器人对照看,人形机器人的产业热与劳工反弹正同时升温。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "诺奖得主 Jennifer Doudna 入局 AI 蛋白质设计",
+      "url": "https://www.fiercebiotech.com/research/nobel-laureate-jennifer-doudna-enters-ai-protein-design-arena",
+      "source": "Fierce Biotech",
+      "summary_zh": "因共同发明 CRISPR 基因编辑而获诺奖的 Jennifer Doudna,开始涉足当下火热的 AI 驱动蛋白质设计。基因编辑的旗帜人物转向计算蛋白设计,是这波「AI+生物」热度的又一个分量级信号。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "礼来 28 亿美元首付收购 AtaiBeckley,进军迷幻药精神健康市场",
+      "url": "https://www.fiercebiotech.com/biotech/eli-lilly-inks-28b-ataibeckley-buyout-challenge-jj-psychedelic-mental-health-market",
+      "source": "Fierce Biotech",
+      "summary_zh": "礼来达成协议,以 28 亿美元首付收购 AtaiBeckley,延续其收购势头,切入以迷幻药物治疗精神健康这一赛道——强生等公司也在争。大药企继续用并购卡位新兴治疗方向。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "SpaceX 跌破 IPO 发行价,一个月蒸发万亿市值,空头大赚 87 亿",
+      "url": "https://www.reuters.com/business/media-telecom/short-sellers-rack-up-87-bln-profit-spacex-slips-below-ipo-price-ortex-2026-07-16/",
+      "source": "Reuters",
+      "summary_zh": "SpaceX 上市后股价跌到 IPO 发行价下方,一个月内市值缩水约 1 万亿美元,空头据 Ortex 数据已赚约 87 亿美元。叠加 7 月 16 日星舰第 13 次试飞因部分发动机未点火而中止,SpaceX 过了颇为难熬的一个月。"
+    },
+    {
+      "domain": "energy",
+      "title_zh": "投资者借能源股押注 AI:能源公司 IPO 井喷,融资速度本世纪最快",
+      "url": "https://arstechnica.com/information-technology/2026/07/energy-ipos-surge-as-investors-hunt-for-ways-to-play-ai-boom/",
+      "source": "Ars Technica",
+      "summary_zh": "为了押注 AI 带来的用电需求,大批能源公司扎堆上市,募资速度创下本世纪最快。数据中心的电从哪来成了 AI 叙事绕不开的一环,资本从「卖铲子」顺藤摸到了「发电」这端——和 GPU 玩家转投推理芯片是同一种「沿 AI 上下游铺开」的逻辑。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "把 SEED 的「事后技能提取」剥出来,做一个训练无关的 agent 记忆小库",
+      "based_on": [
+        {
+          "title": "SEED: Self-Evolving On-Policy Distillation for Agentic Reinforcement Learning",
+          "url": "https://arxiv.org/abs/2607.14777"
+        }
+      ],
+      "why_now": "SEED 刚开源(github.com/jinyangwu/SEED),但它的核心增益绑在 RL 蒸馏上、要训练。其实「让策略回看轨迹、总结成自然语言技能」这一步是可以单拎出来的:不蒸馏、纯在推理时把技能注回上下文,当作一层可复用记忆——这个纯推理时版本还没人系统测过,正好是能攒 star 的工程空白。",
+      "feasibility": "全程推理,单张 24–40GB 卡跑一个开源 7–8B agent 即可,用 ALFWorld / WebShop / AppWorld 等公开 benchmark;2–3 周出 v0.1。",
+      "route": [
+        "先用一个开源小模型在某个公开 agent benchmark 上跑通 ReAct 基线,记录成功率和步数",
+        "实现「轨迹→自然语言技能」的提取 prompt(复用流程、关键观察、避坑规则),把技能写进一个持久 store",
+        "在后续 episode 里检索相关技能注入上下文,不做任何训练,量出相对基线的提升",
+        "对比「注入技能」vs「注入原始轨迹」vs「不注入」,看技能压缩是否真有增益",
+        "封成一行接入的库 + 一份可复现 harness 发出去"
+      ],
+      "risk": "纯推理版本的增益可能远小于 SEED 的蒸馏版;技能质量对提取 prompt 敏感,需要防止把噪声当经验;定位靠「轻量可复用」而非刷 SOTA。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "验证「推理核在谱空间」这一说法:把 SAR 迁到另一个开源模型族并试试廉价融合",
+      "based_on": [
+        {
+          "title": "Spectral Rewiring for Exploration, Purification, and Model Merging",
+          "url": "https://arxiv.org/abs/2607.03065"
+        }
+      ],
+      "why_now": "SAR 刚放出、而且是训练无关的后处理编辑——它宣称 RL 后训练里对推理有效的更新几乎都躺在基座的谱空间,拿 0.58% 参数就能抠出「推理核」,还能拿来做模型融合。训练无关的方法最适合被独立复现和迁移验证,拿一个 SAR 没测过的开源模型族(如另一家的 7–8B RL 微调 checkpoint)重跑,本身就是低风险、可发表的泛化性验证。",
+      "feasibility": "无需训练,单张 40–80GB 卡做 SVD 编辑 + 评测即可(7–8B 级);复现 + 迁移 + 融合实验约 2–3 周。",
+      "route": [
+        "复现 SAR:对一对「基座 + RL 后训练」的开源 checkpoint 做谱分解,抽出谱核、砍正交方向,在数学/代码 benchmark 上验证性能保住 99%+",
+        "换一个 SAR 论文没覆盖的模型族重跑,看「推理核集中在谱空间」是否仍成立",
+        "拿两个不同领域的开源微调模型,用 SAR 提纯后再融合,对比朴素权重平均和 task-arithmetic",
+        "扫谱核占比,画「保留参数比例 vs 性能/探索」的曲线,找迁移后的甜点",
+        "整理成可复现脚本和一份短报告"
+      ],
+      "risk": "全权重 SVD 有显存/时间开销,大模型要分块;谱核集中的现象可能与训练配方相关,迁移不一定成立——但即使「不成立」也是有价值的负面结果。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个测「因果效用」的 agentic 检索评测 harness,而不只看静态检索分",
+      "based_on": [
+        {
+          "title": "Bridge Evidence: Static Retrieval Utility Does Not Predict Causal Utility in Multi-Step Agentic Search",
+          "url": "https://arxiv.org/abs/2607.15253"
+        }
+      ],
+      "why_now": "这篇点破一件反直觉的事:一篇文档对多步搜索 agent 有没有用,取决于它让 agent「接下来能做什么」,而不是它对当前问题说了什么。作者用「删掉某篇读过的文档、再从那一步重跑轨迹」在 HotpotQA 上测了这个差距,但只是一次性实验、没有通用工具——把这套反事实效用测量做成跨数据集、跨检索器的开源 harness,正是能攒 star 的工程缺口。",
+      "feasibility": "纯推理,单张 24GB 卡跑一个 7–8B ReAct agent + 公开检索索引即可;先支持 HotpotQA/2Wiki 两个多跳 QA 集,2–4 周 v0.1。",
+      "route": [
+        "复现论文的 ReAct + 反事实探针:对每篇被读过的文档,删掉它并从该步重跑剩余轨迹,量出对最终成功率的 Δ(因果效用)",
+        "抽象出统一接口,让检索器、agent、数据集都可替换,支持批量重放与缓存以省算力",
+        "把因果效用和静态检索指标(命中率、reader-score)并排画出来,量化两者的错位程度",
+        "接入 2–3 个开源检索器 / 重排器,给出「静态强但因果弱」的反例榜",
+        "发布成 pip 装的 harness + 一篇短博客,工具本身就是卖点"
+      ],
+      "risk": "反事实重放要多跑很多次轨迹,算力和随机性都要控(建议固定温度/多次平均);因果效用的定义有多种口径,需要在 README 里讲清取舍。"
+    }
+  ]
+}
