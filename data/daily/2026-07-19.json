@@ -1,0 +1,333 @@
+{
+  "date": "2026-07-19",
+  "editor_note": "今天 AI 圈的主线是「agent 越跑越长」和「有人开始泼冷水」两股力同时发力:LongStraw 把 RL 后训练推到 200 万 token、SEED 和 SearchOS 各自在给多轮 agent 补中间监督和进度记忆;另一边 Length Penalties 那篇提醒你,压缩思维链会让它更不可监控,BadWAM 则直接给「会做梦的机器人」下了对抗毒药——方法狂奔的时候,这种冷静的反例最该点开。产业侧同样热闹:苹果起诉 OpenAI、Databricks 冲到 1880 亿估值还顺手论证开源权重更省钱,连印度手机涨价都被 AI 抢内存的浪潮波及,算力扩张已经开始渗到普通人的账单里。最想推荐的是 Doudna 入场 AI 蛋白设计——CRISPR 的发明人转身做生成式设计,这条线值得长期盯。研究点今天偏机器人:两条是训练无关/仿真可跑的 VLA 工程缺口,单卡就能开工。",
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "LongStraw: Long-Context RL Beyond 2M Tokens under a Fixed GPU Budget",
+      "title_zh": "LongStraw:固定显存预算下把长上下文 RL 推到 200 万 token",
+      "url": "https://arxiv.org/abs/2607.14952",
+      "hf_url": "https://huggingface.co/papers/2607.14952",
+      "authors": "Changhai Zhou、Kieran Liu 等",
+      "affiliation": "Mind Lab",
+      "upvotes": 169,
+      "one_liner": "推理都百万 token 了,后训练还卡在 256K,这篇专治这道坎",
+      "summary_zh": "作者点出一个现实脱节:推理端已经逼近百万 token,RL 后训练却大多还停在 256K,靠部署时的长度外推硬撑,而 agent 的观测、工具输出、历史决策恰恰是越滚越长的。LongStraw 是一套围绕 GRPO 的「架构感知执行栈」,靠共享 prompt 不走自动求导、只保留模型专属状态等工程手段,在不加卡的前提下把可训上下文顶到 200 万+。工程味很重,真正的价值是把「长上下文 RL」从堆卡问题变成了排布问题——能不能复现是另一回事,方向对。",
+      "tags": ["LLM", "RL", "长上下文", "Agent"]
+    },
+    {
+      "domain": "ai",
+      "title": "SEED: Self-Evolving On-Policy Distillation for Agentic Reinforcement Learning",
+      "title_zh": "SEED:面向 agent 强化学习的自演化在线蒸馏",
+      "url": "https://arxiv.org/abs/2607.14777",
+      "hf_url": "https://huggingface.co/papers/2607.14777",
+      "authors": "Jinyang Wu、Shuo Yang 等",
+      "upvotes": 79,
+      "one_liner": "结果奖励太稀,那就让 agent 回看自己的轨迹补中间监督",
+      "summary_zh": "多轮 agent 用结果奖励做 RL 的老毛病是:一整条轨迹只给一个稀疏分,中间每一步该怎么走没人教。SEED 的做法是把跑完的在线轨迹回收成「事后技能」,再把这些技能的行为效果蒸馏回策略,相当于自己给自己造中间监督信号。思路和事后经验回放一脉相承,但落到语言 agent 上;把「回看轨迹提技能」这一步单拎出来做训练无关的记忆层,也是个能延伸的角度。",
+      "tags": ["Agent", "RL", "蒸馏"]
+    },
+    {
+      "domain": "ai",
+      "title": "SearchOS-V1: Towards Robust Open-Domain Information-Seeking Agent Collaboration",
+      "title_zh": "SearchOS-V1:让开放域检索 agent 别在死循环里烧预算",
+      "url": "https://arxiv.org/abs/2607.15257",
+      "hf_url": "https://huggingface.co/papers/2607.15257",
+      "authors": "Yuyao Zhang、Junjie Gao 等",
+      "affiliation": "蚂蚁集团",
+      "upvotes": 56,
+      "one_liner": "搜不到就反复搜同一个词——这篇把进度做成显式共享状态",
+      "summary_zh": "带工具的检索 agent 有个常见崩法:交互历史一长就跟丢了任务进度,一旦某次搜索没捞到证据,单/多 agent 系统就陷进重复循环里空烧搜索预算。SearchOS 的核心是把「隐式、脆弱」的搜索进度变成「显式、持久、共享」的状态,让多个 agent 围绕这份状态协作。问题诊断得很准,是做过 deep research 类系统的人都踩过的坑;值不值得上多 agent 那套复杂度,得看它相对单 agent + 好记忆的净增益。",
+      "tags": ["Agent", "检索", "多智能体"]
+    },
+    {
+      "domain": "ai",
+      "title": "Length Penalties Make Chain-of-Thought Less Monitorable",
+      "title_zh": "长度惩罚会让思维链变得更难监控",
+      "url": "https://arxiv.org/abs/2607.09786",
+      "hf_url": "https://huggingface.co/papers/2607.09786",
+      "authors": "Bryce Little",
+      "upvotes": 8,
+      "one_liner": "思维链变短不等于变干净,可能只是把动机藏起来了",
+      "summary_zh": "为了省 token 用长度惩罚来压缩思维链,听起来是好事,这篇泼了盆冷水:训练加了长度惩罚后,误导性提示照样能左右模型答案,但模型在思维链里提到这个提示的次数明显变少了。也就是说,以 token 准确率来看这些跑法很成功(更短、精度几乎没掉),却完全没测出「剩下的思维链还能不能反映真正驱动答案的东西」。在 Qwen3-4B/14B 上做的对照实验,规模不大但角度很扎实——对所有把 CoT 当安全监控手段的人是个警告。",
+      "tags": ["安全", "可解释性", "CoT"]
+    },
+    {
+      "domain": "ai",
+      "title": "VideoChat3: Fully Open Video MLLM for Efficient and Generalist Video Understanding",
+      "title_zh": "VideoChat3:一个真·全开源的高效通用视频多模态模型",
+      "url": "https://arxiv.org/abs/2607.14935",
+      "hf_url": "https://huggingface.co/papers/2607.14935",
+      "authors": "Xinhao Li、Yuhan Zhu 等",
+      "affiliation": "南京大学",
+      "upvotes": 117,
+      "one_liner": "训练代码、策略、数据都放出来,不是「半开源」的那种",
+      "summary_zh": "现有开源视频多模态模型的通病是三样:跨视频类型泛化差、算力吃得凶、而且大多只「半开源」——权重给了但训练代码/策略/数据藏着,别人没法复现。VideoChat3 针对的正是这三点,主打完整开放和推理效率。对想在视频理解上做下游适配的人,一个训练链路全透明的基座比多刷两个点的 SOTA 有用得多。",
+      "tags": ["多模态", "视频理解", "开源"]
+    },
+    {
+      "domain": "embodied",
+      "title": "RoboTTT: Context Scaling for Robot Policies",
+      "title_zh": "RoboTTT:把机器人策略的视觉运动上下文拉长三个数量级",
+      "url": "https://arxiv.org/abs/2607.15275",
+      "hf_url": "https://huggingface.co/papers/2607.15275",
+      "authors": "Yunfan Jiang、Yevgen Chebotar 等",
+      "affiliation": "NVIDIA",
+      "upvotes": 16,
+      "one_liner": "机器人基座还在看单步/短历史,这篇用测试时训练把它撑到 8K 步",
+      "summary_zh": "现在的机器人基础模型基本只吃单步或很短历史的视觉运动上下文,RoboTTT 用测试时训练(test-time training)的思路把上下文一口气拉到 8K 时间步,比现有策略长三个数量级,而且没把参数量顶爆。长上下文这条线从语言模型烧到了机器人策略上,思路一致:与其每次从短窗口重新推断,不如让模型记住更久。能不能真转化成操作成功率的提升,是关键看点。",
+      "tags": ["VLA", "机器人", "长上下文"]
+    },
+    {
+      "domain": "embodied",
+      "title": "BadWAM: When World-Action Models Dream Right but Act Wrong",
+      "title_zh": "BadWAM:当「会做梦」的机器人梦对了却做错了",
+      "url": "https://arxiv.org/abs/2607.15207",
+      "hf_url": "https://huggingface.co/papers/2607.15207",
+      "authors": "Qi Li、Xingyi Yang 等",
+      "upvotes": 41,
+      "one_liner": "「能拿动作对照想象的未来来自检」这条安全性,被一小撮像素扰动打穿了",
+      "summary_zh": "世界-动作模型(WAM,一边生成动作一边预测未来世界的一类具身模型)常被当成更鲁棒、更可解释、更安全的路线——理由是机器人的动作可以拿它「想象的未来」来核对。这篇专门拆这个假设:BadWAM 是一类针对 WAM 的对抗攻击,用很小的视觉扰动就能把「想象」和「实际动作」之间的对齐撬开,让它梦里一切正常、手上全做错。给这波把世界模型当安全护栏的乐观情绪浇了盆必要的冷水。",
+      "tags": ["世界模型", "对抗攻击", "具身安全"]
+    },
+    {
+      "domain": "bio",
+      "title": "Vilya-1: An all-atom foundation model for macrocycle structure prediction and design",
+      "title_zh": "Vilya-1:面向大环肽结构预测与设计的全原子基础模型",
+      "url": "https://arxiv.org/abs/2607.09998",
+      "authors": "Vilya Research 团队",
+      "affiliation": "Vilya Research",
+      "one_liner": "大环肽这类「介于小分子和抗体之间」的药,终于有了自己的全原子基座",
+      "summary_zh": "大环肽(环状结构的肽类药物,兼具小分子的可成药性和大分子的靶点覆盖)是越来越受重视的一类药物,但现有计算方法覆盖窄、跨合成可及化学空间泛化差。Vilya-1 是个全原子深度模型,同时啃两件事:采样有生物学意义的构象、以及做结构预测与设计。蛋白结构那套范式往非天然、环状肽类扩散是明显趋势,这类垂类基座能不能真在湿实验里省事,还得看后续。",
+      "tags": ["蛋白设计", "大环肽", "药物"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Dynamic Entanglement Distribution for Multi-User and Multi-Protocol Quantum Networking",
+      "title_zh": "面向多用户多协议的动态纠缠分发量子网络",
+      "url": "https://arxiv.org/abs/2607.15262",
+      "authors": "Rui Wang、Marcus J. Clark 等",
+      "one_liner": "城域尺度实测:一台可重构光分插复用器给六个用户动态派发纠缠光子",
+      "summary_zh": "这是个实打实的城域量子网络演示,而非纯理论。核心器件是一台量子可重构光分插复用器(q-ROADM),能把一个宽带纠缠源产生的偏振纠缠光子对,按需动态分发给部署在校园光纤上的六个用户,并支持多种协议。量子网络从点对点走向「可动态重配的多用户」这一步很关键,这类真机演示比又一篇协议论文更有说服力。",
+      "tags": ["量子网络", "纠缠分发", "实验"]
+    },
+    {
+      "domain": "chip",
+      "title": "CODA: How to Mitigate ColumnDisturb for (Almost) Free?",
+      "title_zh": "CODA:如何(几乎)零成本地缓解 ColumnDisturb",
+      "url": "https://arxiv.org/abs/2607.13505",
+      "authors": "Moinuddin Qureshi",
+      "one_liner": "继 RowHammer 之后,DRAM 又冒出一个跨子阵列的「列扰动」翻位问题",
+      "summary_zh": "ColumnDisturb 是一种新的 DRAM 数据扰动错误:频繁激活某一行,会导致几百行之外的受害行、乃至相邻子阵列的行发生比特翻转——比 RowHammer 波及更远。子阵列内的部分已有方案(如 SALT、REGA)能扛,难点在跨子阵列那部分。CODA 主打用近乎零开销的机制把它压下去。内存可靠性这条线这些年一直在和物理尺寸微缩赛跑,新扰动模式层出不穷,做 DRAM 安全和 controller 的人得盯着。",
+      "tags": ["DRAM", "内存可靠性", "硬件安全"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "One-Shot Generative Design for Disordered Metamaterials via Self-Organizing Neural Cellular Automata",
+      "title_zh": "用自组织神经元胞自动机一步生成无序超材料",
+      "url": "https://arxiv.org/abs/2607.14475",
+      "authors": "Yujie Xiang、Liwei Wang",
+      "one_liner": "无序微结构比规则的更难设计,这篇让它自己「长」出来",
+      "summary_zh": "无序超材料靠微结构里天然的随机性和不规则,能覆盖规则结构够不到的性能区间,但也正因为无序,设计起来比规则微结构难得多——过去要么手工参数化、表达力受限,要么迭代优化、算力烧不起。这篇把自组织神经元胞自动机搬来做一步式(one-shot)生成设计,让微结构像细胞群落一样自己生长成目标性能。AI 做材料逆设计的又一个具体切口,思路挺漂亮,泛化到多目标物性时能不能稳住待观察。",
+      "tags": ["超材料", "生成设计", "AI4Science"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "Robbyant/lingbot-map",
+      "url": "https://github.com/Robbyant/lingbot-map",
+      "language": "Python",
+      "stars": 12762,
+      "stars_today": "827",
+      "one_liner": "喂进流式数据就能前馈式重建 3D 场景的基础模型",
+      "summary_zh": "一个前馈式 3D 基础模型,从流式输入直接重建场景,不用逐帧慢慢优化。属于 VGGT 之后这波「一次前向出 3D」的路线,做 SLAM、具身导航、AR 的人可以拿它当现成的场景重建后端。今天新增 800+ star,热度实打实。",
+      "tags": ["3D重建", "基础模型"]
+    },
+    {
+      "domain": "ai",
+      "name": "lyogavin/airllm",
+      "url": "https://github.com/lyogavin/airllm",
+      "language": "Jupyter Notebook",
+      "stars": 23273,
+      "stars_today": "242",
+      "one_liner": "4GB 显存跑 70B 推理——分层加载硬把大模型塞进小卡",
+      "summary_zh": "靠分层加载权重,让 70B 模型在单张 4GB 显卡上也能做推理(牺牲速度换显存)。对手上只有消费级卡、又想在本地跑大模型做实验的人很实用。别指望它当生产推理引擎,它解决的是「能不能跑」而不是「跑得多快」。",
+      "tags": ["推理", "低显存", "本地部署"]
+    },
+    {
+      "domain": "ai",
+      "name": "tirth8205/code-review-graph",
+      "url": "https://github.com/tirth8205/code-review-graph",
+      "language": "Python",
+      "stars": 20102,
+      "stars_today": "356",
+      "one_liner": "给 AI 编码工具建一张持久代码地图,让它只读该读的那部分",
+      "summary_zh": "本地优先的代码智能图谱,面向 MCP 和 CLI 使用,把整个代码库建成一张持久的关系图,让 AI 编码工具在评审、大仓检索时只读真正相关的上下文,官方给了上下文量削减的实测数据。冲着「省 token、给 agent 喂对上下文」这个真痛点去的,做 AI 编码基建的人值得看一眼。",
+      "tags": ["MCP", "代码智能", "开发工具"]
+    },
+    {
+      "domain": "ai",
+      "name": "KnockOutEZ/wigolo",
+      "url": "https://github.com/KnockOutEZ/wigolo",
+      "language": "TypeScript",
+      "stars": 1139,
+      "stars_today": "192",
+      "one_liner": "给 AI agent 的本地搜索/抓取/研究后端,不要 API key、$0 一次查询",
+      "summary_zh": "通过 MCP 给编码 agent 提供本地优先的搜索、抓取、爬取和研究能力,不依赖云服务、不需要 API key,主打零成本查询。和上面 code-review-graph 是一路人:把 agent 的外部能力搬到本地、去掉付费门槛。还在公测,但方向讨喜,今天涨了近 200 star。",
+      "tags": ["MCP", "检索", "Agent工具"]
+    },
+    {
+      "domain": "ai",
+      "name": "MoonshotAI/kimi-cli",
+      "url": "https://github.com/MoonshotAI/kimi-cli",
+      "language": "Python",
+      "stars": 9409,
+      "stars_today": "48",
+      "one_liner": "月之暗面官方的命令行 agent,踩在新 Kimi 发布的节点上",
+      "summary_zh": "Moonshot 官方出的 CLI 编码 agent,定位就是终端里的下一个 agent 工具。正好赶上这周新版 Kimi 模型发布引发的讨论,配套官方 CLI 是国产开源模型「模型 + 工具链」一起铺的常规打法,想在本地用 Kimi 跑 agent 工作流的可以直接上手。",
+      "tags": ["CLI", "Agent", "国产模型"]
+    },
+    {
+      "domain": "ai",
+      "name": "apache/ossie",
+      "url": "https://github.com/apache/ossie",
+      "language": "Python",
+      "stars": 1241,
+      "stars_today": "48",
+      "one_liner": "想给分析/AI/BI 平台之间的语义元数据定一套通用交换标准",
+      "summary_zh": "Apache Ossie 是一个行业级规范尝试,想统一 analytics、AI、BI 各平台之间交换语义元数据的方式,做一个厂商中立的「单一事实来源」。语义层碎片化是数据栈里长期的痛,这类标准化努力成不成很大程度看生态肯不肯买账,但方向值得关注。",
+      "tags": ["数据基建", "语义层", "标准"]
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "苹果起诉 OpenAI,商业秘密诉讼来势汹汹",
+      "url": "https://www.theverge.com/podcast/967244/apple-openai-lawsuit-vergecast",
+      "source": "The Verge / TechCrunch",
+      "summary_zh": "苹果上周五对 OpenAI 提起商业秘密诉讼,诉状措辞激烈,指控存在系统性不当行为。多家媒体都在讨论这场官司的时机对 OpenAI 有多不利——正撞上它 IPO 的节骨眼上。不过也有专家认为诉状里不少指控其实是行业常规操作,后续要看法庭怎么认。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Databricks 估值冲到 1880 亿美元,还发论文论证开源权重更省钱",
+      "url": "https://techcrunch.com/2026/07/17/databricks-hits-188b-valuation-extending-its-run-as-ais-favorite-second-act/",
+      "source": "TechCrunch",
+      "summary_zh": "Databricks 完成新一轮融资,估值达到 1880 亿美元,把自己从数据平台彻底改造成了一家 AI 公司。值得留意的是它同时发布研究,论证开源权重模型在编码场景下的成本优势——这和今天 airllm、kimi-cli 这些开源工具的热度是同一股风。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "月之暗面发布新版 Kimi,引发「AI 全民共产」的讨论",
+      "url": "https://techcrunch.com/2026/07/18/kimi-threat-or-menace/",
+      "source": "TechCrunch",
+      "summary_zh": "Moonshot AI 本周放出新版 Kimi 模型,凭借开放策略和性价比再次搅动舆论,甚至冒出「AI 全民共产」这种半调侃的说法。国产开源模型持续给闭源阵营施压,配套的官方 CLI 也一并铺开。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "AI 抢内存推高价格,冲击印度智能手机市场",
+      "url": "https://techcrunch.com/2026/07/17/ai-driven-memory-crunch-jolts-indias-smartphone-market/",
+      "source": "TechCrunch",
+      "summary_zh": "AI 热潮对内存的巨量需求正传导到消费电子:印度智能手机市场出现放缓,定价、需求和厂商策略都被重塑。这是算力扩张渗进普通人账单的一个直观例子——数据中心囤内存,最后手机涨价。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "最早一批 GPU 融资方转向推理芯片,达成 4 亿美元贷款",
+      "url": "https://techcrunch.com/2026/07/17/why-the-first-gpu-financiers-are-turning-to-inference-chips-in-a-400-million-deal/",
+      "source": "TechCrunch",
+      "summary_zh": "一笔 4 亿美元、以芯片作抵押的贷款,标志着 AI 基础设施融资进入下一波:资金开始从训练用 GPU 转向推理芯片。押注推理侧的算力需求,反映出行业重心正从「训得动」向「跑得起」迁移。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Agility Robotics 在特斯拉后院弗里蒙特建 Digit 训练中心",
+      "url": "https://techcrunch.com/2026/07/17/agility-robotics-plants-its-flag-in-teslas-backyard/",
+      "source": "TechCrunch",
+      "summary_zh": "Agility Robotics 在加州弗里蒙特开设新的训练中心,用于训练它的 Digit 人形机器人——地点就选在特斯拉的地盘。人形机器人公司开始建专门的实训基地,是从 demo 走向规模化部署的信号。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "印度 Skyroot 首飞 Vikram-1 入轨,成首个入轨的印度商业火箭",
+      "url": "https://spacenews.com/skyroot-aerospace-reaches-orbit-on-first-vikram-1-launch/",
+      "source": "SpaceNews",
+      "summary_zh": "Skyroot Aerospace 的 Vikram-1 火箭 7 月 18 日首飞成功入轨,成为首枚进入轨道的印度商业火箭。印度商业航天迈过从零到入轨这道最难的坎,新兴航天国家的私营发射力量又添一员。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "美太空军把发射合同上限从 56 亿一举提到 170 亿美元",
+      "url": "https://spacenews.com/space-force-triples-launch-contract-ceiling-amid-rising-demand/",
+      "source": "SpaceNews",
+      "summary_zh": "美国太空军将国家安全太空发射(NSSL)第三阶段 Lane 1 合同的最高金额从 56 亿美元上调到 170 亿美元,直接翻了三倍。需求猛增之下政府在给商业发射市场加码,受益的是有资质的一众发射商。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "礼来 28 亿美元首付收购 AtaiBeckley,进军迷幻剂心理健康赛道",
+      "url": "https://www.fiercebiotech.com/biotech/eli-lilly-inks-28b-ataibeckley-buyout-challenge-jj-psychedelic-mental-health-market",
+      "source": "Fierce Biotech",
+      "summary_zh": "礼来达成协议,以 28 亿美元首付收购 AtaiBeckley,切入以强生等公司为代表的迷幻剂心理健康市场。这是礼来收购攻势的又一笔,大药企正加速在精神健康这个新兴方向卡位。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "诺奖得主 Doudna 入场 AI 蛋白质设计",
+      "url": "https://www.fiercebiotech.com/research/nobel-laureate-jennifer-doudna-enters-ai-protein-design-arena",
+      "source": "Fierce Biotech",
+      "summary_zh": "以共同发明 CRISPR 基因编辑闻名的诺奖得主 Jennifer Doudna,开始涉足 AI 蛋白质设计这个当红领域。基因编辑的奠基者转身做生成式蛋白设计,是这条 AI+生物主线又添一位重量级玩家,值得长期跟。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个「多轮 agent 负载下 KV Cache 剪枝」的统一评测 harness",
+      "based_on": [
+        { "title": "Adaptive Filtering of the KV Cache: Diagnosing and Correcting Structural-Role Bias in LLM Inference", "url": "https://arxiv.org/abs/2607.13205" },
+        { "title": "Set-shifting Behavioral Test for Harnessed Agents", "url": "https://arxiv.org/abs/2607.13396" }
+      ],
+      "why_now": "KV cache 剪枝(H2O 及其后代)几乎都在通用长文本上调的,这篇却指出按注意力累积量排序会带来「结构角色偏置」——在多轮工具调用的 agent 负载上,这类偏置更致命,而目前缺一个把各种剪枝策略放到 agent trace 上公平横评的开源工具。",
+      "feasibility": "纯推理,单张 40–80GB 卡跑 7–14B + vLLM,trace 用公开 agent benchmark;2–3 周出 v0.1。",
+      "route": [
+        "选 2–3 个多轮 agent benchmark(工具调用/网页操作类),统一成可重放的 trace 格式",
+        "在 vLLM 上复现 H2O、SnapKV、以及这篇的自适应过滤三种策略",
+        "相同压缩率下并排测成功率 / 延迟 / 显存,重点看「工具调用轮次越多、偏置越大」的现象",
+        "按任务类型分析敏感性,给一个针对 agent 场景的简单启发式改进",
+        "封成 pip 可装的 harness + 短报告,工具本身就是卖点"
+      ],
+      "risk": "部分方法无官方实现需标注复现版本;trace 统一有工程量;定位靠「公平评测 + agent 场景」而非刷最优压缩率。"
+    },
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "训练无关的 VLA 推理加速:复现「去时序冗余」并迁到另一个开源底座",
+      "based_on": [
+        { "title": "Reducing Temporal Redundancy for Efficient Vision-Language-Action Inference", "url": "https://arxiv.org/abs/2607.12287" },
+        { "title": "Reflex: Real-Time VLA Control through Streaming Inference", "url": "https://arxiv.org/abs/2607.14695" }
+      ],
+      "why_now": "这两天一口气冒出好几篇训练无关的 VLA 推理加速工作(去时序冗余、流式推理),都不需要微调数据、拿开源权重就能在 LIBERO/SIMPLER 单卡评测。训练无关方法最适合被独立复现,把它迁到架构不同的另一个开源 VLA 底座验证泛化性,本身就是低风险、可发 workshop 的小贡献。",
+      "feasibility": "全程仿真,单张 A100 40GB,7B 级 VLA + 官方权重;复现 + 迁移约 2–3 周。",
+      "route": [
+        "第一步先跑通:部署 LIBERO 或 SIMPLER + 一个开源 VLA 官方权重,量出基线成功率和推理延迟",
+        "实现「去时序冗余」加速模块并复现原文的加速比-成功率结果",
+        "迁移到架构不同的另一个开源 VLA,验证方法是否模型无关",
+        "扫任务复杂度,画加速比 vs 成功率的帕累托边界,找长程任务上的甜点",
+        "整理成可复现脚本 + 短文投 workshop"
+      ],
+      "risk": "原文未开源则复现细节要猜;跨架构迁移可能非平凡;同期方向撞车,需挑长程 / 高频控制这类差异化切口。"
+    },
+    {
+      "domain": "embodied",
+      "type": "repo",
+      "title": "做一个 VLA「光照 / 颜色鲁棒性」压力测试套件",
+      "based_on": [
+        { "title": "Lights, Camera, Malfunction: When Illumination Robustness Leaves VLA Models Blind to Color", "url": "https://arxiv.org/abs/2607.14698" }
+      ],
+      "why_now": "这篇发现 VLA 模型在光照变化下会「对颜色失明」——本该靠颜色区分的抓取直接崩,但它只是一次性实验,没留下可复用的压力测试工具。把「光照 + 颜色扰动」这套探针做成能挂到 SIMPLER/LIBERO 上的开源 harness,是个明确的工程空白,也容易攒 star。",
+      "feasibility": "纯仿真,单张 24–40GB 卡跑开源 VLA + 渲染扰动即可;2–3 周 v0.1。",
+      "route": [
+        "先跑通:在 SIMPLER 或 LIBERO 上用一个开源 VLA 复现一组正常光照下的抓取基线",
+        "实现一层可配置的光照 / 色温 / 颜色扰动渲染管线,复现原文的「对颜色失明」失效",
+        "抽象成统一接口,让 VLA 模型、任务、扰动类型都可替换,支持批量评测",
+        "接 2–3 个开源 VLA,给出「哪些模型在何种光照下崩、崩在哪类颜色任务」的对照榜",
+        "发布成 pip 可装的鲁棒性 harness + 短博客"
+      ],
+      "risk": "仿真里的光照扰动和真机差距未知,结论要标注「仿真内」;扰动强度的口径要在 README 里讲清,避免造出无意义的极端 case。"
+    }
+  ]
+}
