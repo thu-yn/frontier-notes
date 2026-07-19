@@ -1,0 +1,338 @@
+{
+  "date": "2026-07-20",
+  "editor_note": "今天翻下来,AI 这边的关键词是「把地基补齐」而不是又一个 SOTA:AgentCompass 想把 agent 评测拆成能复用的三件套,SAR 发现 RL 后训练的推理增益其实挤在基座谱空间里、砍掉杂音就能训练无关地合并模型——都是让人踩着往上走的活。产业侧则是开源模型继续压闸:Qwen 3.8 上榜、Kimi K3 直接把订阅挤到暂停,配合 OpenAI 悄悄下调 Codex 上下文、Claude Code 转 Rust,一整条「开源追赶 + 工程降本」的线很清楚。跨领域有个巧合值得记一笔:五角大楼掏钱把卫星盖板玻璃产能搬回本土,和 AI 抢内存推高硬件价格是同一种焦虑——先进产业都在给供应链上保险。最想点开的是 scVision,把单细胞从「基因 token 序列」改成「图像」来学,这种换表征的赌注要么很妙要么翻车,值得追;机器人那几篇(DriftWorld、行为基础模型、遥操作陷阱)则异口同声:少迷信真机和遥操作堆量,仿真与学习才是主干。",
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "AgentCompass: A Unified Evaluation Infrastructure for Agent Capabilities",
+      "title_zh": "AgentCompass:把 agent 评测拆成基准/harness/环境三件套的开源基建",
+      "url": "https://arxiv.org/abs/2607.13705",
+      "hf_url": "https://huggingface.co/papers/2607.13705",
+      "authors": "Zichen Ding、Jiaye Ge 等",
+      "affiliation": "OpenCompass",
+      "upvotes": 38,
+      "one_liner": "agent 评测各写各的,这篇想把三件套解耦成能复用的地基",
+      "summary_zh": "agent 评测现在的乱象是流水线高度耦合、各家重复造轮子,换个 benchmark 就得重写一堆执行逻辑。AgentCompass 把评测拆成 Benchmark、Harness、Environment 三个互相独立的组件,配上容错的异步运行时和轨迹分析工具,原生支持 20+ benchmark、五个能力维度,还能诊断 reward-hacking 这类隐蔽失败。对做 agent 的人,一个能横评又能查错的统一底座,比再多刷一个榜单实在。",
+      "tags": ["Agent", "评测", "开源"]
+    },
+    {
+      "domain": "ai",
+      "title": "From Pixels to States: Rethinking Interactive World Models as Game Engines",
+      "title_zh": "从像素到状态:把交互式世界模型当游戏引擎重新审视",
+      "url": "https://arxiv.org/abs/2607.14076",
+      "hf_url": "https://huggingface.co/papers/2607.14076",
+      "authors": "Zhen Li、Zian Meng 等",
+      "affiliation": "Alaya Studio",
+      "upvotes": 29,
+      "one_liner": "视频生成模型想当下一代游戏引擎?先照着游戏引擎的循环把账算清楚",
+      "summary_zh": "这篇拿传统游戏引擎的「动作-状态-观测」循环当尺子,系统梳理了用视频生成模型做交互世界的四个维度:玩家动作控制、游戏状态动力学、状态-观测的持久性、实时生成。既是综述,也顺手放了个数据引擎——从《黑神话:悟空》采了 90+ 小时带帧对齐动作、真值游戏状态和标注的 gameplay。把「视频模型≈游戏引擎」这个热概念拉回到工程可检验的框架上,比空喊「下一代引擎」有用。",
+      "tags": ["世界模型", "视频生成", "游戏引擎"]
+    },
+    {
+      "domain": "ai",
+      "title": "UniVR: Thinking in Visual Space for Unified Visual Reasoning",
+      "title_zh": "UniVR:在视觉空间里「思考」的统一视觉推理",
+      "url": "https://arxiv.org/abs/2607.12800",
+      "hf_url": "https://huggingface.co/papers/2607.12800",
+      "authors": "Zhongwei Ren、Yunchao Wei 等",
+      "affiliation": "字节跳动",
+      "upvotes": 28,
+      "one_liner": "不靠图文对,纯从视觉演示里学推理、物理动力学和长程规划",
+      "summary_zh": "UniVR 想直接从纯视觉演示里学三样东西:复杂推理、细粒度物理动力学、长程规划,不依赖任务启发式或图文配对。核心是 VR-GRPO,一种带全局和步级双重奖励的强化学习,逼着推理过程保持逻辑一致和物理自洽。配套的 VR-X 从 16 个来源汇了长程操作、空间谜题、物理推理,号称首个纯视觉协议下的综合评测,代码模型全开源。视觉空间内推理这条线值得盯,能不能泛化到真实杂乱场景是关键验证。",
+      "tags": ["视觉推理", "RL", "多模态"]
+    },
+    {
+      "domain": "ai",
+      "title": "Spectral Rewiring for Exploration, Purification, and Model Merging",
+      "title_zh": "SAR:用谱空间「重连」抽出推理有效更新,做训练无关的模型编辑与合并",
+      "url": "https://arxiv.org/abs/2607.03065",
+      "hf_url": "https://huggingface.co/papers/2607.03065",
+      "authors": "Zhilong Zhang、Hongli Yu 等",
+      "upvotes": 22,
+      "one_liner": "RL 后训练的推理增益其实挤在基座的谱核心里,剩下的正交方向净添乱",
+      "summary_zh": "全参数 RL 后训练有两个部署级毛病:推理性能被压(测试时扩展早早饱和),以及多域训练或模型合并时互相打架。作者发现更新里真正管用的推理成分,主要集中在基座模型的谱空间;于是提出 SAR,一种训练后编辑方法,保留这块谱核心、砍掉正交分量。只用约 0.58% 参数就能留住 99%+ 的后训练性能,还能净化混域更新、把模型合并做得比现有基线更好。训练无关、成本低,是个很适合被独立复现和迁移验证的方向。",
+      "tags": ["LLM", "RL", "模型合并", "训练无关"]
+    },
+    {
+      "domain": "ai",
+      "title": "Registers Matter for Pixel-Space Diffusion Transformers",
+      "title_zh": "寄存器 token 对像素空间扩散 Transformer 同样有用",
+      "url": "https://arxiv.org/abs/2605.16147",
+      "hf_url": "https://huggingface.co/papers/2605.16147",
+      "authors": "Nikita Starodubcev、Ilia Sudakov 等",
+      "affiliation": "Yandex Research",
+      "upvotes": 24,
+      "one_liner": "ViT 那套「寄存器 token」搬到像素空间 DiT,居然比在隐空间更管用",
+      "summary_zh": "ViT 里那些高范数的异常 patch token 会拖累特征图,加「寄存器 token」能治。扩散模型越来越像 ViT(转向像素空间训练),这篇就问寄存器对扩散 Transformer(DiT)有没有用。结论有意思:DiT 其实不出现 patch 异常值,却照样从寄存器受益,而且在像素空间 DiT 上比隐空间更有效——分析发现寄存器在高噪声档能产出更干净的特征图。据此提出 Register Guidance,放大寄存器对结构和连贯性的贡献。小改动、机理讲得清楚,像素空间生成这波正好用得上。",
+      "tags": ["扩散模型", "DiT", "图像生成"]
+    },
+    {
+      "domain": "embodied",
+      "title": "DriftWorld: Fast World Modeling through Drifting",
+      "title_zh": "DriftWorld:靠「漂移」把世界模型的每次 rollout 做到单次前向",
+      "url": "https://arxiv.org/abs/2607.15065",
+      "authors": "Susie Lu、Haonan Chen 等",
+      "one_liner": "扩散世界模型每步 rollout 太贵,这篇训练时学好漂移、推理一把过",
+      "summary_zh": "预测式世界模型让机器人靠「想象动作后果」来规划,但价值全看能不能快速多跑 rollout——扩散世界模型的多步采样让每次 rollout 都很贵,推理时没法大规模搜索动作。DriftWorld 换成基于漂移生成模型的思路:训练时学一个动作条件下的漂移,推理时从当前观测加候选动作序列单次前向就出未来帧,30+ fps,平均比多步采样快约 17 倍。把「世界模型能不能用于实时控制」的瓶颈从采样步数挪开,方向对;实机规划里的真实收益还要看闭环验证。",
+      "tags": ["世界模型", "机器人", "推理加速"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Scaling Behavior Foundation Model for Humanoid Robots",
+      "title_zh": "人形机器人行为基础模型的规模化",
+      "url": "https://arxiv.org/abs/2607.15163",
+      "authors": "Weishuai Zeng、Kangning Yin 等",
+      "one_liner": "想把行为基础模型往大做,先搞清学习范式、数据、架构该怎么配",
+      "summary_zh": "人形控制要全身自然协调、对指令实时精确响应、还得跨环境泛化,是通用具身智能的硬骨头。行为基础模型(BFM)靠大规模行为数据来换表达力和泛化,但一直没说清:学习范式、行为数据、模型架构这几样该怎么协调才能真正「越大越好」。这篇就系统研究 BFM 的扩展规律。人形这波热在硬件和 demo,基座怎么 scale 反而缺系统性答案,这类工作是补地基的。",
+      "tags": ["人形机器人", "基础模型", "Scaling"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Coulomb blockade in microscopic material defects as a source of decoherence and noise in solid-state quantum circuits",
+      "title_zh": "微观材料缺陷里的库仑阻塞:超导量子电路退相干与噪声的新来源",
+      "url": "https://arxiv.org/abs/2607.15252",
+      "authors": "R. Banerjee、L. P. Lindoy 等",
+      "one_liner": "用扫描栅极显微镜在「活的」超导电路上,抓到一个此前没认出的退相干机制",
+      "summary_zh": "固态量子器件的一大瓶颈来自制造材料:表面、界面、结构缺陷带来各种损耗和退相干,但把这些机制和微观材料起源对上号一直很难,拖慢了相干性改进。这篇用扫描栅极显微镜直接在工作中的超导电路上做测量,识别出一个此前没被认出的退相干机制——来自金属晶粒里的库仑阻塞和微波驱动的电荷隧穿。把退相干追到具体材料缺陷,才谈得上有针对性地压制,对做超导量子硬件的人是实打实的线索。",
+      "tags": ["超导量子", "退相干", "实验"]
+    },
+    {
+      "domain": "bio",
+      "title": "A vision foundation model for single-cell biology via spatial gene cartography",
+      "title_zh": "scVision:把每个细胞画成图像的单细胞生物学视觉基础模型",
+      "url": "https://arxiv.org/abs/2607.14163",
+      "authors": "Ridvan Yesiloglu、Sakib Mostafa 等",
+      "one_liner": "别再把细胞当基因 token 序列了,这篇把它渲染成图像来学",
+      "summary_zh": "现在的单细胞基础模型大多照搬语言模型,把每个细胞当成一串基因 token,这样会丢掉基因间的关系、常常还丢掉表达量的大小。scVision 反其道:把每个细胞渲染成一张连续图像,用最优传输把基因固定摆到一张跨组织共享的版图上,让共表达的基因成为空间邻居,于是一个转录组就变成一张「基因程序显示为局部纹理」的图。在 7200 万人类细胞上用掩码图像建模预训练,冻结编码器直接零样本用。换个表征范式来啃单细胞,思路新;能不能在下游任务上稳赢序列派还要看更多评测。",
+      "tags": ["单细胞", "基础模型", "表征"]
+    },
+    {
+      "domain": "chip",
+      "title": "Towards Reliable AI-Assisted Analog Design: Template-Constrained LLM Agents for SAR ADC Generation",
+      "title_zh": "用模板约束的 LLM agent 生成能过 SPICE 的 SAR ADC",
+      "url": "https://arxiv.org/abs/2607.14165",
+      "authors": "Dimple Vijay Kochar、Hae-Seung Lee 等",
+      "one_liner": "直接让大模型画模拟电路基本靠幻觉,这篇用模板约束把它拉回能仿真的地步",
+      "summary_zh": "大模型写软件代码很行,搬到模拟 EDA 就卡壳:电路拓扑理解有限、数据又少,直接提示多模态模型只会产生幻觉、画出过不了 SPICE 仿真的原理图。这篇提出端到端多步 agent 框架 ATLAS,能生成通过仿真验证的逐次逼近型模数转换器(SAR ADC),关键是用模板约束顶住模拟设计那些死规矩。AI 做模拟电路一直雷声大雨点小,这种「先保证能仿真、再谈优化」的务实路子,比端到端硬生成靠谱。",
+      "tags": ["模拟EDA", "LLM", "芯片设计"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "A fast summation method for the DFT-D3 dispersion correction",
+      "title_zh": "FourierD3:把 DFT-D3 色散修正做成 O(N log N) 的快速求和",
+      "url": "https://arxiv.org/abs/2607.15103",
+      "authors": "Victoria Valeeva、Cheuk Hin Ho 等",
+      "one_liner": "机器学习力场都爱加 D3 色散,但它一直逼着你要么截断要么变慢",
+      "summary_zh": "大家给 PBE 这类色散不足的泛函训机器学习力场时,routine 地补上 DFT-D3 色散修正,但 D3 的环境依赖成对系数破坏了原子中心可分性,快速求和方法用不上,只能要么截断 D3、要么忍受明显变慢。FourierD3 用一个泛函低秩分解把可分性恢复出来,让色散项能用 particle-mesh 在 O(N log N) 时间内算、还不需要实空间截断。是个具体又实用的小工具,做大规模分子动力学模拟的直接受益。",
+      "tags": ["机器学习力场", "分子动力学", "AI4Science"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "kvcache-ai/ktransformers",
+      "url": "https://github.com/kvcache-ai/ktransformers",
+      "language": "Python",
+      "stars": 18296,
+      "stars_today": "328",
+      "one_liner": "想在异构硬件上把大模型推理/微调榨到极致的实验框架",
+      "summary_zh": "一个主打异构 LLM 推理/微调优化的灵活框架,核心卖点是在有限硬件(比如单张大显存卡配 CPU/内存)上把大模型跑起来、跑得更省。对手上没有整机 GPU、又想在本地折腾大模型推理和微调的人很实用,是 llama.cpp 之外另一条「用工程换硬件门槛」的路子。",
+      "tags": ["推理", "异构计算", "微调"]
+    },
+    {
+      "domain": "ai",
+      "name": "jamiepine/voicebox",
+      "url": "https://github.com/jamiepine/voicebox",
+      "language": "TypeScript",
+      "stars": 43231,
+      "stars_today": "629",
+      "one_liner": "开源 AI 语音工作室:克隆、口述、创作一条龙,今天涨了 600+ star",
+      "summary_zh": "定位是开源的 AI 语音工作室,支持声音克隆、语音输入和生成创作,底层挂了 CUDA/MLX 和 Qwen3-TTS。热度很猛(单日 600+ star),对想在本地搭语音克隆/TTS 流水线、又不想依赖闭源 API 的人是现成选择。声音克隆这类工具的授权和伦理边界要自己把好。",
+      "tags": ["语音", "TTS", "开源"]
+    },
+    {
+      "domain": "ai",
+      "name": "trycua/cua",
+      "url": "https://github.com/trycua/cua",
+      "language": "HTML",
+      "stars": 20207,
+      "stars_today": "136",
+      "one_liner": "给 computer-use agent 的开源驱动 + 跨系统机群 + benchmark",
+      "summary_zh": "面向「computer-use 2.0」的开源基建:提供操作电脑的驱动、跨操作系统的机群管理,以及用于训练、评测和数据生成的 benchmark。computer-use agent 现在缺的正是可复现的执行底座和评测,这个项目冲着这个空白去,做桌面自动化 agent 的可以拿它当地基。",
+      "tags": ["computer-use", "Agent", "评测"]
+    },
+    {
+      "domain": "ai",
+      "name": "1jehuang/jcode",
+      "url": "https://github.com/1jehuang/jcode",
+      "language": "Rust",
+      "stars": 8820,
+      "stars_today": "199",
+      "one_liner": "又一个用 Rust 写的编码 agent harness",
+      "summary_zh": "一个 Rust 实现的编码 agent harness,对标 Claude Code / kimi-cli 那类终端编码 agent。CLI 编码 agent 现在是红海,但 Rust 底座图的是启动快、资源省,和这两天「Claude Code 转 Bun/Rust」的风是一路。想要个轻、可改的编码 agent 骨架可以看看。",
+      "tags": ["编码Agent", "CLI", "Rust"]
+    },
+    {
+      "domain": "ai",
+      "name": "github/copilot-sdk",
+      "url": "https://github.com/github/copilot-sdk",
+      "language": "Java",
+      "stars": 9931,
+      "stars_today": "46",
+      "one_liner": "GitHub 官方出的 SDK,把 Copilot Agent 塞进你自己的应用里",
+      "summary_zh": "GitHub 官方的多平台 SDK,用来把 Copilot Agent 集成进第三方应用和服务。大厂把自家 agent 能力开成 SDK,是想让 Copilot 从 IDE 里的补全变成到处能调的后端能力。做集成、想在自己产品里接 Copilot 的团队用得上。",
+      "tags": ["Copilot", "SDK", "Agent"]
+    },
+    {
+      "domain": "ai",
+      "name": "Canner/WrenAI",
+      "url": "https://github.com/Canner/WrenAI",
+      "language": "Python",
+      "stars": 16147,
+      "stars_today": "96",
+      "one_liner": "给 AI agent 用的开源 text-to-SQL,带一层「可信语义」上下文",
+      "summary_zh": "面向 AI agent 的开源生成式 BI:通过一层开放的语义上下文,把自然语言问题变成可信的仪表盘、图表和 SQL,接 BigQuery、Snowflake、ClickHouse 等 20+ 数据源。text-to-SQL 的老大难是「生成的 SQL 到底可不可信」,它主打用受治理的语义层来兜底,做数据问答产品的可以关注。",
+      "tags": ["text-to-SQL", "生成式BI", "数据"]
+    },
+    {
+      "domain": "ai",
+      "name": "AstrBotDevs/AstrBot",
+      "url": "https://github.com/AstrBotDevs/AstrBot",
+      "language": "Python",
+      "stars": 36665,
+      "stars_today": "62",
+      "one_liner": "把一堆 IM 平台、大模型和插件缝在一起的 AI agent 框架",
+      "summary_zh": "一个把多种即时通讯平台、LLM 和插件集成到一起的 AI agent 助手与开发框架,能接 Discord、各类聊天平台当入口。对想快速搭一个跨平台聊天机器人 / agent、又不想从零对接各家 IM 协议的人,是个省事的脚手架。",
+      "tags": ["聊天机器人", "Agent框架", "插件"]
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "阿里发布 Qwen 3.8,登上 HN 热榜",
+      "url": "https://twitter.com/Alibaba_Qwen/status/2078759124914098291",
+      "source": "Hacker News",
+      "summary_zh": "阿里通义千问放出 Qwen 3.8,在 Hacker News 上冲到 640+ 分。国产开源模型的迭代节奏依旧很密,配合下面 Kimi 的热度,这周开源阵营又是一波密集更新。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Kimi K3 需求太猛,月之暗面暂停新订阅",
+      "url": "https://twitter.com/kimi_moonshot/status/2078855608565207130",
+      "source": "Hacker News",
+      "summary_zh": "Moonshot AI 因 Kimi K3 的需求过载,宣布暂停新用户订阅。上一版还在被讨论「性价比搅局」,这一版直接把服务器挤到要限流,国产开源模型的真实使用量可见一斑。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "OpenAI 把 Codex 的模型上下文从 372k 下调到 272k",
+      "url": "https://github.com/openai/codex/pull/33972/files",
+      "source": "Hacker News",
+      "summary_zh": "OpenAI 在 Codex 的一个 PR 里把模型上下文窗口从 372k 降到 272k,引来 HN 讨论。上下文并非越大越好——过长会拖慢、增本还稀释注意力,这次收缩多半是拿实际效果和成本换来的取舍。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Claude Code 改用 Bun、底层用 Rust 重写",
+      "url": "https://simonwillison.net/2026/Jul/19/claude-code-in-bun-in-rust/",
+      "source": "Hacker News",
+      "summary_zh": "据 Simon Willison 梳理,Claude Code 现在跑在 Bun 上、关键部分用 Rust 重写。编码 agent 工具集体往 Rust/原生底座迁,图的是启动更快、资源更省——和今天 jcode 这类 Rust harness 是同一股工程风向。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "苹果的诉讼会不会拖垮 OpenAI 的硬件计划?",
+      "url": "https://techcrunch.com/2026/07/19/can-an-apple-lawsuit-derail-openais-hardware-plans/",
+      "source": "TechCrunch",
+      "summary_zh": "继苹果对 OpenAI 提起商业秘密诉讼后,业界开始讨论这场官司会不会波及 OpenAI 备受关注的硬件计划,以及它临近的 IPO。诉讼从「商业秘密」延烧到「硬件 + 上市」两条线,是这件事最值得盯的后续。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "三期数据不及预期,GSK 砍掉重磅止咳药 camlipixant",
+      "url": "https://www.fiercebiotech.com/biotech/gsk-axes-key-cough-drug-candidate-after-phase-3-data-disappoint",
+      "source": "Fierce Biotech",
+      "summary_zh": "GSK 在慢性咳嗽三期拿到喜忧参半的数据后,终止了 camlipixant 的开发——分析师本把它看作 GSK 2026 年的关键催化剂,这一刀砸掉了一个潜在重磅炸弹。呼吸领域的新机制药又一次栽在三期,提醒这条赛道的高风险。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "Dimerix 500 万首付、总额 2.92 亿收下 Mission 的二期肾病候选药",
+      "url": "https://www.fiercebiotech.com/biotech/dimerix-snaps-missions-stalled-phase-2-ready-kidney-disease-candidate-5m-upfront",
+      "source": "Fierce Biotech",
+      "summary_zh": "Dimerix 从 Mission Therapeutics 买下一款急性肾损伤药物,首付 500 万美元、里程碑总额最高 2.87 亿。把别家「卡住的、二期就绪」的资产低首付接过来接着推,是当下 biotech 常见的抄底打法。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "毛里求斯成为第 70 个签署《阿尔忒弥斯协定》的国家",
+      "url": "https://spacenews.com/mauritius-becomes-70th-nation-to-sign-the-artemis-accords/",
+      "source": "SpaceNews",
+      "summary_zh": "岛国毛里求斯 7 月 17 日签署《阿尔忒弥斯协定》,成为不到六年里第 70 个签署国。美国主导的这套月球探测规则框架仍在快速扩圈,签署国数量本身就是地缘航天格局的一个风向标。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "五角大楼拨款 710 万美元扩大卫星盖板玻璃的美国本土产能",
+      "url": "https://spacenews.com/pentagon-awards-7-1-million-to-expand-u-s-production-of-cover-glass-for-satellites/",
+      "source": "SpaceNews",
+      "summary_zh": "美国国防部依《国防生产法》向小企业 Martin Materials Solutions 拨款 710 万美元,扩大用于航天器太阳能阵和热控系统的抗辐射盖板玻璃产能。看似不起眼的一块玻璃,却是卫星供应链的关键环节——把这类特种材料产能拉回本土,是航天供应链去风险的一步。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "别掉进机器人开发的「遥操作陷阱」",
+      "url": "https://www.therobotreport.com/how-to-avoid-teleoperation-trap-robotics-development/",
+      "source": "The Robot Report",
+      "summary_zh": "Flexion 的 CEO 提醒:遥操作对训练人形机器人是必要的,但不能只靠它——强化学习和仿真仍然不可或缺。这波人形热里遥操作采数被捧得很高,这篇算是给「以为堆遥操作数据就能出通用策略」的想法泼盆冷水,和今天 DriftWorld、行为基础模型那几篇「仿真/学习为主」的口径是呼应的。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "复现 AHR(每个注意力头只学一个标量),在低资源分类上和 LoRA 掰手腕",
+      "based_on": [
+        { "title": "Data-Efficient Adaptation of LLMs via Attention Head Reweighting", "url": "https://arxiv.org/abs/2607.13425" }
+      ],
+      "why_now": "AHR 把适配一个新文本分类任务压到「每个注意力头一个标量」,可训参数量比 LoRA 还少一个量级,原文主打少样本。这种极简、近乎训练无关的适配最适合被独立复现,把它挪到真正低资源、类别极不均衡的任务上、和 LoRA 比样本效率,是低风险又有说服力的扩展。",
+      "feasibility": "只训极少参数,7–8B 模型 + 单张 24–40GB 卡,复现加两个新任务约 2 周。",
+      "route": [
+        "先跑通:拿一个开源 7–8B 模型,在原文的一个分类任务上复现 AHR,量出准确率和可训参数量",
+        "接入两个低资源 / 类别不均衡的文本分类任务(如安全、小语种)",
+        "在相同 shot 数下和 LoRA、全量微调比准确率与样本效率",
+        "消融「重加权多少个头」对效果的影响,看功能特化假设是否成立",
+        "封成可复现脚本 + 短报告"
+      ],
+      "risk": "增益可能强任务依赖;少样本方差大,需多种子控制;要挑 AHR 相对 LoRA 真有优势的低资源切口。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个稀疏视角 / 乱序输入前馈式 3DGS 重建的统一评测 harness",
+      "based_on": [
+        { "title": "Immediate 3D Gaussian Splat Reconstruction of Unordered Input with Global Consistency", "url": "https://arxiv.org/abs/2607.14481" },
+        { "title": "G$^2$SR: Geometric Methods for Fast and Memory-Efficient Gaussian-based Surface Reconstruction", "url": "https://arxiv.org/abs/2607.14470" }
+      ],
+      "why_now": "这两天前馈式、少视角、免 SfM 的 3DGS 重建一口气冒出好几篇(乱序输入即时重建、少视角表面重建、SfM-free 变体),但各写各的数据划分和指标,尤其免 SfM 那类缺乏同口径对比,目前没有一个把它们放到一起公平横评的开源工具。",
+      "feasibility": "以推理加少量优化为主,单张 24–40GB 卡跑公开权重;2–3 周出 v0.1。",
+      "route": [
+        "先跑通:选一个有公开权重的方法,复现官方推理当基线,确认 harness 端到端能出数",
+        "再接 1–2 个前馈式 / 少视角方法,统一到相同数据集与少视角、乱序划分",
+        "统一指标:PSNR/SSIM/LPIPS + 重建耗时 + 显存 + 是否依赖 SfM 位姿",
+        "加乱序 / 极少视角的压力档,看各方法在哪崩、崩在几何还是外观",
+        "封成 pip 可装的 harness + 短榜单报告,工具本身就是卖点"
+      ],
+      "risk": "相机位姿约定和坐标系各家不一,统一有工程量;部分方法未开源需标注复现版本;定位靠公平评测而非刷最优。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "复现 PruneGround 的即插即用空间剪枝,迁到另一个 3DVG 底座验证泛化",
+      "based_on": [
+        { "title": "PruneGround: Plug-and-play Spatial Pruning for 3D Visual Grounding", "url": "https://arxiv.org/abs/2606.31148" }
+      ],
+      "why_now": "PruneGround 用冻结的 VLM 做语言引导的空间剪枝,训练无关、即插即用地给 3D 视觉定位(3DVG)砍搜索范围和算力。plug-and-play 方法最适合被独立复现,把它挂到架构不同的另一个 3DVG 模型 / 数据集上验证泛化,本身就是低风险、可发 workshop 的扩展。",
+      "feasibility": "以推理为主,冻结 VLM + 一个 3DVG 模型,单张 24–40GB 卡;约 2–3 周。",
+      "route": [
+        "先跑通:在 ScanRefer / Nr3D 上用一个开源 3DVG 模型复现基线定位精度与耗时",
+        "接入 PruneGround 的语言引导空间剪枝,复现原文的精度-算力权衡",
+        "迁移到架构不同的第二个 3DVG 底座,验证是否模型无关",
+        "分析剪枝在「依赖全局上下文」的指代表达上会不会误伤",
+        "整理成可复现脚本 + 短文投 workshop"
+      ],
+      "risk": "原文未开源则剪枝细节要猜;对需要全场景推理的查询,剪枝可能有害;同方向可能撞车,需挑差异化数据集 / 底座。"
+    }
+  ]
+}
