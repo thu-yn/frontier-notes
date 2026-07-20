@@ -63,6 +63,47 @@
 </section>
 {% endif %}
 
+{% if issue.math_note %}
+{% set m = issue.math_note %}
+<section class="theorem" id="theorem" aria-label="每日一理">
+  <div class="theorem__head">
+    <span class="theorem__kicker">每日一理 · THEOREM</span>
+    <h2 class="theorem__name">{{ m.name }}{% if m.name_en %}<span class="theorem__en">{{ m.name_en }}</span>{% endif %}</h2>
+    {% if m.field %}<span class="theorem__field">{{ m.field }}</span>{% endif %}
+  </div>
+  {% if m.one_liner %}<p class="theorem__oneliner"><mark>{{ m.one_liner }}</mark></p>{% endif %}
+  {% if m.statement %}
+  <div class="theorem__block">
+    <h3>说的是什么</h3>
+    <p>{{ m.statement }}</p>
+  </div>
+  {% endif %}
+  {% if m.origin %}
+  <div class="theorem__block">
+    <h3>由来</h3>
+    <p>{{ m.origin }}</p>
+  </div>
+  {% endif %}
+  {% if m.derivation %}
+  <div class="theorem__block">
+    <h3>怎么推出来的</h3>
+    <ol class="theorem__steps">
+      {% for s in m.derivation %}<li>{{ s }}</li>{% endfor %}
+    </ol>
+  </div>
+  {% endif %}
+  {% if m.applications %}
+  <div class="theorem__block">
+    <h3>能用在哪</h3>
+    <ul class="theorem__apps">
+      {% for a in m.applications %}<li><b>{{ a.area }}</b>{{ a.detail }}</li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+  {% if m.takeaway %}<p class="theorem__takeaway">{{ m.takeaway }}</p>{% endif %}
+</section>
+{% endif %}
+
 {% if present | length > 1 %}
 <div class="filter-bar" role="group" aria-label="按领域筛选">
   <button type="button" data-domain="all" aria-pressed="true">全部</button>
