@@ -40,10 +40,33 @@ jobs:
         with:
           # 用 Claude 订阅额度:本地跑 `claude setup-token` 后存入仓库 secrets
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          prompt: "请阅读 prompts/summarize.md 并严格按其中要求完成今天的编辑任务。"
-          claude_args: '--model claude-opus-4-8 --allowedTools "Read,Glob,Grep,Write,Edit,Bash(python3 scripts/build.py)"'
-          # TODO: 诊断用,定位到具体是哪些 Bash 调用被拒绝(2026-07-15 那次跑出 permission_denials_count:7 导致 is_error:true)后移除
+          # 强调「本次运行内亲自 Write 出文件、不得委派子代理」:2026-07-21 那次 Claude 派了
+          # digest 子代理后说「稍后再写」就 end_turn,文件从没写出,却报 success(见 --disallowedTools Task)
+          prompt: "请阅读 prompts/summarize.md 并严格按其中要求完成今天的编辑任务。你必须在本次运行内亲自用 Write 写出 data/daily/<今天日期>.json,写完再结束;禁止把编辑任务委派给子代理(Task),禁止只声明「稍后再写」就结束。"
+          # allowedTools 放宽到 Bash(python3:*)/ls,避免 Claude 检查原始数据时被「requires approval」挡住绕远路;
+          # disallowedTools Task 硬禁子代理,防止再次出现「委派后 end_turn 不写文件」
+          claude_args: '--model claude-opus-4-8 --allowedTools "Read,Glob,Grep,Write,Edit,Bash(python3:*),Bash(ls:*)" --disallowedTools "Task"'
           show_full_output: true
+
+      - name: 校验当日产出
+        run: |
+          # Claude 步骤即使没写出文件也会报 success,commit 步骤又会静默跳过,整条流水线照样绿。
+          # 这里显式校验当日 data/daily/<北京日期>.json 存在且合法,缺了/坏了就让工作流变红。
+          DATE=$(date -u -d '+8 hours' +%F)
+          F="data/daily/${DATE}.json"
+          if [ ! -f "$F" ]; then
+            echo "::error::Claude 未写出当日文件 $F,本期生成失败(疑似委派子代理后未落盘)"
+            exit 1
+          fi
+          python3 - "$F" <<'PY'
+          import json, sys
+          f = sys.argv[1]
+          d = json.load(open(f, encoding="utf-8"))          # 非法 JSON 会在此抛错
+          missing = [k for k in ("date", "editor_note", "math_note") if k not in d]
+          if missing:
+              sys.exit(f"::error::{f} 缺少必需字段: {missing}")
+          print(f"✓ 当日文件已生成并校验通过: {f}")
+          PY
 
       - name: 构建站点
         run: python scripts/build.py
