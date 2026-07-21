@@ -20,8 +20,30 @@
   }
 
   var ACCENT = themeColor("--color-accent", "#3457d5"); // 主强调色(y=f(x) 曲线、起点)
-  var COBWEB = "#c0392b"; // 蛛网迭代路径(暖红,和主色区分)
-  var GUIDE = "#9aa4b2"; // 辅助线 y=x(灰)
+  var COBWEB = "#c0392b"; // 迭代/下降路径(暖红,和主色区分)
+  var GUIDE = "#9aa4b2"; // 辅助线(灰)
+
+  /* 把表达式串编译成 JS 函数 f(x):解构 Math 让 cos/sin/exp 等可直接写。
+   * 表达式来自本仓库(组件参数),非用户输入,new Function 可信。 */
+  function makeFn(expr) {
+    return new Function(
+      "x",
+      "var {sin,cos,tan,asin,acos,atan,exp,log,sqrt,cbrt,abs,pow,sign," +
+        "sinh,cosh,tanh,floor,ceil,round,min,max,PI,E}=Math;" +
+        "return (" + expr + ");"
+    );
+  }
+
+  /* 在 [a,b] 上采样估计 f 的取值范围,用来自动定纵向视窗。 */
+  function sampleRange(f, a, b, n) {
+    var lo = Infinity, hi = -Infinity;
+    for (var i = 0; i <= n; i++) {
+      var y = f(a + ((b - a) * i) / n);
+      if (isFinite(y)) { if (y < lo) lo = y; if (y > hi) hi = y; }
+    }
+    if (!isFinite(lo) || !isFinite(hi) || lo === hi) { lo = -1; hi = 1; }
+    return [lo, hi];
+  }
 
   /* ---- 组件:迭代蛛网图(cobweb / fixed-point iteration) -----------------
    * 画 y=f(x) 与 y=x,给一个可沿 x 轴拖动的起点 x₀,实时画出
@@ -34,14 +56,7 @@
       p || {}
     );
 
-    // 把表达式串编译成 JS 函数 f(x):解构 Math 让 cos/sin/exp 等可直接写。
-    // 表达式来自本仓库(组件参数),非用户输入,new Function 可信。
-    var f = new Function(
-      "x",
-      "var {sin,cos,tan,asin,acos,atan,exp,log,sqrt,cbrt,abs,pow,sign," +
-        "sinh,cosh,tanh,floor,ceil,round,min,max,PI,E}=Math;" +
-        "return (" + p.fn + ");"
-    );
+    var f = makeFn(p.fn);
 
     var pad = 0.6; // 纵向留白,别让曲线顶到边框
     var board = JXG.JSXGraph.initBoard(elId, {
@@ -165,7 +180,74 @@
     return board;
   }
 
-  var COMPONENTS = { cobweb: cobweb, fourier: fourier };
+  /* ---- 组件:梯度下降(gradient) ----------------------------------------
+   * 在一维曲线 y=f(x) 上,从可拖动的起点按 xₙ₊₁=xₙ-η·f'(xₙ) 一步步下山,
+   * 红色折线是下降轨迹。拖起点或调「学习率 η」滑块:η 太大就会震荡甚至发散。
+   * 导数用数值差分,任意表达式都能跑;纵向视窗自动适配。
+   * params: { fn:"0.5*x*x - cos(3*x)", x0:2.4, lr:0.1, maxLr:1.2, xmin:-3, xmax:3, steps:24 }
+   */
+  function gradient(elId, p) {
+    p = Object.assign(
+      { fn: "0.5*x*x - cos(3*x)", x0: 2.4, lr: 0.1, maxLr: 1.2, xmin: -3, xmax: 3, steps: 24 },
+      p || {}
+    );
+    var f = makeFn(p.fn);
+    var df = function (x) { var h = 1e-4; return (f(x + h) - f(x - h)) / (2 * h); };
+
+    var r = sampleRange(f, p.xmin, p.xmax, 200);
+    var pad = (r[1] - r[0]) * 0.15 || 0.5;
+    var board = JXG.JSXGraph.initBoard(elId, {
+      boundingbox: [p.xmin, r[1] + pad, p.xmax, r[0] - pad],
+      keepaspectratio: false,
+      axis: true,
+      showCopyright: false,
+      showNavigation: false,
+      pan: { enabled: false },
+      zoom: { enabled: false },
+    });
+
+    board.create("functiongraph", [f, p.xmin, p.xmax], {
+      strokeColor: ACCENT, strokeWidth: 2.5, highlight: false,
+    });
+    var axisLine = board.create("line", [[0, 0], [1, 0]], { visible: false });
+    var start = board.create("glider", [p.x0, 0, axisLine], {
+      name: "x₀", size: 5, fillColor: ACCENT, strokeColor: ACCENT,
+      label: { offset: [8, -14], fontSize: 14 },
+    });
+    var lr = board.create(
+      "slider",
+      [[p.xmin + (p.xmax - p.xmin) * 0.05, r[1] + pad * 0.4],
+       [p.xmin + (p.xmax - p.xmin) * 0.45, r[1] + pad * 0.4],
+       [0.01, p.lr, p.maxLr]],
+      { name: "学习率 η", precision: 2, fillColor: ACCENT, strokeColor: ACCENT }
+    );
+    var path = board.create("curve", [[], []], {
+      strokeColor: COBWEB, strokeWidth: 1.6, highlight: false,
+    });
+    var cur = board.create("point", [0, 0], {
+      name: "", size: 3, fillColor: COBWEB, strokeColor: COBWEB, fixed: true, highlight: false,
+    });
+
+    function redraw() {
+      var x = start.X(), eta = lr.Value();
+      var xs = [x], ys = [f(x)];
+      for (var i = 0; i < p.steps; i++) {
+        x = x - eta * df(x);
+        if (!isFinite(x)) break;
+        xs.push(x); ys.push(f(x));
+      }
+      path.dataX = xs; path.dataY = ys;
+      cur.moveTo([xs[xs.length - 1], ys[ys.length - 1]]);
+      board.update();
+    }
+    start.on("drag", redraw);
+    lr.on("drag", redraw);
+    board.on("up", redraw); // 拖滑块释放后兜底重算
+    redraw();
+    return board;
+  }
+
+  var COMPONENTS = { cobweb: cobweb, fourier: fourier, gradient: gradient };
 
   function boot() {
     var nodes = document.querySelectorAll(".mathviz[data-viz]");

@@ -61,6 +61,15 @@ GALLERY_DEMOS = [
         "跳变处的过冲永不消失。参数:wave(square/sawtooth/triangle)、terms(初始项数)、maxTerms(滑块上限)。",
         "params": {"wave": "square", "terms": 5, "maxTerms": 30},
     },
+    {
+        "id": "gradient",
+        "title": "梯度下降",
+        "use": "优化 / 迭代下山 / 学习率的影响。拖起点或调「学习率 η」滑块看轨迹如何滚向极小值,"
+        "η 太大就震荡甚至发散。导数用数值差分,任意 fn 都能跑。"
+        "参数:fn、x0(起点)、lr(初始学习率)、maxLr(滑块上限)、xmin/xmax、steps(迭代步数)。",
+        "params": {"fn": "0.5*x*x - cos(3*x)", "x0": 2.4, "lr": 0.1, "maxLr": 1.2,
+                   "xmin": -3, "xmax": 3, "steps": 24},
+    },
 ]
 
 
