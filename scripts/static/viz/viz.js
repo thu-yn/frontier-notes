@@ -322,7 +322,84 @@
     return board;
   }
 
-  var COMPONENTS = { cobweb: cobweb, fourier: fourier, gradient: gradient, vectorfield: vectorfield };
+  /* ---- 组件:黎曼和 / 定积分(riemann) ----------------------------------
+   * 在 [a,b] 上用 n 个矩形逼近 ∫f,拖「矩形数 n」滑块看黎曼和收敛到真积分,
+   * 支持左端/右端/中点取样。文本实时显示当前和与真值。
+   * params: { fn, a, b, n, maxN, rule:"mid"|"left"|"right", xmin, xmax }
+   */
+  function riemann(elId, p) {
+    p = Object.assign(
+      { fn: "0.6*sin(x)+1.4", a: 0, b: 6.283, n: 8, maxN: 60, rule: "mid", xmin: -0.4, xmax: 6.7 },
+      p || {}
+    );
+    var f = makeFn(p.fn);
+    var r = sampleRange(f, p.xmin, p.xmax, 200);
+    var span = (r[1] - r[0]) || 1;
+    var top = Math.max(r[1], 0) + span * 0.34; // 顶部留白:上一行文本 + 下一行滑块
+    var bot = Math.min(r[0], 0) - span * 0.1;
+    var board = JXG.JSXGraph.initBoard(elId, {
+      boundingbox: [p.xmin, top, p.xmax, bot],
+      keepaspectratio: false,
+      axis: true,
+      showCopyright: false,
+      showNavigation: false,
+      pan: { enabled: false },
+      zoom: { enabled: false },
+    });
+
+    var N = board.create(
+      "slider",
+      [[p.xmin + (p.xmax - p.xmin) * 0.05, top - span * 0.2],
+       [p.xmin + (p.xmax - p.xmin) * 0.42, top - span * 0.2],
+       [1, p.n, p.maxN]],
+      { name: "矩形数 n", snapWidth: 1, precision: 0, fillColor: ACCENT, strokeColor: ACCENT }
+    );
+
+    // 取样点:左端 / 右端 / 中点
+    function sx(xi, dx) {
+      return p.rule === "left" ? xi : p.rule === "right" ? xi + dx : xi + dx / 2;
+    }
+    // 真积分参考值(细分 2000 段的中点和)
+    var exact = (function () {
+      var m = 2000, dx = (p.b - p.a) / m, s = 0;
+      for (var i = 0; i < m; i++) s += f(p.a + (i + 0.5) * dx);
+      return s * dx;
+    })();
+
+    var area = board.create("curve", [[], []], {
+      strokeColor: ACCENT, strokeWidth: 1, fillColor: ACCENT, fillOpacity: 0.18, highlight: false,
+    });
+    board.create("functiongraph", [f, p.xmin, p.xmax], {
+      strokeColor: ACCENT, strokeWidth: 2.5, highlight: false,
+    });
+    var label = board.create("text", [p.xmin + (p.xmax - p.xmin) * 0.5, top - span * 0.05, function () {
+      var n = Math.round(N.Value()), dx = (p.b - p.a) / n, s = 0;
+      for (var i = 0; i < n; i++) s += f(sx(p.a + i * dx, dx));
+      s *= dx;
+      return "黎曼和 = " + s.toFixed(4) + "   真值 ∫ ≈ " + exact.toFixed(4);
+    }], { fontSize: 13, anchorX: "middle", cssStyle: "font-family:var(--font-mono)" });
+
+    function redraw() {
+      var n = Math.round(N.Value()), dx = (p.b - p.a) / n;
+      var xs = [p.a], ys = [0];
+      for (var i = 0; i < n; i++) {
+        var xi = p.a + i * dx, h = f(sx(xi, dx));
+        xs.push(xi, xi + dx); ys.push(h, h); // 阶梯:平顶
+      }
+      xs.push(p.b); ys.push(0);
+      area.dataX = xs; area.dataY = ys;
+      board.update();
+    }
+    N.on("drag", redraw);
+    board.on("up", redraw);
+    redraw();
+    return board;
+  }
+
+  var COMPONENTS = {
+    cobweb: cobweb, fourier: fourier, gradient: gradient,
+    vectorfield: vectorfield, riemann: riemann,
+  };
 
   function boot() {
     var nodes = document.querySelectorAll(".mathviz[data-viz]");

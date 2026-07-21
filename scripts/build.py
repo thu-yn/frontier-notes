@@ -80,6 +80,15 @@ GALLERY_DEMOS = [
                    "ymin": -3, "ymax": 3, "density": 15, "seedX": -2.5, "seedY": 2.5,
                    "steps": 700, "dt": 0.02},
     },
+    {
+        "id": "riemann",
+        "title": "黎曼和 / 定积分",
+        "use": "定积分 / 数值积分 / 极限。拖「矩形数 n」滑块看黎曼和如何逼近曲线下面积,"
+        "文本实时对比当前和与真积分。参数:fn、a/b(积分区间)、n(初始矩形数)、maxN(滑块上限)、"
+        "rule(left/right/mid 取样)、xmin/xmax(视窗)。",
+        "params": {"fn": "0.6*sin(x)+1.4", "a": 0, "b": 5, "n": 6, "maxN": 60,
+                   "rule": "left", "xmin": -0.4, "xmax": 5.5},
+    },
 ]
 
 
