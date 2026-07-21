@@ -34,6 +34,16 @@
     );
   }
 
+  /* 同 makeFn,但支持双变量 g(x,y),给向量场 / 相图用。 */
+  function makeFn2(expr) {
+    return new Function(
+      "x", "y",
+      "var {sin,cos,tan,asin,acos,atan,exp,log,sqrt,cbrt,abs,pow,sign," +
+        "sinh,cosh,tanh,floor,ceil,round,min,max,PI,E,hypot,atan2}=Math;" +
+        "return (" + expr + ");"
+    );
+  }
+
   /* 在 [a,b] 上采样估计 f 的取值范围,用来自动定纵向视窗。 */
   function sampleRange(f, a, b, n) {
     var lo = Infinity, hi = -Infinity;
@@ -247,7 +257,72 @@
     return board;
   }
 
-  var COMPONENTS = { cobweb: cobweb, fourier: fourier, gradient: gradient };
+  /* ---- 组件:向量场 / 相图(vectorfield) --------------------------------
+   * 画平面上的向量场 (ẋ,ẏ)=(fx,fy),并从一个可拖动的种子点用 RK4 积分出流线
+   * (前向实线、后向虚线),直观看系统的相轨迹、平衡点与旋涡。
+   * params: { fx:"y", fy:"-sin(x)-0.3*y", xmin,xmax,ymin,ymax, density, seedX, seedY, steps, dt }
+   */
+  function vectorfield(elId, p) {
+    p = Object.assign(
+      { fx: "y", fy: "-sin(x)-0.3*y", xmin: -3.6, xmax: 3.6, ymin: -3, ymax: 3,
+        density: 15, seedX: -2.5, seedY: 2.5, steps: 700, dt: 0.02 },
+      p || {}
+    );
+    var Fx = makeFn2(p.fx), Fy = makeFn2(p.fy);
+
+    var board = JXG.JSXGraph.initBoard(elId, {
+      boundingbox: [p.xmin, p.ymax, p.xmax, p.ymin],
+      keepaspectratio: false,
+      axis: true,
+      showCopyright: false,
+      showNavigation: false,
+      pan: { enabled: false },
+      zoom: { enabled: false },
+    });
+
+    board.create(
+      "vectorfield",
+      [[function (x, y) { return Fx(x, y); }, function (x, y) { return Fy(x, y); }],
+       [p.density, p.xmin, p.xmax], [p.density, p.ymin, p.ymax]],
+      { strokeColor: GUIDE, strokeWidth: 1, opacity: 0.7, scale: true }
+    );
+
+    var seed = board.create("point", [p.seedX, p.seedY], {
+      name: "拖我", size: 5, fillColor: ACCENT, strokeColor: ACCENT,
+      label: { offset: [8, -12], fontSize: 12 },
+    });
+    var fwd = board.create("curve", [[], []], { strokeColor: COBWEB, strokeWidth: 2, highlight: false });
+    var bwd = board.create("curve", [[], []], { strokeColor: COBWEB, strokeWidth: 1.4, dash: 2, highlight: false });
+
+    // 从种子点用 RK4 积分一条流线,sign=+1 前向、-1 后向;越出视窗即停。
+    function streamline(sign) {
+      var h = sign * p.dt, x = seed.X(), y = seed.Y();
+      var xs = [x], ys = [y];
+      for (var i = 0; i < p.steps; i++) {
+        var k1x = Fx(x, y), k1y = Fy(x, y);
+        var k2x = Fx(x + h / 2 * k1x, y + h / 2 * k1y), k2y = Fy(x + h / 2 * k1x, y + h / 2 * k1y);
+        var k3x = Fx(x + h / 2 * k2x, y + h / 2 * k2y), k3y = Fy(x + h / 2 * k2x, y + h / 2 * k2y);
+        var k4x = Fx(x + h * k3x, y + h * k3y), k4y = Fy(x + h * k3x, y + h * k3y);
+        x += h / 6 * (k1x + 2 * k2x + 2 * k3x + k4x);
+        y += h / 6 * (k1y + 2 * k2y + 2 * k3y + k4y);
+        if (!isFinite(x) || !isFinite(y)) break;
+        if (x < p.xmin - 1 || x > p.xmax + 1 || y < p.ymin - 1 || y > p.ymax + 1) break;
+        xs.push(x); ys.push(y);
+      }
+      return [xs, ys];
+    }
+    function redraw() {
+      var a = streamline(1), b = streamline(-1);
+      fwd.dataX = a[0]; fwd.dataY = a[1];
+      bwd.dataX = b[0]; bwd.dataY = b[1];
+      board.update();
+    }
+    seed.on("drag", redraw);
+    redraw();
+    return board;
+  }
+
+  var COMPONENTS = { cobweb: cobweb, fourier: fourier, gradient: gradient, vectorfield: vectorfield };
 
   function boot() {
     var nodes = document.querySelectorAll(".mathviz[data-viz]");

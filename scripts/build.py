@@ -70,6 +70,16 @@ GALLERY_DEMOS = [
         "params": {"fn": "0.5*x*x - cos(3*x)", "x0": 2.4, "lr": 0.1, "maxLr": 1.2,
                    "xmin": -3, "xmax": 3, "steps": 24},
     },
+    {
+        "id": "vectorfield",
+        "title": "向量场 / 相图",
+        "use": "微分方程 / 动力系统 / 相轨迹。示例是带阻尼的单摆相图,拖动种子点看 RK4 积分出的"
+        "流线如何盘旋进平衡点。参数:fx、fy(关于 x,y 的分量)、xmin/xmax/ymin/ymax、density(箭头密度)、"
+        "seedX/seedY(种子点)、steps/dt(积分步数与步长)。",
+        "params": {"fx": "y", "fy": "-sin(x)-0.3*y", "xmin": -3.6, "xmax": 3.6,
+                   "ymin": -3, "ymax": 3, "density": 15, "seedX": -2.5, "seedY": 2.5,
+                   "steps": 700, "dt": 0.02},
+    },
 ]
 
 
