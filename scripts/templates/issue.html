@@ -114,7 +114,13 @@
   <figure class="theorem__viz">
     {% if m.viz.type == 'custom' %}
     <div class="mathviz-custom">{{ m.viz.html | safe }}</div>
-    <script>(function(){var el=document.currentScript.previousElementSibling;{{ m.viz.script | safe }}})();</script>
+    {# 解析时抓住容器 el,延到 DOMContentLoaded 再跑——那时 defer 的 JSXGraph 已就绪 #}
+    <script>(function(){
+      var el = document.currentScript.previousElementSibling;
+      function run(){ try { {{ m.viz.script | safe }} } catch (e) { console.error("[viz:custom]", e); } }
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run);
+      else run();
+    })();</script>
     {% else %}
     <div class="mathviz" data-viz='{{ m.viz | tojson }}'></div>
     {% endif %}
