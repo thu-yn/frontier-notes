@@ -44,6 +44,19 @@ DOMAINS = {
 }
 
 
+# 可视化组件目录:每个条目在 /gallery.html 里渲染一块示例,也是给「每日一理」
+# 选型的参考清单。新增一个组件 = 在 viz.js 里实现 + 这里补一条示例。
+GALLERY_DEMOS = [
+    {
+        "id": "cobweb",
+        "title": "迭代蛛网图",
+        "use": "不动点 / 迭代收敛 / 压缩映射。拖动初始点 x₀ 看 xₙ₊₁=f(xₙ) 收敛到不动点。"
+        "参数:fn(表达式)、x0(初值)、xmin/xmax(视窗)、iterations(迭代步数)。",
+        "params": {"fn": "cos(x)", "x0": 2.5, "xmin": -0.2, "xmax": 3.3, "iterations": 14},
+    },
+]
+
+
 def issue_domains(issue: dict) -> list[str]:
     """本期实际出现过的领域,按 DOMAINS 定义顺序排,供筛选条使用。"""
     seen = {
@@ -107,6 +120,7 @@ def main() -> None:
     archive_tpl = env.get_template("archive.html")
     likes_tpl = env.get_template("likes.html")
     research_tpl = env.get_template("research.html")
+    gallery_tpl = env.get_template("gallery.html")
 
     if SITE.exists():
         shutil.rmtree(SITE)
@@ -155,6 +169,11 @@ def main() -> None:
             idea_issues=idea_issues, idea_domains=idea_domains, root=""
         ),
         encoding="utf-8",
+    )
+
+    # 可视化组件目录(开发/参考页,不挂主导航)
+    (SITE / "gallery.html").write_text(
+        gallery_tpl.render(demos=GALLERY_DEMOS, root=""), encoding="utf-8"
     )
 
     # 前端静态资源:build 会 rmtree(SITE),所以每次从 scripts/static 复制进来

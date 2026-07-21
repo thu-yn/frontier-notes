@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}前沿手记 · 可视化组件目录{% endblock %}
+{% block stamp %}可视化组件 · 共 {{ demos | length }} 个{% endblock %}
+{% block nav_active %}{% endblock %}
+
+{% block masthead %}
+<header class="masthead">
+  <div class="masthead__brand">
+    <a class="seal" href="{{ root }}index.html" aria-label="前沿手记"><span>前</span><span>沿</span><span>手</span><span>记</span></a>
+    <h1 class="masthead__title">可视化组件</h1>
+  </div>
+  <p class="masthead__dash"><span class="masthead__dot" aria-hidden="true"></span>COMPONENT GALLERY · 每日一理的图库</p>
+</header>
+{% endblock %}
+
+{% block content %}
+<p class="gallery-intro">「每日一理」可用的交互可视化组件,配上示例参数——拖一拖、试一试。给某个定理配图时优先从这里挑一个 <code>type</code> + 填参数;都不合适再走 <code>custom</code> 现写。</p>
+{% for d in demos %}
+<section class="gallery-item">
+  <div class="column-head">
+    <h2><code>{{ d.id }}</code> · {{ d.title }}</h2>
+  </div>
+  <p class="gallery-desc">{{ d.use }}</p>
+  <div class="mathviz" data-viz='{{ {"type": d.id, "params": d.params} | tojson }}'></div>
+  <details class="gallery-src">
+    <summary>示例参数</summary>
+    <pre>{{ d.params | tojson(indent=2) }}</pre>
+  </details>
+</section>
+{% endfor %}
+{% endblock %}
+
+{% block foot %}
+<link rel="stylesheet" href="{{ root }}viz/vendor/jsxgraph.css">
+<script src="{{ root }}viz/vendor/jsxgraphcore.js" defer></script>
+<script src="{{ root }}viz/viz.js" defer></script>
+{% endblock %}
