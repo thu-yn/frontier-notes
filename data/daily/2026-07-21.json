@@ -1,0 +1,371 @@
+{
+  "date": "2026-07-21",
+  "editor_note": "今天 HF 榜和 arXiv 上最抢眼的一条主线是「agent 怎么把经验变成能力」：Resource2Skill 把教程视频、仓库、文章蒸成可执行技能库，Recursive Harness Self-Improvement 直接让 harness 自己进化，LLM-as-a-Coach 把评分模型改造成会写反馈的教练——大家都在想办法把「打分」这种低带宽信号换成更密的监督。另一条线是效率：SWE-Pruner Pro 发现 coder 模型自己就知道该剪哪行 context，xHC 想把残差流当成新的 scaling 轴。非 AI 侧我挑了几条跨界的：Xiaomi 用 10 万小时真机轨迹堆 VLA、QuantiSpect 用轻量 CNN 给表面码纠错做预解码、FluxBench 老实测了一遍「AI agent 到底能不能跑完 RTL-to-GDS」(答案是还差得远)。最值得点开的是 scVision——把单细胞转录组画成图片再用视觉模型学,思路清奇。新闻里 Anthropic 15 亿版权和解落槌、中国开源模型继续给硅谷施压,还有个乐子:有人报告 Claude Fable 给雅可比猜想造了个反例,真假待考,但配今天的「每日一理」聊不动点定理刚好。"
+  ,
+  "math_note": {
+    "name": "巴拿赫不动点定理",
+    "name_en": "Banach Fixed-Point Theorem",
+    "field": "泛函分析 / 度量空间",
+    "one_liner": "只要每走一步都把距离缩小一点,你终将走到那个再也走不动的点。",
+    "statement": "在一个「完备度量空间」里(度量空间就是任意两点都能量出距离的集合,完备指柯西序列都收敛、没有漏洞),如果一个映射 T 是「压缩映射」——也就是存在常数 0 ≤ k < 1,使得任意两点 x、y 经过 T 之后距离一定缩小到原来的 k 倍以内:d(Tx, Ty) ≤ k·d(x, y)——那么 T 有且仅有一个不动点 x*(满足 Tx* = x* 的点),而且从任意起点出发反复作用 T(x, Tx, T²x, …)都会收敛到它。",
+    "origin": "1922 年,波兰数学家斯特凡·巴拿赫(Stefan Banach)在他的博士论文里给出了这个定理。当时他想给微分方程和积分方程的解「存在且唯一」找一个统一、干净的说法——在他之前,证明某个方程有解往往要针对具体形式硬算。巴拿赫把问题抽象成「找一个映射的不动点」,再用「距离每次都缩小」这个几何直觉一举拿下,顺手也奠定了后来以他命名的巴拿赫空间理论。",
+    "derivation": [
+      "先造一条轨迹:随便取个起点 x₀,令 x₁ = Tx₀、x₂ = Tx₁……得到序列 xₙ = Tⁿx₀,我们要证它收敛。",
+      "看相邻两点的距离:因为 T 是压缩的,d(xₙ₊₁, xₙ) ≤ k·d(xₙ, xₙ₋₁),一层层递推下去就是 d(xₙ₊₁, xₙ) ≤ kⁿ·d(x₁, x₀)——每步的挪动量按等比数列指数衰减。",
+      "既然步长是收敛等比级数(k < 1,∑kⁿ 有限),把远处两点 xₘ、xₙ 的距离用三角不等式拆成一串步长求和,就能证明这序列是柯西列:走到后面点与点越挤越近。",
+      "空间是完备的,柯西列必有极限,记作 x*,序列就收敛到它。",
+      "最后验证 x* 是不动点:T 是压缩映射所以连续,对 xₙ₊₁ = Txₙ 两边取极限得 x* = Tx*。唯一性也简单——若还有另一个不动点 y*,则 d(x*, y*) = d(Tx*, Ty*) ≤ k·d(x*, y*),而 k < 1 逼得这距离只能是 0。"
+    ],
+    "applications": [
+      { "area": "微分/积分方程", "detail": "皮卡-林德勒夫存在唯一性定理正是把「解方程」写成一个积分算子的不动点,用本定理一步证明常微分方程初值问题的解存在且唯一。" },
+      { "area": "数值计算", "detail": "牛顿迭代、雅可比/高斯-赛德尔解线性方程组、定点迭代求根,本质都是构造压缩映射,定理保证只要压缩就一定收敛、且收敛速度是几何级(误差每步乘 k)。" },
+      { "area": "强化学习", "detail": "贝尔曼最优算子在折扣因子 γ < 1 下是压缩映射,值迭代之所以必然收敛到唯一的最优价值函数,靠的就是这条定理。" },
+      { "area": "生成模型与隐式网络", "detail": "扩散采样、DEQ 等隐式深度模型把推理写成迭代到不动点的过程,压缩性是它们收敛与稳定的理论抓手。" }
+    ],
+    "takeaway": "「反复施加一个把差距缩小的操作,系统必然稳定到唯一状态」——这是迭代类算法能收敛的最朴素也最深刻的保证,凡是你能把问题写成压缩映射,存在性、唯一性和算法收敛性就一次性到手。"
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "RESOURCE2SKILL: Distilling Executable Agent Skills from Human-Created Multimodal Resources",
+      "title_zh": "Resource2Skill:把人类多模态资料蒸成可执行的 agent 技能",
+      "url": "https://arxiv.org/abs/2606.29538",
+      "hf_url": "https://huggingface.co/papers/2606.29538",
+      "authors": "Yijia Fan、Zonglin Di、Zimo Wen 等",
+      "affiliation": "微软研究院",
+      "upvotes": 126,
+      "one_liner": "技能库不用手写了——教程视频里就藏着现成的操作手册。",
+      "summary_zh": "现在 agent 的技能库要么手写、要么只从纯文本或 agent 自己的轨迹里提,教程视频这类多模态资料基本没被用起来。这篇把视频、仓库、文章统统蒸馏成可执行技能,组织成一个分层的「技能 Wiki」,每条技能同时带结构化文本、代码、视觉示例和出处。思路很对——人类攒了海量教程,拿来当 agent 的现成经验比让它自己试错便宜得多,关键看蒸出来的技能可执行度有多高。",
+      "tags": ["Agent", "多模态", "技能库"]
+    },
+    {
+      "domain": "ai",
+      "title": "RAGU: A Multi-Step GraphRAG Engine with a Compact Domain-Adapted LLM",
+      "title_zh": "RAGU:用小模型也能扛的多步 GraphRAG 引擎",
+      "url": "https://arxiv.org/abs/2607.11683",
+      "hf_url": "https://huggingface.co/papers/2607.11683",
+      "authors": "Mikhail Komarov、Ivan Bondarenko、Stanislav Shtuka 等",
+      "affiliation": "新西伯利亚国立大学",
+      "upvotes": 123,
+      "one_liner": "抽取和整合分开做,GraphRAG 就不用一遍过硬抠了。",
+      "summary_zh": "常见 GraphRAG 一趟抽取就建好知识图,结果实体噪声大、检索一碰就碎。RAGU 把抽取和整合拆成两步:两阶段带类型抽取、DBSCAN 去重、LLM 摘要、再用 Leiden 做社区发现。最有意思的判断是:管线里 LLM 干的活(理解、抽取、按上下文推理)是语言能力,不太随模型变大而涨,真正吃规模的是世界知识——所以用一个小的领域适配模型做抽取器就够了。开源、模块化,想自建领域 RAG 的可以直接拆着用。",
+      "tags": ["RAG", "知识图谱", "小模型"]
+    },
+    {
+      "domain": "ai",
+      "title": "xHC: Expanded Hyper-Connections",
+      "title_zh": "xHC:把残差流拓宽当成新的 scaling 轴",
+      "url": "https://arxiv.org/abs/2607.14530",
+      "hf_url": "https://huggingface.co/papers/2607.14530",
+      "authors": "Xiangdong Zhang、Xiaohan Qin、Sunan Zou 等",
+      "affiliation": "dots studio",
+      "upvotes": 49,
+      "one_liner": "超连接卡在 N=4 不是极限,是写回带宽不够。",
+      "summary_zh": "Hyper-Connections 把 Transformer 的残差流扩成 N 条并行流,相当于在宽度和深度之外多一个存储扩展的维度,但此前方法都停在 N=4——再往上收益骤减、训练成本却按立方涨。这篇把瓶颈归因于两点:流多了写回信息不够、残差混合的生成开销随流数三次方膨胀,并给出改法让 N 能继续往上走。属于结构层面的 scaling 探索,值得看它在更大规模上能不能真兑现。",
+      "tags": ["Transformer", "残差连接", "Scaling"]
+    },
+    {
+      "domain": "ai",
+      "title": "SWE-Pruner Pro: The Coder LLM Already Knows What to Prune",
+      "title_zh": "SWE-Pruner Pro:coder 模型自己就知道该剪哪行",
+      "url": "https://arxiv.org/abs/2607.18213",
+      "hf_url": "https://huggingface.co/papers/2607.18213",
+      "authors": "Yuhang Wang、Yuling Shi、Shaoqiu Zhang 等",
+      "affiliation": "字节跳动",
+      "upvotes": 41,
+      "one_liner": "别再挂个外挂分类器了,模型读工具输出时心里有数。",
+      "summary_zh": "代码 agent 的长 context 需要裁剪,以往像 SWE-Pruner 是外挂一个独立的代码分类器。这篇发现:agent 读工具返回时,内部表征本身就编码了每行代码相不相关。于是直接在 agent 内部加个小头,把内部表征转成「留或剪」的逐行标签,还配了个跟工具输出行数挂钩的长度感知嵌入。在两个开源底座、四个多轮 benchmark 上验证。省掉外挂模型这条路子干净,适合做上下文管理的可以借鉴。",
+      "tags": ["代码Agent", "上下文压缩", "推理效率"]
+    },
+    {
+      "domain": "ai",
+      "title": "On-Policy Delta Distillation",
+      "title_zh": "On-Policy Delta 蒸馏:只学老师「学会推理后多出来的那部分」",
+      "url": "https://arxiv.org/abs/2607.15161",
+      "hf_url": "https://huggingface.co/papers/2607.15161",
+      "authors": "Byeongho Heo、Jaehui Hwang、Sangdoo Yun 等",
+      "affiliation": "NAVER AI Lab",
+      "upvotes": 31,
+      "one_liner": "不模仿老师的输出分布,而是模仿它变聪明的那一步增量。",
+      "summary_zh": "on-policy 蒸馏用老师给学生逐 token 监督,避开了奖励模型的约束,但奖励怎么设计一直没深挖。这篇提出 delta 信号:不直接模仿老师的输出分布,而是学老师模型和它指令微调前的基座之间的差——这个差正好捕捉了「推理微调带来的改变」。相当于把老师「因为学会推理而多出来的能力」单独拎出来传给学生,减少无关信号的干扰,思路挺巧。",
+      "tags": ["蒸馏", "RL", "后训练"]
+    },
+    {
+      "domain": "ai",
+      "title": "Apple-π: Benchmarking Thinking with Video Towards Law-Grounded Physical Intelligence",
+      "title_zh": "Apple-π:按物理定律考一考视频模型到底懂不懂物理",
+      "url": "https://arxiv.org/abs/2607.16401",
+      "hf_url": "https://huggingface.co/papers/2607.16401",
+      "authors": "Runmao Yao、Kairui Hu、Yukang Cao 等",
+      "affiliation": "南洋理工 MMLab",
+      "upvotes": 25,
+      "one_liner": "生成对了不算懂,得看它是不是靠物理定律推出来的。",
+      "summary_zh": "视频生成模型常被吹成「内化了物理规律的世界模型」,但现有 benchmark 只在输出层面看画面像不像真的,不查它是不是靠一条靠谱的、有定律支撑的推理走到那一步。Apple-π 第一个把评测锚在物理定律上:配了 400 个覆盖经典力学十类任务的视频数据集(Orchard),单定律任务做无混淆诊断、多定律任务测泛化,再加一套三阶段评测协议。是给「世界模型」这个大词挤水分的实在工作。",
+      "tags": ["视频生成", "世界模型", "Benchmark"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Xiaomi-Robotics-1: Scaling Vision-Language-Action Models with over 100K Hours of Real-World Trajectories",
+      "title_zh": "Xiaomi-Robotics-1:用超 10 万小时真机轨迹堆出来的 VLA",
+      "url": "https://arxiv.org/abs/2607.15330",
+      "hf_url": "https://huggingface.co/papers/2607.15330",
+      "authors": "Xiaomi Robotics Team、Jun Guo、Piaopiao Jin 等",
+      "affiliation": "小米机器人",
+      "upvotes": 58,
+      "one_liner": "VLA 的「数据即壁垒」这次是真金白银堆出来的。",
+      "summary_zh": "一个视觉-语言-动作基座模型,主打两件事:开箱即用地按语言指令在没见过的环境里做移动操作,以及用极少微调数据快速适配新任务。做法是预训练+后训练两段式,预训练吃的是通过 UMI 手持设备采的 10 万+小时真机操作轨迹,还配了套可扩展的自动标注管线给轨迹片段标自然语言。数据规模是这条路线的硬门槛,小米直接砸真机采集,值得关注它开源程度和跨本体迁移的实际表现。",
+      "tags": ["VLA", "机器人", "移动操作"]
+    },
+    {
+      "domain": "embodied",
+      "title": "RynnBrain 1.1: Towards More Capable and Generalizable Embodied Foundation Model",
+      "title_zh": "RynnBrain 1.1:更能打的具身基座模型家族",
+      "url": "https://arxiv.org/abs/2607.17977",
+      "hf_url": "https://huggingface.co/papers/2607.17977",
+      "authors": "Kehan Li、Bohan Hou、Minghao Zhu 等",
+      "affiliation": "达摩院",
+      "upvotes": 21,
+      "one_liner": "接触点预测 + 原生 3D grounding,让感知直接对齐机械臂动作。",
+      "summary_zh": "一组 2B/9B/122B-A10B 规模的具身基座模型,统一的时空+物理框架下支持具身感知、空间推理、定位和规划。相比 1.0,新增了全家族的接触点预测,以及 2B/9B 的原生 3D grounding,让模型的表征和输出更直接对齐机械臂操作;还做了跨本体统一动作空间的 RynnBrain-VLA,部署到了宇树 G1、Astribot-S1 等真机上。跨本体这条线目前各家都在抢,能同时上多台真机是加分项。",
+      "tags": ["具身智能", "基座模型", "3D grounding"]
+    },
+    {
+      "domain": "bio",
+      "title": "A vision foundation model for single-cell biology via spatial gene cartography",
+      "title_zh": "scVision:把单细胞转录组画成图片,再用视觉模型去学",
+      "url": "https://arxiv.org/abs/2607.14163",
+      "authors": "Ridvan Yesiloglu、Sakib Mostafa、James Zou 等",
+      "one_liner": "别再把细胞当一串基因 token 了,画成图更能看出基因协同。",
+      "summary_zh": "现在多数单细胞基座模型是照搬语言模型,把每个细胞当成一串基因 token,这样既丢了基因之间的关系,常常也丢了表达量的大小。scVision 换了思路——把每个细胞渲染成一张连续的图:用最优传输把基因固定摆到一张跨组织共享的版图上,让共表达的基因在空间上挨着,于是「基因程序」就表现为图上的局部纹理,再用掩码图像建模预训练一个 ViT。转录组学天生没有二维结构,人为造一个空间布局来喂视觉模型,这个跨界很有想象力,值得看它在下游任务上是不是真占便宜。",
+      "tags": ["单细胞", "基座模型", "最优传输"]
+    },
+    {
+      "domain": "quantum",
+      "title": "QuantiSpect: A Structure-Aware Lightweight 3D CNN Pre-Decoder for Scalable Surface Code Quantum Error Correction",
+      "title_zh": "QuantiSpect:给表面码纠错做预解码的轻量 3D CNN",
+      "url": "https://arxiv.org/abs/2607.18204",
+      "authors": "Pan Gao、Xu-Sheng Xu、Ji-Ze Han 等",
+      "one_liner": "先用小网络把大部分错就地纠掉,残差再交给全局解码器。",
+      "summary_zh": "实时解码是大规模容错量子计算的卡点(表面码是主流的量子纠错方案,需要在微秒内判断并纠正物理错误)。AI 预解码器的思路是先在本地把大多数物理错就地纠掉,只把残余的「症状」传给全局解码器,从而压到亚微秒延迟,但已有的密集 3D 卷积开销太大。QuantiSpect 把每层的密集 3D 卷积换成三条并行分支,做成轻量结构感知网络。是一个典型的「AI 帮量子纠错减负」的工程活,方向对,就看在真硬件延迟预算下能不能扛住规模。",
+      "tags": ["量子纠错", "表面码", "CNN"]
+    },
+    {
+      "domain": "chip",
+      "title": "Can AI Agents Really Complete RTL-to-GDS? Lessons from Benchmarking Tool-Interactive EDA Workflows",
+      "title_zh": "AI agent 真能跑完 RTL-to-GDS 吗?FluxBench 老实测了一遍",
+      "url": "https://arxiv.org/abs/2607.17528",
+      "authors": "Jinyuan Deng、Zhengrui Chen、Xufeng Wei 等",
+      "one_liner": "EDA 全流程不是单点任务,agent 一到端到端就现原形。",
+      "summary_zh": "LLM 驱动的 agent 被寄望于自动化芯片设计(RTL-to-GDS 就是从寄存器传输级代码一路做到最终掩膜版图的完整流程),但以往评测只考单个模型在孤立任务上的表现,看不出完整流程里 agent 系统到底行不行。FluxBench 在统一的 prompt、工具环境和工艺库下,系统评测 AI agent 跑端到端 EDA 流程。这种「泼冷水式」的 benchmark 很有价值——把「单点能跑」和「全程能过」之间的差距量化出来,提醒别把 demo 当落地。",
+      "tags": ["EDA", "Agent", "Benchmark"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Apeliotes: A Diffusion-Based Modeling Framework for km-scale Multi-Level Atmospheric Fields",
+      "title_zh": "Apeliotes:用扩散模型做公里级气象降尺度",
+      "url": "https://arxiv.org/abs/2607.17037",
+      "authors": "Evangelia Rafaela Frastali、Achyut Paudel、Maryam Golbazi 等",
+      "one_liner": "动力降尺度太贵,拿扩散模型直接生成高分辨率天气场。",
+      "summary_zh": "很多地区缺高分辨率气象数据,而传统「动力降尺度」(用物理模式把粗网格结果算到细网格)又贵又难跨地点、跨变量扩展。Apeliotes 用扩散模型做机器学习降尺度,能随机地一次生成多个天气变量的公里级、多层大气场。把扩散生成用在气象这类有物理约束的场上,好处是快、可扩展,难点也在于生成结果得经得起物理一致性的检验——这类工作值得盯着看它在极端天气场景下靠不靠谱。",
+      "tags": ["气象", "扩散模型", "降尺度"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "Robbyant/lingbot-map",
+      "url": "https://github.com/Robbyant/lingbot-map",
+      "language": "Python",
+      "stars": 14451,
+      "stars_today": "565",
+      "one_liner": "喂一段流式画面,前馈一次就出 3D 场景。",
+      "summary_zh": "一个前馈式的 3D 基座模型,从流式输入直接重建场景,不用逐场景优化。对做点云、SLAM、AR 或者机器人感知的人挺实用——把「重建」从慢速优化变成一次前向推理。看它对无序输入的鲁棒性和全局一致性能撑到什么规模。"
+    },
+    {
+      "domain": "ai",
+      "name": "kvcache-ai/ktransformers",
+      "url": "https://github.com/kvcache-ai/ktransformers",
+      "language": "Python",
+      "stars": 18798,
+      "stars_today": "458",
+      "one_liner": "单机异构硬件上把大模型推理/微调榨到极致的实验场。",
+      "summary_zh": "一个灵活的框架,专门用来体验各种异构 LLM 推理/微调优化(CPU+GPU 混合、offload、量化那一套)。对显存不够又想跑大模型、或者想在消费级硬件上折腾 MoE 推理的人很对口。属于「本地跑大模型」这条线里持续活跃的项目。"
+    },
+    {
+      "domain": "ai",
+      "name": "tirth8205/code-review-graph",
+      "url": "https://github.com/tirth8205/code-review-graph",
+      "language": "Python",
+      "stars": 23902,
+      "stars_today": "1833",
+      "one_liner": "给 AI 编程工具建一张持久的代码地图,让它只读该读的。",
+      "summary_zh": "本地优先的代码智能图谱,接 MCP 和 CLI,给代码库建一张持久的结构地图,好让 AI 编码工具只读真正相关的部分,而不是每次全盘 grep。对被「上下文塞满、成本爆炸」困扰的 agent 编码流程是个正经解法,和今天 SWE-Pruner Pro 那种「少读点 context」的思路遥相呼应。"
+    },
+    {
+      "domain": "ai",
+      "name": "topoteretes/cognee",
+      "url": "https://github.com/topoteretes/cognee",
+      "language": "Python",
+      "stars": 28901,
+      "stars_today": "234",
+      "one_liner": "给 agent 装一个跨会话的长期记忆。",
+      "summary_zh": "开源的 AI 记忆平台,给 agent 提供跨会话的持久长期记忆,底层用语义存储把交互沉淀下来。做多轮、多会话 agent 应用又不想每次都从零开始的可以用。记忆/记忆检索是今年 agent 工程里很拥挤但也很刚需的一块。"
+    },
+    {
+      "domain": "ai",
+      "name": "MoonshotAI/kimi-cli",
+      "url": "https://github.com/MoonshotAI/kimi-cli",
+      "language": "Python",
+      "stars": 10365,
+      "stars_today": "410",
+      "one_liner": "月之暗面下场,又一个命令行 agent。",
+      "summary_zh": "Kimi Code CLI,月之暗面官方出的命令行编码 agent。命令行 agent 这条赛道已经很挤(Claude Code、各家 CLI 一堆),但大厂亲自下场、绑自家模型的,值得对比看看工具调用和实际编码体验。配合今天那条「中国开源模型施压硅谷」的新闻一起看更有味道。"
+    },
+    {
+      "domain": "ai",
+      "name": "bojieli/ai-agent-book",
+      "url": "https://github.com/bojieli/ai-agent-book",
+      "language": "Python",
+      "stars": 12133,
+      "stars_today": "4434",
+      "one_liner": "一本讲透 AI Agent 设计与工程的中文书,连代码一起开源。",
+      "summary_zh": "《深入理解 AI Agent:设计原理与工程实践》(李博杰 著)的开源主仓库,全书正文、PDF 加按章配套代码。今天单日涨 star 4400+,在中文读者里明显戳中了需求。想系统补 agent 工程、又偏好中文材料的可以直接啃。"
+    },
+    {
+      "domain": "ai",
+      "name": "PrefectHQ/fastmcp",
+      "url": "https://github.com/PrefectHQ/fastmcp",
+      "language": "Python",
+      "stars": 26655,
+      "stars_today": "96",
+      "one_liner": "用 Pythonic 的方式快速搭 MCP 服务器和客户端。",
+      "summary_zh": "构建 MCP 服务端和客户端的框架,主打快和 Pythonic。MCP 正在成为 agent 接工具的通用协议(今天新闻里也提到它在变得更好用),想给自己的工具/数据源包一层 MCP 接口,这是目前最省事的入口之一。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "Anthropic 15 亿美元版权和解获法院最终批准",
+      "url": "https://techcrunch.com/2026/07/20/anthropics-landmark-1-5b-copyright-settlement-is-approved/",
+      "source": "TechCrunch",
+      "summary_zh": "Anthropic 那桩标志性的 15 亿美元版权和解拿到了法院最终批准。这了结了具体这一案,但「用受版权保护的作品训练 AI 到底合不合法」这个大问题依旧悬着,后面还有一堆类似官司要打。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "月之暗面、阿里同期放模型,中国开源军团继续给硅谷加压",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/967781/chinese-ai-models-open-source-moonshot-kimi-k3-alibaba-qwen",
+      "source": "The Verge",
+      "summary_zh": "Moonshot 和阿里接连放出新模型,号称能以零头成本跟 OpenAI、Anthropic 的最强货掰手腕。密集的开源发布让美国在前沿的领先窗口越收越窄,也难怪同一天有报道说 OpenAI 在游说限制中国开源权重模型——开源正成为这轮竞争里最难拆的一招。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "谷歌自研新 AI 芯片,专为让 Gemini 跑得更省",
+      "url": "https://techcrunch.com/2026/07/20/google-is-working-on-a-new-ai-chip-designed-to-make-gemini-more-efficient/",
+      "source": "TechCrunch",
+      "summary_zh": "据报道,Alphabet 正在做一款新芯片,专门用来让 Gemini 系列模型跑得更高效。这是自研算力、把模型和硬件绑在一起降本的又一步,和今天 Apeliotes、QuantiSpect 那种「软件端拼命省算力」的努力正好构成硬币的两面。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "BMS 联手英伟达建药物研发超算,号称生命科学最强 AI 工厂",
+      "url": "https://www.fiercebiotech.com/biotech/bms-expands-ai-footprint-nvidia-create-largest-drug-rd-supercomputer",
+      "source": "Fierce Biotech",
+      "summary_zh": "百时美施贵宝(BMS)扩大与英伟达的合作,要建一台面向药物研发的超算,自称是生命科学领域「最强 AI 工厂」。大药企把算力当核心资产往里砸,是 AI 制药从概念走向重资本投入的信号。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "Tempus 15 亿美元收购癌症基因组老搭档 Personalis",
+      "url": "https://www.fiercebiotech.com/medtech/tempus-buys-out-cancer-genomics-specialist-personalis-15-billion-deal",
+      "source": "Fierce Biotech",
+      "summary_zh": "Tempus 以 15 亿美元收购合作三年的癌症基因组公司 Personalis,补强自家肿瘤业务。诊断+基因组+AI 的整合在加速,数据和检测能力正被巨头一口口吃进去。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "印度首枚私营火箭首飞入轨",
+      "url": "https://arstechnica.com/space/2026/07/indias-first-privately-developed-rocket-reaches-orbit-on-dramatic-debut-launch/",
+      "source": "Ars Technica",
+      "summary_zh": "印度第一枚完全由私营公司研制的火箭在戏剧性的首飞中成功入轨。首发即入轨在商业航天里相当难得,团队自己都直呼没想到能成——印度商业航天又添一个能自主入轨的玩家。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "用 AI 压缩发动机研发周期,中国 LegendSpace 拿 2950 万美元天使轮",
+      "url": "https://spacenews.com/ai-rocket-engine-startup-legendspace-raises-29-5-million-angel-round/",
+      "source": "SpaceNews",
+      "summary_zh": "成立才半年的中国初创 LegendSpace(临界航天)拿到 2950 万美元天使轮,主张用 AI 来压缩火箭发动机的研发周期。金额和「六个月估值」都不小,是 AI+航天工程这条叙事又一次被资本买单。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "智元(AGIBOT)在 WAIC 一口气发四款具身 AI 产品",
+      "url": "https://www.therobotreport.com/agibot-unveils-four-embodied-ai-products-real-world-operations-waic/",
+      "source": "The Robot Report",
+      "summary_zh": "智元在世界人工智能大会(WAIC)上发布四款面向真实场景作业的具身 AI 产品,强调用 demo 和工业部署证明自己在把具身能力变成可复用工作流上的进展。国内具身赛道从秀 demo 转向讲「落地成流程」,和今天 RynnBrain、Xiaomi-Robotics 上真机是一条线上的事。"
+    },
+    {
+      "domain": "ai4s",
+      "title_zh": "有人报告 Claude Fable 给雅可比猜想造出反例,真伪待考",
+      "url": "https://xcancel.com/__alpoge__/status/2079028340955197566",
+      "source": "Hacker News",
+      "summary_zh": "一条在 HN 上炸开的帖子:有研究者在 X 上称 Claude Fable 给著名的雅可比猜想构造出了一个反例。雅可比猜想是代数几何里几十年的悬案,若属实分量极重,但目前只是单方声称、社区还在核验,先当成「值得盯着看的信号」而不是定论。恰好配今天讲不动点定理的每日一理,聊聊「构造 vs 证明」的差别。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "索尼再告 Udio,指其 AI 音乐侵权逾 3 万首歌",
+      "url": "https://www.theverge.com/tech/968375/sony-udio-lawsuit-songs-ai-copyright",
+      "source": "The Verge",
+      "summary_zh": "索尼音乐在纽约法院起诉 AI 音乐生成器 Udio,指其侵犯了超过 3 万首歌的版权,从猫王的 Hound Dog 到碧昂丝、Harry Styles 都在列。和 Anthropic 那桩和解遥相呼应——训练数据版权的官司正从文本蔓延到音乐,音乐生成模型(比如今天榜上的 Qwen-Music)头上的法律阴云短期散不了。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个统一的 3DGS 压缩/效率评测 harness,收编这一大波「省 Gaussian」的方法",
+      "based_on": [
+        { "title": "SPARE-GS: Structural Parsimony and Resource Efficiency for 3D Gaussian Splatting", "url": "https://arxiv.org/abs/2607.16624" },
+        { "title": "QIRF: Quantum-Inspired Non-Orthogonal Function-Space Compression for 3D Gaussian Splatting", "url": "https://arxiv.org/abs/2607.18067" }
+      ],
+      "why_now": "光今天一天,arXiv 上就冒出 SPARE-GS、QIRF、packet-loss 鲁棒压缩、纹理编码等一串 3DGS 压缩工作,各自用不同场景、不同指标(PSNR/存储/帧率)自说自话,横向没法比。缺一个统一 harness,正是转成 repo 型点子的黄金信号。",
+      "feasibility": "单卡 24GB 即可(3DGS 训练/渲染量级不大),核心工作量在工程整合而非算力,4–6 周能出一个覆盖 4–6 个方法、跑 Mip-NeRF360 / Tanks&Temples 的可复现基准。",
+      "route": [
+        "先跑通一个开源 3DGS 压缩方法的官方渲染(如 SPARE-GS 或任一带代码的),把「训练→压缩→渲染→测 PSNR/存储/FPS」串成一条脚本。",
+        "定义统一的评测协议:固定数据集、固定 Gaussian 预算、统一报告存储(MB)、渲染速度(FPS)、质量(PSNR/SSIM/LPIPS)四元组。",
+        "逐个接入 3–5 个近期方法,写适配层抹平各家 IO 差异,产出一张横向对比表。",
+        "把 harness、脚本、排行榜做成一个干净的 GitHub repo,配 README 一键复现,主动去各原论文 issue 区吆喝收 PR。"
+      ],
+      "risk": "部分方法不放代码或依赖特定 CUDA 版本,接入成本高;需在 README 里如实标注哪些方法是复现、哪些是官方权重,别把复现差距算到方法头上。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "把 PruneGround 的训练-free 空间剪枝迁到别的 3D 视觉定位骨干上,验证泛化性",
+      "based_on": [
+        { "title": "PruneGround: Plug-and-play Spatial Pruning for 3D Visual Grounding", "url": "https://arxiv.org/abs/2606.31148" }
+      ],
+      "why_now": "PruneGround 主打 plug-and-play、用冻结的视觉语言模型做语言引导的空间剪枝,不需要训练。这类 training-free 方法复现便宜,「迁到另一个 3DVG 模型/数据集看还灵不灵」本身就是低风险、可发表的扩展,而且刚出、还没人系统做过跨骨干验证。",
+      "feasibility": "纯推理,单卡 24–40GB 足够(冻结 VLM + 现成 3DVG 模型),不涉及训练。挑 2–3 个开源 3DVG 骨干 + ScanRefer/Nr3D 两个数据集,3–5 周能出一份「剪枝在哪些设定下省算力且不掉点、在哪些设定下失效」的分析。",
+      "route": [
+        "先跑通 PruneGround 官方推理,在其原始设定上复现出论文报的精度/加速数。",
+        "换一个不同的开源 3DVG 骨干(不同点云编码器或不同 VLM),把语言引导空间剪枝模块原样挂上去,先看能不能无痛接入。",
+        "在 ScanRefer、Nr3D 上跑,记录精度变化和计算量下降,定位剪枝在稀疏/密集场景下的表现差异。",
+        "补一组消融:剪枝阈值、冻结 VLM 选型对结果的影响,写成一份泛化性/鲁棒性报告。"
+      ],
+      "risk": "training-free 方法常对具体骨干的注意力/特征分布敏感,换骨干后可能直接失效——但即便是「负结果 + 失效原因分析」也有发表价值,别只报正面数。"
+    },
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "在 LIBERO 上复现 Anchor-Align 的 VLA 微调,验证「表征锚定」能不能真挡住灾难性遗忘",
+      "based_on": [
+        { "title": "Generalizable VLA Finetuning via Representation Anchoring and Language-Action Alignment", "url": "https://arxiv.org/abs/2607.13429" }
+      ],
+      "why_now": "行为克隆微调 VLA 会逐步覆盖掉预训练的视觉/语义泛化能力,Anchor-Align 提出用视觉-语言锚定 + 语言-动作对齐两个目标来救。这是仿真环境(LIBERO)可完整复现、真机非必需的机器人工作,正好卡在单人可做的范围里,而且方法刚出、还没人在其他任务套件上验证过泛化。",
+      "feasibility": "LIBERO 是纯仿真、1–2 张卡就能跑 VLA 的 LoRA/轻量微调,不需要真机集群。挑一个开源小 VLA 骨干,4–6 周能复现主结果并做一组遗忘/泛化的对照实验。",
+      "route": [
+        "先跑通 LIBERO 官方 benchmark + 一个开源 VLA 的标准行为克隆微调,拿到 baseline 成功率。",
+        "按论文加上视觉-语言锚定(蒸馏保住预训练表征)和语言-动作对齐两个损失,复现它相对纯 BC 的增益。",
+        "设计一个「泛化探针」:在训练没覆盖的语言指令/物体组合上测,量化两种做法的泛化差距。",
+        "做消融:两个损失各自贡献多少、锚定强度怎么权衡,总结出一条对小 VLA 也有效的微调配方。"
+      ],
+      "risk": "不同 VLA 骨干的预训练表征差异大,锚定收益可能被骨干选型稀释;LIBERO 的分布相对窄,泛化结论要谨慎外推到更开放的真机场景。"
+    }
+  ]
+}
