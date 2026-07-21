@@ -1,0 +1,373 @@
+{
+  "date": "2026-07-22",
+  "editor_note": "今天最扎眼的是「验证器」这条暗线：TimeLens2 用一维 Wasserstein 距离当奖励去教模型『证据到底在第几秒』，DeepSearch-World 干脆搭了个可复现、可判对错的搜索沙盒让 agent 自己蒸馏自己——两边都在说同一件事：只要环境能给出可信的对错信号，模型就能自个儿滚雪球。另一头 Apple-π 泼了盆冷水，把视频生成模型拉去做十道经典力学题，最好的也就 0.47 分，所谓『世界模型内化了物理定律』目前更多是嘴上说说。产业侧全是钱和电：Anthropic 15 亿美元版权和解落槌、数据中心 2035 年用电翻四倍、谷歌一边发 Gemini 3.6 Flash 一边自研省电芯片，AI 的账单正从『算力』蔓延到『电网』。今天『每日一理』挑了奇异值分解，正好和榜上的 PoLoRA(给 LoRA 定制优化器)对上——低秩微调之所以省钱，根子就在 SVD 那句『矩阵的有效信息集中在少数几个方向』。想动手的话，Points-as-Tori 那套点云闭式 SDF 很适合包成一个小库攒 star。",
+  "math_note": {
+    "name": "奇异值分解",
+    "name_en": "Singular Value Decomposition (SVD)",
+    "field": "线性代数 / 矩阵分析",
+    "one_liner": "任何矩阵都是『转个方向 → 沿轴拉伸 → 再转个方向』这三步",
+    "statement": "说的是任何一个 $m\\times n$ 的实矩阵 $A$(把它当成一个把向量搬来搬去的线性变换)都能写成 $A=U\\Sigma V^{\\top}$。这里 $U$、$V$ 是正交矩阵(只旋转/镜像、不改变长度),$\\Sigma$ 是对角阵,对角线上那串非负数 $\\sigma_1\\ge\\sigma_2\\ge\\cdots\\ge 0$ 叫奇异值。几何上就一句话:$A$ 干的事无非『先把空间转一下($V^{\\top}$),再沿各坐标轴按 $\\sigma_i$ 拉伸或压扁($\\Sigma$),最后再转一下($U$)』。奇异值 $\\sigma_i$ 量的正是每个方向被拉了多少倍。",
+    "origin": "1870 年前后,意大利的 Beltrami 和法国的 Jordan 在各自研究双线性型时几乎同时得到了它,之后 Sylvester、Schmidt、Weyl 一路把理论补齐。但真正让 SVD 从课本走进工程的是 1960 年代 Golub 与 Kahan 给出了数值稳定的计算算法——从那以后,它成了数值线性代数里最靠得住的那把『瑞士军刀』,凡是矩阵不听话,先做个 SVD 看看总没错。",
+    "derivation": [
+      { "math": "A^{\\top}A\\ \\text{对称、半正定}", "note": "直接盯着 A 不好下手,先看 $A^{\\top}A$:它一定是对称方阵,特征值都非负,谱定理保证能被一组正交向量对角化。" },
+      { "math": "A^{\\top}A\\,v_i=\\sigma_i^{2}\\,v_i,\\quad \\sigma_i\\ge 0", "note": "$A^{\\top}A$ 那组彼此正交的特征向量 $v_i$ 就是右奇异向量;特征值开个根号,就定义成奇异值 $\\sigma_i$。" },
+      { "math": "u_i=\\tfrac{1}{\\sigma_i}\\,A\\,v_i", "note": "对 $\\sigma_i>0$ 的方向,把 $v_i$ 送过 $A$ 再归一化,得到左奇异向量 $u_i$;算一下会发现这些 $u_i$ 也互相正交。" },
+      { "math": "A\\,v_i=\\sigma_i\\,u_i", "note": "也就是说 $A$ 把第 i 根输入正交轴 $v_i$ 恰好搬成第 i 根输出正交轴 $u_i$、长度乘上 $\\sigma_i$——『转—拉—转』的画面就是这么来的。" },
+      { "math": "A=\\sum_i \\sigma_i\\,u_i v_i^{\\top}=U\\Sigma V^{\\top}", "note": "把所有方向拼成矩阵就是 SVD;只留前 k 个大 $\\sigma_i$、把小的截掉,得到的正是误差最小的低秩近似(Eckart–Young 定理)。" }
+    ],
+    "applications": [
+      { "area": "数据降维 / PCA", "detail": "主成分分析本质就是对居中后的数据矩阵做 SVD,前几个奇异向量就是方差最大的方向;点云里估法向、找主轴用的也是同一招。" },
+      { "area": "大模型微调(LoRA)", "detail": "LoRA 把权重更新压成低秩形式 $\\Delta W=BA$,背后正是『大矩阵的有效信息集中在少数奇异方向』这个直觉;今天榜上的 PoLoRA 就是在这个低秩结构上重新设计优化器。" },
+      { "area": "推荐系统 / 矩阵补全", "detail": "把用户-物品打分矩阵近似成低秩 SVD,再反推没打过的分,就是当年 Netflix Prize 那套协同过滤的核心。" },
+      { "area": "图像压缩 / 去噪", "detail": "一张图只保留前 k 个奇异值就能用极少的数存下大致模样,被丢掉的小奇异值往往对应噪声。" }
+    ],
+    "takeaway": "一切线性变换归根到底都是『转—拉—转』,而奇异值排好了序告诉你哪些方向重要、哪些能扔——现代 AI 省钱靠的『低秩近似』就是从这句话里长出来的。",
+    "viz": {
+      "type": "custom",
+      "caption": "拖上面四个滑块改矩阵 A(=[[a,b],[c,d]]):灰色虚线的单位圆会被压成橙色椭圆;蓝色是输入端相互正交的右奇异向量,红/橙是它们过 A 之后的像,椭圆两条半轴的长度正是奇异值 $\\sigma_1,\\sigma_2$。",
+      "html": "<div id=\"svd-board\" class=\"jxgbox\" style=\"width:100%;max-width:520px;height:340px;margin:0 auto;\"></div>",
+      "script": "var host=el.querySelector('#svd-board');if(!host||typeof JXG==='undefined')return;var board=JXG.JSXGraph.initBoard(host.id,{boundingbox:[-3.2,3.4,3.2,-3.2],axis:true,showNavigation:false,showCopyright:false,keepaspectratio:true});var sa=board.create('slider',[[-2.9,3.15],[-1.1,3.15],[-2,1.2,2]],{name:'a',snapWidth:0.1});var sb=board.create('slider',[[-2.9,2.85],[-1.1,2.85],[-2,0.8,2]],{name:'b',snapWidth:0.1});var sc=board.create('slider',[[0.7,3.15],[2.9,3.15],[-2,0.2,2]],{name:'c',snapWidth:0.1});var sd=board.create('slider',[[0.7,2.85],[2.9,2.85],[-2,1.4,2]],{name:'d',snapWidth:0.1});function A(){return [sa.Value(),sb.Value(),sc.Value(),sd.Value()];}board.create('curve',[function(t){return Math.cos(t);},function(t){return Math.sin(t);},0,2*Math.PI],{strokeColor:'#94a3b8',strokeWidth:1.5,dash:2});board.create('curve',[function(t){var m=A();return m[0]*Math.cos(t)+m[1]*Math.sin(t);},function(t){var m=A();return m[2]*Math.cos(t)+m[3]*Math.sin(t);},0,2*Math.PI],{strokeColor:'#e8590c',strokeWidth:2.5});function svd(){var m=A();var a=m[0],b=m[1],c=m[2],dd=m[3];var p=a*a+c*c,q=a*b+c*dd,r=b*b+dd*dd;var mid=(p+r)/2,dif=Math.sqrt(Math.max(0,((p-r)/2)*((p-r)/2)+q*q));var l1=mid+dif,l2=Math.max(0,mid-dif);var th=0.5*Math.atan2(2*q,p-r);return {s1:Math.sqrt(l1),s2:Math.sqrt(l2),v1:[Math.cos(th),Math.sin(th)],v2:[-Math.sin(th),Math.cos(th)],m:m};}function Av(v,m){return [m[0]*v[0]+m[1]*v[1],m[2]*v[0]+m[3]*v[1]];}var O=board.create('point',[0,0],{visible:false});function vec(fx,fy,col){var P=board.create('point',[fx,fy],{visible:false});board.create('arrow',[O,P],{strokeColor:col,strokeWidth:3});}vec(function(){return svd().v1[0];},function(){return svd().v1[1];},'#1c7ed6');vec(function(){return svd().v2[0];},function(){return svd().v2[1];},'#4dabf7');vec(function(){var s=svd();return Av(s.v1,s.m)[0];},function(){var s=svd();return Av(s.v1,s.m)[1];},'#c92a2a');vec(function(){var s=svd();return Av(s.v2,s.m)[0];},function(){var s=svd();return Av(s.v2,s.m)[1];},'#f76707');board.create('text',[-3.0,-2.9,function(){var s=svd();return 'sigma1 = '+s.s1.toFixed(2)+'    sigma2 = '+s.s2.toFixed(2);}],{fontSize:15,strokeColor:'#e8590c',fixed:true});"
+    }
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "TimeLens2: Generalist Video Temporal Grounding with Multimodal LLMs",
+      "title_zh": "TimeLens2:让多模态大模型说清『证据在第几秒』",
+      "url": "https://arxiv.org/abs/2607.17423",
+      "hf_url": "https://huggingface.co/papers/2607.17423",
+      "authors": "Yuhan Zhu、Changlian Ma 等",
+      "affiliation": "南京大学 多媒体计算组",
+      "upvotes": 139,
+      "one_liner": "视频问答不光要答对,还得指出证据落在哪几段时间",
+      "summary_zh": "视频大模型能描述『发生了什么』,但很难指明『发生在第几秒』。这篇把时间定位当成一个『区间集合』问题:一段查询可能对应零到多个不定数量的证据片段。它的关键招数是把奖励换成一维 Wasserstein 距离——直接比较预测区间和真值区间两个分布的搬运成本,既不怕片段数目不一致,也不用做脆弱的逐段匹配,再配上 IoU 补精度。2B 版本就压过了同尺寸对手,8B 版本在七个基准上追平甚至超过参数量高达 397B 的开源模型。奖励设计这块很有借鉴价值。",
+      "tags": ["视频理解", "多模态LLM", "RL", "最优传输"]
+    },
+    {
+      "domain": "ai",
+      "title": "DeepSearch-World: Self-Distillation for Deep Search Agents in a Verifiable Environment",
+      "title_zh": "DeepSearch-World:在可验证沙盒里让搜索 agent 自我蒸馏",
+      "url": "https://arxiv.org/abs/2607.07820",
+      "hf_url": "https://huggingface.co/papers/2607.07820",
+      "authors": "Xinyu Geng、Xuanhua He 等",
+      "affiliation": "香港科技大学(HKUST)",
+      "upvotes": 70,
+      "one_liner": "搭个能复现、能判对错的搜索环境,agent 就能自己教自己",
+      "summary_zh": "训练工具型 agent 一直卡在监督微调依赖固定老师轨迹、稀疏奖励 RL 又太弱。这篇给了个折中:先造一个确定性、可复现的搜索环境 DeepSearch-World,里面有 42 万道用实体随机游走生成的多跳问答,搜索和读页工具的返回都是可验证的;然后反复『生成轨迹—过滤—混数据—微调』,让模型不靠更强的老师就自己滚起来。9B 模型在 BrowseComp 上 31.2%、GAIA 61.5%、HotpotQA 93.4%,并承诺开源环境、42 万训练池和模型。可验证环境+自蒸馏这条路值得盯。",
+      "tags": ["Agent", "深度搜索", "自蒸馏", "可验证环境"]
+    },
+    {
+      "domain": "ai",
+      "title": "SWE-Pruner Pro: The Coder LLM Already Knows What to Prune",
+      "title_zh": "SWE-Pruner Pro:写代码的模型自己就知道哪些上下文该扔",
+      "url": "https://arxiv.org/abs/2607.18213",
+      "hf_url": "https://huggingface.co/papers/2607.18213",
+      "authors": "Yuhang Wang、Yuling Shi 等",
+      "affiliation": "字节跳动",
+      "upvotes": 64,
+      "one_liner": "不用外挂分类器,模型读工具输出时内部就标好了『留还是删』",
+      "summary_zh": "给编码 agent 剪上下文,以前的做法是外挂一个独立分类器。这篇发现根本没必要——agent 自己读工具返回时,内部表示里就已经编码了『这段代码相不相关』。于是它在 agent 内部接一个小脑袋,把内部表示直接翻成每一行的『保留/删除』标签,还带一个按行数走的长度感知嵌入。两个开源底座、四个多轮基准上省掉最多 39% 的 token,而且在 MiMo-V2-Flash 上还把 SWE-Bench Verified 解决率抬了 3.8 个点。省钱还涨分,挺实用。",
+      "tags": ["代码Agent", "上下文压缩", "长上下文", "推理效率"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Apple-π: Benchmarking Thinking with Video Towards Law-Grounded Physical Intelligence",
+      "title_zh": "Apple-π:让视频生成模型去做力学题,看它是不是真懂物理",
+      "url": "https://arxiv.org/abs/2607.16401",
+      "hf_url": "https://huggingface.co/papers/2607.16401",
+      "authors": "Runmao Yao、Kairui Hu 等",
+      "affiliation": "南洋理工 MMLab(MMLab@NTU)",
+      "upvotes": 37,
+      "one_liner": "所谓『视频模型内化了物理定律』,最好的也才考 0.47 分",
+      "summary_zh": "现在爱说视频生成模型是『世界模型』、内化了物理规律,但以往的评测只看输出画面像不像,不查它是不是靠正确的物理推理走到那一步的。Apple-π 是第一个把评测明确锚在物理定律上的基准:400 段覆盖十类经典力学任务的视频,分单定律(干净诊断)和多定律(测泛化),再用『感知—建模—演绎』三段协议加物理量化指标。测了 11 个模型,最好的也只有 0.473,还暴露出『感知到建模到演绎』的瓶颈和持续的 sim-to-real 差距。这盆冷水泼得挺清醒。",
+      "tags": ["世界模型", "视频生成", "物理推理", "Benchmark"]
+    },
+    {
+      "domain": "embodied",
+      "title": "RynnBrain 1.1: Towards More Capable and Generalizable Embodied Foundation Model",
+      "title_zh": "RynnBrain 1.1:更能打的具身基座模型",
+      "url": "https://arxiv.org/abs/2607.17977",
+      "hf_url": "https://huggingface.co/papers/2607.17977",
+      "authors": "Kehan Li、Bohan Hou 等",
+      "affiliation": "阿里达摩院(DAMO Academy)",
+      "upvotes": 32,
+      "one_liner": "在具身认知上加了接触点预测和原生 3D 定位,输出更贴机器人操作",
+      "summary_zh": "达摩院这套具身基座覆盖 2B、9B 到 122B-A10B 三档,统一在时空+物理接地的框架下训练,管感知、空间推理、定位和规划。相比 1.0,新增了全家族的接触点预测,还给 2B/9B 上了原生 3D 定位,让表示和输出更直接对得上机器人的抓取动作;配套的 RynnBrain-VLA 用统一跨本体动作空间,已经部署到宇树 G1、Astribot-S1 等真机。122B 版在 VSI-Bench、MMSI、RefSpatial-Bench 上压过所有评测过的闭源和开源模型。跟今天 Generative Bionics 那条全身触觉的新闻正好呼应——具身这波都在往『接触/力』上使劲。",
+      "tags": ["具身智能", "VLA", "3D定位", "基座模型"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Open-AoE: An Open Egocentric Manipulation Dataset and Toolchain for Embodied Learning",
+      "title_zh": "Open-AoE:两千小时第一视角操作数据集和配套工具链",
+      "url": "https://arxiv.org/abs/2607.14183",
+      "hf_url": "https://huggingface.co/papers/2607.14183",
+      "authors": "Zishuo Li、Bowen Yang 等",
+      "affiliation": "inclusionAI",
+      "upvotes": 24,
+      "one_liner": "用手机就能采数据,500 多人众包出两千小时人手操作视频",
+      "summary_zh": "第一视角的人手操作视频是具身学习很划算的监督来源,但现有资源要么没结构化标注、要么工具不好复用。Open-AoE 把从『手机拍摄』到『模型训练』的整条链路都开了:首发约 2000 小时、500 多名贡献者、400 多部手机在自然环境里采的操作视频,带文本标注、MANO 手部姿态、相机轨迹和时序切好的原子动作;还配了把原始录像转成结构化样本的处理流水线,以及可视化、跨本体重定向、VLA/世界模型训练配方的下游工具。门槛压得很低,想做人到机器人迁移的可以直接拿来用。",
+      "tags": ["具身智能", "数据集", "第一视角", "手部姿态"]
+    },
+    {
+      "domain": "ai",
+      "title": "Environment-free Synthetic Data Generation for API-Calling Agents",
+      "title_zh": "不搭真环境,也能给『会调 API 的 agent』造训练数据",
+      "url": "https://arxiv.org/abs/2607.16900",
+      "hf_url": "https://huggingface.co/papers/2607.16900",
+      "authors": "Seanie Lee、Sanjoy Chowdhury 等",
+      "affiliation": "Apple",
+      "upvotes": 13,
+      "one_liner": "只给 API 说明书,让 LLM 当『临时后端』把交互轨迹编出来",
+      "summary_zh": "训练会调 API 的 agent 需要海量高质量轨迹,但通常得先搭一整套可执行环境+预填好的数据库,这是扩规模的大瓶颈。这篇干脆不搭环境:只给 API 规范,让一个 LLM 当『即时数字世界模型』——先生成能用这些 API 解的多样任务,老师 agent 一步步解,另一个 LLM 模拟器根据任务和历史编出前后一致的 API 返回,最后 LLM 裁判过滤质量。在 AppWorld、OfficeBench 上用这些合成数据微调涨点明显,包括改状态的任务。把『造环境』换成『模拟环境』,对没有现成沙盒的 API 生态很实用,但模拟返回的保真度是要留神的地方。",
+      "tags": ["Agent", "工具调用", "合成数据", "LLM模拟器"]
+    },
+    {
+      "domain": "bio",
+      "title": "Do Language Models Dream of Binding Molecules? Benchmarking LLMs under Spatial Constraints",
+      "title_zh": "语言模型会梦见结合分子吗?带空间约束的 LLM 药物设计评测",
+      "url": "https://arxiv.org/abs/2607.18144",
+      "hf_url": "https://huggingface.co/papers/2607.18144",
+      "authors": "Thomas MacDougall、Maksim Kuznetsov 等",
+      "affiliation": "Insilico Medicine",
+      "upvotes": 12,
+      "one_liner": "让通用 LLM 在 3D 口袋约束下设计分子,能凑合但还追不上扩散模型",
+      "summary_zh": "结构导向药物设计(SBDD,即拿蛋白靶点的 3D 结构去生成能结合的候选分子)一直是扩散模型的天下,但 LLM 类方法也开始冒头。这篇系统查了通用 LLM 到底能不能在复杂 3D 约束下推理:在蛋白口袋加上锚定片段、药效团点、必须满足的口袋-配体相互作用等条件下生成配体,并提出 3D-Fit——一个省 token 的评测方案。结论很实在:LLM 还落后于专用扩散模型,但能同时应付多个空间约束、可扩到异构设定,是个有潜力的方向。当作现状盘点看挺好,别急着下结论。",
+      "tags": ["药物设计", "LLM", "3D约束", "Benchmark"]
+    },
+    {
+      "domain": "ai",
+      "title": "DiffGI: Differentiable Geometry Images for High-Fidelity Thin-Shell 3D Generation",
+      "title_zh": "DiffGI:用可微几何图像生成衣服这类薄壳 3D 形状",
+      "url": "https://arxiv.org/abs/2607.13365",
+      "hf_url": "https://huggingface.co/papers/2607.13365",
+      "authors": "Eungjune Shim、Hansol Lee、Eunjung Ju",
+      "affiliation": "CLO Virtual Fashion",
+      "upvotes": 11,
+      "one_liner": "把 3D 表面压进 32×32 的『图片』里,还全程可微",
+      "summary_zh": "主流 3D 生成靠隐式体积表示,强制水密拓扑,做衣服这种薄壳、非流形几何就很吃力。这篇走表面路线:把离散的二值占据图换成连续的 2D 截断符号距离场(TSDF),用子像素精度编码边界,消掉了下采样时的台阶伪影;再配一个基于解析线性插值的可微 Marching Squares,让 3D 表面损失的梯度能一路传回 2D 隐空间。最后把复杂表面压进超紧凑的 32×32 隐空间,上面跑 flow-matching 的隐扩散做条件生成。重建保真和边界精度都比以前的几何图像/体素方法强,算力还省。表示设计这块很扎实。",
+      "tags": ["3D生成", "薄壳几何", "SDF", "扩散模型"]
+    },
+    {
+      "domain": "quantum",
+      "title": "QuantiSpect: A Structure-Aware Lightweight 3D CNN Pre-Decoder for Scalable Surface Code Quantum Error Correction",
+      "title_zh": "QuantiSpect:给表面码纠错做的轻量 3D CNN 预解码器",
+      "url": "https://arxiv.org/abs/2607.18204",
+      "authors": "Pan Gao、Xu-Sheng Xu 等",
+      "upvotes": 0,
+      "one_liner": "把笨重的稠密 3D 卷积拆成三条轻量分支,给纠错抢时间",
+      "summary_zh": "实时解码是大规模容错量子计算的关键卡点:AI 预解码器先在本地把大部分物理错误纠掉,再把残余的『症状』丢给全局解码器,能压到亚微秒延迟。问题是现有架构的稠密 3D 卷积开销太大。QuantiSpect 针对旋转表面码,把每个残差块里的稠密 3D 卷积换成三条并行的轻量分支——深度可分的空间分支、时间分支和分组时空分支,在保住纠错能力的同时砍掉计算量。量子纠错这两年越来越像一个『把神经网络塞进硬件时延预算』的系统工程问题,这类工作是绕不开的。",
+      "tags": ["量子纠错", "表面码", "神经解码器", "3D CNN"]
+    },
+    {
+      "domain": "bio",
+      "title": "Neural spectroscopy of AlphaFold2 reveals encoded protein conformational landscapes",
+      "title_zh": "给 AlphaFold2 做『神经光谱』:它其实记住了蛋白的构象地形",
+      "url": "https://arxiv.org/abs/2607.16087",
+      "authors": "Kaustav Mehta",
+      "upvotes": 0,
+      "one_liner": "把 AF2 当研究对象而非工具,去探它权重里藏的构象知识",
+      "summary_zh": "一个有点反常规的视角:AlphaFold2 的 9300 万参数一般只被当成『序列到结构』的机器,这篇主张它同时也是个可以直接分析的科学对象——一份学到的蛋白构象组织的编码。作者用高斯卷积平滑 Evoformer 的权重张量再做缩放,发现训练好的模型能给出物理上有结构的构象地形;施加扰动时,泛素的天然接触按几十年折叠实验确立的顺序断裂。单作者的探索性工作,方法还很初步、结论要谨慎看,但『把大模型当显微镜反过来读』这个思路本身挺有意思。",
+      "tags": ["蛋白质", "AlphaFold2", "构象", "可解释性"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "bojieli/ai-agent-book",
+      "url": "https://github.com/bojieli/ai-agent-book",
+      "language": "Python",
+      "stars": 14190,
+      "stars_today": "4,434",
+      "one_liner": "李博杰《深入理解 AI Agent》全书开源,正文+PDF+配套代码",
+      "summary_zh": "一本讲 AI Agent 设计原理与工程实践的中文书,整本正文、编译好的 PDF 和按章节配套的代码全开源。单日涨了四千多 star,内容从原理讲到落地,适合想系统搭 agent 的中文读者从头过一遍,比零散博客成体系。"
+    },
+    {
+      "domain": "ai",
+      "name": "tirth8205/code-review-graph",
+      "url": "https://github.com/tirth8205/code-review-graph",
+      "language": "Python",
+      "stars": 24444,
+      "stars_today": "1,921",
+      "one_liner": "给代码库建一张持久的智能图谱,让 AI 只读该读的部分",
+      "summary_zh": "本地优先的代码智能图谱,面向 MCP 和 CLI,给你的代码库建一张持久的地图,让 AI 编码工具只读真正相关的部分,在代码审查和大仓工作流上给出了实测的上下文压缩数据。跟今天字节的 SWE-Pruner Pro 是一个母题——都在跟『喂给模型的上下文太多太贵』较劲,只是一个在库这层做、一个在模型内部做。"
+    },
+    {
+      "domain": "ai",
+      "name": "AlexsJones/llmfit",
+      "url": "https://github.com/AlexsJones/llmfit",
+      "language": "Rust",
+      "stars": 30115,
+      "stars_today": "194",
+      "one_liner": "一条命令,告诉你哪些模型能在你这台机器上跑得动",
+      "summary_zh": "覆盖上百个模型和提供商,一条命令就帮你算出『我这块显卡/这台机器到底能跑哪些模型』。本地选型、部署前摸家底很省事,尤其适合硬件受限、要在一堆开源权重里挑一个能塞进显存的场景。"
+    },
+    {
+      "domain": "ai",
+      "name": "dottxt-ai/outlines",
+      "url": "https://github.com/dottxt-ai/outlines",
+      "language": "Python",
+      "stars": 14775,
+      "stars_today": "49",
+      "one_liner": "逼着 LLM 按你给的 schema/正则吐出结构化输出",
+      "summary_zh": "做结构化输出的老牌库,用约束解码保证 LLM 的输出严格符合 JSON schema、正则或语法。做 agent、工具调用、信息抽取时想让模型输出稳定可解析,基本绕不开这类方案,工程上很实。"
+    },
+    {
+      "domain": "embodied",
+      "name": "earthtojake/text-to-cad",
+      "url": "https://github.com/earthtojake/text-to-cad",
+      "language": "JavaScript",
+      "stars": 9006,
+      "stars_today": "378",
+      "one_liner": "一套给 CAD、机器人和硬件设计用的 agent skill",
+      "summary_zh": "面向 CAD、机器人和硬件设计的一组 agent skill 集合,想把『用自然语言描述,让 agent 帮你出机械/硬件设计』这条路走通。做具身、硬件原型的人可以关注,是把编码 agent 往物理世界设计延伸的一次尝试。"
+    },
+    {
+      "domain": "ai",
+      "name": "1jehuang/jcode",
+      "url": "https://github.com/1jehuang/jcode",
+      "language": "Rust",
+      "stars": 10236,
+      "stars_today": "835",
+      "one_liner": "又一个用 Rust 写的编码 agent harness",
+      "summary_zh": "标榜『最聪明的编码 agent harness』,用 Rust 写。编码 agent 外壳这个赛道最近特别热闹(今天榜上就好几个),各家都在卷上下文管理、工具调度和速度,想自建 harness 的可以拿来对照架构。"
+    },
+    {
+      "domain": "ai",
+      "name": "ayghri/i-have-adhd",
+      "url": "https://github.com/ayghri/i-have-adhd",
+      "language": "Markdown",
+      "stars": 6601,
+      "stars_today": "1,846",
+      "one_liner": "一个 skill:逼编码 agent 别把答案埋在一堆废话里",
+      "summary_zh": "一个专治『AI 说话绕』的 agent skill,让编码助手别把结论埋在大段铺垫里,直接给 ADHD 友好的输出。名字很皮,单日涨近两千 star,某种程度上反映了大家对 agent 输出啰嗦的集体怨念——一个小而对味的点子就能攒关注。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "法官批准 Anthropic 15 亿美元图书版权和解,仅 350 名作者选择退出",
+      "url": "https://techcrunch.com/2026/07/20/anthropics-landmark-1-5b-copyright-settlement-is-approved/",
+      "source": "TechCrunch",
+      "summary_zh": "针对 Anthropic 用盗版书训练 Claude 的集体诉讼,15 亿美元和解方案获法官批准,只有 350 名作者选择退出。这是 AI 训练数据版权纠纷里标志性的一笔,给『拿受版权保护内容训模型』划了个昂贵的价格锚,后续别家的类似官司都会拿它当参照。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "谷歌一口气发三款 Gemini,主打更快更便宜的 3.6 Flash 和网络安全模型",
+      "url": "https://arstechnica.com/google/2026/07/google-reveals-faster-and-cheaper-gemini-3-6-flash-says-3-5-pro-is-still-in-testing/",
+      "source": "Ars Technica",
+      "summary_zh": "谷歌发布 Gemini 3.6 Flash、3.5 Flash-Lite 和一款面向网络安全的 Flash Cyber,主打更快更便宜,并透露 3.5 Pro 还在测试、Gemini 4 在路上。旗舰暂时按兵不动、先把中低端和垂直场景铺满,是想用性价比和专用模型稳住日常调用量这块基本盘。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "美国威胁制裁中国 AI 模型,OpenAI 对开源权重的焦虑摆上台面",
+      "url": "https://techcrunch.com/2026/07/21/us-threatens-sanctions-against-chinese-ai-models-over-ip-theft/",
+      "source": "TechCrunch",
+      "summary_zh": "美方以『知识产权盗窃』为由威胁制裁中国 AI 模型,同期舆论场在热议『OpenAI 害怕开源权重模型,美国是否也该怕』。中国开源模型的快速追赶正把 AI 竞争从技术层顶到政策层,开源与封闭、以及国家间的博弈,短期内会持续搅动这条线。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "谷歌自研新款 AI 芯片,专为让 Gemini 跑得更省电",
+      "url": "https://techcrunch.com/2026/07/20/google-is-working-on-a-new-ai-chip-designed-to-make-gemini-more-efficient/",
+      "source": "TechCrunch",
+      "summary_zh": "谷歌正在做一款新 AI 芯片,目标是让 Gemini 的推理更高效省电。跟它同一周又发 Flash 系列小模型放在一起看很清楚:大厂在软硬两头同时压推理成本——模型往小做、芯片往专用做,都是为了扛住暴涨的调用量和电费。"
+    },
+    {
+      "domain": "energy",
+      "title_zh": "报告预测:数据中心用电量到 2035 年将翻两番",
+      "url": "https://techcrunch.com/2026/07/21/data-centers-expected-to-use-4x-more-electricity-by-2035/",
+      "source": "TechCrunch",
+      "summary_zh": "最新预测称,到 2035 年数据中心用电量将是现在的四倍,AI 是主要推手。这条把今天好几件事串起来了:谷歌自研省电芯片、模型往轻量做,底层压力全来自这张电网账单——AI 的瓶颈正从『买不买得到卡』转向『供不供得上电』。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "imec 联合三星、Lam 等提出单片 3D-DRAM 氧化物半导体架构",
+      "url": "https://semiengineering.com/monolithic-3d-dram-with-oxide-semiconductor-architecture-imec-ku-leuven-samsung-lam/",
+      "source": "SemiEngineering",
+      "summary_zh": "imec 联合鲁汶大学、三星和 Lam Research 提出一种基于氧化物半导体的单片 3D-DRAM 架构。DRAM 微缩多年卡壳,把存储单元往垂直方向堆(类似 3D NAND 的思路)被看作提升密度的关键路线之一,氧化物沟道晶体管漏电低、正适合这种堆叠场景。跟数据中心的内存墙和 AI 算力需求直接挂钩。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "BMS 联手英伟达建药物研发超算,号称『生命科学最强 AI 工厂』",
+      "url": "https://www.fiercebiotech.com/biotech/bms-expands-ai-footprint-nvidia-create-largest-drug-rd-supercomputer",
+      "source": "Fierce Biotech",
+      "summary_zh": "百时美施贵宝(BMS)扩大与英伟达的合作,要建一台面向药物研发的超算,自称是『生命科学领域最强的 AI 工厂』。大药企正把 AI 基础设施当成核心资产往里砸钱,和今天那篇 LLM 做结构导向药物设计的论文对着看,能感觉到『算力+生成模型进制药』这条线在产研两头同时加速。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "美国太空军拟采购最高 300 亿美元的火箭发射服务",
+      "url": "https://arstechnica.com/space/2026/07/the-space-force-is-now-seeking-to-buy-up-to-30-billion-in-rocket-launches/",
+      "source": "Ars Technica",
+      "summary_zh": "美国太空军启动新一轮采购,计划买入最高 300 亿美元的火箭发射服务。这是笔巨额的政府订单,会把国家安全发射的蛋糕在 SpaceX 和几家追赶者之间重新分配,对商业发射市场的格局和现金流影响很大。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Generative Bionics 发布全身触觉感知的人形机器人",
+      "url": "https://www.therobotreport.com/generative-bionics-unveils-humanoid-robot-with-full-body-tactile-sensing/",
+      "source": "The Robot Report",
+      "summary_zh": "Generative Bionics 亮相一款带全身触觉感知的人形机器人,把触觉铺满整个机身而非只在指尖。这跟今天 RynnBrain 1.1 新增『接触点预测』是一个方向上的软硬呼应——具身这波的重心正从『看得准』往『摸得准、控得住接触力』上挪,富接触操作是绕不过的坎。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "AI 音乐的清算时刻:Deezer 半数日上传是 AI 生成,索尼就三万首歌起诉 Udio",
+      "url": "https://techcrunch.com/2026/07/21/music-streamer-deezer-says-more-than-50-of-daily-uploads-are-ai-generated/",
+      "source": "TechCrunch / The Verge",
+      "summary_zh": "流媒体 Deezer 称其每日上传中已有超过一半是 AI 生成的;与此同时索尼就三万首歌起诉 AI 音乐生成器 Udio。一边是 AI 内容以肉眼可见的速度淹没平台,一边是版权方大规模开火,和 Anthropic 那笔和解遥相呼应——生成式内容的『谁的数据、谁的版权』之争正在音乐这个赛道集中爆发。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "把 Points-as-Tori 做成即插即用的点云 SDF 小库",
+      "based_on": [
+        { "title": "Points as Tori: Fast Pointwise Signed Distance for Point Clouds", "url": "https://arxiv.org/abs/2607.16946" }
+      ],
+      "why_now": "这套方法用预训练网络前馈地给每点算曲率参数、再用有闭式 SDF 的环面局部拟合,查询任意点的符号距离是解析的、无需重训——正好适合封装成一个轻量库,而目前还没有干净好用的开源实现。",
+      "feasibility": "推理为主,单张 24GB 卡足够(甚至 CPU 也能跑小规模);做成库+基准约 2-4 周,重点在 API 打磨和跑通几个标准数据集的对比。",
+      "route": [
+        "先跑通论文/作者放出的推理代码(或按方法复现前馈拟合),在一两个玩具点云上验证 SDF 查询正确",
+        "封装成 pc_to_sdf 这样的极简 API:输入带法向点云,输出可在任意点查询距离与最近表面的对象",
+        "在 ShapeNet / ScanNet 抽样的点云上,对比 Poisson 重建、NKSR 等的距离精度与单点查询速度,出一张表",
+        "补 pip 安装、README、Colab demo,再加一个『拖动查询点看等值面』的可视化",
+        "开 issue 征集失败案例(尖锐边、薄壳、噪声),持续迭代拟合稳健性"
+      ],
+      "risk": "环面局部拟合在尖锐特征和强噪声区域可能不稳,SDF 会出现符号翻转;需要在文档里如实标注适用边界。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "独立复现 PoLoRA,并迁到扩散/VLA 的 LoRA 微调看是否仍然稳赢",
+      "based_on": [
+        { "title": "PoLoRA: A Preconditioned Orthogonalized LoRA Optimizer", "url": "https://arxiv.org/abs/2607.17620" }
+      ],
+      "why_now": "PoLoRA 声称通过『乘积感知的谱更新方向+曲率预条件』让 LoRA 相比 Adam 稳定涨点,而并发的 Muon 类变体做不到——这种『声称一致优于基线』的优化器最值得独立验证,且方法与今天『每日一理』SVD 的低秩直觉正好同源。",
+      "feasibility": "纯 LoRA 微调,1-2 张卡就能在 7B 级模型上跑;先复现语言任务约 1-2 周,再迁一个新场景约 2 周,整体一个月内可出结论。",
+      "route": [
+        "先在一个 7B 底座+常识推理小套件上,用官方或复现的 PoLoRA 对齐一次论文里的 Adam-LoRA 对比,确认能重现增益",
+        "固定随机种子和超参预算,记录收敛曲线与最终指标,判断增益是真稳定还是调参红利",
+        "把优化器原样迁到一个新场景:如扩散模型或某个开源 VLA 的 LoRA 微调,看低秩结构变了之后是否还赢",
+        "做消融:分别关掉『乘积感知方向』和『预条件』两块,定位增益来源",
+        "整理成一篇复现+迁移报告,附上失败/无增益的设定"
+      ],
+      "risk": "增益可能对学习率、秩、warmup 高度敏感,换了任务就消失;需要严格对齐调参预算,否则结论不可信。"
+    },
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "把 PruneGround 的语言引导空间剪枝迁到新数据集/开放词表 3DVG",
+      "based_on": [
+        { "title": "PruneGround: Plug-and-play Spatial Pruning for 3D Visual Grounding", "url": "https://arxiv.org/abs/2606.31148" }
+      ],
+      "why_now": "PruneGround 是即插即用、靠冻结 VLM 做语言引导空间剪枝的框架,不用重训主干,复现成本低;把它迁到另一个 3DVG 数据集或开放词表设定验证泛化性,本身就是一个低风险、可发表的扩展。",
+      "feasibility": "冻结 VLM 只做推理+轻量下游,单张 24GB 卡可行;先在原数据集复现约 2 周,再迁一个新基准约 2-3 周。",
+      "route": [
+        "在原论文的数据集上跑通 PruneGround,确认能复现它报告的精度提升和计算下降",
+        "接上一个新的 3DVG 基准(如换场景来源或更杂乱的室内数据),不改主干直接套剪枝模块",
+        "量化剪枝前后的定位精度、推理耗时和显存,重点看杂乱场景下歧义是否减少",
+        "试着把语言引导剪枝换成开放词表设定(用另一个冻结 VLM 生成区域先验),看是否仍稳",
+        "整理成迁移+泛化性报告,附剪错区域的失败案例分析"
+      ],
+      "risk": "冻结 VLM 给出的空间先验在新分布上可能失准,把目标区域也剪掉导致召回下降;需要设兜底机制(如剪枝置信度低时退回全场景)。"
+    }
+  ]
+}
