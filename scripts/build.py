@@ -54,6 +54,13 @@ GALLERY_DEMOS = [
         "参数:fn(表达式)、x0(初值)、xmin/xmax(视窗)、iterations(迭代步数)。",
         "params": {"fn": "cos(x)", "x0": 2.5, "xmin": -0.2, "xmax": 3.3, "iterations": 14},
     },
+    {
+        "id": "fourier",
+        "title": "傅里叶级数逼近",
+        "use": "傅里叶级数 / 信号分解 / 收敛与吉布斯现象。拖「项数 N」滑块看部分和如何逼近周期波,"
+        "跳变处的过冲永不消失。参数:wave(square/sawtooth/triangle)、terms(初始项数)、maxTerms(滑块上限)。",
+        "params": {"wave": "square", "terms": 5, "maxTerms": 30},
+    },
 ]
 
 

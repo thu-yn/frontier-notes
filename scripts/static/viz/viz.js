@@ -109,7 +109,63 @@
     return board;
   }
 
-  var COMPONENTS = { cobweb: cobweb };
+  /* ---- 组件:傅里叶级数逼近(fourier) ------------------------------------
+   * 画一个周期波(方波/锯齿/三角)及其前 N 项傅里叶级数部分和,拖滑块加项数,
+   * 直观看级数如何收敛、以及跳变处的吉布斯过冲。
+   * params: { wave:"square"|"sawtooth"|"triangle", terms:5, maxTerms:30 }
+   */
+  function fourier(elId, p) {
+    p = Object.assign({ wave: "square", terms: 5, maxTerms: 30 }, p || {});
+
+    var board = JXG.JSXGraph.initBoard(elId, {
+      boundingbox: [-Math.PI * 1.15, 1.7, Math.PI * 1.15, -1.7],
+      keepaspectratio: false,
+      axis: true,
+      showCopyright: false,
+      showNavigation: false,
+      pan: { enabled: false },
+      zoom: { enabled: false },
+    });
+
+    // 各波形的部分和:传入 x 与项数 n,返回前 n 项之和
+    function partial(x, n) {
+      var s = 0, k;
+      if (p.wave === "sawtooth") {
+        for (k = 1; k <= n; k++) s += (k % 2 ? 1 : -1) * Math.sin(k * x) / k;
+        return (2 / Math.PI) * s;
+      }
+      if (p.wave === "triangle") {
+        for (k = 1; k <= n; k += 2) {
+          s += (((k - 1) / 2) % 2 ? -1 : 1) * Math.sin(k * x) / (k * k);
+        }
+        return (8 / (Math.PI * Math.PI)) * s;
+      }
+      // square(默认)
+      for (k = 1; k <= n; k += 2) s += Math.sin(k * x) / k;
+      return (4 / Math.PI) * s;
+    }
+    // 理想波形(参考,虚线):用大项数近似,避免手写分段
+    function ideal(x) { return partial(x, 199); }
+
+    // 项数滑块 N
+    var N = board.create(
+      "slider",
+      [[-Math.PI * 0.95, 1.45], [Math.PI * 0.15, 1.45], [1, p.terms, p.maxTerms]],
+      { name: "项数 N", snapWidth: 1, precision: 0, fillColor: ACCENT, strokeColor: ACCENT }
+    );
+
+    board.create("functiongraph", [ideal], {
+      strokeColor: GUIDE, strokeWidth: 1.4, dash: 2, highlight: false,
+    });
+    board.create(
+      "functiongraph",
+      [function (x) { return partial(x, Math.round(N.Value())); }],
+      { strokeColor: ACCENT, strokeWidth: 2.5, highlight: false }
+    );
+    return board;
+  }
+
+  var COMPONENTS = { cobweb: cobweb, fourier: fourier };
 
   function boot() {
     var nodes = document.querySelectorAll(".mathviz[data-viz]");
