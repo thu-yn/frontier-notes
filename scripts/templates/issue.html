@@ -88,7 +88,16 @@
   <div class="theorem__block">
     <h3>怎么推出来的</h3>
     <ol class="theorem__steps">
-      {% for s in m.derivation %}<li>{{ s }}</li>{% endfor %}
+      {% for s in m.derivation %}
+        {% if s is mapping %}
+        <li class="mathstep">
+          {% if s.math %}<div class="mathstep__eq">$${{ s.math }}$$</div>{% endif %}
+          {% if s.note %}<p class="mathstep__note">{{ s.note }}</p>{% endif %}
+        </li>
+        {% else %}
+        <li>{{ s }}</li>
+        {% endif %}
+      {% endfor %}
     </ol>
   </div>
   {% endif %}
@@ -101,6 +110,17 @@
   </div>
   {% endif %}
   {% if m.takeaway %}<p class="theorem__takeaway">{{ m.takeaway }}</p>{% endif %}
+  {% if m.viz %}
+  <figure class="theorem__viz">
+    {% if m.viz.type == 'custom' %}
+    <div class="mathviz-custom">{{ m.viz.html | safe }}</div>
+    <script>(function(){var el=document.currentScript.previousElementSibling;{{ m.viz.script | safe }}})();</script>
+    {% else %}
+    <div class="mathviz" data-viz='{{ m.viz | tojson }}'></div>
+    {% endif %}
+    {% if m.viz.caption %}<figcaption class="theorem__viz-cap">{{ m.viz.caption }}</figcaption>{% endif %}
+  </figure>
+  {% endif %}
 </section>
 {% endif %}
 
@@ -187,4 +207,36 @@
   <span><a href="{{ root }}archive.html">全部归档</a></span>
   <span>{% if next %}<a href="{{ root }}issues/{{ next.date }}.html">下一期 · {{ next.date }}</a> →{% elif not is_latest %}<a href="{{ root }}index.html">回到最新一期</a> →{% endif %}</span>
 </nav>
+{% endblock %}
+
+{# 「每日一理」相关资源都自托管、按需加载,别拖慢无定理/无图的页面 #}
+{% block foot %}
+{% if issue.math_note %}
+{# 公式渲染:KaTeX(有定理就加载),把正文里的 $…$ / $$…$$ 排版成数学公式 #}
+<link rel="stylesheet" href="{{ root }}viz/vendor/katex/katex.min.css">
+<script src="{{ root }}viz/vendor/katex/katex.min.js" defer></script>
+<script src="{{ root }}viz/vendor/katex/auto-render.min.js" defer></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var el = document.getElementById("theorem");
+    if (el && window.renderMathInElement) {
+      renderMathInElement(el, {
+        delimiters: [
+          { left: "$$", right: "$$", display: true },
+          { left: "$", right: "$", display: false },
+          { left: "\\(", right: "\\)", display: false },
+          { left: "\\[", right: "\\]", display: true },
+        ],
+        throwOnError: false,
+      });
+    }
+  });
+</script>
+{% if issue.math_note.viz %}
+{# 交互可视化:JSXGraph + viz 框架(仅当本期定理带 viz 时) #}
+<link rel="stylesheet" href="{{ root }}viz/vendor/jsxgraph.css">
+<script src="{{ root }}viz/vendor/jsxgraphcore.js" defer></script>
+<script src="{{ root }}viz/viz.js" defer></script>
+{% endif %}
+{% endif %}
 {% endblock %}

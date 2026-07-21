@@ -159,6 +159,8 @@ def main() -> None:
 
     # 前端静态资源:build 会 rmtree(SITE),所以每次从 scripts/static 复制进来
     shutil.copy(STATIC / "likes.js", SITE / "likes.js")
+    # 每日一理的交互可视化:框架 viz.js + 自托管的 JSXGraph(vendor 整目录)
+    shutil.copytree(STATIC / "viz", SITE / "viz")
 
     (SITE / ".nojekyll").write_text("", encoding="utf-8")
     print(f"[build] {len(issues)} 期已生成 -> {SITE}")

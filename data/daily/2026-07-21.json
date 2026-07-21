@@ -1,28 +1,69 @@
 {
   "date": "2026-07-21",
-  "editor_note": "今天 HF 榜和 arXiv 上最抢眼的一条主线是「agent 怎么把经验变成能力」：Resource2Skill 把教程视频、仓库、文章蒸成可执行技能库，Recursive Harness Self-Improvement 直接让 harness 自己进化，LLM-as-a-Coach 把评分模型改造成会写反馈的教练——大家都在想办法把「打分」这种低带宽信号换成更密的监督。另一条线是效率：SWE-Pruner Pro 发现 coder 模型自己就知道该剪哪行 context，xHC 想把残差流当成新的 scaling 轴。非 AI 侧我挑了几条跨界的：Xiaomi 用 10 万小时真机轨迹堆 VLA、QuantiSpect 用轻量 CNN 给表面码纠错做预解码、FluxBench 老实测了一遍「AI agent 到底能不能跑完 RTL-to-GDS」(答案是还差得远)。最值得点开的是 scVision——把单细胞转录组画成图片再用视觉模型学,思路清奇。新闻里 Anthropic 15 亿版权和解落槌、中国开源模型继续给硅谷施压,还有个乐子:有人报告 Claude Fable 给雅可比猜想造了个反例,真假待考,但配今天的「每日一理」聊不动点定理刚好。"
-  ,
+  "editor_note": "今天 HF 榜和 arXiv 上最抢眼的一条主线是「agent 怎么把经验变成能力」：Resource2Skill 把教程视频、仓库、文章蒸成可执行技能库，Recursive Harness Self-Improvement 直接让 harness 自己进化，LLM-as-a-Coach 把评分模型改造成会写反馈的教练——大家都在想办法把「打分」这种低带宽信号换成更密的监督。另一条线是效率：SWE-Pruner Pro 发现 coder 模型自己就知道该剪哪行 context，xHC 想把残差流当成新的 scaling 轴。非 AI 侧我挑了几条跨界的：Xiaomi 用 10 万小时真机轨迹堆 VLA、QuantiSpect 用轻量 CNN 给表面码纠错做预解码、FluxBench 老实测了一遍「AI agent 到底能不能跑完 RTL-to-GDS」(答案是还差得远)。最值得点开的是 scVision——把单细胞转录组画成图片再用视觉模型学,思路清奇。新闻里 Anthropic 15 亿版权和解落槌、中国开源模型继续给硅谷施压,还有个乐子:有人报告 Claude Fable 给雅可比猜想造了个反例,真假待考,但配今天的「每日一理」聊不动点定理刚好。",
   "math_note": {
     "name": "巴拿赫不动点定理",
     "name_en": "Banach Fixed-Point Theorem",
     "field": "泛函分析 / 度量空间",
     "one_liner": "只要每走一步都把距离缩小一点,你终将走到那个再也走不动的点。",
-    "statement": "在一个「完备度量空间」里(度量空间就是任意两点都能量出距离的集合,完备指柯西序列都收敛、没有漏洞),如果一个映射 T 是「压缩映射」——也就是存在常数 0 ≤ k < 1,使得任意两点 x、y 经过 T 之后距离一定缩小到原来的 k 倍以内:d(Tx, Ty) ≤ k·d(x, y)——那么 T 有且仅有一个不动点 x*(满足 Tx* = x* 的点),而且从任意起点出发反复作用 T(x, Tx, T²x, …)都会收敛到它。",
+    "statement": "在一个「完备度量空间」里(度量空间就是任意两点都能量出距离 $d(x,y)$ 的集合,完备指柯西序列都收敛、没有漏洞),如果映射 $T$ 是「压缩映射」——存在常数 $0\\le k<1$,使得任意两点经过 $T$ 后距离一定缩小到原来的 $k$ 倍以内:$d(Tx,Ty)\\le k\\,d(x,y)$——那么 $T$ 有且仅有一个不动点 $x^*$(满足 $Tx^*=x^*$),且从任意起点反复作用 $T$ 都会收敛到它。",
     "origin": "1922 年,波兰数学家斯特凡·巴拿赫(Stefan Banach)在他的博士论文里给出了这个定理。当时他想给微分方程和积分方程的解「存在且唯一」找一个统一、干净的说法——在他之前,证明某个方程有解往往要针对具体形式硬算。巴拿赫把问题抽象成「找一个映射的不动点」,再用「距离每次都缩小」这个几何直觉一举拿下,顺手也奠定了后来以他命名的巴拿赫空间理论。",
     "derivation": [
-      "先造一条轨迹:随便取个起点 x₀,令 x₁ = Tx₀、x₂ = Tx₁……得到序列 xₙ = Tⁿx₀,我们要证它收敛。",
-      "看相邻两点的距离:因为 T 是压缩的,d(xₙ₊₁, xₙ) ≤ k·d(xₙ, xₙ₋₁),一层层递推下去就是 d(xₙ₊₁, xₙ) ≤ kⁿ·d(x₁, x₀)——每步的挪动量按等比数列指数衰减。",
-      "既然步长是收敛等比级数(k < 1,∑kⁿ 有限),把远处两点 xₘ、xₙ 的距离用三角不等式拆成一串步长求和,就能证明这序列是柯西列:走到后面点与点越挤越近。",
-      "空间是完备的,柯西列必有极限,记作 x*,序列就收敛到它。",
-      "最后验证 x* 是不动点:T 是压缩映射所以连续,对 xₙ₊₁ = Txₙ 两边取极限得 x* = Tx*。唯一性也简单——若还有另一个不动点 y*,则 d(x*, y*) = d(Tx*, Ty*) ≤ k·d(x*, y*),而 k < 1 逼得这距离只能是 0。"
+      {
+        "math": "x_{n+1}=Tx_n,\\qquad x_n=T^{\\,n}x_0",
+        "note": "随便取个起点 x₀,反复作用 T 造一条轨迹,目标是证明这条序列收敛。"
+      },
+      {
+        "math": "d(x_{n+1},x_n)\\le k\\,d(x_n,x_{n-1})\\le\\cdots\\le k^{\\,n}\\,d(x_1,x_0)",
+        "note": "用压缩性逐层往回递推——相邻两点的距离按等比 kⁿ 指数衰减,越走挪得越少。"
+      },
+      {
+        "math": "d(x_m,x_n)\\le\\!\\!\\sum_{i=n}^{m-1}\\!\\!d(x_{i+1},x_i)\\le\\frac{k^{\\,n}}{1-k}\\,d(x_1,x_0)\\xrightarrow[n\\to\\infty]{}0",
+        "note": "三角不等式把远处两点 xₘ、xₙ 的距离拆成一串步长之和;几何级数收敛,故尾巴越挤越近 → 这是柯西列。"
+      },
+      {
+        "math": "X\\ \\text{完备}\\ \\Longrightarrow\\ x_n\\to x^{*}",
+        "note": "完备空间里柯西列必有极限,把这个极限记作 x*。"
+      },
+      {
+        "math": "x^{*}=\\lim_{n\\to\\infty}x_{n+1}=\\lim_{n\\to\\infty}Tx_n=Tx^{*}",
+        "note": "压缩映射必连续,对递推式两边取极限,得到 x* 正是不动点 Tx*=x*。"
+      },
+      {
+        "math": "d(x^{*},y^{*})=d(Tx^{*},Ty^{*})\\le k\\,d(x^{*},y^{*})\\ \\Rightarrow\\ d(x^{*},y^{*})=0",
+        "note": "唯一性:若还有另一个不动点 y*,压缩性逼得它俩距离 ≤ k 倍自己,而 k<1,只能是 0 → 两点重合。"
+      }
     ],
     "applications": [
-      { "area": "微分/积分方程", "detail": "皮卡-林德勒夫存在唯一性定理正是把「解方程」写成一个积分算子的不动点,用本定理一步证明常微分方程初值问题的解存在且唯一。" },
-      { "area": "数值计算", "detail": "牛顿迭代、雅可比/高斯-赛德尔解线性方程组、定点迭代求根,本质都是构造压缩映射,定理保证只要压缩就一定收敛、且收敛速度是几何级(误差每步乘 k)。" },
-      { "area": "强化学习", "detail": "贝尔曼最优算子在折扣因子 γ < 1 下是压缩映射,值迭代之所以必然收敛到唯一的最优价值函数,靠的就是这条定理。" },
-      { "area": "生成模型与隐式网络", "detail": "扩散采样、DEQ 等隐式深度模型把推理写成迭代到不动点的过程,压缩性是它们收敛与稳定的理论抓手。" }
+      {
+        "area": "微分/积分方程",
+        "detail": "皮卡-林德勒夫存在唯一性定理正是把「解方程」写成一个积分算子的不动点,用本定理一步证明常微分方程初值问题的解存在且唯一。"
+      },
+      {
+        "area": "数值计算",
+        "detail": "牛顿迭代、雅可比/高斯-赛德尔解线性方程组、定点迭代求根,本质都是构造压缩映射,定理保证只要压缩就一定收敛、且收敛速度是几何级(误差每步乘 k)。"
+      },
+      {
+        "area": "强化学习",
+        "detail": "贝尔曼最优算子在折扣因子 γ < 1 下是压缩映射,值迭代之所以必然收敛到唯一的最优价值函数,靠的就是这条定理。"
+      },
+      {
+        "area": "生成模型与隐式网络",
+        "detail": "扩散采样、DEQ 等隐式深度模型把推理写成迭代到不动点的过程,压缩性是它们收敛与稳定的理论抓手。"
+      }
     ],
-    "takeaway": "「反复施加一个把差距缩小的操作,系统必然稳定到唯一状态」——这是迭代类算法能收敛的最朴素也最深刻的保证,凡是你能把问题写成压缩映射,存在性、唯一性和算法收敛性就一次性到手。"
+    "takeaway": "「反复施加一个把差距缩小的操作,系统必然稳定到唯一状态」——这是迭代类算法能收敛的最朴素也最深刻的保证,凡是你能把问题写成压缩映射,存在性、唯一性和算法收敛性就一次性到手。",
+    "viz": {
+      "type": "cobweb",
+      "caption": "拖动起点 x₀ 试试:不管从哪儿出发,反复取余弦 xₙ₊₁=cos(xₙ) 都被「压」向同一个不动点 x*≈0.739(cos 在这里正是压缩映射)。红色蛛网就是每步「上到曲线、平移回 y=x」的迭代轨迹。",
+      "params": {
+        "fn": "cos(x)",
+        "x0": 2.5,
+        "xmin": -0.2,
+        "xmax": 3.3,
+        "iterations": 14
+      }
+    }
   },
   "papers": [
     {
@@ -36,7 +77,11 @@
       "upvotes": 126,
       "one_liner": "技能库不用手写了——教程视频里就藏着现成的操作手册。",
       "summary_zh": "现在 agent 的技能库要么手写、要么只从纯文本或 agent 自己的轨迹里提,教程视频这类多模态资料基本没被用起来。这篇把视频、仓库、文章统统蒸馏成可执行技能,组织成一个分层的「技能 Wiki」,每条技能同时带结构化文本、代码、视觉示例和出处。思路很对——人类攒了海量教程,拿来当 agent 的现成经验比让它自己试错便宜得多,关键看蒸出来的技能可执行度有多高。",
-      "tags": ["Agent", "多模态", "技能库"]
+      "tags": [
+        "Agent",
+        "多模态",
+        "技能库"
+      ]
     },
     {
       "domain": "ai",
@@ -49,7 +94,11 @@
       "upvotes": 123,
       "one_liner": "抽取和整合分开做,GraphRAG 就不用一遍过硬抠了。",
       "summary_zh": "常见 GraphRAG 一趟抽取就建好知识图,结果实体噪声大、检索一碰就碎。RAGU 把抽取和整合拆成两步:两阶段带类型抽取、DBSCAN 去重、LLM 摘要、再用 Leiden 做社区发现。最有意思的判断是:管线里 LLM 干的活(理解、抽取、按上下文推理)是语言能力,不太随模型变大而涨,真正吃规模的是世界知识——所以用一个小的领域适配模型做抽取器就够了。开源、模块化,想自建领域 RAG 的可以直接拆着用。",
-      "tags": ["RAG", "知识图谱", "小模型"]
+      "tags": [
+        "RAG",
+        "知识图谱",
+        "小模型"
+      ]
     },
     {
       "domain": "ai",
@@ -62,7 +111,11 @@
       "upvotes": 49,
       "one_liner": "超连接卡在 N=4 不是极限,是写回带宽不够。",
       "summary_zh": "Hyper-Connections 把 Transformer 的残差流扩成 N 条并行流,相当于在宽度和深度之外多一个存储扩展的维度,但此前方法都停在 N=4——再往上收益骤减、训练成本却按立方涨。这篇把瓶颈归因于两点:流多了写回信息不够、残差混合的生成开销随流数三次方膨胀,并给出改法让 N 能继续往上走。属于结构层面的 scaling 探索,值得看它在更大规模上能不能真兑现。",
-      "tags": ["Transformer", "残差连接", "Scaling"]
+      "tags": [
+        "Transformer",
+        "残差连接",
+        "Scaling"
+      ]
     },
     {
       "domain": "ai",
@@ -75,7 +128,11 @@
       "upvotes": 41,
       "one_liner": "别再挂个外挂分类器了,模型读工具输出时心里有数。",
       "summary_zh": "代码 agent 的长 context 需要裁剪,以往像 SWE-Pruner 是外挂一个独立的代码分类器。这篇发现:agent 读工具返回时,内部表征本身就编码了每行代码相不相关。于是直接在 agent 内部加个小头,把内部表征转成「留或剪」的逐行标签,还配了个跟工具输出行数挂钩的长度感知嵌入。在两个开源底座、四个多轮 benchmark 上验证。省掉外挂模型这条路子干净,适合做上下文管理的可以借鉴。",
-      "tags": ["代码Agent", "上下文压缩", "推理效率"]
+      "tags": [
+        "代码Agent",
+        "上下文压缩",
+        "推理效率"
+      ]
     },
     {
       "domain": "ai",
@@ -88,7 +145,11 @@
       "upvotes": 31,
       "one_liner": "不模仿老师的输出分布,而是模仿它变聪明的那一步增量。",
       "summary_zh": "on-policy 蒸馏用老师给学生逐 token 监督,避开了奖励模型的约束,但奖励怎么设计一直没深挖。这篇提出 delta 信号:不直接模仿老师的输出分布,而是学老师模型和它指令微调前的基座之间的差——这个差正好捕捉了「推理微调带来的改变」。相当于把老师「因为学会推理而多出来的能力」单独拎出来传给学生,减少无关信号的干扰,思路挺巧。",
-      "tags": ["蒸馏", "RL", "后训练"]
+      "tags": [
+        "蒸馏",
+        "RL",
+        "后训练"
+      ]
     },
     {
       "domain": "ai",
@@ -101,7 +162,11 @@
       "upvotes": 25,
       "one_liner": "生成对了不算懂,得看它是不是靠物理定律推出来的。",
       "summary_zh": "视频生成模型常被吹成「内化了物理规律的世界模型」,但现有 benchmark 只在输出层面看画面像不像真的,不查它是不是靠一条靠谱的、有定律支撑的推理走到那一步。Apple-π 第一个把评测锚在物理定律上:配了 400 个覆盖经典力学十类任务的视频数据集(Orchard),单定律任务做无混淆诊断、多定律任务测泛化,再加一套三阶段评测协议。是给「世界模型」这个大词挤水分的实在工作。",
-      "tags": ["视频生成", "世界模型", "Benchmark"]
+      "tags": [
+        "视频生成",
+        "世界模型",
+        "Benchmark"
+      ]
     },
     {
       "domain": "embodied",
@@ -114,7 +179,11 @@
       "upvotes": 58,
       "one_liner": "VLA 的「数据即壁垒」这次是真金白银堆出来的。",
       "summary_zh": "一个视觉-语言-动作基座模型,主打两件事:开箱即用地按语言指令在没见过的环境里做移动操作,以及用极少微调数据快速适配新任务。做法是预训练+后训练两段式,预训练吃的是通过 UMI 手持设备采的 10 万+小时真机操作轨迹,还配了套可扩展的自动标注管线给轨迹片段标自然语言。数据规模是这条路线的硬门槛,小米直接砸真机采集,值得关注它开源程度和跨本体迁移的实际表现。",
-      "tags": ["VLA", "机器人", "移动操作"]
+      "tags": [
+        "VLA",
+        "机器人",
+        "移动操作"
+      ]
     },
     {
       "domain": "embodied",
@@ -127,7 +196,11 @@
       "upvotes": 21,
       "one_liner": "接触点预测 + 原生 3D grounding,让感知直接对齐机械臂动作。",
       "summary_zh": "一组 2B/9B/122B-A10B 规模的具身基座模型,统一的时空+物理框架下支持具身感知、空间推理、定位和规划。相比 1.0,新增了全家族的接触点预测,以及 2B/9B 的原生 3D grounding,让模型的表征和输出更直接对齐机械臂操作;还做了跨本体统一动作空间的 RynnBrain-VLA,部署到了宇树 G1、Astribot-S1 等真机上。跨本体这条线目前各家都在抢,能同时上多台真机是加分项。",
-      "tags": ["具身智能", "基座模型", "3D grounding"]
+      "tags": [
+        "具身智能",
+        "基座模型",
+        "3D grounding"
+      ]
     },
     {
       "domain": "bio",
@@ -137,7 +210,11 @@
       "authors": "Ridvan Yesiloglu、Sakib Mostafa、James Zou 等",
       "one_liner": "别再把细胞当一串基因 token 了,画成图更能看出基因协同。",
       "summary_zh": "现在多数单细胞基座模型是照搬语言模型,把每个细胞当成一串基因 token,这样既丢了基因之间的关系,常常也丢了表达量的大小。scVision 换了思路——把每个细胞渲染成一张连续的图:用最优传输把基因固定摆到一张跨组织共享的版图上,让共表达的基因在空间上挨着,于是「基因程序」就表现为图上的局部纹理,再用掩码图像建模预训练一个 ViT。转录组学天生没有二维结构,人为造一个空间布局来喂视觉模型,这个跨界很有想象力,值得看它在下游任务上是不是真占便宜。",
-      "tags": ["单细胞", "基座模型", "最优传输"]
+      "tags": [
+        "单细胞",
+        "基座模型",
+        "最优传输"
+      ]
     },
     {
       "domain": "quantum",
@@ -147,7 +224,11 @@
       "authors": "Pan Gao、Xu-Sheng Xu、Ji-Ze Han 等",
       "one_liner": "先用小网络把大部分错就地纠掉,残差再交给全局解码器。",
       "summary_zh": "实时解码是大规模容错量子计算的卡点(表面码是主流的量子纠错方案,需要在微秒内判断并纠正物理错误)。AI 预解码器的思路是先在本地把大多数物理错就地纠掉,只把残余的「症状」传给全局解码器,从而压到亚微秒延迟,但已有的密集 3D 卷积开销太大。QuantiSpect 把每层的密集 3D 卷积换成三条并行分支,做成轻量结构感知网络。是一个典型的「AI 帮量子纠错减负」的工程活,方向对,就看在真硬件延迟预算下能不能扛住规模。",
-      "tags": ["量子纠错", "表面码", "CNN"]
+      "tags": [
+        "量子纠错",
+        "表面码",
+        "CNN"
+      ]
     },
     {
       "domain": "chip",
@@ -157,7 +238,11 @@
       "authors": "Jinyuan Deng、Zhengrui Chen、Xufeng Wei 等",
       "one_liner": "EDA 全流程不是单点任务,agent 一到端到端就现原形。",
       "summary_zh": "LLM 驱动的 agent 被寄望于自动化芯片设计(RTL-to-GDS 就是从寄存器传输级代码一路做到最终掩膜版图的完整流程),但以往评测只考单个模型在孤立任务上的表现,看不出完整流程里 agent 系统到底行不行。FluxBench 在统一的 prompt、工具环境和工艺库下,系统评测 AI agent 跑端到端 EDA 流程。这种「泼冷水式」的 benchmark 很有价值——把「单点能跑」和「全程能过」之间的差距量化出来,提醒别把 demo 当落地。",
-      "tags": ["EDA", "Agent", "Benchmark"]
+      "tags": [
+        "EDA",
+        "Agent",
+        "Benchmark"
+      ]
     },
     {
       "domain": "ai4s",
@@ -167,7 +252,11 @@
       "authors": "Evangelia Rafaela Frastali、Achyut Paudel、Maryam Golbazi 等",
       "one_liner": "动力降尺度太贵,拿扩散模型直接生成高分辨率天气场。",
       "summary_zh": "很多地区缺高分辨率气象数据,而传统「动力降尺度」(用物理模式把粗网格结果算到细网格)又贵又难跨地点、跨变量扩展。Apeliotes 用扩散模型做机器学习降尺度,能随机地一次生成多个天气变量的公里级、多层大气场。把扩散生成用在气象这类有物理约束的场上,好处是快、可扩展,难点也在于生成结果得经得起物理一致性的检验——这类工作值得盯着看它在极端天气场景下靠不靠谱。",
-      "tags": ["气象", "扩散模型", "降尺度"]
+      "tags": [
+        "气象",
+        "扩散模型",
+        "降尺度"
+      ]
     }
   ],
   "repos": [
@@ -320,8 +409,14 @@
       "type": "repo",
       "title": "做一个统一的 3DGS 压缩/效率评测 harness,收编这一大波「省 Gaussian」的方法",
       "based_on": [
-        { "title": "SPARE-GS: Structural Parsimony and Resource Efficiency for 3D Gaussian Splatting", "url": "https://arxiv.org/abs/2607.16624" },
-        { "title": "QIRF: Quantum-Inspired Non-Orthogonal Function-Space Compression for 3D Gaussian Splatting", "url": "https://arxiv.org/abs/2607.18067" }
+        {
+          "title": "SPARE-GS: Structural Parsimony and Resource Efficiency for 3D Gaussian Splatting",
+          "url": "https://arxiv.org/abs/2607.16624"
+        },
+        {
+          "title": "QIRF: Quantum-Inspired Non-Orthogonal Function-Space Compression for 3D Gaussian Splatting",
+          "url": "https://arxiv.org/abs/2607.18067"
+        }
       ],
       "why_now": "光今天一天,arXiv 上就冒出 SPARE-GS、QIRF、packet-loss 鲁棒压缩、纹理编码等一串 3DGS 压缩工作,各自用不同场景、不同指标(PSNR/存储/帧率)自说自话,横向没法比。缺一个统一 harness,正是转成 repo 型点子的黄金信号。",
       "feasibility": "单卡 24GB 即可(3DGS 训练/渲染量级不大),核心工作量在工程整合而非算力,4–6 周能出一个覆盖 4–6 个方法、跑 Mip-NeRF360 / Tanks&Temples 的可复现基准。",
@@ -338,7 +433,10 @@
       "type": "paper",
       "title": "把 PruneGround 的训练-free 空间剪枝迁到别的 3D 视觉定位骨干上,验证泛化性",
       "based_on": [
-        { "title": "PruneGround: Plug-and-play Spatial Pruning for 3D Visual Grounding", "url": "https://arxiv.org/abs/2606.31148" }
+        {
+          "title": "PruneGround: Plug-and-play Spatial Pruning for 3D Visual Grounding",
+          "url": "https://arxiv.org/abs/2606.31148"
+        }
       ],
       "why_now": "PruneGround 主打 plug-and-play、用冻结的视觉语言模型做语言引导的空间剪枝,不需要训练。这类 training-free 方法复现便宜,「迁到另一个 3DVG 模型/数据集看还灵不灵」本身就是低风险、可发表的扩展,而且刚出、还没人系统做过跨骨干验证。",
       "feasibility": "纯推理,单卡 24–40GB 足够(冻结 VLM + 现成 3DVG 模型),不涉及训练。挑 2–3 个开源 3DVG 骨干 + ScanRefer/Nr3D 两个数据集,3–5 周能出一份「剪枝在哪些设定下省算力且不掉点、在哪些设定下失效」的分析。",
@@ -355,7 +453,10 @@
       "type": "paper",
       "title": "在 LIBERO 上复现 Anchor-Align 的 VLA 微调,验证「表征锚定」能不能真挡住灾难性遗忘",
       "based_on": [
-        { "title": "Generalizable VLA Finetuning via Representation Anchoring and Language-Action Alignment", "url": "https://arxiv.org/abs/2607.13429" }
+        {
+          "title": "Generalizable VLA Finetuning via Representation Anchoring and Language-Action Alignment",
+          "url": "https://arxiv.org/abs/2607.13429"
+        }
       ],
       "why_now": "行为克隆微调 VLA 会逐步覆盖掉预训练的视觉/语义泛化能力,Anchor-Align 提出用视觉-语言锚定 + 语言-动作对齐两个目标来救。这是仿真环境(LIBERO)可完整复现、真机非必需的机器人工作,正好卡在单人可做的范围里,而且方法刚出、还没人在其他任务套件上验证过泛化。",
       "feasibility": "LIBERO 是纯仿真、1–2 张卡就能跑 VLA 的 LoRA/轻量微调,不需要真机集群。挑一个开源小 VLA 骨干,4–6 周能复现主结果并做一组遗忘/泛化的对照实验。",
