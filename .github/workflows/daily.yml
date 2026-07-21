@@ -65,6 +65,22 @@ jobs:
           missing = [k for k in ("date", "editor_note", "math_note") if k not in d]
           if missing:
               sys.exit(f"::error::{f} 缺少必需字段: {missing}")
+
+          # 可视化 viz 只做「软校验」:形状不对只告警不失败——页面本就会优雅回落,
+          # 一块图的问题不该拖垮整期发布。
+          COMPONENTS = {"cobweb", "fourier", "gradient", "vectorfield", "riemann"}
+          viz = (d.get("math_note") or {}).get("viz")
+          if viz:
+              t = viz.get("type")
+              if t == "custom":
+                  if not (viz.get("html") and viz.get("script")):
+                      print("::warning::math_note.viz 为 custom 但缺 html 或 script")
+              elif t in COMPONENTS:
+                  if not isinstance(viz.get("params"), dict):
+                      print(f"::warning::math_note.viz 组件 {t} 缺 params 字典")
+              else:
+                  print(f"::warning::math_note.viz.type 未知: {t!r}(可用: {sorted(COMPONENTS)} 或 custom)")
+
           print(f"✓ 当日文件已生成并校验通过: {f}")
           PY
 
