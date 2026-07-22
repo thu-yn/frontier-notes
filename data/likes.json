@@ -1,6 +1,15 @@
 {
   "items": [
     {
+      "id": "2026-07-22:papers:8f9df5a82d",
+      "date": "2026-07-22",
+      "section": "papers",
+      "domain": "embodied",
+      "title": "Open-AoE:两千小时第一视角操作数据集和配套工具链",
+      "url": "https://arxiv.org/abs/2607.14183",
+      "liked_at": "2026-07-22T01:49:05.203Z"
+    },
+    {
       "id": "2026-07-22:papers:a2de5c7bed",
       "date": "2026-07-22",
       "section": "papers",
