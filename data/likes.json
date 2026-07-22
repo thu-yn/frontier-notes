@@ -1,6 +1,15 @@
 {
   "items": [
     {
+      "id": "2026-07-22:papers:a2de5c7bed",
+      "date": "2026-07-22",
+      "section": "papers",
+      "domain": "embodied",
+      "title": "RynnBrain 1.1:更能打的具身基座模型",
+      "url": "https://arxiv.org/abs/2607.17977",
+      "liked_at": "2026-07-22T01:48:58.345Z"
+    },
+    {
       "id": "2026-07-17:repos:dd6a9d14a0",
       "date": "2026-07-17",
       "section": "repos",
