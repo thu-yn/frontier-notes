@@ -1,6 +1,15 @@
 {
   "items": [
     {
+      "id": "2026-07-23:papers:a81c94f16b",
+      "date": "2026-07-23",
+      "section": "papers",
+      "domain": "ai",
+      "title": "ABot-World-0：单张桌面 GPU 上的无限交互世界推演",
+      "url": "https://arxiv.org/abs/2607.19191",
+      "liked_at": "2026-07-23T06:33:44.618Z"
+    },
+    {
       "id": "2026-07-22:papers:8f9df5a82d",
       "date": "2026-07-22",
       "section": "papers",
