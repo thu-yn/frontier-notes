@@ -1,6 +1,15 @@
 {
   "items": [
     {
+      "id": "2026-07-23:papers:8f9df5a82d",
+      "date": "2026-07-23",
+      "section": "papers",
+      "domain": "embodied",
+      "title": "Open-AoE：面向具身学习的开放第一视角操作数据集与工具链",
+      "url": "https://arxiv.org/abs/2607.14183",
+      "liked_at": "2026-07-23T06:33:55.487Z"
+    },
+    {
       "id": "2026-07-23:papers:a81c94f16b",
       "date": "2026-07-23",
       "section": "papers",
