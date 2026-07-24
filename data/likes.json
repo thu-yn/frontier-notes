@@ -1,6 +1,15 @@
 {
   "items": [
     {
+      "id": "2026-07-24:repos:2955e31aa2",
+      "date": "2026-07-24",
+      "section": "repos",
+      "domain": "embodied",
+      "title": "earthtojake/text-to-cad",
+      "url": "https://github.com/earthtojake/text-to-cad",
+      "liked_at": "2026-07-24T03:36:37.875Z"
+    },
+    {
       "id": "2026-07-23:papers:8f9df5a82d",
       "date": "2026-07-23",
       "section": "papers",
