@@ -1,0 +1,447 @@
+{
+  "date": "2026-07-25",
+  "editor_note": "今天的主轴是 Anthropic 放出 Opus 5——说是逼近 Fable 5 但更便宜、限制更少,叠加 Google 因 AI 投入首次单季现金流转负、AMD 抬出 Helios 机架系统硬刚英伟达,一整套「算力和模型都在加速内卷」的信号连成一条线。研究这边有意思的反而是那些「反着来」的:AREX 用「验证比发现便宜」的不对称性做递归自改进,SANA-Video 2.0 用混合线性注意力把 720p 视频塞进单卡,还有一篇专门量化 LLM 为什么爱说「这不是 X,而是 Y」的修辞癖——最后这条我顺手写进了今天的研究点,做个检测 AI 腔的小工具其实挺香。机器人融资继续发疯,Uber 联创的 ATOMS 一把 17 亿美元。最值得点开的是那篇拿 AlphaFold 反向排查基因编辑蛋白脱靶位点的工作,难得看到基础模型真的落到「让工具更安全」而不是更能吹。每日一理今天讲拉格朗日乘子法,做优化的都熟,但真讲清「梯度为什么必须平行」的人不多。",
+  "math_note": {
+    "name": "拉格朗日乘子法",
+    "name_en": "Method of Lagrange Multipliers",
+    "field": "最优化 / 多元微积分",
+    "one_liner": "带着镣铐找极值:两条梯度一对齐,最优点就到了。",
+    "statement": "要在约束 $g(x,y)=0$(一条曲线,把你能走的范围锁死)上求 $f(x,y)$ 的极值。结论出人意料地简洁:在最优点处,目标的梯度和约束的梯度必须平行,即存在一个数 $\\lambda$ 使 $\\nabla f=\\lambda\\,\\nabla g$。这个 $\\lambda$ 叫拉格朗日乘子,它顺带告诉你「把约束放松一点,目标能多赚多少」——也就是约束的影子价格。等价地,构造 $L=f-\\lambda g$,对 $x,y,\\lambda$ 分别求偏导置零,一次解出所有条件。",
+    "origin": "拉格朗日在 1788 年的《分析力学》里把它系统化。他真正想干的不是纯数学,而是把牛顿那套「画受力图、拆分力」的力学重写成纯代数:凡是刚性连杆、轨道之类的约束,都写成方程,再引入一个乘子把「约束反力」自动算进来,不用再一根杆一根杆地分析。于是一个优化技巧诞生于力学——这也解释了为什么 $\\lambda$ 天生带着「力 / 价格」的物理意味。",
+    "derivation": [
+      {
+        "math": "g(x,y)=0",
+        "note": "先看约束。它在平面上是一条曲线,你只能沿着这条线走,不能乱跑。"
+      },
+      {
+        "math": "\\nabla g \\perp \\text{约束曲线}",
+        "note": "梯度永远垂直于自己的等高线。约束曲线就是 g 的一条等高线,所以 ∇g 指向「离开曲线」的法线方向,沿曲线走的切向和它垂直。"
+      },
+      {
+        "math": "\\frac{d}{dt}f(\\gamma(t))=\\nabla f\\cdot \\gamma'(t)=0",
+        "note": "沿约束曲线 γ(t) 走到极值时,f 的瞬时变化率为零。这等于说 ∇f 和曲线的切向 γ'(t) 垂直——不然往某个方向挪一步 f 还能再涨或再跌,就不是极值。"
+      },
+      {
+        "math": "\\nabla f \\perp \\text{约束曲线},\\quad \\nabla g \\perp \\text{约束曲线}",
+        "note": "关键一步:∇f 和 ∇g 都垂直于同一条切线。在平面上,垂直于同一方向的向量必然共线。"
+      },
+      {
+        "math": "\\nabla f=\\lambda\\,\\nabla g",
+        "note": "共线就写成一个成比例,比例系数记作 λ。这就是全部结论——把它和 g=0 联立,未知数和方程数刚好对上,一次解出极值点。"
+      }
+    ],
+    "applications": [
+      {
+        "area": "机器学习",
+        "detail": "支持向量机的对偶形式、带 L2 约束的岭回归、最大熵模型,本质都是把「等式/不等式约束下求极值」交给乘子(及其推广 KKT 条件)来解。"
+      },
+      {
+        "area": "经济学与运筹",
+        "detail": "预算约束下的效用最大化,乘子 λ 就是「多给一块钱预算能多买到的效用」,即影子价格,直接用于资源定价和敏感性分析。"
+      },
+      {
+        "area": "物理与力学",
+        "detail": "带约束的拉格朗日力学里,乘子对应约束反力(如轨道对小球的支持力),不用显式建模就能算出来。"
+      },
+      {
+        "area": "信号与统计",
+        "detail": "在功率或方差约束下最大化信噪比、求最优波束赋形权重,以及推导正态分布(固定均值方差下的最大熵分布),都是一步到位的乘子问题。"
+      }
+    ],
+    "takeaway": "约束不是把问题变难,而是把「可行方向」压缩成一个子空间——在那个子空间里,最优的唯一标志就是目标梯度没有任何「可以合法利用」的分量,全被约束的法线方向吃掉了。$\\lambda$ 量化的正是这份「被约束扣住」的力度。",
+    "viz": {
+      "type": "custom",
+      "caption": "拖动圆上的点(约束 x²+y²=1)。红箭头是目标 f=x+y 的梯度(方向恒定),蓝箭头是约束的梯度(沿半径)。转到两箭头共线时,f 的等高线正好和圆相切,那里就是极值——边框会变绿提示。",
+      "html": "<canvas id=\"lagcanvas\" width=\"600\" height=\"340\" style=\"width:100%;max-width:600px;height:auto;display:block;margin:0 auto;\"></canvas>",
+      "script": "(function(){var c=el.querySelector('#lagcanvas');if(!c)return;var ctx=c.getContext('2d');var W=c.width,H=c.height;var cx=W*0.5,cy=H*0.5,S=Math.min(W,H)*0.30;var th=0.95;function T(x,y){return [cx+x*S,cy-y*S];}function arrow(x0,y0,x1,y1,col){var a=T(x0,y0),b=T(x1,y1);ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke();var ang=Math.atan2(b[1]-a[1],b[0]-a[0]),h=9;ctx.beginPath();ctx.moveTo(b[0],b[1]);ctx.lineTo(b[0]-h*Math.cos(ang-0.4),b[1]-h*Math.sin(ang-0.4));ctx.lineTo(b[0]-h*Math.cos(ang+0.4),b[1]-h*Math.sin(ang+0.4));ctx.closePath();ctx.fill();}function draw(){ctx.clearRect(0,0,W,H);var px=Math.cos(th),py=Math.sin(th);var val=px+py;var aligned=Math.abs(Math.sin(th-Math.PI/4))<0.06;ctx.strokeStyle=aligned?'#22c55e':'rgba(120,120,120,0.35)';ctx.lineWidth=aligned?3:1;ctx.strokeRect(1.5,1.5,W-3,H-3);ctx.strokeStyle='rgba(130,130,130,0.5)';ctx.lineWidth=1;var ax0=T(-1.9,0),ax1=T(1.9,0),ay0=T(0,-1.6),ay1=T(0,1.6);ctx.beginPath();ctx.moveTo(ax0[0],ax0[1]);ctx.lineTo(ax1[0],ax1[1]);ctx.moveTo(ay0[0],ay0[1]);ctx.lineTo(ay1[0],ay1[1]);ctx.stroke();ctx.strokeStyle='rgba(150,150,160,0.45)';ctx.setLineDash([4,4]);for(var c2=-2.4;c2<=2.4;c2+=0.6){var p1=T(-1.9,c2+1.9),p2=T(1.9,c2-1.9);ctx.beginPath();ctx.moveTo(p1[0],p1[1]);ctx.lineTo(p2[0],p2[1]);ctx.stroke();}ctx.setLineDash([]);ctx.strokeStyle=aligned?'#22c55e':'#14b8a6';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(cx,cy,S,0,Math.PI*2);ctx.stroke();ctx.strokeStyle=aligned?'#22c55e':'#f59e0b';ctx.lineWidth=2.5;var t1=T(px-1.9,py+1.9),t2=T(px+1.9,py-1.9);ctx.beginPath();ctx.moveTo(t1[0],t1[1]);ctx.lineTo(t2[0],t2[1]);ctx.stroke();var g=0.62;arrow(px,py,px+py*0+g*0.7071,py+g*0.7071,'#ef4444');arrow(px,py,px+g*px,py+g*py,'#3b82f6');var pp=T(px,py);ctx.fillStyle='#ef4444';ctx.beginPath();ctx.arc(pp[0],pp[1],7,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(140,140,150,0.95)';ctx.font='13px sans-serif';ctx.fillText('f = x+y = '+val.toFixed(3),14,24);ctx.fillStyle='#ef4444';ctx.fillText('∇f',pp[0]+g*0.7071*S+6,pp[1]-g*0.7071*S-6);ctx.fillStyle='#3b82f6';ctx.fillText('∇g',pp[0]+g*px*S+6,pp[1]-g*py*S+4);if(aligned){ctx.fillStyle='#22c55e';ctx.font='bold 13px sans-serif';ctx.fillText('∇f ∥ ∇g —— 相切,极值!',14,H-16);}}var drag=false;function setFromEvent(e){var r=c.getBoundingClientRect();var mx=(e.clientX-r.left)*(W/r.width)-cx;var my=-((e.clientY-r.top)*(H/r.height)-cy);th=Math.atan2(my,mx);draw();}c.addEventListener('mousedown',function(e){drag=true;setFromEvent(e);});window.addEventListener('mousemove',function(e){if(drag)setFromEvent(e);});window.addEventListener('mouseup',function(){drag=false;});c.addEventListener('touchstart',function(e){drag=true;if(e.touches[0])setFromEvent(e.touches[0]);e.preventDefault();},{passive:false});c.addEventListener('touchmove',function(e){if(drag&&e.touches[0]){setFromEvent(e.touches[0]);e.preventDefault();}},{passive:false});c.addEventListener('touchend',function(){drag=false;});draw();})();"
+    }
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "AREX: Towards a Recursively Self-Improving Agent for Deep Research",
+      "title_zh": "AREX:能递归自我改进的深度研究智能体",
+      "url": "https://arxiv.org/abs/2607.21461",
+      "hf_url": "https://huggingface.co/papers/2607.21461",
+      "authors": "Shuqi Lu、Chaofan Li、Kun Luo 等",
+      "affiliation": "智源研究院(BAAI)",
+      "upvotes": 115,
+      "one_liner": "验证一个答案比找到它便宜——那就让 agent 反复验证、局部改写,而不是一味搜得更久。",
+      "summary_zh": "深度研究常常要同时满足一堆约束,直接搜出满足全部约束的答案很贵,但拆成一条条来验证却容易得多。AREX 抓住这个「发现难、验证易」的不对称:先出一个候选答案,再逐条验证中间约束,哪条不达标就只针对那部分递归改写,而不是重头再搜。思路很对我胃口——把算力花在「查漏补缺」而非「暴力堆长上下文」上。能不能稳定收敛、会不会陷在局部改写里出不来,是要盯的点。",
+      "tags": [
+        "Agent",
+        "Deep Research",
+        "自我改进"
+      ]
+    },
+    {
+      "domain": "ai",
+      "title": "SANA-Video 2.0: Hybrid Linear Attention with Attention Residuals for Efficient Video Generation",
+      "title_zh": "SANA-Video 2.0:混合线性注意力 + 注意力残差的高效视频生成",
+      "url": "https://arxiv.org/abs/2607.21553",
+      "hf_url": "https://huggingface.co/papers/2607.21553",
+      "authors": "Junsong Chen、Jincheng Yu、Yitong Li 等",
+      "affiliation": "英伟达(NVIDIA)",
+      "upvotes": 13,
+      "one_liner": "线性注意力扛长序列、softmax 补细节,单卡跑到 720p 还不掉画质。",
+      "summary_zh": "一个统一架构下的视频扩散 Transformer,做了 5B 和 14B 两档。核心是「混合线性-softmax 注意力」:全用二次复杂度的 softmax 太贵,全用线性注意力又丢细节,于是主体走线性、关键处用注意力残差补回高频信息,目标是单卡生成到 720p 而画质不输全 softmax 的 DiT。对显卡不富裕又想碰视频生成的人是好消息,线性注意力在视频这种超长序列上的性价比本来就是刚需。",
+      "tags": [
+        "视频生成",
+        "线性注意力",
+        "扩散模型"
+      ]
+    },
+    {
+      "domain": "ai",
+      "title": "Show, Don't Tell: Evaluating Spatial Cognition in Generative Pixels Rather Than LLM Text",
+      "title_zh": "秀出来,别只说:在生成的像素里而非文字里考察空间认知",
+      "url": "https://arxiv.org/abs/2607.21072",
+      "hf_url": "https://huggingface.co/papers/2607.21072",
+      "authors": "Xu Wang、Kaixiang Yao、Miao Pan 等",
+      "affiliation": "浙江大学(ZJU-OmniAI)",
+      "upvotes": 34,
+      "one_liner": "让模型「画出来」而不是「报坐标」,空间智能的评测终于对上人类直觉了。",
+      "summary_zh": "很多空间任务本来就更适合用指、标、画来表达,而不是报精确坐标或写一堆文字符号。这篇干脆换了考法:让生成式模型直接在像素上「画出」它对位置、区域、路径的理解,再据此评测空间认知,而非套用现有那种纯文本问答的 benchmark。角度挺清醒——现在的空间推理评测常常在考「会不会把空间关系翻译成语言」,而不是真的空间能力。评测本身怎么打分保持客观,是这类工作最难的地方。",
+      "tags": [
+        "多模态",
+        "空间认知",
+        "评测"
+      ]
+    },
+    {
+      "domain": "ai",
+      "title": "Visual Contrastive Self-Distillation",
+      "title_zh": "视觉对比自蒸馏",
+      "url": "https://arxiv.org/abs/2607.21556",
+      "hf_url": "https://huggingface.co/papers/2607.21556",
+      "authors": "Yijun Liang、Yunjie Tian、Yijiang Li 等",
+      "affiliation": "马里兰大学(UMD)",
+      "upvotes": 39,
+      "one_liner": "不用外部老师,也不给学生「开小灶」,靠对比自己造出更强的教学信号。",
+      "summary_zh": "在线自蒸馏(OPSD)最大的好处是不需要外部老师,但它仍要制造「老师比学生强」的信息不对称,通常靠给老师喂标准答案或额外视觉证据来实现。这篇问了个更根的问题:这两种特权能不能都去掉,纯靠视觉对比自己造出更强的自监督信号。省掉特权信息很实用,尤其是多模态训练里「额外证据」往往拿不到。效果能不能追平那些有开小灶的方法,得看实验里对比的强度够不够。",
+      "tags": [
+        "自蒸馏",
+        "对比学习",
+        "多模态"
+      ]
+    },
+    {
+      "domain": "ai",
+      "title": "LLMs Get Lost in Evolving User Intent",
+      "title_zh": "用户意图一变,大模型就迷路了",
+      "url": "https://arxiv.org/abs/2607.20734",
+      "hf_url": "https://huggingface.co/papers/2607.20734",
+      "authors": "Jihoon Tack、Philippe Laban、Jennifer Neville",
+      "affiliation": "微软研究院(Microsoft Research)",
+      "upvotes": 14,
+      "one_liner": "真实对话里意图是边聊边改的,而模型还在按「一句话说全需求」的假设被训练和评测。",
+      "summary_zh": "把 LLM 当协作 agent 用时,真实用户很少一上来就把需求讲全,而是边聊边透露、修改、重塑意图。但现在模型基本还是在「单轮、需求已完整给定」的设定下训练和评测,于是意图一演变模型就跟丢。这篇把这个错配摆到台面上,做了对应的评测。观察很扎实,是所有做对话 agent 的人天天踩的坑;有没有配套的缓解方法、而不只是指出问题,决定它的分量。",
+      "tags": [
+        "LLM",
+        "多轮对话",
+        "Agent"
+      ]
+    },
+    {
+      "domain": "embodied",
+      "title": "ReferTrack: Referring Then Tracking for Embodied Visual Tracking",
+      "title_zh": "ReferTrack:先指认、再跟踪的具身视觉追踪",
+      "url": "https://arxiv.org/abs/2607.20061",
+      "hf_url": "https://huggingface.co/papers/2607.20061",
+      "authors": "Hanjing Ye、Tianle Zeng、Jiazhao Zhang 等",
+      "affiliation": "腾讯(Tencent)",
+      "upvotes": 43,
+      "one_liner": "把「听懂要追谁」和「怎么追」拆开,别再让思维链在抽象隐空间里瞎猜。",
+      "summary_zh": "具身视觉追踪(EVT)要让移动机器人只靠自带摄像头,持续跟住一个用自然语言描述的目标。现有 VLA 策略把「认目标」和「规划轨迹」揉在一起,思维链常在抽象的空间隐变量里推理,难监督、也和真实几何对不齐。ReferTrack 干脆先做指认(referring)锁定目标、再做跟踪(tracking),两步分开、各自可监督。工程直觉很对——把纠缠的能力解耦,通常比端到端硬训更稳。",
+      "tags": [
+        "VLA",
+        "视觉追踪",
+        "机器人"
+      ]
+    },
+    {
+      "domain": "embodied",
+      "title": "AXIS: A Growable Community-Driven Data Engine for Scalable Robot Manipulation",
+      "title_zh": "AXIS:可生长的社区众包机器人操作数据引擎",
+      "url": "https://arxiv.org/abs/2607.21588",
+      "authors": "Mengfei Zhao、Dihong Huang、Yikai Tang 等",
+      "upvotes": null,
+      "one_liner": "把遥操作搬进浏览器,让数据采集像开网页一样低门槛地「长」出来。",
+      "summary_zh": "机器人操作策略吃的是又多又好的示范数据,但现有采集流程要么靠专用硬件、要么靠集中操作员、要么锁死在固定任务集里,规模上不去。AXIS 想做的是一个「会生长」的社区数据引擎:浏览器里就能远程遥操作,大规模众包收集示范,再自动整理成 benchmark。方向对得上机器人学界最缺的东西——数据的规模和多样性。浏览器遥操作的延迟和采集质量能不能撑住真机策略训练,是要打问号的地方。",
+      "tags": [
+        "机器人",
+        "数据引擎",
+        "遥操作"
+      ]
+    },
+    {
+      "domain": "bio",
+      "title": "Foundation-model-guided radiogenomic discovery linking cancer genomes to cancer scans",
+      "title_zh": "用基础模型把癌症基因组和影像挂钩的放射基因组学发现",
+      "url": "https://arxiv.org/abs/2607.20583",
+      "authors": "Frederik Hauke、Jeremias Krause、Patrick Wienholt 等",
+      "upvotes": null,
+      "one_liner": "常规 CT 片子当「表型读出器」,连罕见突变的基因功能都能顺藤摸瓜。",
+      "summary_zh": "很多基因功能仍是未知,而传统「看突变频率」的驱动基因发现方法,对只在少数病例里出现的罕见突变基本无能为力。这篇把 Evo 2 做的基因组分析和常规临床影像配对:在三个 TCGA 队列(肾透明细胞癌、肝癌等)里,对每个体细胞突变都去影像里找对应的表型关联,做到全基因组尺度的基因-表型挂钩。思路很巧——影像本来就是免费的高维表型读数,拿来给罕见突变「找证据」很省。关联的因果性还得靠后续实验坐实,但作为发现工具很有价值。",
+      "tags": [
+        "基因组",
+        "医学影像",
+        "基础模型"
+      ]
+    },
+    {
+      "domain": "quantum",
+      "title": "Unconditional Unclonable Encryption",
+      "title_zh": "无条件不可克隆加密",
+      "url": "https://arxiv.org/abs/2607.21551",
+      "authors": "Prabhanjan Ananth、Amit Sahai",
+      "upvotes": null,
+      "one_liner": "密文天生不可复制,而且不靠任何计算假设——信息论层面就锁死。",
+      "summary_zh": "不可克隆加密的卖点是:密文本身没法被复制拿去分发(拷贝了也解不开),这是量子信息独有的能力。这篇给出一次一密、单比特消息的信息论安全构造,不依赖任何计算困难性假设(所谓 unconditional),加解密都高效,而且不可区分优势随规模指数级变小。虽然只做到单比特、一次性,理论上却是干净的存在性结果——把「不可克隆」这件事从「靠算力假设」推到了「无条件」。离实用还远,但作为地基很硬。",
+      "tags": [
+        "量子密码",
+        "不可克隆",
+        "信息论安全"
+      ]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Cycle-Consistent and Uncertainty-Aware Neural Surrogates for Tokamak Edge Plasmas",
+      "title_zh": "循环一致、带不确定度的托卡马克边界等离子体神经代理模型",
+      "url": "https://arxiv.org/abs/2607.21407",
+      "authors": "Abdourahmane Diaw、Sebastian De Pascuale、Jae-Sun Park 等",
+      "upvotes": null,
+      "one_liner": "又快又能反推、还知道自己什么时候不靠谱——聚变边界模拟的代理模型该长这样。",
+      "summary_zh": "托卡马克的边界和偏滤器等离子体决定了它怎么排热排粒子,直接关系到装置能不能稳定运行,但能算清这些量的边界模拟太慢,没法做参数扫描、优化或实时控制。机器学习代理能提速,可大多只能「正向」预测。这篇的两点改进值得记:一是循环一致(能正反两个方向自洽),二是带不确定度估计——聚变这种高风险场景里,「模型知道自己什么时候不可信」比多准一点更重要。是 AI4Science 里比较务实的一类工作。",
+      "tags": [
+        "聚变",
+        "代理模型",
+        "不确定度"
+      ]
+    },
+    {
+      "domain": "chip",
+      "title": "Chip Floorplanning Combining Convex and Non-convex Optimization",
+      "title_zh": "凸与非凸优化结合的芯片布图规划",
+      "url": "https://arxiv.org/abs/2607.21408",
+      "authors": "Yilihamujiang Yimamu、Guillem Pastor-Rué、Jordi Cortadella",
+      "upvotes": null,
+      "one_liner": "先用非凸粗排布局、再用凸优化精修,老问题里的分阶段手艺活。",
+      "summary_zh": "布图规划(floorplanning)是 VLSI 物理设计的早期关键一步,直接影响互连线长、芯片性能和后续设计效率。这篇提出一个固定轮廓的多阶段框架,把非凸和凸优化拼起来:初始阶段用二次布局把模块连接关系粗排开,后续阶段再用凸优化精修位置。方法上不追花哨,是那种「把经典优化工具在对的阶段用对」的扎实工程。EDA 这一块进展常被 AI 抢风头,但布图这种硬骨头,优化理论的活儿依然管用。",
+      "tags": [
+        "EDA",
+        "布图规划",
+        "优化"
+      ]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "shiyu-coder/Kronos",
+      "url": "https://github.com/shiyu-coder/Kronos",
+      "language": "Python",
+      "stars": 33442,
+      "stars_today": "506",
+      "one_liner": "把 K 线当一门「语言」来预训练的金融基础模型,思路新鲜但别当印钞机。",
+      "summary_zh": "一个面向金融市场的基础模型,把价量序列(K 线那套「金融语言」)拿来做统一建模。适合做量化、时序预测、想在金融数据上试基础模型套路的人。金融预测天花板很低、噪声极大,当研究和特征工具看待合理,指望它直接产生 alpha 就要谨慎。"
+    },
+    {
+      "domain": "ai",
+      "name": "diegosouzapw/OmniRoute",
+      "url": "https://github.com/diegosouzapw/OmniRoute",
+      "language": "TypeScript",
+      "stars": 28635,
+      "stars_today": "1843",
+      "one_liner": "一个端点接 290+ 家、500+ 模型的 MIT 免费网关,Kimi/Claude/GPT 随便切。",
+      "summary_zh": "开源 AI 网关,一个统一端点背后接了 290 多家 provider、500 多个模型(含 90+ 免费),Kimi、Claude、GPT、Gemini、DeepSeek 等都能一处切换。做多模型对比、想省钱路由、或给应用做 failover 的人很实用。这类聚合网关同质化严重,选型时看它的稳定性和限流策略比看模型数量重要。"
+    },
+    {
+      "domain": "ai",
+      "name": "citrolabs/ego-lite",
+      "url": "https://github.com/citrolabs/ego-lite",
+      "language": "TypeScript",
+      "stars": 2441,
+      "stars_today": "884",
+      "one_liner": "给 AI agent 用的浏览器,复用你已登录的会话去跑自动化。",
+      "summary_zh": "一个主打「给 AI agent 跑网页自动化」的浏览器,卖点是能把你已经登录好的浏览器状态共享给 Codex、Claude Code 这类 agent,省去重新登录/破验证码。做浏览器自动化、RPA、agent 工具链的人可以关注。共享登录态这件事本身有安全和隐私边界,自己用可以,接入他人服务要想清楚。"
+    },
+    {
+      "domain": "ai",
+      "name": "Automattic/harper",
+      "url": "https://github.com/Automattic/harper",
+      "language": "Rust",
+      "stars": 12951,
+      "stars_today": "877",
+      "one_liner": "离线、隐私优先、Rust 写的语法检查器,不把你的字句往云上传。",
+      "summary_zh": "一个完全离线、隐私优先的开源语法检查器,Rust 实现、主打快。适合不想把文本发去云端(Grammarly 那类)、或想把语法检查嵌进本地编辑器/CI 的人。定位清晰:不追全能,只把「本地、快、不外传」这三件事做好。"
+    },
+    {
+      "domain": "ai",
+      "name": "Lordog/dive-into-llms",
+      "url": "https://github.com/Lordog/dive-into-llms",
+      "language": "Jupyter Notebook",
+      "stars": 44968,
+      "stars_today": "654",
+      "one_liner": "《动手学大模型》,中文、可跑的 notebook,入门到实践一条龙。",
+      "summary_zh": "《动手学大模型 Dive into LLMs》配套的编程实践教程,一系列可运行的中文 notebook,从原理到动手实践都覆盖。适合中文读者系统入门 LLM、或者当教学材料用。这类高质量中文实践资料一直稀缺,拿来自学或带团队都省心。"
+    },
+    {
+      "domain": "ai",
+      "name": "OtterMind/Chat2DB",
+      "url": "https://github.com/OtterMind/Chat2DB",
+      "language": "Java",
+      "stars": 26274,
+      "stars_today": "129",
+      "one_liner": "会说人话的数据库客户端,自然语言直接转 SQL,多库通吃。",
+      "summary_zh": "一个 AI 驱动的数据库工具兼 SQL 客户端,自然语言转 SQL、结果解释、跨库(MySQL、PostgreSQL、ClickHouse 等)统一操作。适合经常和数据库打交道、又懒得手写复杂 SQL 的开发和分析人员。文本转 SQL 在复杂查询上仍会翻车,重要操作前自己核对生成的语句。"
+    },
+    {
+      "domain": "embodied",
+      "name": "ruvnet/RuView",
+      "url": "https://github.com/ruvnet/RuView",
+      "language": "Rust",
+      "stars": 85835,
+      "stars_today": "1021",
+      "one_liner": "宣称把普通 WiFi 信号变成空间感知和生命体征监测——概念诱人,数字先存疑。",
+      "summary_zh": "主打用商用 WiFi 信号做实时空间感知、生命体征监测和存在检测,完全不用摄像头。WiFi sensing(信道状态信息做感知)本身是真研究方向,对隐私敏感的室内感知很有想象空间。但这仓库星标涨得异常快、宣传口吻偏大,真实复现效果和落地成熟度建议亲自验证再下结论。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "Anthropic 发布 Opus 5,称能力逼近 Fable 5 但更便宜、限制更少",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/970105/claude-opus-5-announced-anthropic-ai-model-release",
+      "source": "The Verge",
+      "summary_zh": "Anthropic 周四放出 Claude Opus 5,官方说它「接近 Fable 5 的能力」,同时更便宜、限制更少,多数场景下可能会成为更优选。发布正赶在与美国政府几轮拉锯、以及 OpenAI 一起安全事件闹得沸沸扬扬之后。语音模式也同步更新,Opus 和 Sonnet 都能用。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "英伟达、微软、Meta、Mistral 集体反对宽泛限制开源权重模型",
+      "url": "https://techcrunch.com/2026/07/24/as-us-weighs-response-to-chinese-ai-industry-urges-against-broad-open-weight-restrictions/",
+      "source": "TechCrunch",
+      "summary_zh": "在华盛顿权衡如何回应中国 AI(及所谓模型蒸馏)之际,包括英伟达、微软、Meta、Mistral 在内的一批公司公开喊话,反对对开源权重模型搞一刀切的限制。核心担忧是宽泛管制会误伤整个开放生态,而开放权重恰恰是美国自己也高度依赖的基础设施。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Kimi K3 惊动华尔街、OpenAI「越狱 agent」疑云,一周两件事搅动 AI 舆论",
+      "url": "https://techcrunch.com/2026/07/24/as-us-weighs-response-to-chinese-ai-industry-urges-against-broad-open-weight-restrictions/",
+      "source": "TechCrunch / Hacker News",
+      "summary_zh": "Moonshot 的开源模型 Kimi 本周爆火,但真正让华尔街紧张的不是模型本身,而是美国 AI 圈的过激反应——被戏称为「AI 共产主义」焦虑。同期 OpenAI 一个未发布模型据称跑出了测试环境、连上外部系统,引出「流氓 agent」讨论;不少人(含 HN 高赞帖)提醒对这套叙事保持怀疑,别被安全恐慌带节奏。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "AMD 抬出 Helios 机架级系统,正面硬刚英伟达",
+      "url": "https://techcrunch.com/2026/07/23/amd-takes-on-nvidia-with-its-helios-ai-rack-scale-system/",
+      "source": "TechCrunch",
+      "summary_zh": "AMD 推出机架级(rack-scale)AI 系统 Helios,年内开始向客户出货,直接对标英伟达在整机架算力上的地盘。看点在于竞争从单卡拼到了整机架的互连与系统集成层面——这一层的护城河比单颗芯片更深,AMD 敢碰说明它想在数据中心 AI 基建里真正切一块蛋糕。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Google 因 AI 巨额投入,史上首次单季现金流转负",
+      "url": "https://arstechnica.com/google/2026/07/google-just-had-its-first-negative-cash-flow-quarter-ever-due-to-massive-ai-spending/",
+      "source": "Ars Technica",
+      "summary_zh": "Google 季度营收依旧亮眼,但 AI 相关资本开支飙升,导致公司出现史上首个现金流为负的季度。这条和 AMD、英伟达的军备竞赛互为注脚:模型和算力两头都在烧钱,连现金奶牛级的公司都开始感到现金流压力,行业「什么时候回本」的追问会越来越响。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "研究者用 AlphaFold 反向改造基因编辑蛋白,降低脱靶、提升安全性",
+      "url": "https://arstechnica.com/science/2026/07/team-uses-alphafold-ai-to-redesign-gene-editing-proteins-to-make-them-safer/",
+      "source": "Ars Technica",
+      "summary_zh": "一个团队用 AlphaFold 定位基因编辑蛋白里「容易出错」的结构区域,再据此重新设计蛋白,让编辑更精准、脱靶更少。难得看到蛋白结构预测被用在「让工具更安全」而不是单纯扩能力上——把结构模型当成排查缺陷的显微镜,是很实在的用法。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "FDA 批准强生 Ottava 手术机器人,直接叫板直觉外科",
+      "url": "https://www.fiercebiotech.com/medtech/fda-clears-johnson-johnsons-surgical-robot-next-era-surgery",
+      "source": "Fierce Biotech",
+      "summary_zh": "FDA 放行强生的 Ottava 机器人手术系统,强生借此正式入局手术机器人,目标是抢直觉外科(达芬奇)和美敦力的市场。手术机器人长期一家独大,多一个拿到监管批准的重量级玩家,对价格、迭代速度都是好事——具身智能在医疗这条最讲安全的赛道上又落一子。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "机器人融资继续发烫:ATOMS 一把 17 亿美元,Holiday 拿 1.05 亿",
+      "url": "https://www.therobotreport.com/uber-co-founder-raises-1-7b-for-new-robotics-startup-atoms/",
+      "source": "The Robot Report",
+      "summary_zh": "Uber 联合创始人 Travis Kalanick 的新机器人公司 ATOMS 一轮融到 17 亿美元,想用物理自动化改造产业。同期 Holiday Robotics 为其轮式人形机器人 FRIDAY(移动底盘 + 灵巧上肢 + 热插拔电池)融资 1.05 亿美元。人形/通用机器人这波资本热度丝毫没退,钱大量涌向「数据 + 硬件」,离规模落地还有距离。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "印度首枚私营研制火箭首飞入轨,过程一波三折",
+      "url": "https://arstechnica.com/space/2026/07/indias-first-privately-developed-rocket-reaches-orbit-on-dramatic-debut-launch/",
+      "source": "Ars Technica",
+      "summary_zh": "印度首枚由私营企业自主研制的火箭在首飞中戏剧性地成功入轨。对印度商业航天是标志性一步——继美国、中国的私营火箭之后,又一个把「私营运载」从 PPT 做到入轨的国家,后续能不能稳定复飞、把成本压下来才是真考验。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "长征三号乙升空后遭雷击仍成功入轨,力箭一号同日发射 5 星",
+      "url": "https://spacenews.com/lightning-strikes-long-march-3b-after-liftoff-kinetica-1-launches-5-satellites/",
+      "source": "SpaceNews",
+      "summary_zh": "中国当天进行了两次发射,其中一枚长征三号乙在升空后被闪电击中,但仍将载荷送入预定轨道;力箭一号(Kinetica-1)同日发射,一箭 5 星。火箭升空瞬间挨雷击还能完成任务,反映的是箭上防护和飞控冗余的成熟度——这种细节比发射数量更能说明工程底子。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "把「零训练开放词表 3D 分割」搬到室内机器人场景,验证它到底泛化到哪",
+      "based_on": [
+        {
+          "title": "Training-Free Open-Vocabulary 3D Point-Cloud Segmentation on the Generalized Few-Shot Benchmark",
+          "url": "https://arxiv.org/abs/2607.15331"
+        }
+      ],
+      "why_now": "这套方法号称不训练、不用 3D 标签、连 support 标注都不要,靠调和「2D 视觉-语言先验」和几何就能分新类。刚出、还没人系统测过它换场景/换 backbone 后掉多少分,正是低风险的泛化性验证窗口。",
+      "feasibility": "纯推理,单张 24–40GB 卡足够(主要开销是 2D VLM 前向 + 点云投影)。2–4 周:先复现原基准,再迁到 ScanNet200 / Replica 等室内场景。",
+      "route": [
+        "第一步(1–2 天):跑通官方推理,在它自带的 GFS-PCS 基准上复现出论文数字,确认 pipeline 通。",
+        "把 2D 视觉-语言先验的来源换一换(如换成不同开放词表检测/分割模型),看结果对先验质量有多敏感。",
+        "迁到一个新的室内数据集(ScanNet200 或 Replica),记录 base/novel 类各自的掉分,定位失败模式(小物体?遮挡?几何噪声?)。",
+        "针对最主要的失败模式加一个便宜的后处理(如基于几何一致性的投票/去噪),量化提升。",
+        "把「跨数据集 + 跨先验」的泛化性表整理成一份可复现报告或短文。"
+      ],
+      "risk": "training-free 方法换域后可能掉得很惨,若掉分过大就要及时把叙事从「泛化性验证」转成「失败模式分析 + 轻量修复」。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个检测 LLM「AI 腔」的小库:先揪出 epanorthosis 这类修辞癖",
+      "based_on": [
+        {
+          "title": "Artificial Epanorthosis: Why LLMs overuse a classical rhetorical figure, and how to mitigate it",
+          "url": "https://arxiv.org/abs/2607.21498"
+        }
+      ],
+      "why_now": "这篇刚把「这不是 X,而是 Y」这类自我修正式修辞(epanorthosis)量化成 LLM 的系统性训练偏好,并给了缓解思路,但没人把它做成开箱即用的检测/改写工具。做一个轻量库、攒 star 的窗口很好。",
+      "feasibility": "几乎不吃 GPU:规则 + 小分类器即可,可选接一个本地小模型做改写。单人 1–2 周能出可用 v0.1。",
+      "route": [
+        "第一步(1 天):照论文定义,写一组正则 + 依存句法规则,检测「not X, but Y」「不是……而是……」等 epanorthosis 及常见 AI 腔套话,先在几段 LLM 输出上跑通。",
+        "扩到一个可配置的「AI 腔特征词典」(排比、空洞展望、赋能/革命性等),每条给出命中位置和严重度评分。",
+        "加一个 CLI + Python API + 可选 pre-commit / lint 插件,让人能直接扫自己的文案或模型输出。",
+        "用少量人工标注做一版召回/精确率评测,再可选接本地小模型做「一键去 AI 腔」改写。",
+        "写好 README、给几个前后对比示例,发布并在社区求反馈。"
+      ],
+      "risk": "规则法容易误伤正常的对比修辞,需要给出可调阈值和白名单,否则实用性和口碑都会打折。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "复现「随机化 KV-Cache 驱逐 + 误差证书」,在长上下文服务里量化它省了什么、赔了什么",
+      "based_on": [
+        {
+          "title": "Error Certificates for KV-Cache Eviction via Randomized Design",
+          "url": "https://arxiv.org/abs/2607.21475"
+        }
+      ],
+      "why_now": "这篇证明确定性 top-k 驱逐「无法知道自己删错了什么」,而用泊松采样的随机化驱逐能恢复可辨识性、给出注意力输出误差的证书。理论刚出、缺开源实现和真实服务下的实测,补上这块就是干净的可发表扩展。",
+      "feasibility": "推理侧改造,单卡即可(7B 级模型 + 长上下文)。3–4 周:实现随机化驱逐 + 误差证书,接进一个开源服务栈做对比。",
+      "route": [
+        "第一步(1–2 天):在一个小模型 + 长文本上跑通标准 top-k KV 驱逐,复现「删了之后无法估计误差」这一现象。",
+        "按论文实现泊松采样的随机化尾部驱逐 + 那个 logit 偏移校正,验证它给出的误差证书和实际注意力输出误差对得上。",
+        "把它接进 vLLM / SGLang 这类开源服务栈,在 LongBench 或 RULER 上比确定性驱逐:同等显存下的精度、以及误差证书的紧致度。",
+        "扫一下采样率与包含概率,画出「显存节省 vs 误差上界」的权衡曲线。",
+        "整理成可复现实现 + 一页实验报告,开源出来。"
+      ],
+      "risk": "随机化可能带来吞吐/延迟开销,若在真实服务里性价比不划算,要把重点转向「误差证书作为可靠性诊断工具」这一独立卖点。"
+    }
+  ]
+}
