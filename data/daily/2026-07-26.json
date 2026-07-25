@@ -1,0 +1,354 @@
+{
+  "date": "2026-07-26",
+  "editor_note": "今天最有意思的一条暗线是「国产算力在软件上补课」:SLAI 把 DeepSeek-V4 全参后训练搬到昇腾 SuperPOD,把 MFU 从开源基线硬拉到 34%,同一天芯片版块还有人在 RISC-V 单核上做 float16 端侧训练——两头都在证明,硬件不是唯一瓶颈,把训练/推理的每一层榨干同样值钱。Agent 这边 NVIDIA 的 NOOA 想把「智能体」还原成一个普通 Python 对象,方向我挺喜欢:能测、能 trace、能重构的 agent 才是工程,而不是一堆缠在一起的 prompt。评测则集体转向「机器当读者」——文档集怎么排、模型会不会主动看,单看一条准确率已经不够了。今天新能源版块的 arXiv basically 全是凝聚态物理,没挑到真正的电池/聚变工程活儿,就没硬凑。每日一理换皮卡-林德洛夫存在唯一性定理,正好接上前几天的巴拿赫不动点——那条抽象定理今天在微分方程里兑现成真金白银。",
+  "math_note": {
+    "name": "皮卡-林德洛夫存在唯一性定理",
+    "name_en": "Picard–Lindelöf Existence–Uniqueness Theorem",
+    "field": "常微分方程 / 分析",
+    "one_liner": "只要斜率场不太「野」(Lipschitz),过每一点就只有一条命运线——未来被此刻唯一决定。",
+    "statement": "考虑初值问题 $y'(t)=f(t,y)$、$y(t_0)=y_0$,这里 $y'$ 是变化率、$f$ 是给定的「斜率场」。定理说:只要 $f$ 关于 $y$ 满足 Lipschitz 条件 $|f(t,u)-f(t,v)|\\le L\\,|u-v|$(意思是 $f$ 随 $y$ 变化的快慢有个上限 $L$),那么在 $t_0$ 附近的一小段时间里,这个方程**存在且只存在一条**解曲线穿过 $(t_0,y_0)$。换句话说,初值一旦定死,轨迹就唯一确定,不会分岔、也不会凭空多出一条。",
+    "origin": "十九世纪末,法国数学家埃米尔·皮卡(Émile Picard)在 1890 年前后用「逐次逼近法」给微分方程的解落了地,芬兰的林德洛夫(Ernst Lindelöf)随后把条件和证明整理得更干净,两人的名字就并在了一起。它的根其实更早:柯西和 Lipschitz 在十九世纪中叶就在追问——凭什么相信一个微分方程「有解、而且只有一个解」?物理学家默认世界是确定性的(给定此刻状态,未来唯一),这条定理正是给那份信念补上的数学地基。",
+    "derivation": [
+      { "math": "y(t)=y_0+\\int_{t_0}^{t} f\\big(s,y(s)\\big)\\,ds", "note": "第一步不动手算,先换个说法:解微分方程等价于解这个积分方程。好处是把「求导」这件难事,换成了「找一个代进去等于自己的函数」——也就是找不动点。" },
+      { "math": "y_{n+1}(t)=y_0+\\int_{t_0}^{t} f\\big(s,y_n(s)\\big)\\,ds", "note": "皮卡迭代:从最笨的猜测 $y_0(t)\\equiv y_0$ 出发,把它塞进右边积一次得到 $y_1$,再塞进去得 $y_2$……每转一圈都更接近真解。" },
+      { "math": "|f(t,u)-f(t,v)|\\le L\\,|u-v|", "note": "这里用上 Lipschitz 条件:$f$ 对 $y$ 的敏感度被 $L$ 卡住。它保证「输入差一点、输出不会差太多」,是下一步收敛的关键闸门。" },
+      { "math": "\\|y_{n+1}-y_n\\|\\le (L\\,h)\\,\\|y_n-y_{n-1}\\|", "note": "在长度为 $h$ 的小时间窗内估一下两次迭代的差:每迭代一次,误差按 $L h$ 缩小。只要把窗口取得够小让 $Lh<1$,这个映射就是压缩映射。" },
+      { "math": "\\|y_n-y_m\\|\\to 0,\\qquad y_n\\to y^\\ast", "note": "压缩映射把迭代序列越挤越紧(柯西列),它必然收敛到唯一的极限函数 $y^\\ast$——这一步正是巴拿赫不动点定理在「函数空间」里的现场执行。" },
+      { "math": "y^\\ast(t)=y_0+\\int_{t_0}^{t} f\\big(s,y^\\ast(s)\\big)\\,ds", "note": "极限 $y^\\ast$ 满足积分方程,也就是原微分方程的解;而压缩映射的不动点只有一个,所以解唯一。存在与唯一,一次拿下。" }
+    ],
+    "applications": [
+      { "area": "数值仿真 / 物理引擎", "detail": "RK4 这类求解器之所以「算出来是有意义的」,前提是背后有一条唯一的真实轨迹在等着被逼近;斜率场一旦不 Lipschitz(如碰撞、摩擦突变),解可能不唯一,求解器就开始发疯。" },
+      { "area": "Neural ODE / 连续深度模型", "detail": "把网络的前向传播写成一个 ODE,要它良定义(前向反向都稳),就得让右端的神经网络是 Lipschitz 的——这也是今天点云 4D 运动那类「用 Neural ODE 建模连续形变」工作能站得住的理论前提。" },
+      { "area": "控制与机器人", "detail": "给定控制律和初始状态,系统响应唯一确定,才谈得上「可预测、可复现」;这是从仿真调好的策略敢往真机上搬的隐含底气。" },
+      { "area": "动力学建模(生态 / 流行病)", "detail": "SIR 传染病模型、种群方程这些,只有在存在唯一性成立时,「给定初始感染人数就能推演疫情曲线」才不是一句空话。" }
+    ],
+    "takeaway": "它的精髓是把「解方程」翻译成「找不动点」:只要变化率不太剧烈($L$ 有限),未来就被此刻唯一钉死。反过来也提醒你——混沌不是因为解不唯一,而是解对初值极度敏感,$L$ 大到指数放大误差,确定性和不可预测其实可以同时成立。",
+    "viz": {
+      "type": "vectorfield",
+      "caption": "背景箭头是斜率场 $f(t,y)$,拖动那个白点(初值),会看到从它出发只长出**一条**积分曲线;把点拖到任何位置,轨迹都唯一确定、彼此永不相交——这就是「存在且唯一」在动。",
+      "params": { "fx": "y", "fy": "-x - 0.2*y", "xmin": -3, "xmax": 3, "ymin": -3, "ymax": 3, "density": 15, "seedX": 2.2, "seedY": 0, "steps": 400, "dt": 0.02 }
+    }
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "SLAI T-Rex: Full-Parameter Post-training of the DeepSeek-V4 Family on Ascend SuperPOD",
+      "title_zh": "SLAI T-Rex:在昇腾 SuperPOD 上对 DeepSeek-V4 家族做全参后训练",
+      "url": "https://arxiv.org/abs/2607.20145",
+      "hf_url": "https://huggingface.co/papers/2607.20145",
+      "authors": "Dongfang Li、Xiaodong Luo、Ruoyu Sun 等",
+      "upvotes": 56,
+      "one_liner": "万亿 MoE 全参后训练搬到昇腾 NPU,MFU 干到 34%、是开源基线的近 3 倍——证明国产算力卡的不只是硬件。",
+      "summary_zh": "大部分 LLM 训练系统是围着 GPU 集群搭的,这份报告偏偏在昇腾 NPU 的 SuperPOD 上,把 DeepSeek-V4 这种万亿参数级 MoE 做完整全参后训练。难点是显存压力大、通信盖不住计算、底层 kernel 跑不满,他们从模型并行、算通信编排到 kernel 三层一起优化,最终把 Model FLOPs 利用率(MFU,衡量算力真正花在有用计算上的比例)拉到 34.22%,比开源基线配方快 2.93 倍还稳。工程味很重,对关心国产算力软件栈能不能撑起大模型的人是难得的一手实践。",
+      "tags": ["MoE", "训练系统", "昇腾NPU"]
+    },
+    {
+      "domain": "ai",
+      "title": "NVIDIA-labs OO Agents: Native Python Object-Oriented Agents",
+      "title_zh": "NOOA:把智能体写成一个原生 Python 对象",
+      "url": "https://arxiv.org/abs/2607.20709",
+      "hf_url": "https://huggingface.co/papers/2607.20709",
+      "authors": "Paul Furgale、Severin Klingler、James Nolan 等",
+      "affiliation": "NVIDIA",
+      "upvotes": 21,
+      "one_liner": "方法是动作、字段是状态、docstring 是 prompt、类型注解是契约——agent 回归成普通对象,能测能 trace 能重构。",
+      "summary_zh": "现在写 agent,逻辑散落在 prompt 模板、工具 schema、回调代码、workflow 图之间,又乱又难维护。NOOA 的主张很直接:一个 agent 就是一个 Python 对象。它的方法就是模型能采取的动作,字段是状态,docstring 是提示词,类型注解是契约;方法体只写个 `...` 的就交给 LLM 循环在运行时补全,写了正常代码的就是确定性 Python。这样 agent 和普通软件用同一套接口,可以测试、追踪、重构、迭代。框架层面我看好这个方向——把 agent 当代码而非咒语来管,才是能长期维护的样子。",
+      "tags": ["Agent", "框架", "工程"]
+    },
+    {
+      "domain": "ai",
+      "title": "K12-KGraph: A Curriculum-Aligned Knowledge Graph for Benchmarking and Training Educational LLMs",
+      "title_zh": "K12-KGraph:对齐课程体系的知识图谱,用来评测和训练教育大模型",
+      "url": "https://arxiv.org/abs/2605.09635",
+      "hf_url": "https://huggingface.co/papers/2605.09635",
+      "authors": "Hao Liang、Qihan Lin、Zhaoyang Han 等",
+      "affiliation": "北京大学",
+      "upvotes": 55,
+      "one_liner": "考模型会不会做题太浅了——这套图谱考它懂不懂「知识点之间怎么搭台阶」。",
+      "summary_zh": "现有教育类评测基本只考模型会不会做题,但没测它是否理解课程知识本身是怎么组织、怎么由浅入深铺开的——作者把这种能力叫「课程认知」,包括先修链条、概念分类、实验与概念的对应、教学顺序、以及图文对照。他们从人教版数理化生教材里抽出一张知识图谱(9 类节点、14 类关系),派生出 2.36 万题的多选基准 K12-Bench,分 Ground/Prereq/Neighbor/Evidence/Locate 五类任务,还配了训练集。切入点挺好:教育 AI 光会答题不够,得知道知识的骨架长什么样。",
+      "tags": ["教育", "知识图谱", "评测"]
+    },
+    {
+      "domain": "ai",
+      "title": "An Exam for Active Observers",
+      "title_zh": "给「主动观察者」出的一场考试",
+      "url": "https://arxiv.org/abs/2607.16165",
+      "hf_url": "https://huggingface.co/papers/2607.16165",
+      "authors": "Jiarui Zhang、Muzi Tao、Shangshang Wang 等",
+      "affiliation": "南加州大学(USC)",
+      "upvotes": 24,
+      "one_liner": "人看东西是「边看边调整视线」的闭环,而多模态模型这门课几乎交白卷:最强的也只做对一成。",
+      "summary_zh": "人的视觉是闭环:目光会被中途冒出来的假设不断牵着重新看,而不是拍一张快照就完事。作者做了 ActiveVision 基准,17 个任务专门逼模型「反复看、主动看」,而不是看一眼给个静态描述。结果前沿多模态模型集体翻车——分数最高的一个(GPT-5.5 开到最高推理档)也只解出 10.6%,还有 11 个任务直接零分。它戳中的是当前 MLLM 一个真实短板:被动看图行,主动探索式地看还差得远。这类明确指出「现有方法在某场景很烂」的基准,最适合拿来当改进靶子。",
+      "tags": ["多模态", "评测", "主动感知"]
+    },
+    {
+      "domain": "ai",
+      "title": "Beyond Relevance-Centric Retrieval: Rubric-Oriented Document Set Selection and Ranking",
+      "title_zh": "别只盯着单篇相关性:面向评分细则的「文档集」筛选与排序",
+      "url": "https://arxiv.org/abs/2607.19747",
+      "hf_url": "https://huggingface.co/papers/2607.19747",
+      "authors": "Kailin Jiang、Lei Liu、Jian Xi 等",
+      "affiliation": "腾讯",
+      "upvotes": 28,
+      "one_liner": "LLM 才是搜索结果的主要读者,可现有评测还在给每篇文档单独打分——冗余、冲突、互补全没考虑。",
+      "summary_zh": "当 LLM 和 agent 成了搜索结果的主要消费者,决定下游生成上限的其实是「整套文档质量」,而不是单篇。可现有评测还停在给每篇独立打分、用 nDCG 一加了事,完全忽略文档之间的冗余、冲突、互补关系。作者提出「评估-诊断-优化」框架和 SetwiseEvalKit 基准(三层九维、约 2.8 万条评分细则),系统测了 12 个 reranker——最好的覆盖率也不到 45%,跨文档协调这一维普遍拉胯。对做 RAG 检索的人是个提醒:该从「排单篇」转向「配一套」了。",
+      "tags": ["RAG", "检索", "评测"]
+    },
+    {
+      "domain": "ai",
+      "title": "Self Gradient Forcing: Native Long Video Extrapolation",
+      "title_zh": "Self Gradient Forcing:让自回归视频扩散原生地往长了外推",
+      "url": "https://arxiv.org/abs/2607.20368",
+      "hf_url": "https://huggingface.co/papers/2607.20368",
+      "authors": "Junhao Zhuang、Shiyi Zhang、Yuxuan Bian 等",
+      "upvotes": 30,
+      "one_liner": "问题出在:早先生成的帧被冻成只读缓存,后面的损失没法回头教它「该往缓存里写什么」。",
+      "summary_zh": "现在的自回归视频扩散大多建在 Self Forcing 上——让模型用自己 rollout 出来的历史(而非真值)做训练,缓解暴露偏差。但作者发现一个「历史上下文梯度断层」:早先生成的帧存进 KV 缓存后就被当成冻结状态,后续帧的损失没法反过来监督「当初那些潜变量该怎么写成对后面更有用的 key/value」。他们的 SGF 用两趟训练补上这段缺失的梯度信号,又不必对整条串行 rollout 做反传。想法挺细,专治长视频越生成越走样的老毛病。",
+      "tags": ["视频生成", "扩散模型", "自回归"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Emergent Compositional Skills in Mixture-of-Experts VLAs",
+      "title_zh": "MoE 视觉-语言-动作模型里自发长出来的组合技能",
+      "url": "https://arxiv.org/abs/2607.20771",
+      "authors": "Shlok Shah、Rhiaan Jhaveri、Tharun Kumar T. K. 等",
+      "one_liner": "不预设任何任务分解,给 VLA 换个 MoE 动作头,专家竟自己学会了当「可复用的低层动作原语」。",
+      "summary_zh": "问题是:能不能不预先规定任务该怎么拆、怎么分层,让机器人策略从示范里端到端学会组合?作者给 VLA 换上一个简化的 MoE(混合专家)动作头——多个「专家」子网络,由路由器决定每步用谁。结果发现学出来的专家被跨任务大量复用,而且各自对应清晰、可解释的低层行为,像是路由器在做高层排序、专家充当可拼装的动作原语,整体性能还和单体基线打平。对做操作策略的人是个便宜信号:组合性也许不必手工设计,换个结构就能自发涌现。",
+      "tags": ["VLA", "MoE", "机器人操作"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Flow-based Phase-space Tomography of Continuous-variable Quantum States",
+      "title_zh": "用流模型做连续变量量子态的相空间层析",
+      "url": "https://arxiv.org/abs/2607.21584",
+      "authors": "Owen Dugan、Rumen Dangovski、Peter Y. Lu 等",
+      "one_liner": "把量子态层析从「截断密度矩阵」换成一张可采样的归一化流,专治高维相空间里的非高斯结构。",
+      "summary_zh": "连续变量量子态层析(从测量数据反推量子态)难在:相空间维度高,非高斯结构解析起来很贵。作者的 QST-Flow 改用流模型(normalizing flow,一种能精确算概率密度的生成网络)来表示实验能测到的相空间准概率分布,而不是用一个截断的密度矩阵。它有两个变体:QST-QFlow 用单个流拟合恒正的 Husimi-$Q$ 函数,QST-WFlow 把会变号的 Wigner 函数写成两个归一化流之差,巧妙地保住准概率归一性还能精确求密度。ML 和量子测量结合得很自然,是「拿生成模型当科学工具」的一个漂亮例子。",
+      "tags": ["量子态层析", "流模型", "连续变量"]
+    },
+    {
+      "domain": "bio",
+      "title": "Antigen-specific Antibody Multi-modal Foundation Model for Functional Antibody Design",
+      "title_zh": "面向功能性抗体设计的「抗原特异」多模态基础模型",
+      "url": "https://arxiv.org/abs/2607.20057",
+      "authors": "Xiaoliang Shi、Zichen Wang、Runze Ma 等",
+      "one_liner": "蛋白语言模型会建单链,却不太会「配对」——抗体设计的关键恰恰在抗体和抗原怎么在表位上贴合。",
+      "summary_zh": "抗体靠精确结合特定抗原来完成免疫识别。现有蛋白语言模型在单链建模上进步不小,但一到「抗原特异」的抗体设计就吃力,因为这里必须显式建模抗体和抗原的配对、尤其是表位(epitope,抗原上被抗体识别的那一小块)层面的贴合。作者的 AAMFM 是个多模态基础模型,把抗体的序列和结构放在抗原语境下学统一表示,还纳入了几何界面和表位信息。切中了抗体设计里最实的一环——不是生成一条好看的链,而是生成一条真能结合目标抗原的链。",
+      "tags": ["抗体设计", "蛋白模型", "多模态"]
+    },
+    {
+      "domain": "chip",
+      "title": "Hardware-Software Co-Design for Float16 On-Device Training on RISC-V Single-Core",
+      "title_zh": "软硬协同:在 RISC-V 单核上做 float16 端侧训练",
+      "url": "https://arxiv.org/abs/2607.21130",
+      "authors": "Benjamin Hubinet、Pierre-Alain Moellic、Olivier Savry 等",
+      "one_liner": "靠标准 RISC-V 的 float16 扩展,把端侧训练的内存占用砍掉约一半,精度几乎不掉。",
+      "summary_zh": "在资源紧巴巴的 RISC-V 单核上做「完整的端侧训练」——不是只推理,而是能在设备上更新权重。作者借用两个标准 RISC-V 扩展(Zfh 标量 float16、Zvfh 向量 float16),搭了套开源框架,把内存占用比 float32 降了约 50%,模型性能几乎不掉;还加了层冻结,方便做迁移学习和微调。工作建在嵌入式训练框架 AIfES 上。对做端侧 / TinyML、想让小设备自己学一点东西的人,是个务实的软硬协同样本。",
+      "tags": ["RISC-V", "端侧训练", "float16"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Graph Neural Network Force Fields (GPTFF-mol) for Organic Molecules from Optimization Trajectories (OpenGEM26)",
+      "title_zh": "从优化轨迹学有机分子力场:OpenGEM26 数据集与 GNN 势",
+      "url": "https://arxiv.org/abs/2607.21369",
+      "authors": "Yifan Huang、Fankai Xie、Jiangnan Zheng 等",
+      "one_liner": "20 万分子、440 万构象,连完整结构优化轨迹和大量非平衡结构都留着——机器学习势最缺的就是这种数据。",
+      "summary_zh": "DFT(密度泛函理论)算分子准但贵,机器学习势是它的高性价比替身,可训练数据往往只有平衡态结构,遇到「半路上」的构象就抓瞎。作者放出 OpenGEM26 数据集:20 万个不同有机分子、440 万构象(H/C/N/O/S/Cl、最多十个重原子),关键是把完整的结构优化轨迹和大量非平衡结构都记了下来,并训了个 GNN 力场 GPTFF-mol。对做分子模拟、材料 / 药物筛选的人,这类带轨迹的开源数据比又一个 benchmark 更有用——它补的是训练分布本身的洞。",
+      "tags": ["机器学习势", "分子模拟", "数据集"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "alibaba/open-code-review",
+      "url": "https://github.com/alibaba/open-code-review",
+      "language": "Go",
+      "stars": 12837,
+      "stars_today": "439",
+      "one_liner": "确定性流水线 + LLM Agent 的混合架构代码审查,行级精确评论,阿里内部大规模跑过。",
+      "summary_zh": "一个开源免费的代码审查工具,走「确定性流水线 + LLM Agent」的混合架构:该用规则硬查的(空指针、线程安全这类)就上内置微调过的规则集,该靠模型理解的再交给 agent,评论能精确落到行级。号称在阿里的规模下实战过。适合想给团队接一套自动 code review、又不想全押在大模型幻觉上的人。",
+      "tags": ["代码审查", "Agent", "DevTools"]
+    },
+    {
+      "domain": "ai",
+      "name": "citrolabs/ego-lite",
+      "url": "https://github.com/citrolabs/ego-lite",
+      "language": "JavaScript",
+      "stars": 3430,
+      "stars_today": "986",
+      "one_liner": "给 AI agent 用的浏览器:共享你已登录的会话状态,又不打扰你自己用。",
+      "summary_zh": "一个专为 AI agent 做 Web 自动化的浏览器,主打把你「已登录的浏览器状态」共享给 Codex、Claude Code 这类 agent,让它们能以你的身份操作网页,同时不干扰你本人正在用的浏览器。宣传是零成本、零配置。适合在搭需要登录态的网页自动化、又被 cookie / 会话隔离折腾过的人。",
+      "tags": ["浏览器", "Web自动化", "Agent"]
+    },
+    {
+      "domain": "ai",
+      "name": "Automattic/harper",
+      "url": "https://github.com/Automattic/harper",
+      "language": "Rust",
+      "stars": 13348,
+      "stars_today": "503",
+      "one_liner": "离线、隐私优先的语法检查器,Rust 写的,快到能塞进编辑器实时跑。",
+      "summary_zh": "一个开源语法检查器,最大卖点是完全离线、隐私优先——文字不出本机,不像多数工具要把你写的东西发去云端。Rust 实现,轻快到能嵌进编辑器做实时校对。适合注重隐私、想在本地给写作 / 文档 / 代码注释加一层语法把关的人,也是「小而专的本地工具」思路的好样本。",
+      "tags": ["语法检查", "Rust", "本地优先"]
+    },
+    {
+      "domain": "ai",
+      "name": "RyanCodrai/turbovec",
+      "url": "https://github.com/RyanCodrai/turbovec",
+      "language": "Python",
+      "stars": 14242,
+      "stars_today": "89",
+      "one_liner": "建在 TurboQuant 上的向量索引,Rust 内核 + Python 绑定,冲的是检索速度。",
+      "summary_zh": "一个向量索引库,底层量化用 TurboQuant、核心用 Rust 写、对外给 Python 绑定,目标是把近邻检索做快。适合做 RAG、语义搜索、推荐这类要在大批向量里快速找相似项的人。这类基础检索件更新很快,选型时值得拿自己的数据量和召回要求跑个基准再定。",
+      "tags": ["向量检索", "量化", "Rust"]
+    },
+    {
+      "domain": "ai",
+      "name": "andrewyng/aisuite",
+      "url": "https://github.com/andrewyng/aisuite",
+      "language": "Python",
+      "stars": 15196,
+      "stars_today": "75",
+      "one_liner": "吴恩达团队的统一接口:一套代码调多家大模型,换 provider 只改一个字符串。",
+      "summary_zh": "一个给多家生成式 AI 提供商做统一接口的库,让你用一套写法调不同厂商的模型,切换 provider 基本只改模型名字符串。适合要做多模型对比、给系统留后端可替换余地、或者不想被单一供应商锁死的人。类似定位的库不少,它胜在简洁和 Andrew Ng 团队维护带来的关注度。",
+      "tags": ["LLM", "统一接口", "多模型"]
+    },
+    {
+      "domain": "ai",
+      "name": "Lordog/dive-into-llms",
+      "url": "https://github.com/Lordog/dive-into-llms",
+      "language": "Jupyter Notebook",
+      "stars": 45330,
+      "stars_today": "405",
+      "one_liner": "中文的《动手学大模型》系列实践教程,notebook 一路跟着敲。",
+      "summary_zh": "《动手学大模型 Dive into LLMs》系列编程实践教程,中文、以 Jupyter notebook 组织,偏动手而非纯理论。适合中文读者系统入门大模型、想边看边跑代码建立体感的人;也适合当组内新人培训的现成材料。",
+      "tags": ["教程", "大模型", "中文"]
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "Anthropic 发布 Opus 5,主打 token 效率而非能力跃升",
+      "url": "https://arstechnica.com/ai/2026/07/anthropics-opus-5-is-about-token-efficiency-not-a-capability-leap/",
+      "source": "Ars Technica / The Verge / TechCrunch",
+      "summary_zh": "Anthropic 放出 Claude Opus 5,官方说能力「接近 Fable 5」,同时更便宜、限制更少。多家报道的共识是:这一版的重点是 token 效率(同样的活儿花更少 token),而不是一次能力上的大跳。语音模式也同步更新,Opus 和 Sonnet 都能用。发布正赶在与美国政府几轮拉锯的节点上。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Kimi K3 惊动华尔街,「AI 共产主义」争论与流氓模型担忧一起发酵",
+      "url": "https://techcrunch.com/2026/07/24/ai-communism-rogue-models-and-why-kimi-k3-spooked-wall-street/",
+      "source": "TechCrunch",
+      "summary_zh": "月之暗面 Kimi K3 的表现让华尔街紧张了一把,围绕它的讨论掺进了「AI 共产主义」这种意识形态标签,以及对模型失控(rogue models)的担忧。核心事实是:又一款高水平中国开源 / 开放权重模型改变了市场对「谁在领跑」的预期,资本市场对此的反应比技术圈更激烈。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "美国酝酿对华 AI 政策,业界集体反对宽泛限制开源权重",
+      "url": "https://techcrunch.com/2026/07/25/as-us-weighs-response-to-chinese-ai-industry-urges-against-broad-open-weight-restrictions/",
+      "source": "TechCrunch / Hacker News",
+      "summary_zh": "在美国政府权衡如何应对中国 AI 之际,产业界公开呼吁不要对开源 / 开放权重模型下宽泛的限制令,理由是那会伤到本土创新和整个开放生态。同期 Hacker News 上「开放权重 AI 正迎来它的 Kubernetes 时刻」的讨论也在升温——开放权重正从边缘选项变成事实上的基础设施。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Reid Hoffman、Mark Pincus 联合创办新 AI 实验室 Prentis,商谈融资 1 亿美元",
+      "url": "https://techcrunch.com/2026/07/24/prentis-new-ai-lab-co-founded-by-reid-hoffman-mark-pincus-in-talks-to-raise-100m/",
+      "source": "TechCrunch",
+      "summary_zh": "由 Reid Hoffman(LinkedIn 联创)和 Mark Pincus(Zynga 联创)联合创办的新 AI 实验室 Prentis 正在商谈约 1 亿美元融资。又一支明星创业者组队入场,说明即便在头部大模型格局趋于集中的当下,资本对「再开一家 AI 实验室」的胃口还没消退。"
+    },
+    {
+      "domain": "energy",
+      "title_zh": "一根倒下的电线,暴露 AI 数据中心正给电网添的乱",
+      "url": "https://techcrunch.com/2026/07/25/one-fallen-power-line-exposed-a-growing-ai-data-center-problem-heres-how-to-fix-it/",
+      "source": "TechCrunch / Ars Technica",
+      "summary_zh": "一起单根电线故障事件,把 AI 数据中心给电网带来的隐患摆上台面:海量算力负载正在考验本就脆弱的供电系统。与此同时 Ars 报道,特朗普政府的 EPA 可能在数据中心选址上削弱周边居民的话语权,给「AI 要更多数据中心、电从哪来」的矛盾又加了一层。芯片和 AI 算力的账,最终都要落到能源和电网上结。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "SpaceX 完成星舰第 13 次试飞,下一次瞄准「筷子夹塔」回收",
+      "url": "https://arstechnica.com/space/2026/07/spacex-eyes-tower-catch-for-next-starship-after-auspicious-end-to-13th-flight/",
+      "source": "Ars Technica / SpaceNews",
+      "summary_zh": "SpaceX 完成星舰(Starship)第 13 次试飞,结尾表现被评价为「顺利」,公司据此把下一次目标定为用发射塔机械臂「夹塔」回收飞船本体。星舰的迭代节奏仍是整个商业航天里最快的一档,回收环节一旦跑通,重复使用的经济性会再上一个台阶。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "火神火箭停飞拖累财务,ULA 面临经营压力",
+      "url": "https://spacenews.com/ula-deals-with-financial-challenges-caused-by-vulcan-grounding/",
+      "source": "SpaceNews",
+      "summary_zh": "联合发射联盟(ULA)因火神(Vulcan)火箭停飞而承受财务压力:发射节奏被打断直接影响收入和履约。对比 SpaceX 的高频迭代,传统发射商在「一出问题就停飞、停飞就烧钱」的循环里回旋空间越来越小。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Generalist 的 GEN-1 基础模型开始支持多种机器人末端执行器",
+      "url": "https://www.therobotreport.com/generalists-gen-1-foundation-model-now-supports-a-range-of-robot-end-effectors/",
+      "source": "The Robot Report",
+      "summary_zh": "机器人公司 Generalist 宣布其 GEN-1 基础模型现在能适配一系列不同的末端执行器(机械手 / 夹爪等)。这一步的意义在于通用性:同一个策略模型不必为换个夹爪就重训,是把「机器人基础模型」往真正可跨硬件部署推进的实际动作。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "FDA 批准强生 Ottava 手术机器人,称开启「手术下一个时代」",
+      "url": "https://www.fiercebiotech.com/medtech/fda-clears-johnson-johnsons-surgical-robot-next-era-surgery",
+      "source": "Fierce Biotech / The Robot Report",
+      "summary_zh": "FDA 批准了强生(J&J)的 Ottava 手术机器人系统。强生把它定位为「手术下一个时代」的平台,直接冲着长期垄断该市场的直觉外科(Intuitive)达芬奇系统去。医疗机器人这块被单一玩家把持多年,一个大厂拿到监管放行,意味着竞争格局要开始松动。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "团队用 AlphaFold 反向改造基因编辑蛋白,让它更安全",
+      "url": "https://arstechnica.com/science/2026/07/team-uses-alphafold-ai-to-redesign-gene-editing-proteins-to-make-them-safer/",
+      "source": "Ars Technica",
+      "summary_zh": "研究团队用 AlphaFold 来反向设计、改造基因编辑用的蛋白,目标是降低脱靶、提升安全性。这是「AI 结构预测」从看懂蛋白走向主动设计蛋白的又一个落地案例——把预测工具倒过来当设计工具用,正在成为蛋白工程的常规打法。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "给现成开源 VLA 换个 MoE 动作头,验证「可复用动作原语」是不是真会自发涌现",
+      "based_on": [
+        { "title": "Emergent Compositional Skills in Mixture-of-Experts VLAs", "url": "https://arxiv.org/abs/2607.20771" },
+        { "title": "LIBERO: Benchmarking Knowledge Transfer for Lifelong Robot Learning", "url": "https://libero-project.github.io/" }
+      ],
+      "why_now": "这篇刚指出:不预设任何任务分解,只把 VLA 的动作头换成简化 MoE,专家就自发对应上可解释的低层行为。但它主要在自家设定里验证,换个开源基座、换个仿真套件后这套「涌现」还稳不稳、专家复用率掉多少,没人系统测过,正是低风险的可发表扩展。",
+      "feasibility": "在 LIBERO 这类纯仿真基准上微调一个中小 VLA,1–2 张 24–40GB 卡够用,不碰真机。约 3–4 周:第一周复现单体基线,之后换 MoE 头做对照。",
+      "route": [
+        "第 1–2 天:跑通一个开源 VLA(如 OpenVLA 系)在 LIBERO 上的官方微调 + 评测,拿到单体基线数字。",
+        "把动作头换成简化 MoE(几个专家 + 一个路由器),其余不动,在同一套任务上微调。",
+        "记录每个专家在各任务 / 各时间步的激活频率,做「专家-低层行为」对照,量化跨任务复用率。",
+        "对比 MoE 与单体在成功率上是否打平,并检验专家数、路由温度对涌现程度的影响。"
+      ],
+      "risk": "「专家对应可解释原语」可能对超参和随机种子敏感,换基座后涌现可能变弱——但即便是负结果,「在什么条件下才涌现」本身就是有价值的结论。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "把「语言引导的空间剪枝」做成即插即用小库,给 3D 视觉定位 / 分割模型提速",
+      "based_on": [
+        { "title": "PruneGround: Plug-and-play Spatial Pruning for 3D Visual Grounding", "url": "https://arxiv.org/abs/2606.31148" }
+      ],
+      "why_now": "PruneGround 的核心观察很朴素:很多指代表达只涉及场景里一小块局部区域,没必要让模型对整个场景做推理。它本身就设计成即插即用、且用「冻结的 VLM」定位相关区域,复现成本低;但目前没有一个能跨多种 3DVG / 3D 分割模型直接接的开源实现,适合转成一个攒 star 的小工具库。",
+      "feasibility": "纯推理为主,单张 24GB 卡足够(主要开销是一次 VLM 前向 + 点云区域裁剪)。约 2–3 周:先在一个模型上复现剪枝收益,再抽象成通用接口接第二个模型。",
+      "route": [
+        "第 1–2 天:在一个开源 3DVG 模型(如 ScanRefer / Nr3D 基线)上跑通,量出未剪枝的延迟和显存。",
+        "实现「语言引导空间剪枝」模块:用冻结 VLM 圈出语言相关区域,只把该区域的点 / token 送进下游。",
+        "封成一个 `prune_context(scene, text)` 的即插即用接口,记录 token 数、延迟、精度三条曲线。",
+        "把接口迁到第二个模型(如某开放词表 3D 分割模型)验证通用性,写 README + 一键 demo 冲 star。"
+      ],
+      "risk": "剪得太狠会切掉必要的上下文导致精度下降,得找到「省算力」和「保精度」的甜点;不同模型的输入格式差异也可能让通用接口比预想难抽象。"
+    },
+    {
+      "domain": "quantum",
+      "type": "paper",
+      "title": "在仿真量子态上复现 QST-Flow,测它到底比传统层析省多少测量",
+      "based_on": [
+        { "title": "Flow-based Phase-space Tomography of Continuous-variable Quantum States", "url": "https://arxiv.org/abs/2607.21584" }
+      ],
+      "why_now": "QST-Flow 刚提出用归一化流表示相空间准概率分布来做连续变量量子态层析,思路新但论文更侧重方法本身。用仿真生成的态(相干态、Fock 态、猫态)当 ground truth,系统比较「达到同样保真度需要多少次测量」是个具体、可衡量、且不需要真实量子硬件的验证角度。",
+      "feasibility": "全流程都是仿真 + 单卡训练小流模型,1 张 24GB 卡足够(用 QuTiP / strawberryfields 造态和模拟测量)。约 2–4 周:先复现单个态,再扫态的类型和测量次数。",
+      "route": [
+        "第 1–2 天:用 QuTiP 生成几类已知 Wigner / Husimi-Q 函数的态,并模拟出对应的测量数据。",
+        "复现 QST-QFlow(拟合恒正的 Q 函数)在其中一个态上的重建,确认能收敛、保真度对得上。",
+        "接上 QST-WFlow(两流之差建会变号的 Wigner 函数),在猫态这种强非高斯态上对比两个变体。",
+        "画「测量次数 → 重建保真度」曲线,和最大似然 / 截断密度矩阵等经典基线比样本效率。"
+      ],
+      "risk": "变号的 Wigner 函数用「两流之差」建模训练可能不稳、易发散;而且『省测量』的优势可能只在特定态类上显著,得如实报告适用边界。"
+    }
+  ]
+}
