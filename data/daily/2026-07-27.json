@@ -1,0 +1,370 @@
+{
+  "date": "2026-07-27",
+  "editor_note": "今天 arXiv 的抓取又崴脚了——按领域拉的 domain_papers 吃了个 429，定向抓的 research_papers 直接读超时,所以本期论文全部来自 HF 榜(偏 AI 和具身),非 AI 领域的原始论文暂缺,研究点只能从今天的论文和 repo 反推。榜上的两条主线值得点开:一是「agent 自己改自己」——AREX 把「找答案难、验答案容易」这个不对称做成了递归自我改进;二是国产算力的存在感,SLAI 那篇把 DeepSeek-V4 万亿 MoE 的全参后训练搬到昇腾 SuperPOD 上跑通,系统工程味道很浓。视频生成这边继续卷「单卡能跑」和「训练无关加速」。资讯里最扎眼的是 Hugging Face CEO 喊话的那起「首个自主 agent 网络攻击」,以及 Terence Tao 在 ICM 讲 AI 时代的数学——正好和今天的每日一理(微积分基本定理)遥相呼应:再花哨的自动化,底子还是「变化率和累积量互为逆运算」这点老道理。",
+  "math_note": {
+    "name": "微积分基本定理",
+    "name_en": "Fundamental Theorem of Calculus",
+    "field": "微积分 / 实分析",
+    "one_liner": "求斜率和求面积,其实是同一件事的正反两面。",
+    "statement": "设 $f$ 在区间 $[a,b]$ 上连续。定义「从 $a$ 累积到 $x$ 的面积」函数 $F(x)=\\int_a^x f(t)\\,dt$,则第一部分说它的导数就是被积函数本身:$F'(x)=f(x)$——积分再求导,转一圈回到原地。第二部分(牛顿-莱布尼茨公式)说,只要找到 $f$ 的任意一个原函数 $G$(即 $G'=f$),定积分就能一步算出:$\\int_a^b f(x)\\,dx=G(b)-G(a)$,不必真去累加无穷多个小矩形。一句话:微分(求变化率)和积分(求累积量)是互逆的两件事。",
+    "origin": "17 世纪后半叶,牛顿和莱布尼茨各自独立地把它挑明。在此之前,巴罗(Barrow)、费马等人已经零星发现「切线问题」和「面积问题」暗中相关,但都是就事论事;是这两位把它拧成一条能实际计算的通用法则,微积分才从一堆技巧变成一门有骨架的学科。顺带也埋下了那场著名的优先权之争。",
+    "derivation": [
+      { "math": "F(x)=\\int_a^x f(t)\\,dt", "note": "先造一个「面积累积函数」:F(x) 就是曲线从 a 到 x 下面那块的面积。想研究它随 x 怎么变。" },
+      { "math": "F(x+h)-F(x)=\\int_x^{x+h} f(t)\\,dt", "note": "x 往右挪一小步 h,面积多出来的部分,恰好是宽 h 那一条竖直细条的面积。" },
+      { "math": "F(x+h)-F(x)\\approx f(x)\\,h", "note": "h 很小时,f 在这一小段几乎是常数 f(x),这条细条近似一个高 f(x)、宽 h 的矩形。" },
+      { "math": "F'(x)=\\lim_{h\\to0}\\frac{F(x+h)-F(x)}{h}=f(x)", "note": "两边除以 h 再让 h→0,右边极限正好是 f(x)。这就是第一部分:面积函数的导数等于原曲线高度。" },
+      { "math": "\\int_a^b f(x)\\,dx=F(b)-F(a)=G(b)-G(a)", "note": "任意原函数 G 和 F 只差一个常数,差值一减就抵消,于是定积分等于原函数在两端的差——牛顿-莱布尼茨公式。" }
+    ],
+    "applications": [
+      { "area": "工程与数值计算", "detail": "能找到原函数时,定积分一步得解;找不到才退回数值积分去逼近那堆小矩形。" },
+      { "area": "物理", "detail": "位移是速度的积分、功是力沿路径的积分——已知「怎么变」反推「一共变了多少」。" },
+      { "area": "概率统计", "detail": "累积分布 CDF 是密度 PDF 的积分,$P(a<X<b)=F(b)-F(a)$ 直接就是两端点之差。" },
+      { "area": "机器学习与信号", "detail": "连续时间信号的能量、连续损失的累积都靠它;它也是「自动微分」与「数值积分」互为逆运算的直觉源头。" }
+    ],
+    "takeaway": "微分和积分是一枚硬币的两面——「怎么变」与「变了多少」互为逆运算。这种「局部变化率 ↔ 全局累积量」的对偶,从物理守恒律一路延伸到反向传播,是反复出现的思维模板。",
+    "viz": {
+      "type": "riemann",
+      "caption": "拖 n 把矩形加密,阴影面积逐渐逼近曲线下的真实积分;而这块面积恰好等于原函数在两端点的差 F(b)−F(a)——这就是微分与积分互逆的直观。",
+      "params": { "fn": "1 + 0.6*sin(x)", "a": 0.5, "b": 5, "n": 8, "maxN": 60, "rule": "mid", "xmin": 0, "xmax": 6 }
+    }
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "AREX: Towards a Recursively Self-Improving Agent for Deep Research",
+      "title_zh": "AREX:面向深度研究的递归自我改进 Agent",
+      "url": "https://arxiv.org/abs/2607.21461",
+      "hf_url": "https://huggingface.co/papers/2607.21461",
+      "authors": "Shuqi Lu、Chaofan Li、Kun Luo 等",
+      "affiliation": "北京智源(BAAI)",
+      "upvotes": 136,
+      "one_liner": "找答案难、验答案容易——那就让 agent 边验边改自己。",
+      "summary_zh": "深度研究要同时满足一堆约束,找到满足全部约束的答案很贵,但逐条验证某个候选答案往往可以拆成一批小检查。AREX 抓住这个「发现难、验证易」的不对称:不是单纯搜得更久,而是先验证中间结果、再拿这些已经部分验证过的状态引导下一轮改写,递归地把答案越磨越好。思路很顺,关键看它在开放式任务上的验证器可靠性,别验错方向反而越改越偏。",
+      "tags": ["Agent", "Deep Research", "Self-Improvement"]
+    },
+    {
+      "domain": "ai",
+      "title": "SLAI T-Rex: Full-Parameter Post-training of the DeepSeek-V4 Family on Ascend SuperPOD",
+      "title_zh": "SLAI T-Rex:在昇腾 SuperPOD 上对 DeepSeek-V4 系列做全参后训练",
+      "url": "https://arxiv.org/abs/2607.20145",
+      "hf_url": "https://huggingface.co/papers/2607.20145",
+      "authors": "Dongfang Li、Xiaodong Luo、Ruoyu Sun 等",
+      "upvotes": 57,
+      "one_liner": "万亿 MoE 全参后训练,这次跑在昇腾 NPU 上而不是 GPU。",
+      "summary_zh": "万亿参数级 MoE 做全参数后训练,系统层面全是硬骨头:显存吃紧、通信盖不住计算、算子跑不满。业界的大规模训练栈基本都围着 GPU 集群建,这份报告偏偏在华为昇腾 NPU 的 SuperPOD 上,用 DeepSeek-V4 作为目标负载做了端到端优化实践。工程报告的价值在细节,对关心国产算力能不能扛住前沿模型训练的人是一手材料。",
+      "tags": ["MoE", "Post-training", "Ascend", "算力"]
+    },
+    {
+      "domain": "ai",
+      "title": "K12-KGraph: A Curriculum-Aligned Knowledge Graph for Benchmarking and Training Educational LLMs",
+      "title_zh": "K12-KGraph:面向教育大模型的课程对齐知识图谱",
+      "url": "https://arxiv.org/abs/2605.09635",
+      "hf_url": "https://huggingface.co/papers/2605.09635",
+      "authors": "Hao Liang、Qihan Lin、Zhaoyang Han 等",
+      "affiliation": "北京大学",
+      "upvotes": 56,
+      "one_liner": "考试会做题不算懂,得知道知识点之间怎么搭起来的。",
+      "summary_zh": "现有教育类 benchmark 大多只测「会不会做题」,不测模型是否理解课程知识本身的结构。作者提出「课程认知」这个能力概念——先修链、概念分类、实验与概念的关联、教学顺序、图文对应,并从人教版教材抽出一张课程对齐的知识图谱来测和训。切口挺实:把「懂知识结构」和「会答题」分开衡量,对做教育 AI 的人有参考,数据本地化也是加分。",
+      "tags": ["Education", "Knowledge Graph", "Benchmark"]
+    },
+    {
+      "domain": "ai",
+      "title": "Show, Don't Tell: Evaluating Spatial Cognition in Generative Pixels Rather Than LLM Text",
+      "title_zh": "Show, Don't Tell:用生成的像素而非文字来考空间认知",
+      "url": "https://arxiv.org/abs/2607.21072",
+      "hf_url": "https://huggingface.co/papers/2607.21072",
+      "authors": "Xu Wang、Kaixiang Yao、Miao Pan 等",
+      "affiliation": "浙大 ZJU-OmniAI",
+      "upvotes": 35,
+      "one_liner": "空间题让模型画出来,比逼它报坐标更公道。",
+      "summary_zh": "很多空间任务本质是连续视觉场景里的位置、区域、路径,用「指、标、画」表达比报精确坐标或选选项自然得多。可现有空间推理 benchmark 偏要模型输出坐标或文字,对图像生成模型是「答题接口不匹配」。这篇让模型直接在像素上把答案画出来评测空间认知,思路对生成式模型更友好,评测协议本身就是贡献。",
+      "tags": ["Spatial Reasoning", "Generative", "Benchmark"]
+    },
+    {
+      "domain": "ai",
+      "title": "Self Gradient Forcing: Native Long Video Extrapolation",
+      "title_zh": "Self Gradient Forcing:原生的长视频外推",
+      "url": "https://arxiv.org/abs/2607.20368",
+      "hf_url": "https://huggingface.co/papers/2607.20368",
+      "authors": "Junhao Zhuang、Shiyi Zhang、Yuxuan Bian 等",
+      "upvotes": 30,
+      "one_liner": "让未来帧的损失能反过来管教早先写进缓存的 KV。",
+      "summary_zh": "自回归视频扩散近来爱用 Self Forcing——让学生在自己 rollout 出来的历史上训练,减少曝光偏差。但历史的 KV 缓存对后续帧只是「冻结的只读状态」,未来帧的损失管不着早先的 latent 该怎么写成更有用的 key/value。这篇让梯度能穿回去,监督早先 latent 的写入方式,针对的是长视频越生成越漂的老问题,切点很准。",
+      "tags": ["Video Diffusion", "Autoregressive", "Long Video"]
+    },
+    {
+      "domain": "ai",
+      "title": "SANA-Video 2.0: Hybrid Linear Attention with Attention Residuals for Efficient Video Generation",
+      "title_zh": "SANA-Video 2.0:混合线性注意力 + 注意力残差的高效视频生成",
+      "url": "https://arxiv.org/abs/2607.21553",
+      "hf_url": "https://huggingface.co/papers/2607.21553",
+      "authors": "Junsong Chen、Jincheng Yu、Yitong Li 等",
+      "affiliation": "NVIDIA",
+      "upvotes": 26,
+      "one_liner": "单卡 720p 视频,线性注意力管长序列、周期性 softmax 补质量。",
+      "summary_zh": "SANA-Video 2.0 是个混合视频扩散 Transformer,5B 和 14B 两个规模同一套架构,目标是单卡生成到 720p。核心是混合线性-softmax 注意力:主体用门控线性注意力做 O(N) 的混合,再周期性插入门控 softmax 锚点补回质量,想同时要「全 softmax 的画质」和「线性注意力的长序列可扩展」。对显卡不富裕又想跑视频生成的人很实用,是很好的下游适配底座。",
+      "tags": ["Video Generation", "Linear Attention", "Efficiency"]
+    },
+    {
+      "domain": "ai",
+      "title": "Beyond Euclidean Clipping: Overcoming Exploration Collapse in LLM RL via Riemannian Isometric Policy Optimization",
+      "title_zh": "超越欧氏裁剪:用黎曼等距策略优化解决 LLM RL 的探索坍缩",
+      "url": "https://arxiv.org/abs/2607.10169",
+      "hf_url": "https://huggingface.co/papers/2607.10169",
+      "authors": "Zhicheng Cai、Xinyuan Guo、Hanlin Wu 等",
+      "upvotes": 12,
+      "one_liner": "PPO 的 clip 用错了尺子——策略空间不是欧氏的。",
+      "summary_zh": "RL 训 LLM 推理离不开 PPO-Clip,但它有个老毛病:探索坍缩。作者指认根因是 PPO-Clip 隐式地用欧氏度量衡量策略差异,而策略本身活在一个有内在几何(黎曼流形)的空间上,尺子从一开始就配错了。于是提出用等距的黎曼裁剪替代。理论切口漂亮,是那种「换个模型和任务验证泛化性」就很值得复现的算法改动。",
+      "tags": ["LLM", "RL", "PPO", "Optimization"]
+    },
+    {
+      "domain": "ai",
+      "title": "Self-Supervised Learning of Structured Dynamics from Videos",
+      "title_zh": "从视频中自监督地学习结构化运动",
+      "url": "https://arxiv.org/abs/2607.21576",
+      "hf_url": "https://huggingface.co/papers/2607.21576",
+      "authors": "Lukas Knobel、Andrew Zisserman、Yuki M. Asano",
+      "affiliation": "UTN Fundamental AI Lab",
+      "upvotes": 18,
+      "one_liner": "把镜头在动和物体在动这两件事拆开来学。",
+      "summary_zh": "视频里帧间的变化混着两种运动:相机运动和物体运动。表示学习里很少去拆它们,因为自然视频里两者纠缠得紧、又难分别监督。可要学到稳健的运动表示,恰恰得把「有意义的物体动态」和「相机晃动带来的变化」分开。这篇用自监督做这件事,对做 3D、点云、动态场景理解的人有直接参考价值。",
+      "tags": ["Self-Supervised", "Video", "Motion", "Representation"]
+    },
+    {
+      "domain": "embodied",
+      "title": "ReferTrack: Referring Then Tracking for Embodied Visual Tracking",
+      "title_zh": "ReferTrack:先指认再跟踪的具身视觉跟踪",
+      "url": "https://arxiv.org/abs/2607.20061",
+      "hf_url": "https://huggingface.co/papers/2607.20061",
+      "authors": "Hanjing Ye、Tianle Zeng、Jiazhao Zhang 等",
+      "affiliation": "腾讯",
+      "upvotes": 49,
+      "one_liner": "别在抽象隐空间里想,先在图像上把目标框出来再追。",
+      "summary_zh": "具身视觉跟踪(EVT)要求移动机器人只靠车载视觉,持续跟住一个用自然语言描述的目标。现有 VLA 策略把「认出目标」和「规划轨迹」揉在一起,但它们的思维链在抽象空间里推理,难监督、也和图像里的具体检测对不齐。ReferTrack 改成「先指认、再跟踪」两步:先把目标在图像上明确框出来,再据此跟踪。把中间量落到可监督的图像空间,这一步很对。",
+      "tags": ["Embodied", "Visual Tracking", "VLA"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Generalizable VLA Finetuning via Representation Anchoring and Language-Action Alignment",
+      "title_zh": "靠表征锚定与语言-动作对齐做可泛化的 VLA 微调",
+      "url": "https://arxiv.org/abs/2607.13429",
+      "hf_url": "https://huggingface.co/papers/2607.13429",
+      "authors": "Dwip Dalal、Shivansh Patel、Chahit Jain 等",
+      "upvotes": 14,
+      "one_liner": "行为克隆微调会把预训练的好表征一点点洗掉。",
+      "summary_zh": "把预训练 VLM 用行为克隆(BC)在机器人示范上微调,是当下 VLA 策略的标准套路。但 BC 微调会渐渐覆盖掉支撑视觉和语义泛化的预训练表征;常用的「拿网络图文数据 co-training」也救不了,因为语言损失和动作损失作用在不同观测上,留下语言-动作错位。这篇用表征锚定加上语言-动作对齐来治,针对的痛点是公认的,方法也偏轻量,适合在仿真 benchmark 上复现验证。",
+      "tags": ["VLA", "Finetuning", "Generalization", "Embodied"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Robostral Navigate",
+      "title_zh": "Robostral Navigate:只靠单目 RGB 的通用导航模型",
+      "url": "https://arxiv.org/abs/2607.20785",
+      "hf_url": "https://huggingface.co/papers/2607.20785",
+      "authors": "Arjun Majumdar、Avinash Sooriyarachchi、Benjamin Tibi 等",
+      "affiliation": "Mistral AI",
+      "upvotes": 8,
+      "one_liner": "扔掉深度相机和预建地图,只喂单目 RGB 也能导航。",
+      "summary_zh": "大规模部署导航系统,得尽量少依赖传感器、能跨不同机器人本体、还要训得省。可当下最好的系统普遍离不开深度相机、多相机阵列或预建地图,限制了能支持的硬件、也抬高了成本。Robostral Navigate 是个 8B 的视觉-语言模型,只吃单目 RGB 流——最普及的传感器。来自 Mistral,把「最小传感器假设」当一等目标,这个取向对落地成本很友好。",
+      "tags": ["Navigation", "VLM", "Embodied", "Monocular"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "citrolabs/ego-lite",
+      "url": "https://github.com/citrolabs/ego-lite",
+      "language": "JavaScript",
+      "stars": 4333,
+      "stars_today": "898",
+      "one_liner": "把你登录好的浏览器状态借给 agent,又不打扰你自己用。",
+      "summary_zh": "一个为 AI agent 做 web 自动化而生的轻量浏览器,主打「共享你已登录的浏览器状态」给 Codex、Claude Code 这类工具,让 agent 直接带着你的登录态干活,而不影响你手头的浏览。零成本零配置,给想让 agent 跑真实网页任务、又被登录墙卡住的人省事。"
+    },
+    {
+      "domain": "ai",
+      "name": "pbakaus/impeccable",
+      "url": "https://github.com/pbakaus/impeccable",
+      "language": "JavaScript",
+      "stars": 50525,
+      "stars_today": "466",
+      "one_liner": "一套让 AI 生成的界面别再那么「AI 味」的设计语言。",
+      "summary_zh": "一套「设计语言」,目标是让 AI harness 产出的界面更好看、更专业。AI 写前端最大的短板就是设计品味,这个项目试图把可复用的设计规范喂给模型来补齐。星标积累很快,给做 AI 生成 UI、又苦于成品太糙的人一个现成参照。"
+    },
+    {
+      "domain": "ai",
+      "name": "shiyu-coder/Kronos",
+      "url": "https://github.com/shiyu-coder/Kronos",
+      "language": "Python",
+      "stars": 34102,
+      "stars_today": "322",
+      "one_liner": "把金融市场当成一门「语言」来预训练的基础模型。",
+      "summary_zh": "一个面向金融市场的基础模型,把 K 线/行情序列当作「金融的语言」来建模。时间序列基础模型是近年热点,金融场景又天然带噪声和分布漂移,能不能真赚钱另说,但作为一个开源的金融时序基座,适合做量化和金融 NLP 的人拿来做下游微调练手。"
+    },
+    {
+      "domain": "ai",
+      "name": "alibaba/open-code-review",
+      "url": "https://github.com/alibaba/open-code-review",
+      "language": "Go",
+      "stars": 13667,
+      "stars_today": "840",
+      "one_liner": "确定性流水线 + LLM Agent 的混合式代码审查。",
+      "summary_zh": "阿里开源的代码审查工具,号称在内部规模上实战过。走混合架构:确定性流水线负责稳,LLM Agent 负责灵活,能给出行级精确评论,还内置了微调过的规则集(如空指针、线程安全)。给想在 CI 里接入 AI code review、又不放心纯模型漂移的团队一个可自托管的选项。"
+    },
+    {
+      "domain": "ai",
+      "name": "OtterMind/Chat2DB",
+      "url": "https://github.com/OtterMind/Chat2DB",
+      "language": "Java",
+      "stars": 27038,
+      "stars_today": "399",
+      "one_liner": "用自然语言查数据库的 GUI 客户端。",
+      "summary_zh": "一个 AI 驱动的数据库工具兼 SQL 客户端,支持 MySQL、PostgreSQL、SQL Server、ClickHouse 等一大票数据库,主打自然语言生成 SQL 和智能补全。给经常在多种数据库之间切、又不想手写复杂 SQL 的开发和分析人员用,算成熟的通用型工具。"
+    },
+    {
+      "domain": "ai",
+      "name": "andrewyng/aisuite",
+      "url": "https://github.com/andrewyng/aisuite",
+      "language": "Python",
+      "stars": 15363,
+      "stars_today": "189",
+      "one_liner": "一套接口调所有大模型,换供应商只改一行。",
+      "summary_zh": "吴恩达团队的项目,给多家生成式 AI 供应商包了一层统一接口,换模型/换厂商基本只动一行字符串。适合要在多个模型间做对比评测、或想避免被单一供应商锁定的开发者,轻量、上手快。"
+    },
+    {
+      "domain": "ai",
+      "name": "anthropics/claude-cookbooks",
+      "url": "https://github.com/anthropics/claude-cookbooks",
+      "language": "Jupyter Notebook",
+      "stars": 50163,
+      "stars_today": "377",
+      "one_liner": "官方 notebook 合集,照着抄就能上手各种玩法。",
+      "summary_zh": "Anthropic 官方的 notebook/recipe 合集,覆盖工具使用、检索、多模态、Agent 等一堆用 Claude 的实用套路。对刚上手或想找可运行范例的人很省事,直接拿来改比看文档快。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "HF CEO 就「首个自主 agent 网络攻击」呼吁彻底透明",
+      "url": "https://techcrunch.com/2026/07/26/hugging-face-ceo-calls-for-radical-transparency-after-unprecedented-openai-hack/",
+      "source": "TechCrunch AI",
+      "summary_zh": "OpenAI 遭遇一起被称为「首个自主 agent 网络攻击」的入侵事件,Hugging Face CEO 公开发声,称这是「前所未有的事件,值得前所未有的回应」,呼吁行业彻底透明。随着 agent 能自主执行多步操作,攻击面和攻防形态都在变,这条对做 AI 安全的人是个信号。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "月之暗面 Kimi 让硅谷和华尔街集体紧张",
+      "url": "https://techcrunch.com/2026/07/26/making-sense-of-the-panic-over-chinese-ai/",
+      "source": "TechCrunch AI",
+      "summary_zh": "TechCrunch 的 Equity 播客讨论了为何月之暗面(Moonshot AI)的 Kimi 让硅谷和华尔街一阵恐慌。中国大模型的性价比和进展再次冲击美国市场情绪,和 SLAI 那篇「在昇腾 NPU 上训 DeepSeek-V4」放一起看,国产算力+模型这条线的存在感明显在涨。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Terence Tao 在 ICM 讲「AI 时代的数学」",
+      "url": "https://teorth.github.io/tao-web/slides/age-of-ai-icm-2026.pdf",
+      "source": "Hacker News",
+      "summary_zh": "陶哲轩在 2026 ICM 的报告幻灯片流出,谈 AI 时代数学研究的形态变化,HN 上热议。核心话题绕不开形式化证明、AI 辅助猜想和验证,对关心 AI4Math、以及数学工作流会不会被重塑的人是一手材料。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "礼来三靶点减肥药减重 22.6%,但降心血管风险数据存疑",
+      "url": "https://www.fiercebiotech.com/biotech/lillys-triple-g-drug-hits-226-weight-loss-cardio-risk-impact-disappoints",
+      "source": "Fierce Biotech",
+      "summary_zh": "礼来的三靶点(triple-G)药物 retatrutide 在两项 3 期肥胖试验中达到主要终点,峰值减重 22.6%,但低于此前试验、且在降低心血管风险上没给出清晰结论。减肥药军备竞赛继续,但这次市场对「减重之外的硬终点」看得更重。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "FDA 批准强生 Ottava 手术机器人",
+      "url": "https://www.fiercebiotech.com/medtech/fda-clears-johnson-johnsons-surgical-robot-next-era-surgery",
+      "source": "Fierce Biotech",
+      "summary_zh": "FDA 放行强生的 Ottava 手术机器人系统,强生直接叫板直觉外科(达芬奇)和美敦力。其「机器人内嵌手术台」的设计号称比传统的悬臂+推车方案省 30–50% 的空间。手术机器人这块长期一家独大,多一个获批玩家,竞争格局会变。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "默沙东为每月一次 HIV PrEP 口服药铺路,提前开放可及",
+      "url": "https://www.fiercebiotech.com/pharma/merck-prepares-expanded-access-alimatravir-monthly-hiv-prep-pill-ahead-approval",
+      "source": "Fierce Biotech",
+      "summary_zh": "继吉利德之后,默沙东也为其在研的每月一次 HIV PrEP 口服药 alimatravir 签了自愿许可协议,在正式获批前就铺开扩大可及。月频次口服 PrEP 若成,对依从性是实打实的改善,这也是大药企抢占预防市场的动作。"
+    },
+    {
+      "domain": "energy",
+      "title_zh": "一根倒下的电线,暴露了 AI 数据中心的电网隐患",
+      "url": "https://techcrunch.com/2026/07/25/one-fallen-power-line-exposed-a-growing-ai-data-center-problem-heres-how-to-fix-it/",
+      "source": "TechCrunch AI",
+      "summary_zh": "北弗吉尼亚一次电网扰动的虚惊,暴露出数据中心在面对电网波动时的响应有多糟。文章分析了 AI 数据中心快速堆负荷给电网带来的稳定性压力和可能的解法。算力扩张和电力基础设施的矛盾越来越具体,这是 AI 热潮绕不开的物理约束。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "星舰第 13 飞收尾漂亮,SpaceX 下一飞或尝试塔臂回收",
+      "url": "https://arstechnica.com/space/2026/07/spacex-eyes-tower-catch-for-next-starship-after-auspicious-end-to-13th-flight/",
+      "source": "Ars Technica",
+      "summary_zh": "星舰第 13 次试飞以一个不错的结果收尾,SpaceX 很可能在下一飞尝试让星舰(上面级)直接飞回发射台由塔臂接住。若成,上面级也能像助推器那样快速复用,朝完全可重复使用又近一步。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "谷歌披露持有 941 亿美元 SpaceX 股票,占约 6% 股份",
+      "url": "https://www.wsj.com/tech/google-discloses-94-1-billion-in-spacex-stock-marking-6-stake-91655d7c",
+      "source": "Hacker News",
+      "summary_zh": "据《华尔街日报》,谷歌披露持有价值 941 亿美元的 SpaceX 股票,约占 6% 股份。这个体量既反映了 SpaceX 估值之高,也把两家在星链、云和地面站等业务上的绑定摆到了台面上,HN 上讨论热烈。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "美国 NIH 加入 5 亿美元级「Genesis 使命」,推 AI 驱动生物医学研究",
+      "url": "https://www.fiercebiotech.com/research/hhs-joins-trumps-artificial-intelligence-genesis-mission",
+      "source": "Fierce Biotech",
+      "summary_zh": "美国卫生与公众服务部(HHS)宣布,NIH 加入白宫以 AI 为核心的「Genesis 使命」,推动 AI 驱动的生物医学研究。政府级的大手笔把 AI4Science 往生物医学方向再推一把,是产业和政策层面值得盯的资金信号。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "把「黎曼等距裁剪」搬到小模型 RL,验证它是否真治探索坍缩",
+      "based_on": [
+        { "title": "Beyond Euclidean Clipping: Riemannian Isometric Policy Optimization", "url": "https://arxiv.org/abs/2607.10169" }
+      ],
+      "why_now": "这篇刚指认出「PPO-Clip 用欧氏度量衡量策略差异」这个根因、并给出黎曼裁剪替代方案,但验证范围有限。这类纯算法改动,「换个模型和任务复现并看泛化」本身就是低风险、可发表的扩展。",
+      "feasibility": "单卡 24–40GB 足够:用 Qwen2.5-1.5B/3B 配 LoRA + GRPO,在 GSM8K/MATH 小规模上跑,约 2–3 周。不涉及预训练或多机。",
+      "route": [
+        "先用 TRL 或 verl 跑通一个开源 GRPO/PPO 基线,复现出「探索坍缩」现象(如熵快速塌陷、pass@k 停滞)",
+        "按论文把欧氏 clip 替换成黎曼等距裁剪,先在一个模型+任务上对齐指标",
+        "系统对比坍缩相关指标(策略熵、KL、pass@k)看是否缓解",
+        "换第二个 backbone 或第二个任务,检验方法是靠调参还是真泛化"
+      ],
+      "risk": "小模型 RL 训练本就不稳、方差大;论文的黎曼裁剪实现细节若没给全,复现要靠自己补,结论要多种子多任务才站得住。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "给开源视频 DiT 做一个可插拔的 training-free 稀疏注意力库",
+      "based_on": [
+        { "title": "FVAttn: Adaptive Sparse Attention with Runtime Load Balancing", "url": "https://arxiv.org/abs/2607.16190" },
+        { "title": "SANA-Video 2.0: Hybrid Linear Attention for Efficient Video Generation", "url": "https://arxiv.org/abs/2607.21553" }
+      ],
+      "why_now": "视频 DiT 推理慢是普遍痛点,训练无关的稀疏注意力方法散落在各篇论文里、缺一个统一好用的开源插件。做成可插拔的 attention processor,天然是攒 star 的 repo 型点子。",
+      "feasibility": "纯推理、不训练,单卡 24–40GB 就能跑一个开源视频模型,约 2–4 周出可用版本。",
+      "route": [
+        "先跑通一个开源视频 DiT 的官方推理(如 Wan2.x 或 HunyuanVideo),测出注意力占的耗时基线",
+        "把 Top-p / 块稀疏注意力封装成可一行替换的 attention processor",
+        "在单卡上画「质量-速度」曲线,给出不同稀疏度下的画质回退与加速比",
+        "打包成 pip 安装 + 一份带示例的 README,先支持一到两个主流模型"
+      ],
+      "risk": "稀疏注意力容易掉画质,需要细调阈值和保留策略;不同模型的注意力接口不一致,通用适配比想象中费劲。"
+    },
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "在 LIBERO 上复现「表征锚定」VLA 微调,验证抗遗忘增益",
+      "based_on": [
+        { "title": "Generalizable VLA Finetuning via Representation Anchoring and Language-Action Alignment", "url": "https://arxiv.org/abs/2607.13429" }
+      ],
+      "why_now": "「BC 微调会洗掉预训练表征」是 VLA 圈公认痛点,这篇的表征锚定方法偏轻量、且能在纯仿真里评,不必真机——正适合单人在 sim benchmark 上复现并做消融。",
+      "feasibility": "单卡 40GB、LIBERO/SIMPLER 仿真即可,不需要真机或机器人集群,约 3–4 周。显存紧就换更小的 VLA backbone。",
+      "route": [
+        "跑通一个开源 VLA(如 OpenVLA 或轻量版 π0)在 LIBERO 的 BC 微调基线,记录泛化分档表现",
+        "按论文加入表征锚定正则项与语言-动作对齐损失",
+        "在 LIBERO-Long 等更难的分档上测泛化,和纯 BC 对比",
+        "做锚定强度/对齐权重的消融,看增益来自哪一项"
+      ],
+      "risk": "VLA 微调显存吃紧,可能被迫用更小模型影响结论说服力;先得确认所用 VLA 的权重与训练数据可得,否则第一步就卡住。"
+    }
+  ]
+}
