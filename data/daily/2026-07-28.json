@@ -1,0 +1,359 @@
+{
+  "date": "2026-07-28",
+  "editor_note": "今天 AI 侧最抢眼的是「自我改进」这条线:AREX 把「验证比搜索便宜」这件事榨成递归自改进的 agent,Skill Self-Play 让一堆可验证的小技能互相卷,不约而同都在绕开「开放任务没法验证」这个老坑。硬件和效率也很热闹——SANA-Video 单卡跑 720p、HiKV 给 KV cache 两级瘦身,配上新闻里英伟达/微软牵头的开放 AI 安全联盟(三家最头部的闭源巨头集体缺席)和 Kimi K3 引发的开源焦虑,能闻到「开源 vs 闭源」的火药味在升温。想点开的话,我私心推 VCSD:一句「把图片遮一块就成了免费的老师」,朴素又聪明。能源和航天今天论文侧偏冷,但新闻里「把 AI 算力搬上轨道」倒是芯片和航天难得的一次同框。每日一理挑了庞加莱-本迪克松定理,正好和那篇旋转爆震的 Koopman 降阶模型聊的是同一件事:平面里的非线性振荡,终究只能绕圈。",
+  "math_note": {
+    "name": "庞加莱-本迪克松定理",
+    "name_en": "Poincaré–Bendixson Theorem",
+    "field": "常微分方程 / 动力系统",
+    "one_liner": "困在平面里的运动,除了打转别无去处。",
+    "statement": "对一个光滑的平面自治系统 $\\dot{x}=f(x)$(这里 $x\\in\\mathbb{R}^2$,每个点上有唯一的速度箭头),如果一条轨迹始终困在一块有界闭区域 $K$ 里、而 $K$ 内部又没有任何平衡点(没有 $f(x)=0$ 的静止点),那么它最终只能趋向一个周期轨道——一个首尾相接的闭环,也就是极限环。一句话:在二维平面上,有界又不肯静止的运动,别无选择只能绕圈,连混沌都发生不了。",
+    "origin": "亨利·庞加莱在 1880 年代研究天体力学(尤其是三体问题)时,提出「不去解方程、只看轨迹几何长什么样」的定性理论,勾勒出平面轨迹能有的几种归宿;1901 年伊瓦尔·本迪克松补上严格证明,把它钉成定理。动机很实在:大量非线性方程根本解不出闭式解,但工程师往往只想知道一件事——这系统最后会不会稳定地振荡下去。",
+    "derivation": [
+      { "math": "\\dot{x}=f(x),\\quad x\\in\\mathbb{R}^2", "note": "先摆好舞台:二维自治系统,相平面上每一点都对应唯一一支速度箭头,轨迹顺着箭头走、彼此永不相交。" },
+      { "math": "\\omega(\\gamma)=\\bigcap_{t\\ge 0}\\overline{\\{x(s):s\\ge t\\}}\\neq\\varnothing", "note": "轨迹被关在有界闭区域里跑不出去,它必然「有归宿」——极限时间的落脚集合 $\\omega(\\gamma)$(ω-极限集)非空而且紧致。" },
+      { "math": "\\text{Jordan curve}:\\ \\mathbb{R}^2=\\text{inside}\\sqcup\\text{outside}", "note": "关键的拓扑武器:平面上任何闭曲线都把世界干净地切成「里」和「外」两半(若尔当曲线定理)。轨迹既不能自交,也无法穿过自己围出的墙——这条只在二维成立,正是平面容不下混沌的根源。" },
+      { "math": "p_{n-1}<p_n<p_{n+1}\\ \\text{along a transversal}", "note": "取一小段横切流向的线段,轨迹每次穿过它留下的落点,只会沿线段单调往一个方向挪,不会来回横跳——这是上一步「不能自交」逼出来的。" },
+      { "math": "p_n\\to p^\\ast\\ \\Rightarrow\\ \\gamma(p^\\ast)\\ \\text{is a closed orbit}", "note": "单调又有界,必收敛到某一点 $p^\\ast$;过这点的轨迹首尾闭合,就是那个极限环。于是 ω-极限集只能是一个周期轨道。" }
+    ],
+    "applications": [
+      { "area": "电子电路", "detail": "van der Pol 振荡器等负阻电路自发进入稳定周期振荡,收音机本振、张弛振荡器都靠它;定理保证不管怎么启动,最后都收敛到同一波形。" },
+      { "area": "生物节律", "detail": "FitzHugh–Nagumo 神经元模型、捕食-被捕食系统里,心跳、神经放电这类自持振荡对应一个极限环,受扰后还能回到原来的节律。" },
+      { "area": "混沌的边界", "detail": "它反过来告诉你:连续时间系统要出现混沌,至少得三维——洛伦兹吸引子、湍流这些只能活在 $\\mathbb{R}^3$ 及以上,平面太「平」装不下。" }
+    ],
+    "takeaway": "维度决定命运:平面被若尔当曲线定理「锁死」,有界不静止的运动只剩绕圈这一条路;一旦给系统加上第三个自由度,混沌才有容身之地——$\\mathbb{R}^2$ 与 $\\mathbb{R}^3$ 根本是两个世界。",
+    "viz": {
+      "type": "vectorfield",
+      "caption": "背景箭头是 van der Pol 系统 $\\dot{x}=y,\\ \\dot{y}=(1-x^2)y-x$ 的速度场;拖动白点换初值,你会发现无论从环里还是环外出发,轨迹都被卷向同一个闭环——那个环就是庞加莱-本迪克松保证一定存在的极限环。",
+      "params": {
+        "fx": "y",
+        "fy": "(1 - x*x)*y - x",
+        "xmin": -3.5,
+        "xmax": 3.5,
+        "ymin": -3.5,
+        "ymax": 3.5,
+        "density": 15,
+        "seedX": 0.15,
+        "seedY": 0.1,
+        "steps": 600,
+        "dt": 0.02
+      }
+    }
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "AREX: Towards a Recursively Self-Improving Agent for Deep Research",
+      "title_zh": "AREX:走向能递归自我改进的深度研究 agent",
+      "url": "https://arxiv.org/abs/2607.21461",
+      "hf_url": "https://huggingface.co/papers/2607.21461",
+      "authors": "Shuqi Lu、Chaofan Li、Kun Luo 等",
+      "affiliation": "智源研究院(BAAI)",
+      "upvotes": 142,
+      "one_liner": "与其搜得更久,不如把「验证很便宜」这件事榨干。",
+      "summary_zh": "把「深度研究 agent」做成能递归自我改进的一族方法。核心观察是「找答案难、验答案易」:一个要同时满足多重约束的答案很难搜到,但验证一个候选可以拆成一条条约束逐项核对。AREX 于是分内外两层循环——内层搜证据、拼一个临时答案,外层用逐项验证的结果反过来指导下一轮改写,而不是单纯搜得更久。思路很对味,验证器的可靠性是成败关键,值得盯下游复现。",
+      "tags": ["Agent", "Deep Research", "RL"]
+    },
+    {
+      "domain": "ai",
+      "title": "Visual Contrastive Self-Distillation",
+      "title_zh": "视觉对比自蒸馏(VCSD)",
+      "url": "https://arxiv.org/abs/2607.21556",
+      "hf_url": "https://huggingface.co/papers/2607.21556",
+      "authors": "Yijun Liang、Yunjie Tian、Yijiang Li 等",
+      "affiliation": "马里兰大学",
+      "upvotes": 44,
+      "one_liner": "把图片遮一块,就成了免费的老师。",
+      "summary_zh": "自蒸馏想甩掉外部老师,但得让「自己当老师」的信号确实比学生强,以往靠喂特权答案或额外视觉证据来制造这种不对称。这篇把不对称压到最简:只靠「抠掉图像内容」——EMA 老师看完整图、学生看被遮的图,两者输出之差就是训练信号,不需要任何额外标注。省事、干净,做多模态自监督的人可以直接试。",
+      "tags": ["Self-Distillation", "Multimodal", "VLM"]
+    },
+    {
+      "domain": "ai",
+      "title": "SANA-Video 2.0: Hybrid Linear Attention with Attention Residuals for Efficient Video Generation",
+      "title_zh": "SANA-Video 2.0:用混合线性注意力+注意力残差做高效视频生成",
+      "url": "https://arxiv.org/abs/2607.21553",
+      "hf_url": "https://huggingface.co/papers/2607.21553",
+      "authors": "Junsong Chen、Jincheng Yu、Yitong Li 等",
+      "affiliation": "NVIDIA",
+      "upvotes": 34,
+      "one_liner": "线性注意力打底、softmax 定点补刀,单卡跑 720p。",
+      "summary_zh": "单张 GPU 就能出 720p 视频的扩散 Transformer,提供 5B/14B 两个规模。招数是混合注意力:大部分层用线性注意力吃 O(N) 的长序列,每隔三层插一层门控 softmax 注意力,把纯线性注意力丢掉的全秩 token 交互补回来(3:1),再用 Block Attention Residuals 把刷新后的表示往深层传。质量对标全 softmax 的视频 DiT,长序列却便宜得多。想在消费级卡上跑视频生成的人值得关注。",
+      "tags": ["Video Generation", "Linear Attention", "Diffusion"]
+    },
+    {
+      "domain": "ai",
+      "title": "Skill Self-Play: Pushing the Frontier of LLM Capability with Co-Evolving Skills",
+      "title_zh": "技能自博弈:用共同进化的技能推 LLM 能力上限",
+      "url": "https://arxiv.org/abs/2607.22529",
+      "hf_url": "https://huggingface.co/papers/2607.22529",
+      "authors": "Siyuan Huang、Pengyu Cheng、Haotian Liu 等",
+      "affiliation": "阿里通义(Qwen)",
+      "upvotes": 29,
+      "one_liner": "让一堆可验证的小技能互相卷,卷出开放能力。",
+      "summary_zh": "LLM 自我进化老在「任务多样」和「反馈可靠」之间二选一:绑死环境反馈准但领域窄,开放式自造任务花样多却没法可靠验证、错误奖励会污染训练。这篇把「技能」当成中间态——每个技能在自己场景里能深度、可验证地执行,技能之间动态路由又保住了开放性,靠技能共同进化来推能力上限。想法清爽,能不能长跑持续涨点还得看后续。",
+      "tags": ["LLM", "Self-Play", "RL"]
+    },
+    {
+      "domain": "ai",
+      "title": "LLMs Get Lost in Evolving User Intent",
+      "title_zh": "意图一变,LLM 就迷路了",
+      "url": "https://arxiv.org/abs/2607.20734",
+      "hf_url": "https://huggingface.co/papers/2607.20734",
+      "authors": "Jihoon Tack、Philippe Laban、Jennifer Neville",
+      "affiliation": "微软研究院",
+      "upvotes": 22,
+      "one_liner": "需求是聊着聊着才成形的,而模型跟不上这个漂移。",
+      "summary_zh": "现实里用户很少一上来就说清需求,而是边聊边改。作者把静态单轮任务改造成「意图逐步演化」的多轮对话,测模型能不能跟住并据此行动。结论如题——模型会迷路,一旦意图中途变了就跟不上。对做 agent 产品的人是个提醒:单轮全信息的评测把真实难度藏起来了。",
+      "tags": ["Agent", "Multi-turn", "Evaluation"]
+    },
+    {
+      "domain": "embodied",
+      "title": "ReferTrack: Referring Then Tracking for Embodied Visual Tracking",
+      "title_zh": "ReferTrack:先指认再跟踪的具身视觉跟踪",
+      "url": "https://arxiv.org/abs/2607.20061",
+      "hf_url": "https://huggingface.co/papers/2607.20061",
+      "authors": "Hanjing Ye、Tianle Zeng、Jiazhao Zhang 等",
+      "affiliation": "腾讯",
+      "upvotes": 50,
+      "one_liner": "先在画面里点名,再谈怎么跟——把跟踪锚回像素。",
+      "summary_zh": "具身视觉跟踪:机器人只靠车载摄像头,按一句自然语言描述持续追一个目标。以往 VLA 策略的思维链在抽象的空间隐变量里推理,跟图像里的实际检测框对不上、也难监督。ReferTrack 改成「先指认再跟踪」——先从一组带编号的候选框里选中目标,再基于这个图像级锚点解码跟踪航点。把推理落到看得见的框上,既好监督也更稳。",
+      "tags": ["VLA", "Embodied", "Tracking"]
+    },
+    {
+      "domain": "embodied",
+      "title": "ViTacWorld: Scaling Visuo-Tactile World Models for Contact-Rich Robot Manipulation",
+      "title_zh": "ViTacWorld:为接触密集操作扩规模的视触世界模型",
+      "url": "https://arxiv.org/abs/2607.22530",
+      "authors": "Yunao Huang、Shiyu Sang、Haotao Lu 等",
+      "one_liner": "给世界模型装上触觉,预测「捏下去会怎样」。",
+      "summary_zh": "接触密集的操作光靠视觉不够,很多接触线索摄像头根本看不见,得靠触觉。但真实触觉数据贵、依赖硬件、场景又少,难扩规模。ViTacWorld 是个动作条件下的视触世界模型,把公开的真实触觉数据集和自建仿真环境拼起来,扩「视觉-触觉-动作」数据规模,用来预测接触时会发生什么。方向对,触觉 sim2real 的坑还不少,先看它的 benchmark 立不立得住。",
+      "tags": ["World Model", "Tactile", "Manipulation"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Highly indistinguishable photons from a tin-vacancy spin qubit in diamond",
+      "title_zh": "金刚石锡空位自旋量子比特产生高度不可区分的光子",
+      "url": "https://arxiv.org/abs/2607.22439",
+      "authors": "Dennis Herrmann、Robert Morsch-Golsong、Tobias Bauer 等",
+      "one_liner": "金刚石里的锡空位,吐出两个「长得几乎一样」的光子。",
+      "summary_zh": "量子网络要把远处的节点用光子连起来,超过城市尺度就得靠量子中继器对抗光纤里的指数衰减。所有方案的共同命门是单光子的「不可区分性」——两个光子越像,Bell 态测量、融合门这些基于双光子干涉的操作保真度才越高。这篇在金刚石里的锡空位(tin-vacancy)自旋量子比特上做出了高度不可区分的单光子。锡空位比常用的氮空位相干性更好、是做中继器的热门候选,这是一块扎实的硬件进展。",
+      "tags": ["Quantum Network", "Diamond", "Single Photon"]
+    },
+    {
+      "domain": "chip",
+      "title": "HiKV: Hierarchical Importance-Aware KV Cache with Hardware Acceleration for LLM Decoding",
+      "title_zh": "HiKV:分层重要性感知的 KV cache 硬件加速",
+      "url": "https://arxiv.org/abs/2607.22389",
+      "authors": "Chao Fang、Jun Yin、Man Shi、Marian Verhelst",
+      "one_liner": "KV cache 两级瘦身:先扔 token,再抠每个 token 的关键位。",
+      "summary_zh": "长上下文 LLM 解码时,KV cache 越滚越大,成了显存瓶颈。HiKV 是算法-硬件协同设计,分两层砍:第一层在固定预算内先赶走不重要的 token,第二层对留下的每个 token 只加载真正显著的元素——两层粒度叠加,能达到单层做不到的压缩比,再配一套专门的硬件架构加速。给关心推理成本、做推理加速芯片的人看。今天芯片新闻里也在聊 AI 算力,正好呼应。",
+      "tags": ["KV Cache", "LLM Inference", "Accelerator"]
+    },
+    {
+      "domain": "bio",
+      "title": "Graph Learning on Ensembles of Cyclic Peptides: An Investigation of Molecular Ensemble Modeling",
+      "title_zh": "在环肽构象系综上做图学习:分子系综建模初探",
+      "url": "https://arxiv.org/abs/2607.21561",
+      "authors": "Aaron Feller、Kris Deibler、Maxim Secor",
+      "one_liner": "别只看一个构象,把分子的「一群样子」一起喂进去。",
+      "summary_zh": "从结构预测分子性质,大家习惯用单个代表构象,可分子在溶液里其实是一群构象在动态切换。EnsembleEGNN 先用共享的等变图网络(EGNN,一种对旋转平移保持不变的图神经网络)编码每个构象,再用 Set Attention 把这一群构象池化成整体表示,并在环肽构象数据集 CREMP 上做多任务自监督预训练。对做药物设计、尤其是环肽这类柔性分子的人,「建模一群构象而非一个」是个值得试的方向。",
+      "tags": ["Molecular ML", "EGNN", "Drug Design"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Data Driven Modeling of Nonlinear Dynamics in a Rotating Detonation Combustor via Finite Dimensional Approximations of the Koopman Operator",
+      "title_zh": "用 Koopman 算子的有限维近似,数据驱动地建旋转爆震燃烧室的非线性动力学",
+      "url": "https://arxiv.org/abs/2607.22457",
+      "authors": "David Oexle、Tobias Breiten、Myles D. Bohon",
+      "one_liner": "用 Koopman 把爆震波的非线性,拉直成一个线性模型。",
+      "summary_zh": "旋转爆震燃烧室(RDC,靠环形腔里持续传播的爆震波做功,被看作提升推进/发电效率的路子)动力学高度非线性,会出现对转波相互作用、驻波这些花样。这篇用 Koopman 算子理论——把非线性系统搬到「可观测量」空间里去全局线性化——从数据里建 RDC 的降阶模型。跟今天「每日一理」聊的平面极限环、以及那篇气动弹性 Neural ODE 是同一个母题:怎么驯服自持的非线性振荡。",
+      "tags": ["Koopman", "Reduced-Order Model", "Combustion"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "shiyu-coder/Kronos",
+      "url": "https://github.com/shiyu-coder/Kronos",
+      "language": "Python",
+      "stars": 34508,
+      "stars_today": "442",
+      "one_liner": "把 K 线当语言,给行情来个「基础模型」。",
+      "summary_zh": "号称「金融市场语言」的基础模型,把 K 线/行情序列当成一种语言来建模和预测,开源权重加持下最近涨星很猛。想拿预训练时序基座做量化、又不想从零训的人可以扒来看它的 tokenization 和下游接法;金融数据噪声大,别指望开箱即赚。"
+    },
+    {
+      "domain": "ai",
+      "name": "alibaba/open-code-review",
+      "url": "https://github.com/alibaba/open-code-review",
+      "language": "Go",
+      "stars": 14668,
+      "stars_today": "980",
+      "one_liner": "规则管精度、模型管眼界的行级代码评审。",
+      "summary_zh": "阿里开源的代码评审工具,混合架构:确定性流水线 + LLM agent,能给出精确到行的评审意见,号称在阿里内部大规模用过。对想在 CI 里挂个自动 reviewer、又不放心纯 LLM 乱评的团队,这种「规则兜底 + 模型补充」的路子比较务实。"
+    },
+    {
+      "domain": "ai",
+      "name": "pbakaus/impeccable",
+      "url": "https://github.com/pbakaus/impeccable",
+      "language": "JavaScript",
+      "stars": 51427,
+      "stars_today": "849",
+      "one_liner": "专治「AI 写出来的界面为什么这么丑」。",
+      "summary_zh": "一套「设计语言」,目标是让你的 AI 编码 harness 更懂设计——给 agent 一套能遵循的视觉/交互规范,产出别那么丑。星标窜得飞快,反映大家对「AI 写的前端普遍难看」的集体焦虑。想让 Claude/Cursor 之流产出像样 UI 的人值得试。"
+    },
+    {
+      "domain": "ai",
+      "name": "bradautomates/claude-video",
+      "url": "https://github.com/bradautomates/claude-video",
+      "language": "Python",
+      "stars": 10970,
+      "stars_today": "412",
+      "one_liner": "一句 /watch,让 Claude 把视频看完再跟你聊。",
+      "summary_zh": "给 Claude 装上「看视频」的能力:一条 /watch 命令把视频下载、抽帧、转录,再一股脑喂给模型。对想让 agent 处理教程、会议录像、监控片段的人是个现成脚手架,本质是把视频降维成帧+文字这套老办法包装得顺手。"
+    },
+    {
+      "domain": "ai",
+      "name": "mvanhorn/last30days-skill",
+      "url": "https://github.com/mvanhorn/last30days-skill",
+      "language": "Python",
+      "stars": 54101,
+      "stars_today": "221",
+      "one_liner": "把全网最近一个月的讨论,替你读完再总结。",
+      "summary_zh": "一个 agent skill,横跨 Reddit、X、YouTube、HN、Polymarket 和网页,把某个话题最近的讨论捞一遍,再综合成有出处的摘要。属于「多源信息聚合 + 溯源」这类实用工具,做舆情/调研的人能直接用。"
+    },
+    {
+      "domain": "ai4s",
+      "name": "opengeos/GeoLibre",
+      "url": "https://github.com/opengeos/GeoLibre",
+      "language": "TypeScript",
+      "stars": 2567,
+      "stars_today": "420",
+      "one_liner": "浏览器里就能跑的现代开源 GIS。",
+      "summary_zh": "轻量、云原生的 GIS 平台,浏览器、桌面、移动端都能跑,用来可视化、探索、分析地理空间数据。开源界一直缺个顺手的现代 GIS,这个定位讨喜。做遥感、气候、地球观测数据的研究者可以拿它当前端。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "英伟达、微软牵头成立开放 AI 安全联盟,OpenAI/谷歌/Anthropic 缺席",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/971281/nvidia-open-secure-ai-alliance-cybersecurity",
+      "source": "The Verge",
+      "summary_zh": "英伟达周一宣布联合微软、SpaceX、IBM 等公司成立 Open Secure AI Alliance,共建并共享开源 AI 安全工具,称面对前沿模型带来的攻击,只有开源工具才防得住。同一周微软还发布了自家首个网络安全模型和一套 agentic 安全系统。值得玩味的是三家最头部的闭源模型公司都不在名单里,开源与闭源两派在「安全该不该开放」上的裂缝越来越明显。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "伊利亚·苏茨克维尔的 SSI 与英伟达达成长期合作",
+      "url": "https://techcrunch.com/2026/07/27/ilya-sutskevers-safe-superintelligence-partners-with-nvidia-to-scale-its-ai-research/",
+      "source": "TechCrunch",
+      "summary_zh": "潜行两年后,Safe Superintelligence 宣布与英伟达长期合作,为进入「下一阶段扩规模」备算力。这家公司一直没产品、只谈安全超级智能,这次绑定英伟达算是给外界一个「要动真格」的信号。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Enigma 融资 7100 万美元,想让操控机器人像调音量一样简单",
+      "url": "https://techcrunch.com/2026/07/27/enigma-raises-70m-to-make-controlling-a-robot-as-easy-as-adjusting-the-volume/",
+      "source": "TechCrunch",
+      "summary_zh": "巨额种子轮由 Index Ventures 和 Ribbit Capital 领投,Sarah Guo 的 Conviction 参投。主打把机器人遥操作/控制的门槛降到消费级,踩在具身智能落地最缺的「人机接口」这一环。种子轮就 7100 万,资本对机器人操控赛道的热度可见一斑。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "中国为什么把最好的 AI 模型免费送出来",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/971444/how-chinese-open-weight-ai-models-impact-us-companies",
+      "source": "The Verge",
+      "summary_zh": "硅谷这一周被 Moonshot 的 Kimi K3 搅得神经紧绷——这个中国模型据称能以极低成本在部分任务上打平美国最强系统。文章借此讨论中国厂商密集开源权重模型的动机与冲击:开源本身正在成为改变竞争格局的一件武器。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "谷歌 AI 搜索正在变成默认:AI Overviews 已覆盖 43% 的搜索",
+      "url": "https://techcrunch.com/2026/07/27/googles-ai-search-is-rapidly-becoming-the-default-new-data-shows/",
+      "source": "TechCrunch",
+      "summary_zh": "新数据显示谷歌 AI Overviews 已出现在 43% 的搜索里,AI 生成的答案正快速成为人们获取信息的默认方式。对内容站、SEO 和「流量从哪来」是实打实的冲击。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "FDA 批准 Freenome 结直肠癌血检,雅培在美独家销售",
+      "url": "https://www.fiercebiotech.com/medtech/fda-signs-freenomes-bowel-cancer-screener-abbott-preps-sell-blood-test-us",
+      "source": "Fierce Biotech",
+      "summary_zh": "FDA 批准了 Freenome 基于血液的结直肠癌筛查产品 SimpleScreen CRC,雅培拿到美国独家推广权。抽血就能筛查、避开肠镜的路子又往前迈了一步,液体活检在早筛上的商业化再落一子。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "Argenx 22 亿美元收购 Forte,拿下 2 期白癜风新药",
+      "url": "https://www.fiercebiotech.com/biotech/argenx-acquires-forte-22b-get-hands-phase-2-stage-vitiligo-drug",
+      "source": "Fierce Biotech",
+      "summary_zh": "Argenx 斥资 22 亿美元吞下 Forte Biosciences,看中的是其处于 2 期的白癜风和乳糜泻药物。自免赛道的并购还在加价,大药企在用真金白银为中期管线卡位。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "英特尔推出面向太空计算的新芯片 Starfire",
+      "url": "https://spacenews.com/intel-debuts-new-chip-for-space-computing/",
+      "source": "SpaceNews",
+      "summary_zh": "Starfire 专为卫星在轨的数据处理和 AI 负载设计。把 AI 算力搬到轨道上是今年的明显趋势——芯片、航天两头都在往「在轨智能」使劲,和今天几条航天新闻正好接上。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "亚马逊申请直连手机的卫星星座,规划超 5100 颗",
+      "url": "https://spacenews.com/amazon-files-application-for-direct-to-device-satellite-constellation/",
+      "source": "SpaceNews",
+      "summary_zh": "亚马逊向 FCC 递交申请,计划用 Globalstar 频谱、超 5100 颗卫星提供直连手机(D2D)服务。继 Starlink 之后又一个巨头正面切入「卫星直连手机」,频谱和轨位的争夺要更挤了。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "火箭实验室拿下 2.66 亿美元太空军合同,将在阿拉斯加建发射场",
+      "url": "https://spacenews.com/rocket-lab-to-open-alaska-launch-site-under-266-million-space-force-deal/",
+      "source": "SpaceNews",
+      "summary_zh": "新的科迪亚克(Kodiak)设施将支持最多 18 次亚轨道任务,用于军方测试。Rocket Lab 借军方订单扩发射版图,商业航天与国防需求的绑定越来越紧。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个「零训练开放词表 3D 点云分割」工具箱 + 统一 GFS-PCS 评测 harness",
+      "based_on": [
+        { "title": "Training-Free Open-Vocabulary 3D Point-Cloud Segmentation on the Generalized Few-Shot Benchmark", "url": "https://arxiv.org/abs/2607.15331" }
+      ],
+      "why_now": "这篇刚证明:不训练、不用 3D 标签、连 few-shot support 都不要,单靠冻结的 3D 视觉语言模型(RegionPLC)当稠密先验 + 一个可提示的分割器,就能把开放词表分割做到能打。这类 training-free 方案最缺的不是想法,而是一个别人能一键复现、公平对比的开源实现。",
+      "feasibility": "全程只做推理、无需训练,单张 24–40GB 卡够用;2–4 周能把冻结模型串起来 + 补上统一评测脚本,攒 star 的性价比高。",
+      "route": [
+        "先跑通 RegionPLC + 一个可提示分割器的官方推理,在 ScanNet 单场景上出一张分割图",
+        "把两者的「稠密先验↔提示」接口抽象成插件式 API,支持替换不同 3D-VLM 骨干",
+        "封装 GFS-PCS 基准的统一 data loader 与指标(base/novel 类分别报),做成一条命令跑完",
+        "加 2–3 个 baseline 的复现配置,输出对比表和可视化,写清楚每个组件的开关"
+      ],
+      "risk": "冻结模型的先验噪声大,novel 类分割上限可能不高;工具的价值要靠「统一、易用、可复现」立住,而非刷 SOTA。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "把「文档直接烤进 LoRA」的闭卷问答方案迁到你自己的语料/另一个小模型上验证泛化",
+      "based_on": [
+        { "title": "Data Quality over Capacity: Internalizing Documents into LoRA Adapters for Closed-Book QA", "url": "https://arxiv.org/abs/2607.21861" }
+      ],
+      "why_now": "这篇在 4-bit Gemma 上跑了约 100 次实验,得出一个干净结论:只要 adapter 容量过了硬门槛,训练数据质量(比如把标准答案缩成 1–6 词的规范跨度)才是闭卷准确率的主导杠杆,盖过 rank、学习率和换架构。方法便宜、消融清楚,天然适合迁移验证。",
+      "feasibility": "单张 24GB 卡就能跑 4-bit LoRA;换一个自建小语料 + 另一个 4-bit 小模型(如 Qwen/Phi 系)重做「容量门槛 × 数据质量」两维扫描,2–3 周出结论。",
+      "route": [
+        "复现原文单文档→多文档的闭卷 QA 训练与评测流程,先在他们的设定上对齐数字",
+        "换成自己的一个 50–100 篇文档语料,重跑「答案规范化」这一条数据质量干预",
+        "固定容量,系统扫 rank/lr,验证「质量 > 容量之上其它超参」这个结论还成不成立",
+        "补一个跨模型对照(换第二个 4-bit 小模型),看容量门槛的位置是否随模型漂移"
+      ],
+      "risk": "结论可能对语料的事实密度和答案可规范化程度敏感;若你的语料答案天然长而发散,数据质量这根杠杆的效果会打折。"
+    },
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "在仿真里复现「线性注意力导航策略」,检验它是否真在长上下文上压过 Transformer",
+      "based_on": [
+        { "title": "Beyond Transformers: Linear Attention Policy for Open-Vocabulary Object Goal Navigation", "url": "https://arxiv.org/abs/2607.18794" }
+      ],
+      "why_now": "这篇的对照实验发现:开放词表目标导航里,Transformer 策略的表现并不随上下文变长而变好,质疑了 self-attention 适不适合做部分可观测下的状态积累,并提出线性注意力替代。这个「上下文越长越不灵」的观察值得独立复现,也方便扩到别的仿真环境验证泛化。",
+      "feasibility": "纯仿真(Habitat/HM3D 一类)、无需真机,单卡可训可评;2–4 周能把线性注意力 vs Transformer 策略在同一环境跑出上下文长度扫描曲线。",
+      "route": [
+        "先跑通一个开放词表目标导航 baseline 的官方仿真训练与评测,拿到基准成功率",
+        "把策略骨干换成线性注意力,保持其余管线不变,复现原文的核心对照",
+        "系统扫上下文长度,画「成功率 vs 上下文长度」曲线,看两种注意力的走向差异",
+        "换一套场景/物体集做零样本迁移,检验结论是不是只在原数据集成立"
+      ],
+      "risk": "导航成功率对奖励设计和环境版本很敏感,复现差异可能来自管线而非注意力本身;要把变量控干净才能下结论。"
+    }
+  ]
+}
