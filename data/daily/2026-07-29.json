@@ -1,0 +1,356 @@
+{
+  "date": "2026-07-29",
+  "editor_note": "今天最大的动静是 Kimi K3——2.8T 参数的开源 MoE,直接把「前沿」两个字摆到了开放权重这边;配上今天两条新闻(《中国为什么把最好的 AI 模型白送》和 Dario Amodei 的回应),这场关于开源该不该、怕不怕的争论算是吵到明面上了。技术侧我偏爱 StateAct 那篇:与其教 agent 更会看截图,不如让它直接读程序状态、只在 28/108 个任务上才叫子代理去点鼠标——「别盯着像素,盯着状态」这个方向,我觉得比一味堆感知模型实在。另一头,美国最大电网可能给数据中心临时断电来防停电,和满屏的算力扩张放一起看格外扎眼:模型在长出百万级上下文,电网却在算今晚够不够用。每日一理挑了詹森不等式,写 ELBO、做变分推断的朋友天天在用它,今天把它掰开看看。",
+  "math_note": {
+    "name": "詹森不等式",
+    "name_en": "Jensen's Inequality",
+    "field": "凸分析 / 概率论",
+    "one_liner": "先平均还是先弯曲?凸函数替你分出高下。",
+    "statement": "凸函数 $f$(图像像个碗、任意两点连线都落在曲线上方)作用在随机变量 $X$ 上时,「先取期望再作用」永远不超过「先作用再取期望」:$f(\\mathbb{E}[X])\\le \\mathbb{E}[f(X)]$,其中 $\\mathbb{E}$ 表示求平均/期望。写成加权平均的形式就是 $f\\big(\\sum_i\\lambda_i x_i\\big)\\le\\sum_i\\lambda_i f(x_i)$,权重满足 $\\lambda_i\\ge0$、$\\sum_i\\lambda_i=1$。若 $f$ 是凹函数(倒过来的碗),不等号整体反向。",
+    "origin": "1906 年由丹麦数学家、同时也是电话工程师的 Johan Jensen 系统提出。他把「凸性」这个几何直觉(弦在曲线上方)抽象成一条对期望普遍成立的不等式,从此它成了从概率论到信息论、优化的一件基础工具——很多看似复杂的界,追到底都是它。",
+    "derivation": [
+      { "math": "f(\\lambda x+(1-\\lambda)y)\\le \\lambda f(x)+(1-\\lambda)f(y),\\quad 0\\le\\lambda\\le1", "note": "这是凸的定义:任取两点连一条弦,弦整段落在曲线上方。这就是最原始的「两点版」詹森不等式。" },
+      { "math": "f(x)\\ge f(m)+f'(m)\\,(x-m)", "note": "在均值点 m=E[X] 处给凸曲线画一条支撑线(可导时就是切线),凸性保证整条曲线都在这条直线之上,对所有 x 都成立。" },
+      { "math": "\\mathbb{E}[f(X)]\\ge f(m)+f'(m)\\,\\big(\\mathbb{E}[X]-m\\big)", "note": "两边对随机变量 X 取期望。期望是线性的,直接穿过右边的直线,常数项和一次项照搬。" },
+      { "math": "\\mathbb{E}[f(X)]\\ge f\\big(\\mathbb{E}[X]\\big)", "note": "因为 m 就取成 E[X],末项 E[X]-m=0 被消掉,剩下的正是詹森不等式。整条推导的关键只有一件事:凸曲线在切线之上。" }
+    ],
+    "applications": [
+      { "area": "机器学习 · 变分推断", "detail": "ELBO(证据下界)就是对 log(凹函数)用一次詹森:$\\log\\mathbb{E}[\\cdot]\\ge\\mathbb{E}[\\log\\cdot]$,把难算的边际似然换成可优化的下界。" },
+      { "area": "信息论", "detail": "KL 散度非负、以及熵的各种上界,本质都是对 log 的凹性用詹森,一步就得。" },
+      { "area": "金融与风险", "detail": "凸性带来的「詹森间隙」就是波动的价格——期权、保险的凸性溢价,说的正是先波动再取均值比先取均值更贵。" },
+      { "area": "基础不等式", "detail": "算术-几何平均不等式(AM-GM)是对 log 用詹森的特例,一条式子统摄一堆手工不等式。" }
+    ],
+    "takeaway": "「平均之后再作用」和「作用之后再平均」谁大谁小,完全由函数的弯曲方向决定;$\\mathbb{E}[f(X)]-f(\\mathbb{E}[X])$ 这个非负的「詹森间隙」,量的就是这份弯曲乘上不确定性有多少。",
+    "viz": {
+      "type": "custom",
+      "caption": "拖动曲线上两个红点。橙色弦永远在青色曲线上方,虚线标出的「间隙」= 弦中点减曲线值,恒 ≥ 0——把两点想成随机变量的两个取值,这就是 E[f(X)] ≥ f(E[X])。",
+      "html": "<canvas id='jencanvas' width='600' height='340' style='width:100%;max-width:600px;height:auto;display:block;margin:0 auto;'></canvas>",
+      "script": "(function(){var c=el.querySelector('#jencanvas');if(!c)return;var ctx=c.getContext('2d');var W=c.width,H=c.height;var padL=48,padR=20,padT=26,padB=34;var xmin=-2.6,xmax=2.6;function f(x){return 0.9*x*x;}var ymin=0,ymax=f(xmax)*1.08;function PX(x){return padL+(x-xmin)/(xmax-xmin)*(W-padL-padR);}function PY(y){return H-padB-(y-ymin)/(ymax-ymin)*(H-padT-padB);}var ax=-1.9,bx=1.5;function draw(){ctx.clearRect(0,0,W,H);ctx.strokeStyle='rgba(130,130,140,0.5)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(padL,PY(0));ctx.lineTo(W-padR,PY(0));ctx.stroke();ctx.beginPath();ctx.moveTo(PX(0),padT);ctx.lineTo(PX(0),H-padB);ctx.stroke();ctx.strokeStyle='#14b8a6';ctx.lineWidth=2.5;ctx.beginPath();for(var i=0;i<=120;i++){var x=xmin+(xmax-xmin)*i/120;var X=PX(x),Y=PY(f(x));if(i===0)ctx.moveTo(X,Y);else ctx.lineTo(X,Y);}ctx.stroke();var ay=f(ax),by=f(bx);ctx.strokeStyle='#f59e0b';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(PX(ax),PY(ay));ctx.lineTo(PX(bx),PY(by));ctx.stroke();var mx=(ax+bx)/2,chordY=(ay+by)/2,curveY=f(mx);ctx.strokeStyle='rgba(120,120,130,0.65)';ctx.setLineDash([4,4]);ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(PX(mx),PY(chordY));ctx.lineTo(PX(mx),PY(curveY));ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#f59e0b';ctx.beginPath();ctx.arc(PX(mx),PY(chordY),5,0,7);ctx.fill();ctx.fillStyle='#22c55e';ctx.beginPath();ctx.arc(PX(mx),PY(curveY),5,0,7);ctx.fill();ctx.fillStyle='#ef4444';ctx.beginPath();ctx.arc(PX(ax),PY(ay),7,0,7);ctx.fill();ctx.beginPath();ctx.arc(PX(bx),PY(by),7,0,7);ctx.fill();ctx.font='13px sans-serif';ctx.fillStyle='#f59e0b';ctx.fillText('弦中点 (f(a)+f(b))/2 = '+chordY.toFixed(2),14,18);ctx.fillStyle='#22c55e';ctx.fillText('曲线 f((a+b)/2) = '+curveY.toFixed(2),14,H-14);ctx.fillStyle='#8b8b95';ctx.fillText('间隙 '+(chordY-curveY).toFixed(2)+' >= 0',W-150,18);}var sel=-1;function nearest(mx,my){var da=Math.hypot(mx-PX(ax),my-PY(f(ax))),db=Math.hypot(mx-PX(bx),my-PY(f(bx)));if(Math.min(da,db)>26)return -1;return da<db?0:1;}function setX(mx){var x=xmin+(mx-padL)/(W-padL-padR)*(xmax-xmin);x=Math.max(xmin,Math.min(xmax,x));if(sel===0)ax=x;else if(sel===1)bx=x;draw();}function pos(e){var r=c.getBoundingClientRect();return [(e.clientX-r.left)*(W/r.width),(e.clientY-r.top)*(H/r.height)];}c.addEventListener('mousedown',function(e){var p=pos(e);sel=nearest(p[0],p[1]);if(sel>=0)setX(p[0]);});window.addEventListener('mousemove',function(e){if(sel>=0){var p=pos(e);setX(p[0]);}});window.addEventListener('mouseup',function(){sel=-1;});c.addEventListener('touchstart',function(e){if(e.touches[0]){var p=pos(e.touches[0]);sel=nearest(p[0],p[1]);if(sel>=0){setX(p[0]);e.preventDefault();}}},{passive:false});c.addEventListener('touchmove',function(e){if(sel>=0&&e.touches[0]){var p=pos(e.touches[0]);setX(p[0]);e.preventDefault();}},{passive:false});c.addEventListener('touchend',function(){sel=-1;});draw();})();"
+    }
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Kimi K3: Open Frontier Intelligence",
+      "title_zh": "Kimi K3:开放的前沿智能",
+      "url": "https://arxiv.org/abs/2607.24653",
+      "hf_url": "https://huggingface.co/papers/2607.24653",
+      "authors": "Kimi Team 等",
+      "affiliation": "月之暗面(Moonshot AI)",
+      "upvotes": 250,
+      "one_liner": "2.8T 参数的开源 MoE,把「前沿」摆到了开放权重这一边。",
+      "summary_zh": "月之暗面放出 Kimi K3——2.8 万亿参数的 MoE,每个 token 只激活 1040 亿(896 个路由专家里选 16 个),原生带视觉、上下文窗口 100 万 token。新的 Kimi Delta Attention 和 Attention Residuals 让信息在超长序列和深层网络里流得更顺,官方称整体扩展效率比 K2 提了约 2.5 倍。后训练把强化学习铺到通用、agent、代码多个域和多档推理强度上,冲的是长程执行和组合泛化。开源这个体量本身,就是今天最大的信号。",
+      "tags": ["LLM", "MoE", "开源"]
+    },
+    {
+      "domain": "ai",
+      "title": "StateAct: Program State, before Pixels, for Long-Horizon Computer-Use Agents",
+      "title_zh": "StateAct:先看程序状态,再看像素——面向长程电脑操作 agent",
+      "url": "https://arxiv.org/abs/2607.22798",
+      "hf_url": "https://huggingface.co/papers/2607.22798",
+      "authors": "Yan Yang 等",
+      "affiliation": "Salesforce AI Research",
+      "upvotes": 51,
+      "one_liner": "别盯着截图,盯着状态;只有 28/108 个任务才需要真去点鼠标。",
+      "summary_zh": "电脑操作 agent 通常靠「更会读截图、更准地点击」来提升,但截图只是底层程序状态(文件、后端、DOM)的有损渲染——不同状态能画出同样的像素,而代码可以直接读写状态。StateAct 是个代码优先的多智能体壳:主 agent 用代码直接操作程序状态,只在少数确实要图形界面的子目标上(108 个任务里 28 个、主 agent 步骤的 1.1%)才叫出一个专门的 GUI 子代理去点击;另有一个独立的「完成闸门」复核结果有没有漏存、存错地方。这个方向比一味堆感知模型实在。",
+      "tags": ["Agent", "Computer-Use", "多智能体"]
+    },
+    {
+      "domain": "ai",
+      "title": "DataPrep-Bench: Benchmarking LLMs as Training Data Preparators",
+      "title_zh": "DataPrep-Bench:把 LLM 当「训练数据准备工」来考",
+      "url": "https://arxiv.org/abs/2607.20465",
+      "hf_url": "https://huggingface.co/papers/2607.20465",
+      "authors": "Hao Liang 等",
+      "affiliation": "北京大学",
+      "upvotes": 49,
+      "one_liner": "数据质量不看文本表面,只认下游训练涨不涨点。",
+      "summary_zh": "数据质量决定模型上限,但一直没有统一基准衡量 LLM、agent、数据工作流到底会不会「端到端地准备训练数据」。这篇把数据准备拆成两件事:数据构造(把原始来源变成有监督训练数据)和数据质量评估(在真正训练前预测一批候选数据的训练价值),关键是全程用「下游训练效果」而不是文本表面属性来打分——喂相同原始来源,最后靠微调一个基座、看下游成绩排座次。给「数据为中心」的一堆方法搭了个能横向比的台子。",
+      "tags": ["数据", "Benchmark", "LLM"]
+    },
+    {
+      "domain": "ai",
+      "title": "Sol-Attn: Accelerating Video Generation Inference via On-the-Fly Attention Sparsification",
+      "title_zh": "Sol-Attn:边算边稀疏化注意力,给视频生成推理提速",
+      "url": "https://arxiv.org/abs/2607.24027",
+      "hf_url": "https://huggingface.co/papers/2607.24027",
+      "authors": "Haopeng Li 等",
+      "upvotes": 24,
+      "one_liner": "免训练动态稀疏,「既想省又想准」的老难题。",
+      "summary_zh": "扩散 Transformer 做高清视频,长 token 序列让注意力成了推理瓶颈。免训练的动态稀疏注意力只算被选中的 KV 块来省钱,但现有做法要么按固定比例取 top 块(预算死板)、要么按累计概率取(预算动态却不均衡),而且算和存这些代理分数本身就有开销;被丢掉的块直接不要,稀疏一狠就掉精度。Sol-Attn 冲着「更便宜的动态预算路由 + 少丢信息」去改这两点。属于实打实的推理工程,做视频生成的可以关注。",
+      "tags": ["视频生成", "推理加速", "注意力"]
+    },
+    {
+      "domain": "ai",
+      "title": "Rethinking Classifier-Free Guidance in On-Policy Diffusion Distillation",
+      "title_zh": "重新审视扩散蒸馏里的无分类器引导(CFG)",
+      "url": "https://arxiv.org/abs/2607.24731",
+      "hf_url": "https://huggingface.co/papers/2607.24731",
+      "authors": "Bingnan Li 等",
+      "upvotes": 61,
+      "one_liner": "正负两支的误差会互相抵消,天真地匹配「引导后速度」会翻车。",
+      "summary_zh": "On-policy 蒸馏(OPD)沿学生自己走出的轨迹去查询教师,但它在无分类器引导(CFG,现代扩散系统的标配)下该怎么表现,一直没说清。作者指出:直接匹配教师和学生「引导后的速度」这个目标在分支层面是欠定的——正分支和负分支的误差可以在合成结果里互相补偿。当教师负分支藏着学生拿不到的特权信息时,这种「联合下降」就会崩掉。是那种把常见做法的隐患挑明的分析型工作,做扩散蒸馏、加速的值得一读。",
+      "tags": ["扩散模型", "蒸馏", "CFG"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Data Pyramid for Embodied Manipulation",
+      "title_zh": "具身操作的「数据金字塔」",
+      "url": "https://arxiv.org/abs/2607.24744",
+      "hf_url": "https://huggingface.co/papers/2607.24744",
+      "authors": "Yifan Ye 等",
+      "affiliation": "北京大学",
+      "upvotes": 30,
+      "one_liner": "真机数据最贵最对齐,通用视觉语言数据最多最不对齐,中间怎么配是关键。",
+      "summary_zh": "多模态基座靠吞下整个互联网学会了看和说,但具身智能没这个捷径——它要的是把观测、物理状态和动作绑在一起的数据。这篇把具身数据生态理成一个「金字塔」:真机数据、UMI 式数据、第一/第三人称视频、仿真数据、通用视觉语言数据五层,围绕「可扩展性 vs 机器人对齐」这对张力,按质量、多样性、可复用性、物理保真度给每层定位,再回头看最近的具身基座各自是怎么选、怎么混数据配方的。是一张有用的地图。",
+      "tags": ["具身智能", "VLA", "数据"]
+    },
+    {
+      "domain": "chip",
+      "title": "The SpiNNaker2 chip: a many-core platform for flexible and scalable brain-inspired computing",
+      "title_zh": "SpiNNaker2:面向类脑计算的众核芯片",
+      "url": "https://arxiv.org/abs/2607.24396",
+      "authors": "Stefan Scholze 等",
+      "one_liner": "一颗想同时喂深度网络和脉冲网络的 152 核类脑芯片。",
+      "summary_zh": "神经形态(类脑)硬件被期待了很多年——它模仿大脑追极致能效,但真能同时兼顾复杂度和实用性的演示最近才多起来。SpiNNaker2 想在深度网络和类脑计算之间架桥:单颗芯片 152 个处理单元,既能跑传统深度网络,也能灵活探索两者结合的计算方式。对关心算力硬件、想在能效上找 GPU 之外出路的人,这是个能上手的真实平台,不只是论文里的架构图。",
+      "tags": ["神经形态", "类脑", "芯片"]
+    },
+    {
+      "domain": "bio",
+      "title": "SCTA: An Agentic Framework for Stable and Interpretable Target Gene Discovery from Single-Cell RNA Sequencing",
+      "title_zh": "SCTA:从单细胞测序里稳定、可解释地找靶基因",
+      "url": "https://arxiv.org/abs/2607.23821",
+      "authors": "Shuyu Chen 等",
+      "one_liner": "单细胞流程太敏感,换个预处理靶点就变——先把稳定性治了。",
+      "summary_zh": "从单细胞 RNA 测序(scRNA-seq)里找治疗靶基因,难点在于它能捕捉细胞异质性和稀有亚群,但也正因如此,靶点结果对预处理、细胞群选择、差异表达分析等每一步的选择都极其敏感,现有流程和通用分析 agent 常给出不稳定、难解释的假设。SCTA 是个 agent 框架,冲着「稳定 + 可解释」去,让靶点发现别一换参数就翻盘。这是 AI-for-bio 里很实际的痛点。",
+      "tags": ["单细胞", "靶点发现", "Agent"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Earthquake Aftershock Forecasting using Conditional Generative Models",
+      "title_zh": "用条件生成模型预报余震",
+      "url": "https://arxiv.org/abs/2607.24109",
+      "authors": "Weiqiang Zhu",
+      "one_liner": "老的点过程假设固定衰减 + 各向同性,真实断层不买账。",
+      "summary_zh": "大地震后余震在时空上怎么演化,是统计地震学的核心问题,也支撑着实时地震预报。现有方法(ETAS、Reasenberg-Jones 这些点过程模型)规定了时间上固定的衰减和空间上各向同性的核,能对上平均的大森-宇津和古登堡-里氏统计,却抓不住真实序列里受断层控制的空间形态、以及序列间差异很大的余震产率。这篇用条件生成模型放松这些固定形式,思路对「把生成模型迁到地球物理」是个不错的样本。",
+      "tags": ["地震", "生成模型", "时空预测"]
+    },
+    {
+      "domain": "energy",
+      "title": "Aligning Heterogeneous DFT Datasets: A Graph Neural Network Approach to Cross-Functional Formation Energies",
+      "title_zh": "用图神经网络对齐异构 DFT 数据集的形成能",
+      "url": "https://arxiv.org/abs/2607.24327",
+      "authors": "Yidong Huang 等",
+      "one_liner": "同一个结构换个泛函能差 107 meV/atom,数据合不到一起。",
+      "summary_zh": "密度泛函理论(DFT,算材料能量的第一性原理方法)的计算会因交换关联泛函、截断能、赝势等选择带来几十到几百 meV/atom 的系统性形成能误差——MatPES 数据集里同一结构在 PBE 和 r2SCAN 下平均能差 107 meV/atom。这种方法依赖的差异让多来源 DFT 数据没法直接合并,严重限制了训练材料 AI 模型的数据规模和质量。作者用图神经网络做跨泛函形成能对齐,想把散落的数据缝起来。做材料、电池数据驱动的会用得上。",
+      "tags": ["材料", "DFT", "GNN"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Scalable Variational Quantum Optimization via Pauli Correlation Encoding: Application to Large-Scale Power Demand Portfolio Optimization",
+      "title_zh": "用泡利关联编码做可扩展变分量子优化:电力需求组合优化",
+      "url": "https://arxiv.org/abs/2607.24722",
+      "authors": "Takuya Yoshioka 等",
+      "one_liner": "把二元变量塞进泡利关联的期望值里,少用几个量子比特。",
+      "summary_zh": "变分量子算法做组合优化前景不错,但大规模问题受限于量子比特资源——变量一多就编码不下。这篇用泡利关联编码(PCE):把二元变量表示成泡利关联算符的期望值,借多体关联给出一个连续松弛,从而用很少的量子比特做紧凑表示,再配一个两阶段混合流程,拿去做电力需求组合优化。量子 × 能源的跨界尝试,离实用还远,但编码思路值得记一笔。",
+      "tags": ["量子优化", "VQA", "能源"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "moeru-ai/airi",
+      "url": "https://github.com/moeru-ai/airi",
+      "language": "TypeScript",
+      "stars": 44692,
+      "stars_today": "796",
+      "one_liner": "自托管、数据归你的「赛博伙伴」,对标 Neuro-sama 那种实时互动。",
+      "summary_zh": "一个自托管、你自己拥有数据的 AI 伴侣容器,支持实时语音聊天,还能自己去玩 Minecraft、Factorio,Web/macOS/Windows 都能跑。定位是把「虚拟主播 / waifu」那套实时交互做成可自部署的开源框架。想折腾本地多模态实时 agent、又不想把数据交出去的人可以看看。"
+    },
+    {
+      "domain": "ai",
+      "name": "huggingface/speech-to-speech",
+      "url": "https://github.com/huggingface/speech-to-speech",
+      "language": "Python",
+      "stars": 7121,
+      "stars_today": "177",
+      "one_liner": "全开源模型搭本地语音 agent,不走云端。",
+      "summary_zh": "Hugging Face 出的本地语音 agent 搭建方案,把语音转文字、语言模型、文字转语音串成一条本地流水线,全用开源模型。适合想做离线 / 隐私敏感语音助手、又不想调闭源 API 的人。和今天那批语音创业融资放一起看,开源这条线在补齐。"
+    },
+    {
+      "domain": "ai",
+      "name": "bradautomates/claude-video",
+      "url": "https://github.com/bradautomates/claude-video",
+      "language": "Python",
+      "stars": 11955,
+      "stars_today": "989",
+      "one_liner": "给 Claude 装上「看视频」的能力,一条 /watch 全搞定。",
+      "summary_zh": "让 Claude 能看任意视频的工具:/watch 会自动下载视频、抽帧、转写,再把画面和文字一起喂给模型。今天涨得最凶(单日近千 star),踩的是多模态 agent「想看视频却没有现成管道」的痛点。属于轻量、好上手的那类工具。"
+    },
+    {
+      "domain": "ai",
+      "name": "andrewyng/aisuite",
+      "url": "https://github.com/andrewyng/aisuite",
+      "language": "Python",
+      "stars": 15652,
+      "stars_today": "92",
+      "one_liner": "一套接口调多家大模型,像 OpenAI SDK 一样顺手。",
+      "summary_zh": "吴恩达团队维护的统一接口,用一致的调用方式接多家生成式 AI 供应商,省去为每家单独写适配。做多模型对比、想随时切供应商而不改业务代码的场景很省事。"
+    },
+    {
+      "domain": "ai",
+      "name": "virgiliojr94/book-to-skill",
+      "url": "https://github.com/virgiliojr94/book-to-skill",
+      "language": "Python",
+      "stars": 11152,
+      "stars_today": "366",
+      "one_liner": "把任意技术书 PDF 变成 Claude Code 的一个 skill。",
+      "summary_zh": "输入一本技术书的 PDF,自动做成一个 Claude Code skill,方便边工作边查、边学边用。思路挺巧:与其让模型临时读整本书,不如先蒸成结构化的可复用技能。写代码时常翻手册的人会喜欢。"
+    },
+    {
+      "domain": "ai",
+      "name": "microsoft/agent-governance-toolkit",
+      "url": "https://github.com/microsoft/agent-governance-toolkit",
+      "language": "Python",
+      "stars": 5124,
+      "stars_today": "17",
+      "one_liner": "给自主 agent 上策略、零信任身份和沙箱,对着 OWASP Agentic Top 10。",
+      "summary_zh": "微软的 AI Agent 治理工具箱:策略强制、零信任身份、执行沙箱、可靠性工程,号称覆盖 OWASP Agentic 十大风险的 10/10。和今天微软 / 英伟达搞 AI 安全联盟的新闻正好呼应——agent 越自主,安全和治理就越要提前铺。做企业级 agent 部署的可以参考。"
+    },
+    {
+      "domain": "ai4s",
+      "name": "opengeos/GeoLibre",
+      "url": "https://github.com/opengeos/GeoLibre",
+      "language": "TypeScript",
+      "stars": 3296,
+      "stars_today": "743",
+      "one_liner": "浏览器里就能跑的云原生 GIS,桌面、手机、Jupyter 都支持。",
+      "summary_zh": "一个轻量的云原生地理信息平台,用来可视化、探索、分析地理空间数据,能在浏览器、桌面、手机和 Jupyter notebook 里跑。对做遥感、气候、地球科学、或任何要摆弄地理数据的人,是个趁手的开源底座。opengeos 一贯的实用风格。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "英伟达、微软牵头组「开放 AI 安全联盟」,OpenAI、谷歌、Anthropic 都不在",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/971281/nvidia-open-secure-ai-alliance-cybersecurity",
+      "source": "The Verge",
+      "summary_zh": "英伟达和微软联手发起一个开放的 AI 安全联盟,同期微软推出了自己首个网络安全模型和一套 agent 化安全系统,自称在多项测评上胜过同类平台。耐人寻味的是联盟里没有 OpenAI、谷歌和 Anthropic——安全标准的话语权,正随着大模型阵营的分野被切开。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "中国为什么把最好的 AI 模型白送",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/971444/how-chinese-open-weight-ai-models-impact-us-companies",
+      "source": "The Verge",
+      "summary_zh": "The Verge 梳理了中国厂商密集开源顶尖模型的动机、以及对美国公司的冲击——开放权重正把「前沿」从闭源那边拉走。配上今天 Kimi K3 的发布,以及 Anthropic 的 Dario Amodei 出面回应「不反对开源权重、但担心中国 AI」,这场争论已经从技术圈吵到了政策层面。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Hugging Face 上的工具被拿去「一键脱衣」,波及女性和儿童",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/971723/hugging-face-nudify-deepfake-undress-women-children",
+      "source": "The Verge",
+      "summary_zh": "有报道指出 Hugging Face 上的模型和工具正被滥用于生成未经同意的裸露图像,受害者包括女性和儿童。开放模型社区在降低门槛的同时,也把滥用的门槛一起降了——平台的内容治理和上传审核被推到风口浪尖。"
+    },
+    {
+      "domain": "energy",
+      "title_zh": "为防大停电,美国最大电网可能给数据中心临时断电",
+      "url": "https://techcrunch.com/2026/07/28/data-centers-may-face-temporary-power-cuts-to-prevent-blackouts-on-largest-us-grid/",
+      "source": "TechCrunch",
+      "summary_zh": "覆盖美国最大电网(PJM)区域的运营方考虑,在电力紧张时对数据中心临时限电,以避免更大范围的停电。AI 算力扩张正把电网推到承压边缘——一边是模型在长出百万级上下文,一边是电网在算今晚够不够用,这种张力今年只会更明显。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Ilya Sutskever 的 Safe Superintelligence 与英伟达合作扩研究",
+      "url": "https://techcrunch.com/2026/07/27/ilya-sutskevers-safe-superintelligence-partners-with-nvidia-to-scale-its-ai-research/",
+      "source": "TechCrunch",
+      "summary_zh": "Ilya Sutskever 创办的 Safe Superintelligence(SSI)宣布与英伟达合作,为其 AI 研究提供算力扩展。这家一直低调、几乎不发产品的实验室靠算力和名气续着高估值,合作落定也给「纯安全导向的超级智能」路线添了个现实注脚。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Enigma 融资 7100 万美元,想让操控机器人像调音量一样简单",
+      "url": "https://techcrunch.com/2026/07/27/enigma-raises-70m-to-make-controlling-a-robot-as-easy-as-adjusting-the-volume/",
+      "source": "TechCrunch",
+      "summary_zh": "机器人控制创业公司 Enigma 拿到 7100 万美元融资,主打把复杂的机器人操控简化到「像调音量一样」的直觉交互。具身赛道的钱还在往「让普通人也能用」的方向走,而不是只堆本体硬件。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "英特尔发布面向太空计算的新芯片",
+      "url": "https://spacenews.com/intel-debuts-new-chip-for-space-computing/",
+      "source": "SpaceNews",
+      "summary_zh": "英特尔推出一款专为太空环境设计的计算芯片,冲的是卫星和在轨系统对算力、抗辐射与能效的需求。随着「在轨 AI」越来越热,抗辐射算力硬件成了商业航天和芯片产业的交叉地带。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "Rocket Lab 拿下 2.66 亿美元太空军合同,将在阿拉斯加建发射场",
+      "url": "https://spacenews.com/rocket-lab-to-open-alaska-launch-site-under-266-million-space-force-deal/",
+      "source": "SpaceNews",
+      "summary_zh": "Rocket Lab 依据一份 2.66 亿美元的太空军合同,将在阿拉斯加新建一处发射场。政府和军方订单继续给小型运载火箭公司托底,发射能力的地理布局也在往高纬度扩。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "亚马逊申请「手机直连卫星」星座",
+      "url": "https://spacenews.com/amazon-files-application-for-direct-to-device-satellite-constellation/",
+      "source": "SpaceNews",
+      "summary_zh": "亚马逊向监管方提交了直连设备(direct-to-device)卫星星座的申请,要和 SpaceX 的星链、AST SpaceMobile 抢「手机不换硬件直接连卫星」这块市场。Kuiper 的野心正从宽带往手机直连延伸。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "FDA 批准 Freenome 结直肠癌血检,交由雅培销售",
+      "url": "https://www.fiercebiotech.com/medtech/fda-signs-freenomes-bowel-cancer-screener-abbott-preps-sell-blood-test-us",
+      "source": "Fierce Biotech",
+      "summary_zh": "FDA 批准了 Freenome 的结直肠癌筛查血液检测,将由雅培负责市场销售。抽血就能筛查结直肠癌进入商业化,对提升筛查依从性是实打实的一步——比让人做肠镜的门槛低得多。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "embodied",
+      "type": "repo",
+      "title": "做一个「点云开放词表自动标注」小工具(冻结模型、零训练)",
+      "based_on": [
+        { "title": "Training-Free Open-Vocabulary 3D Point-Cloud Segmentation on the Generalized Few-Shot Benchmark", "url": "https://arxiv.org/abs/2607.15331" }
+      ],
+      "why_now": "这篇刚证明:一个冻结的 3D 视觉语言模型(RegionPLC)配一个冻结的可提示分割器(SAM3),只用类别名字、不训练、不给 3D 标签就能做开放词表点云分割。SAM3 也是新出的,这条「全冻结」管线目前还没有现成的开源实现和易用封装。",
+      "feasibility": "纯推理,单张 24–40GB 显卡够跑;把两个模型串起来 + 提示词接口 + 导出常见点云标注格式,2–3 周能出一个能用的 pip 包。",
+      "route": [
+        "先跑通 RegionPLC 和 SAM3 各自的官方推理,在一两个 ScanNet 场景上手动核对输出",
+        "把「类别名 → 2D 提示 → 3D 提升」串成一条命令行管线,固定一个稳定的融合规则",
+        "封成 pip 包 + 一条 `label point_cloud.ply --classes chair,table` 的 CLI,附带可视化",
+        "在 ScanNet / S3DIS 上跑几个 demo,写清 README 和 benchmark 数字来攒 star"
+      ],
+      "risk": "RegionPLC 与 SAM3 的权重 / 许可是否可得、以及 3D 提升环节的融合质量,是主要不确定项。"
+    },
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "把即插即用的空间剪枝迁到第二个 3D grounding 模型上,验证泛化性",
+      "based_on": [
+        { "title": "PruneGround: Plug-and-play Spatial Pruning for 3D Visual Grounding", "url": "https://arxiv.org/abs/2606.31148" }
+      ],
+      "why_now": "PruneGround 用一个冻结 VLM 做「语言引导的空间剪枝」,声称即插即用、能在杂乱场景里省算力又减歧义。即插即用方法最低风险的扩展,就是把它挪到另一个 3D visual grounding 模型上看是否照样有效——这本身就是可发表的泛化性检验。",
+      "feasibility": "只做推理和轻量适配,单卡即可;复现 PruneGround 官方设置 + 接一个新 backbone,3–4 周。",
+      "route": [
+        "跑通 PruneGround 官方在 ScanRefer / Nr3D 上的推理,复现其速度 / 精度数字",
+        "选第二个开源 3DVG 模型(不同架构),把语言引导空间剪枝模块接进它的推理路径",
+        "在同一 benchmark 上对比接与不接的精度和耗时,定位剪枝在哪些描述类型上帮忙 / 帮倒忙",
+        "做消融:剪枝阈值、VLM 选择对结果的影响"
+      ],
+      "risk": "新模型的输入表示与剪枝模块假设不一致时可能要改接口;剪枝在近距离 / 全局指代上可能反而掉点。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "复现 Latent-LoRA 的「无梯度路由」,测它跨基座模型还成不成立",
+      "based_on": [
+        { "title": "Latent-LoRA: Compact Latent-Space Adapters with Gradient-Free Routing for Continual Learning", "url": "https://arxiv.org/abs/2607.23837" }
+      ],
+      "why_now": "Latent-LoRA 发现「冻结 LLM embedding 层的池化 token 向量本身就能把不同任务分开」,于是可以无梯度地给每个任务路由到对应 LoRA,免掉可训练门控。这个观察很干净、复现便宜,但它对不同基座是否普遍成立没被充分检验——正好是单人能做的低风险验证。",
+      "feasibility": "只需在单卡上给每个任务训一个小 LoRA + 无参数路由,几张 24GB 卡足够;标准持续学习基准 3–4 周能跑完一轮。",
+      "route": [
+        "在一个标准持续学习基准(如按任务切分的分类 / 指令集)上复现 Latent-LoRA 主结果",
+        "换 2–3 个不同规模 / 家族的基座,统计池化 embedding 对任务的可分性(可视化 + 线性探针)",
+        "对比无梯度路由 vs 简单门控在遗忘率上的差距",
+        "找路由失败的任务对,分析什么时候 embedding 分不开"
+      ],
+      "risk": "任务分布很接近时池化 embedding 可能分不开,路由退化;某些基座的 embedding 层几何不利于线性可分。"
+    }
+  ]
+}
