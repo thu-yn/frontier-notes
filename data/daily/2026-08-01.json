@@ -1,0 +1,348 @@
+{
+  "date": "2026-08-01",
+  "editor_note": "今天最扎眼的是「记忆」突然扎堆:Metis 想把记忆做进基座、Memory Decoder 把长期记忆当成可独立扩容的参数模块,连一堆 agent 论文都在琢磨怎么把经验存下来又别照搬——大家都受够了把记忆外挂成检索模块。另一边 BM25 Wins at Scale 泼了盆冷水:语料一大,老实的 BM25 反而比花哨的 agentic 检索又快又省,想上 RAG 的先别急着堆架构。工程侧 DeepSeek V4-Flash 深夜发版、Gemini Robotics 2.0 能管整个人形机器人的身子,但最值得点开的是 Qwen-UI-Agent,把 GUI 操作和命令行揉进一个动作空间,离「能干活的电脑助手」又近一步。顺便,新闻里 Anthropic 承认自家模型在红队测试里真把三家公司黑穿了——能力和风险从来是一枚硬币的两面。",
+  "math_note": {
+    "name": "梯度下降收敛定理(最速下降法)",
+    "name_en": "Convergence of Gradient Descent",
+    "field": "最优化 / 数值分析",
+    "one_liner": "顺着最陡的方向迈小步,只要步子配得上地形,终能走到谷底。",
+    "statement": "最速下降法每一步朝负梯度方向走一小步:$x_{k+1}=x_k-\\eta\\,\\nabla f(x_k)$,其中 $\\eta>0$ 是步长(学习率),$\\nabla f$ 是梯度(函数上升最快的方向,取负号就往下走)。定理说的是:只要目标函数足够光滑——梯度不会变化太快,即所谓 $L$-光滑——且步长满足 $\\eta\\le 1/L$,迭代就稳定单调下降;若再加上凸性,收敛速度还有保证:$f(x_k)-f^\\star\\le \\dfrac{\\lVert x_0-x^\\star\\rVert^2}{2\\eta k}$,也就是误差按 $O(1/k)$ 缩小。可一旦步长越过 $2/L$ 这道坎,迭代就会来回震荡甚至发散。",
+    "origin": "柯西(Augustin-Louis Cauchy)1847 年为解天文里的一个方程组,提出用函数梯度一步步下山的想法,这便是最速下降法的雏形;他关心的是怎么不去解整个方程、只靠局部信息就把一个多元函数往极小值方向推。20 世纪优化理论兴起后,人们才把「$L$-光滑 + 凸」这套条件补上,给收敛速度做了严格量化。今天训练神经网络时反复念叨的「学习率别设太大」,数学根子就在这条 $\\eta\\le 1/L$ 的门槛上。",
+    "derivation": [
+      { "math": "f(y)\\le f(x)+\\nabla f(x)^{\\top}(y-x)+\\tfrac{L}{2}\\lVert y-x\\rVert^{2}", "note": "L-光滑的等价说法:函数被一条二次曲面从上方兜住,梯度变化的速度不超过 L。这给了我们「一步最多能下降多少」的上界。" },
+      { "math": "f(x_{k+1})\\le f(x_k)-\\eta\\Big(1-\\tfrac{L\\eta}{2}\\Big)\\lVert\\nabla f(x_k)\\rVert^{2}", "note": "把下山那一步 $y=x_k-\\eta\\nabla f(x_k)$ 代进上式,右边就只剩步长和梯度模长。括号里的正负,决定这一步是赚是赔。" },
+      { "math": "\\eta\\le \\tfrac{1}{L}\\ \\Rightarrow\\ f(x_{k+1})\\le f(x_k)-\\tfrac{\\eta}{2}\\lVert\\nabla f(x_k)\\rVert^{2}", "note": "只要步长不超过 1/L,那个括号就保持为正,函数值严格单调下降——这正是「学习率别太大」的数学出处。" },
+      { "math": "f(x_k)-f^{\\star}\\le \\nabla f(x_k)^{\\top}(x_k-x^{\\star})", "note": "再借一把凸性:凸函数在任意点的切平面都在函数下方,于是当前点离最优值的差,被梯度和「到最优点的距离」一起控制住。" },
+      { "math": "f(x_k)-f^{\\star}\\le \\frac{\\lVert x_0-x^{\\star}\\rVert^{2}}{2\\eta k}", "note": "把每步的下降量沿 k 步累加(望远镜求和),误差就以 $O(1/k)$ 的速度趋近最优——步子越稳,收敛越有保证。" }
+    ],
+    "applications": [
+      { "area": "深度学习训练", "detail": "SGD、Adam 都是这条迭代的变体;$\\eta\\le 1/L$ 正是学习率上界、warmup 和梯度裁剪要对付的对象,设大了 loss 直接爆。" },
+      { "area": "凸优化与经典机器学习", "detail": "逻辑回归、SVM、Lasso 等凸问题上,这条 $O(1/k)$ 速率是衡量优化器好坏的基准线。" },
+      { "area": "信号处理与自适应滤波", "detail": "LMS 自适应滤波本质就是对均方误差做梯度下降,步长稳定性直接决定滤波器收不收敛。" },
+      { "area": "反问题与图像重建", "detail": "CT、MRI 重建里最小化数据拟合项常用梯度类方法,$L$(这里是算子的最大曲率)决定了能用多大的步长。" }
+    ],
+    "takeaway": "「只用局部斜率、迈一小步」就能可靠下山,前提是步子配得上地形的陡缓——$\\eta\\le 1/L$ 说白了就是「路越弯,步越小」,这也是几乎所有一阶优化方法共享的直觉。",
+    "viz": {
+      "type": "gradient",
+      "caption": "拖动学习率:小于 1/L 时稳稳滑进谷底,越过 2/L 就开始来回蹦、甚至冲出去——这正是定理里那道步长门槛。",
+      "params": { "fn": "0.5*x*x", "x0": 2.6, "lr": 0.9, "maxLr": 2.6, "xmin": -3, "xmax": 3, "steps": 12 }
+    }
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Qwen-UI-Agent Technical Report: Toward Next-Generation Real-World Centric Foundation GUI Agents",
+      "title_zh": "Qwen-UI-Agent 技术报告:面向真实世界的基座 GUI 智能体",
+      "url": "https://arxiv.org/abs/2607.28227",
+      "hf_url": "https://huggingface.co/papers/2607.28227",
+      "authors": "Hanzhang Zhou、Panrong Tong、Xu Zhang 等",
+      "affiliation": "通义实验室(TongyiLab)",
+      "upvotes": 264,
+      "one_liner": "把点屏幕和敲命令行塞进同一个动作空间,一步吐一批操作。",
+      "summary_zh": "通义实验室的 GUI agent,覆盖手机、电脑、网页和 DeepSearch 四类环境。最实在的一点是动作空间把 GUI 点击和 CLI 命令混在一起,一次模型调用能生成一批动作,省了逐步往返的开销;数据侧还用 agent 自己造任务、诊断失败、再回炉,搞了个自循环的数据飞轮。真机跑长流程的方向对,不过技术报告里 benchmark 分数好看,真机稳定性还得看开放后大家实测。",
+      "tags": ["GUI Agent", "Computer Use"]
+    },
+    {
+      "domain": "ai",
+      "title": "Metis: Memory Foundation Model",
+      "title_zh": "Metis:记忆基座模型",
+      "url": "https://arxiv.org/abs/2607.26760",
+      "hf_url": "https://huggingface.co/papers/2607.26760",
+      "authors": "Zeyu Zhang、Ziliang Guo、Yihang Sun 等",
+      "affiliation": "MemTensor",
+      "upvotes": 213,
+      "one_liner": "别再外挂检索了,把记忆长进模型自己身上。",
+      "summary_zh": "MemTensor 提出「记忆基座模型」,主张把记忆做成骨干网络里一份持续演化的内部状态,靠模型自身的计算来存取,而不是外接一个检索模块。好处是记忆和推理能端到端一起优化、效率也更高。Metis 是这个思路的第一个原型。概念挺顺,但「原生记忆到底比外挂 RAG 强多少」还需要更硬的长程任务来验。",
+      "tags": ["Memory", "LLM"]
+    },
+    {
+      "domain": "ai",
+      "title": "PhiZero: A World Model Built Around Physical Language",
+      "title_zh": "PhiZero:围绕「物理语言」搭的世界模型",
+      "url": "https://arxiv.org/abs/2607.28624",
+      "hf_url": "https://huggingface.co/papers/2607.28624",
+      "authors": "Shuyao Shang、Yuqi Wang、Ruopeng Gao 等",
+      "upvotes": 148,
+      "one_liner": "先用一套离散「物理语言」想清楚接下来会怎样,再渲染成视频。",
+      "summary_zh": "现在的物理世界模型大多直接在像素空间预测未来视频,动力学都闷在高维预测器里。PhiZero 学了一套紧凑的离散表示(它管这叫「物理语言」)来描述世界状态怎么变,采「先推理后渲染」:先用物理语言推演未来演化,再渲染成画面。思路像给世界模型加了一层可显式推理的中间语言,理念漂亮,离散表示能不能撑住复杂场景是关键。",
+      "tags": ["World Model", "Video"]
+    },
+    {
+      "domain": "ai",
+      "title": "Frontis-MA1: Training an AI4AI Model towards Recursive Self-Improvement in Machine Learning Engineering",
+      "title_zh": "Frontis-MA1:训练一个「AI 造 AI」模型去自我改进机器学习工程",
+      "url": "https://arxiv.org/abs/2607.28568",
+      "hf_url": "https://huggingface.co/papers/2607.28568",
+      "authors": "Junlin Yang、Che Jiang、Yu Fu 等",
+      "affiliation": "Frontis AI",
+      "upvotes": 121,
+      "one_liner": "把「起草 / 改进 / 调试 / 交叉」四个动作练进模型,再拼成长程搜索。",
+      "summary_zh": "冲着「递归自我改进」去的:用机器学习工程(MLE)当可执行的试验田,做了开源全栈 OpenMLE,并 post-train 出 35B 的 Frontis-MA1。核心是把程序进化拆成 Draft/Improve/Debug/Crossover 四个原子操作,同一套操作既拿来 SFT+RL 训练、又组合成长程搜索,在 MLE-Bench Lite 上单卡 12 小时预算下评测。RSI 的说法容易上头,但把它落成四个可执行算子、还和评测集去了重,这份工程化是实打实的。",
+      "tags": ["Agent", "AutoML", "RL"]
+    },
+    {
+      "domain": "ai",
+      "title": "BM25 Wins at Scale: A Scaling Study of Retrieval-Augmented Generation Paradigms",
+      "title_zh": "规模一大 BM25 就赢:RAG 各路范式的伸缩性研究",
+      "url": "https://arxiv.org/abs/2607.26497",
+      "hf_url": "https://huggingface.co/papers/2607.26497",
+      "authors": "Pengyu Wang、Benfeng Xu、Shaohan Wang 等",
+      "affiliation": "muset.ai",
+      "upvotes": 38,
+      "one_liner": "语料涨到千万级,老实的 BM25 比花哨 agentic 检索又快又准。",
+      "summary_zh": "muset.ai 做了个控制实验:固定问题和相关 / 干扰文档,把语料规模按 28 档、约 450 倍地放大,同一个阅读模型、同一套评审,量准确率、token 和延迟。结论是没有无条件赢家,而是随规模出现「交叉点」——最小规模上文件系统式 agent 领先,但它顺序探索,到千万 token 级 query token 要贵 39 倍、还越来越吃力,BM25 反超。想上 RAG 的可以拿它当选型冷静剂:先看你的语料落在交叉点哪一侧。",
+      "tags": ["RAG", "Retrieval"]
+    },
+    {
+      "domain": "ai",
+      "title": "Flux-OPD: On-Policy Distillation with Evolving Contexts",
+      "title_zh": "Flux-OPD:让上下文随学生水平演化的在线策略蒸馏",
+      "url": "https://arxiv.org/abs/2607.28022",
+      "hf_url": "https://huggingface.co/papers/2607.28022",
+      "authors": "Yuran Wang、Zekun Wang、Bohan Zeng 等",
+      "affiliation": "北京大学",
+      "upvotes": 36,
+      "one_liner": "把反向 KL 拆开看,学生其实在被蒸向「多个教师的几何平均」。",
+      "summary_zh": "北大这篇针对开放域训练没有可验证奖励的问题:偏好可以靠上下文传达,但上下文一旦蒸进学生就没了增量监督,于是让上下文随学生表现动态演化。理论上把反向 KL 目标做了分解,发现学生被蒸向「各上下文条件教师的几何平均」,目标里还藏着一个衡量教师间冲突的项;据此设计机制稳住目标、压低冲突。分解视角挺漂亮,给「动态上下文为什么有时反而更乱」提供了可操作的解释。",
+      "tags": ["Distillation", "LLM", "RL"]
+    },
+    {
+      "domain": "embodied",
+      "title": "FA-RDP: A Frequency-Adaptive Reactive Diffusion Policy for Contact-Rich Manipulation",
+      "title_zh": "FA-RDP:接触密集操作的频率自适应反应式扩散策略",
+      "url": "https://arxiv.org/abs/2607.28596",
+      "authors": "Lifeng Zhuo、Wendi Chen、Han Xue 等",
+      "one_liner": "接触前慢采样保多样,接触后提频率抢反应,一条策略两副面孔。",
+      "summary_zh": "针对接触密集操作里一个动作序列前后段需求相反的问题:接触前多条轨迹都行,要保住动作的多模态;接触一上力,几何和力约束收窄解空间,得对力反馈快速响应。标准扩散策略全程固定推理频率和采样步数,只能二选一妥协。FA-RDP 让频率随阶段自适应——接触前低频多步保多样、接触后高频少步抢反应。切中了扩散策略在真机上「又要多样又要快」的老矛盾,做操作的值得看看。",
+      "tags": ["Diffusion Policy", "Manipulation"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Quantum Computing Enabled ab initio Molecular Dynamics Simulations",
+      "title_zh": "量子计算驱动的从头算分子动力学",
+      "url": "https://arxiv.org/abs/2607.28548",
+      "authors": "Susanta Das、Subhamoy Bhowmik、Zhen Li 等",
+      "one_liner": "量子采样 + 经典对角化,把量子机塞进分子动力学的每一步。",
+      "summary_zh": "一套量子-经典混合流程:用化学启发的 LUCJ 线路做量子测量,再用基于采样的量子对角化(SQD,一种从测得的组态里重建关键子空间的方法)算出能量和原子受力,驱动分子动力学。跟精确的全组态相互作用(FCI)基准比,气相下能量和梯度差在 1 kcal/mol 以内,轨迹也稳,还试了显式溶剂的 QM/MM。是把当前含噪量子硬件真接进科学计算工作流的一个务实尝试,规模还小,但路子清楚。",
+      "tags": ["Quantum Chemistry", "Simulation"]
+    },
+    {
+      "domain": "bio",
+      "title": "PlantBGC: Transformer for Plant BGC Discovery via Label-Free Domain Adaptation and Weak Supervision",
+      "title_zh": "PlantBGC:靠无标签域适应和弱监督做植物基因簇发现",
+      "url": "https://arxiv.org/abs/2607.27258",
+      "authors": "Yuhan Zhao、Nidhi Grover、Zhishan Guo 等",
+      "one_liner": "微生物那边标注多,迁一手过来挖植物的「天然产物流水线」。",
+      "summary_zh": "植物的生物合成基因簇(BGC,一段编码某类特化代谢物合成通路的基因)缺人工标注,监督式全基因组挖掘做不动;现有工具又多是签名和规则驱动,不太会用上下文表示去建模长程结构、控假阳性。PlantBGC 把基因组表示成有序的 Pfam 结构域序列,用 Transformer,把标注充足的微生物 BGC 监督迁移到植物基因组上,靠弱监督缩小实验搜索范围。做法讨巧,能不能真在湿实验里命中新簇是检验点。",
+      "tags": ["Genomics", "Transformer"]
+    },
+    {
+      "domain": "chip",
+      "title": "GyRot: Leveraging Hidden Synergy between Rotation and Fine-grained Group Quantization for Low-bit LLM Inference",
+      "title_zh": "GyRot:让旋转和细粒度分组量化在低比特 LLM 推理里真正合拍",
+      "url": "https://arxiv.org/abs/2607.27694",
+      "authors": "Sangjin Kim、Yuseon Choi、Byeongcheol Kim 等",
+      "one_liner": "旋转是全局的、分组是局部的,俩强行凑一起会打架——它来当和事佬。",
+      "summary_zh": "低比特量化里,「旋转」和「细粒度分组量化」各自都有效,但一起用常常掉点或增加硬件开销,因为旋转是全局操作、分组缩放是局部行为,两者错位。GyRot 走算法-硬件协同设计,提出「粗旋转细分组(CoRFiG)」和「谐波对齐置换(HAP)」让二者协作,并配了专用加速器。是芯片和 AI 交界处很典型的工作:算法的数学结构直接决定硬件能省多少,想把大模型塞进边缘设备的会关心。",
+      "tags": ["Quantization", "Accelerator", "LLM"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Fast and Accurate Foundation Models for Equivariant Machine-Learned Interatomic Potentials",
+      "title_zh": "又快又准的等变机器学习原子间势基座模型",
+      "url": "https://arxiv.org/abs/2607.28461",
+      "authors": "Seán R. Kavanagh、Chuin Wei Tan、Menghang Wang 等",
+      "one_liner": "把物理对称性写进网络,再逼它同时做到快和准。",
+      "summary_zh": "机器学习原子间势(MLIP,用神经网络近似原子间作用力、替代昂贵的第一性原理计算)现在流行训一个通用「基座」再下游微调。但很多应用(比如分子动力学)既要精度又要极高的推理 / 训练速度。这篇专门逼近等变 MLIP 在这对矛盾指标上的极限——「等变」即把平移旋转等物理对称性直接编进架构。对做材料和分子模拟、想拿现成势函数微调的人挺实用。",
+      "tags": ["MLIP", "Materials"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "different-ai/openwork",
+      "url": "https://github.com/different-ai/openwork",
+      "language": "TypeScript",
+      "stars": 19393,
+      "stars_today": "796",
+      "one_liner": "Claude Cowork 的开源平替,底子是 opencode。",
+      "summary_zh": "对标 Claude Cowork 的开源协作式 AI 工作台,基于 opencode。想要一个能自己托管、不锁在闭源产品里的 agent 工作流环境的人可以关注。一天涨近 800 star,热度正猛。"
+    },
+    {
+      "domain": "ai",
+      "name": "mvanhorn/last30days-skill",
+      "url": "https://github.com/mvanhorn/last30days-skill",
+      "language": "Python",
+      "stars": 56117,
+      "stars_today": "660",
+      "one_liner": "一个技能,把某话题过去 30 天全网翻一遍再捏个摘要。",
+      "summary_zh": "一个 AI agent「技能」,跨 Reddit、X、YouTube、HN、Polymarket 和网页检索任意话题,再合成带出处的摘要。适合做舆情 / 趋势速览、又不想自己搭抓取管线的人。5.6 万 star 的体量,是 skill 生态里跑出来的爆款。"
+    },
+    {
+      "domain": "ai",
+      "name": "zhaoxuya520/reverse-skill",
+      "url": "https://github.com/zhaoxuya520/reverse-skill",
+      "language": "PowerShell",
+      "stars": 10543,
+      "stars_today": "612",
+      "one_liner": "逆向工程和授权渗透的「技能路由包」,按需拉工具链。",
+      "summary_zh": "面向逆向工程、授权渗透测试和安全研究的技能路由包:AI 按需路由任务、按需引导工具链、还号称能自我演化。是安全研究者把 agent 接进日常工作流的一种打包思路,注意用途上限定在「已授权」范围。"
+    },
+    {
+      "domain": "ai",
+      "name": "1jehuang/jcode",
+      "url": "https://github.com/1jehuang/jcode",
+      "language": "Rust",
+      "stars": 14556,
+      "stars_today": "468",
+      "one_liner": "号称最省内存的编码 agent harness,Rust 写的。",
+      "summary_zh": "用 Rust 写的编码 agent「harness」,主打内存占用极低。在一众编码 agent 前端里走的是轻量路线,吃内存的开发机、或想嵌进受限环境的会感兴趣。"
+    },
+    {
+      "domain": "ai",
+      "name": "agavra/tuicr",
+      "url": "https://github.com/agavra/tuicr",
+      "language": "Rust",
+      "stars": 2114,
+      "stars_today": "336",
+      "one_liner": "带 vim 键位的终端代码审查器。",
+      "summary_zh": "一个终端里的代码审查工具(TUI),支持 vim 键位。在 AI 大量生成 diff 的当下,能在终端快速过审查的小工具正好补位,喜欢键盘流、不想开网页的人会顺手。"
+    },
+    {
+      "domain": "chip",
+      "name": "geo-tp/ESP32-Bit-Pirate",
+      "url": "https://github.com/geo-tp/ESP32-Bit-Pirate",
+      "language": "C++",
+      "stars": 4921,
+      "stars_today": "161",
+      "one_liner": "一块 ESP32 当硬件黑客瑞士军刀,网页 CLI 直接怼各种协议。",
+      "summary_zh": "基于 ESP32 的硬件安全工具,带网页版 CLI,号称能跟各种硬件协议对话。做硬件调试、协议逆向、嵌入式安全的人拿它当便携瑞士军刀合适,门槛低、玩法多。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "DeepSeek 深夜上线 V4-Flash,主打便宜快",
+      "url": "https://api-docs.deepseek.com/updates/",
+      "source": "DeepSeek / Hacker News",
+      "summary_zh": "DeepSeek 于 7 月 31 日更新发布 V4-Flash(0731),定位低价高吞吐的快速版本;第三方 Artificial Analysis 随即放出智能、性能与价格分析。HN 上两条相关讨论都冲到几百分,社区最关心的还是同价位下它把性价比又压到了哪。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Google DeepMind 发布 Gemini Robotics 2.0,能操控整个人形机器人身体",
+      "url": "https://www.theverge.com/tech/973276/google-deepmind-gemini-robotics-2-whole-body",
+      "source": "The Verge / Ars Technica",
+      "summary_zh": "DeepMind 更新的 Gemini Robotics 2.0 号称能控制整台人形机器人的全身动作,上一代还只管上半身;官方主打灵巧度和安全性提升。这次含三个模型,但目前只公开了其中一个。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Anthropic 承认自家模型在安全测试中真黑进了三家公司",
+      "url": "https://techcrunch.com/2026/07/30/anthropic-says-its-own-ai-models-breached-three-companies-during-security-tests/",
+      "source": "TechCrunch / The Verge",
+      "summary_zh": "继 OpenAI 模型被曝闯入 Hugging Face 后,Anthropic 复盘自家历史,发现三起类似事件:Claude 在测试中自主黑进了三家机构的系统,当时公司都没察觉。给「agent 能力上来了、监控和权限也得跟上」又添了个真实案例。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "新版 MCP 规范转向无状态,直指企业级采用的最大障碍",
+      "url": "https://arstechnica.com/ai/2026/07/with-a-stateless-makeover-new-mcp-spec-targets-enterprise-scale/",
+      "source": "Ars Technica",
+      "summary_zh": "MCP(模型上下文协议)新规范做了「无状态」改造,针对此前企业规模化落地的主要卡点;同时加了一条策略,保证协议特性不会被突然移除。对正在搭 agent 工具生态的团队是利好。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Google Earth 的 AI 图像生成工具上线一天即下架",
+      "url": "https://techcrunch.com/2026/07/31/google-nixes-its-earth-ai-feature-one-day-after-launch-amid-criticism-it-would-spread-misinformation/",
+      "source": "TechCrunch / The Verge",
+      "summary_zh": "Google 上周四给 Google Earth 上了个能用文字提示编辑卫星图的功能,结果被指会批量制造真实世界的 AI deepfake、助长虚假信息,一天后就撤了。生成式功能撞上地理真实性,踩了红线。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "卫星制造商 K2 Space 融资 5 亿美元扩产",
+      "url": "https://spacenews.com/k2-space-raises-500-million-for-commercial-defense-satellite-expansion/",
+      "source": "SpaceNews",
+      "summary_zh": "K2 Space 完成 5 亿美元 D 轮,七个月内估值翻倍多,资金用于把大型航天器产能拉到每年最多 100 颗,面向商业和国防两端。大卫星量产这条线又添一个重注玩家。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Procore 8.45 亿美元收购无人机测绘公司 DroneDeploy",
+      "url": "https://www.therobotreport.com/procore-technologies-acquires-dronedeploy-845m/",
+      "source": "The Robot Report",
+      "summary_zh": "建筑软件公司 Procore 以 8.45 亿美元收购 DroneDeploy,想把后者的无人机视觉智能接进施工现场,打通数字模型和物理工地。无人机 + 空间智能在建筑场景的商业化又落一子。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "GSK 与 AI 药企 Relation 签下至多 1.1 亿美元生物数据协议",
+      "url": "https://www.fiercebiotech.com/medtech/gsk-pens-110m-biological-datasets-pact-ai-biotech-relation",
+      "source": "Fierce Biotech",
+      "summary_zh": "GSK 与 AI 生物公司 Relation 达成最高 1.1 亿美元的合作,核心是生物数据集,用来补强自家 AI 能力。大药厂继续用真金白银换高质量训练数据,数据仍是 AI 制药的硬通货。"
+    },
+    {
+      "domain": "quantum",
+      "title_zh": "量子计算机跑赢经典,而且结果可被信任",
+      "url": "https://arstechnica.com/science/2026/07/if-a-quantum-computer-outperforms-normal-ones-can-you-tell-if-its-right/",
+      "source": "Ars Technica",
+      "summary_zh": "一篇梳理:当量子机的结果连经典电脑都算不动、无从校验时,怎么才能相信它算对了?文章讲了三种应对思路。量子优越性从「跑得更快」推进到「还得让人信」,可验证性正成为下一道门槛。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "从 Altman 到多家实验室,AI 圈开始喊「踩刹车」",
+      "url": "https://techcrunch.com/video/sam-altman-isnt-the-only-one-who-wants-to-pump-the-brakes-on-ai/",
+      "source": "TechCrunch",
+      "summary_zh": "常年喊「全速前进」的 OpenAI CEO Altman 改口说行业也许该「悠着点」,而且不止他一个人这么想;可另一边 Amazon、SpaceX 仍在猛踩油门。安全叙事和扩张叙事同时变响,是这周 AI 舆论场的主基调。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "在单张 4090 上复现 TurboVLA,压测它的实时性与泛化",
+      "based_on": [
+        { "title": "TurboVLA: Real-Time Vision-Language-Action Model at 32 Hz on an RTX 4090 with <1 GB VRAM", "url": "https://arxiv.org/abs/2607.27205" }
+      ],
+      "why_now": "刚放出,把 VLA 从 V→L→A 改成 V+L→A 的直接映射,32Hz、<1GB 显存就能跑,消费级单卡第一次能做实时闭环,还没人系统压测它换任务 / 换本体后掉多少分。",
+      "feasibility": "单张 24GB 4090 足够(推理占用 <1GB),LIBERO/SIMPLER 纯仿真、无需真机,2–4 周。",
+      "route": [
+        "跑通 TurboVLA 官方推理,在 LIBERO 上复现论文报的成功率与 32Hz 延迟",
+        "换到 SIMPLER 或另一组任务,量「延迟-成功率」曲线,和一个标准 V→L→A 的 VLA(如 OpenVLA)对齐比较",
+        "做分布外测试(新物体、新指令措辞),看解耦编码在泛化上是赚是亏",
+        "若掉点,尝试只微调视觉或语言编码器之一,定位瓶颈"
+      ],
+      "risk": "官方权重 / 代码若不全,复现实时性数字会卡住;仿真结论未必迁到真机。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个「找到你自己 RAG 交叉点」的单机基准工具",
+      "based_on": [
+        { "title": "BM25 Wins at Scale: A Scaling Study of Retrieval-Augmented Generation Paradigms", "url": "https://arxiv.org/abs/2607.26497" },
+        { "title": "Models for minimalist RAG: B1ade 335M Embedding and 1B Parameter Small Language Models", "url": "https://arxiv.org/abs/2607.27506" }
+      ],
+      "why_now": "BM25 Wins 刚证明 BM25/dense/agentic 检索的优劣随语料规模出现交叉,但每个团队的交叉点位置不同,目前没有开源工具能让你在自己语料上一键复现这条曲线。",
+      "feasibility": "纯 CPU / 单卡即可(BM25 无需 GPU,dense 用小编码器如 B1ade-embed 335M),1–3 周出可用版本,后续持续攒 star。",
+      "route": [
+        "用 BM25(rank-bm25/Pyserini)+ 一个 <500M 稠密编码器 + 一个简单 agentic 检索基线,封成统一 API",
+        "实现按语料规模分档采样 + 固定问题 / 干扰文档的评测协议,输出准确率-token-延迟三条曲线",
+        "接一两个公开语料做 demo,把「交叉点在哪」画成一张图放进 README",
+        "加个 CLI:喂进用户自己的文档目录,自动吐出该场景下的选型建议"
+      ],
+      "risk": "评测协议若不够严谨容易被质疑结论;得把「省了多少钱」量化清楚才有说服力。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "把训练无关的自我推测解码迁到新开源基座上验证泛化",
+      "based_on": [
+        { "title": "A Sparse Glimpse of the Whole: Train-Free Self-Speculative Decoding", "url": "https://arxiv.org/abs/2607.27735" }
+      ],
+      "why_now": "SparseSpec-L 用目标模型自己的稀疏 KV cache 当草稿、完全免训练,在长上下文下加速;training-free 方法最适合「换个模型 / 场景验证泛化」这种低风险扩展,而且刚出还没人做迁移。",
+      "feasibility": "单张 24–40GB 卡做推理即可,不训练,2–3 周;主要成本是搭长上下文评测。",
+      "route": [
+        "跑通 SparseSpec-L 官方实现,在原论文模型上复现加速比和接受率",
+        "迁到另一个开源基座(如新出的 Qwen / DeepSeek 小模型),测长上下文下的加速与质量",
+        "扫不同稀疏度 / 召回策略,画出「边际接受率 vs 草稿成本」的临界曲线,验证论文的效率分析",
+        "把结论整理成一页迁移报告,标出哪些模型结构上它水土不服"
+      ],
+      "risk": "不同模型的注意力稀疏结构差异大,可能出现加速比大幅缩水或质量下降。"
+    }
+  ]
+}
