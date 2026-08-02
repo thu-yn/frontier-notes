@@ -1,0 +1,365 @@
+{
+  "date": "2026-08-03",
+  "editor_note": "今天 HF 榜几乎被『记忆』刷屏——Metis 把记忆做进基座权重、Memory Decoder 硬扩到 6.9B,再加一堆 MemHarness、Σ-Mem、文件系统记忆,大家都在琢磨怎么让 Agent 不再靠外挂向量库记事。要点开就点 Metis 和 Qwen-UI-Agent 这两篇技术报告:一个想把记忆内生化,一个把 GUI Agent 往真机、跨平台的长任务推。另一条暗线是『物理世界模型』——PhiZero 用一套离散的『物理语言』先推理再渲染,和具身那篇按接触阶段自适应换挡的 FA-RDP 遥相呼应。芯片这边 KAIST 的 LightRot 又在给低比特 LLM 推理省电,AI 的胃口最后总会落到这些旋转量化的硬件小算盘上。今天的『每日一理』挑了刘维尔定理,正好接着量子 AIMD 和 MLIP 基座那股跑长程分子动力学的劲儿——它解释了为什么那些模拟必须用辛积分器才不会把能量跑飞。",
+  "math_note": {
+    "name": "刘维尔定理",
+    "name_en": "Liouville's Theorem (Hamiltonian mechanics)",
+    "field": "经典力学 / 动力系统 / 辛几何",
+    "one_liner": "相空间里的一团初值,形状随便扭,面积一分不少。",
+    "statement": "一个哈密顿系统的状态用「位置 $q$ 和动量 $p$」这一对坐标描述,所有可能状态构成的空间叫相空间。定理说:随时间演化,相空间里任取一团初值,它可以被拉长、扭成任何古怪形状,但占据的体积(二维时就是面积)始终不变。用密度的话讲,跟着轨迹看,相空间密度 $\\rho$ 守恒,$\\frac{d\\rho}{dt}=0$;等价地,推着这团点走的「速度场」$v=(\\dot q,\\dot p)$ 处处无散度,$\\nabla\\cdot v=0$(散度衡量一小块区域是在膨胀还是收缩)。",
+    "origin": "约瑟夫·刘维尔(Joseph Liouville),1838 年前后。他本行是微分方程和复分析,在琢磨哈密顿方程的解如何随时间铺开时,注意到了这个体积不变的性质。半个世纪后它成了统计力学的地基——吉布斯正是靠它才敢把「相空间里的概率密度」当成一团守恒的流体来处理,搭起了整套系综理论。",
+    "derivation": [
+      { "math": "\\dot q=\\frac{\\partial H}{\\partial p},\\qquad \\dot p=-\\frac{\\partial H}{\\partial q}", "note": "从哈密顿方程出发。$H(q,p)$ 是系统能量,它同时决定了位置怎么动、动量怎么变——这一对方程就是相空间里那团点的「速度场」。" },
+      { "math": "v=(\\dot q,\\dot p),\\qquad \\nabla\\cdot v=\\frac{\\partial \\dot q}{\\partial q}+\\frac{\\partial \\dot p}{\\partial p}", "note": "把这团点想象成流动的液体,散度就是判断它整体在膨胀还是收缩的量。算出散度,体积变不变就有答案了。" },
+      { "math": "\\frac{\\partial \\dot q}{\\partial q}+\\frac{\\partial \\dot p}{\\partial p}=\\frac{\\partial^2 H}{\\partial q\\,\\partial p}-\\frac{\\partial^2 H}{\\partial p\\,\\partial q}=0", "note": "代入上面两式,得到的是同一个 $H$ 的两个二阶混合偏导,只是求导次序不同、大小相等,正负一抵消就为零。散度恒等于零——全部魔法都在这一步。" },
+      { "math": "\\frac{d}{dt}\\int_{\\Omega_t}dq\\,dp=\\int_{\\Omega_t}(\\nabla\\cdot v)\\,dq\\,dp=0", "note": "由输运定理:一块区域体积的变化率,等于它边界上速度场的净流出,也就是散度在内部的积分。散度处处为零,体积就一丝不动。" },
+      { "math": "\\frac{d\\rho}{dt}=\\frac{\\partial\\rho}{\\partial t}+v\\cdot\\nabla\\rho=0", "note": "换个视角:跟着一团点一起走,里面点的数目和占的体积都不变,所以密度守恒。这就是刘维尔方程,统计力学里系综演化的出发点。" }
+    ],
+    "applications": [
+      { "area": "统计力学 / 系综理论", "detail": "保证相空间概率密度沿运动守恒,微正则系综那条「等能面上处处等概率」的假设才立得住,是从纯力学通向热力学的桥。" },
+      { "area": "辛积分器 / 分子动力学", "detail": "长时间数值模拟里,普通积分器会让相空间体积慢慢漂移、能量爆掉;辛积分器(如蛙跳法)刻意保住这个体积不变,才能跑几百万步还稳——今天那篇量子 AIMD 和 MLIP 基座要跑的长程动力学,底层靠的就是它。" },
+      { "area": "生成模型 / 连续归一化流", "detail": "连续归一化流用一个 ODE 把噪声搬成数据,密度怎么变由 $\\frac{d\\log p}{dt}=-\\nabla\\cdot f$ 决定;当速度场无散度、体积保持时密度不变——NICE、RealNVP 的加性耦合层正是刻意做成体积保持,好省掉雅可比行列式的计算。" }
+    ],
+    "takeaway": "一个系统「可逆、不耗散」的深层标志,就是它在相空间里从不压缩信息——刘维尔定理把这句话钉成一条能算的等式 $\\nabla\\cdot v=0$,也顺带解释了为什么可逆的哈密顿流永远长不出吸引子。",
+    "viz": {
+      "type": "vectorfield",
+      "caption": "拖动种子点看单摆的相流:轨迹要么绕圈(摆动)、要么波浪式前进(转圈),就是不会螺旋着收拢到某一点——因为哈密顿流处处无散度、不压缩面积,所以永远没有吸引子。",
+      "params": { "fx": "y", "fy": "-sin(x)", "xmin": -6.5, "xmax": 6.5, "ymin": -3, "ymax": 3, "density": 15, "seedX": 0.5, "seedY": 0, "steps": 500, "dt": 0.02 }
+    }
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "AskChem: Claim-Centered Infrastructure for Chemistry Literature Synthesis",
+      "title_zh": "AskChem:以「论断」为单位的化学文献综合检索基建",
+      "url": "https://arxiv.org/abs/2607.28618",
+      "hf_url": "https://huggingface.co/papers/2607.28618",
+      "authors": "Bing Yan、Gregory Wolfe、Kyunghyun Cho 等",
+      "affiliation": "纽约大学 NYU",
+      "upvotes": 292,
+      "one_liner": "检索单位从「论文」降到「带出处的一句论断」,让读者的 DOI 100% 可查证。",
+      "summary_zh": "现有文献检索给你一串排好序的论文,真正的发现还得自己去每篇里翻、对出处、跨论文拼答案。AskChem 把检索的最小单位从「论文」换成「一条带出处的原子论断」——每条断言都挂着源 DOI 和原文引文,再在这个论断库上搭分面分类、证据图和探索式分类树,目前已索引 147K 篇论文里的 240 万条论断。接了它之后,GPT-5.5 阅读器给出的 DOI 从 88.3% 可解析升到 100%,引用密度五个系统里最高。思路很对症:把「可核查」做进检索的骨架,而不是事后补。",
+      "tags": ["RAG", "科学文献", "Agent"]
+    },
+    {
+      "domain": "ai",
+      "title": "Qwen-UI-Agent Technical Report: Toward Next-Generation Real-World Centric Foundation GUI Agents",
+      "title_zh": "Qwen-UI-Agent 技术报告:面向真实设备的下一代 GUI 智能体基座",
+      "url": "https://arxiv.org/abs/2607.28227",
+      "hf_url": "https://huggingface.co/papers/2607.28227",
+      "authors": "Hanzhang Zhou、Panrong Tong、Xu Zhang 等",
+      "affiliation": "通义实验室 TongyiLab",
+      "upvotes": 281,
+      "one_liner": "手机、电脑、网页、深搜四类环境一把抓,还想让 GUI 交互和命令行混着用。",
+      "summary_zh": "一份把 GUI Agent 往「真机可用」推的基座技术报告:目标是在真实设备上可靠操作、跨平台跑工作流、把点点点的 GUI 操作和命令行执行揉在一个动作空间里,还要能扛长任务、自我改进。做法是把多样的沙盒环境和一套大规模真机手机运行时结合起来训练。方向务实,少了实验室 benchmark 味,但真机长任务的稳定性到底如何,得看后续放出来的可复现细节。",
+      "tags": ["GUI Agent", "多模态", "Computer-Use"]
+    },
+    {
+      "domain": "ai",
+      "title": "Metis: Memory Foundation Model",
+      "title_zh": "Metis:记忆基础模型",
+      "url": "https://arxiv.org/abs/2607.26760",
+      "hf_url": "https://huggingface.co/papers/2607.26760",
+      "authors": "Zeyu Zhang、Ziliang Guo、Yihang Sun 等",
+      "affiliation": "MemTensor",
+      "upvotes": 256,
+      "one_liner": "把记忆做进模型主干,更新只要一次前向、不用回传梯度。",
+      "summary_zh": "现在 Agent 的记忆基本都是外挂模块(向量库、检索),模型自己「原生记忆」的能力几乎没人碰。Metis 想把记忆内生化:在主干里维护一个持续演化的记忆状态,历史信息被压进模型、通过「记忆注意力」访问,并用中期训练教会它自主存取的流程。亮点是在线维护是免梯度的,记忆更新只需一次前向。这是「记忆基础模型」的第一个原型——今天榜上一整排记忆主题的论文说明这条路正热,但压进主干会不会牺牲通用推理,值得盯着看。",
+      "tags": ["记忆", "Agent", "基础模型"]
+    },
+    {
+      "domain": "ai",
+      "title": "Frontis-MA1: Training an AI4AI Model towards Recursive Self-Improvement in Machine Learning Engineering",
+      "title_zh": "Frontis-MA1:训练一个会做机器学习工程、走向递归自我改进的模型",
+      "url": "https://arxiv.org/abs/2607.28568",
+      "hf_url": "https://huggingface.co/papers/2607.28568",
+      "authors": "Junlin Yang、Che Jiang、Yu Fu 等",
+      "affiliation": "Frontis AI",
+      "upvotes": 168,
+      "one_liner": "35B 模型在一张限到 12GB 的 4090 上,把 MLE-Bench 奖牌率从 39% 干到 71%。",
+      "summary_zh": "递归自我改进的一个可执行试验场,就是「让 AI 去做搭 AI 的机器学习工程」。作者开源了全栈系统 OpenMLE(可验证任务环境 + 算子学习 + 长程搜索),并把 35B 的 Frontis-MA1 训成绕着四个原子操作(起草、改进、调试、交叉)转的元进化 Agent——同一套算子既用带执行反馈的 SFT/RL 训练,又组合成长程搜索。在单张限到 12GB 显存的 4090、每任务 12 小时预算下,MLE-Bench Lite 奖牌均分从 39.4% 提到 71.2%,逼近闭源大模型。省算力这点很实在,不过「自我改进」的循环能滚多久,还得看它在没见过的任务上会不会退化。",
+      "tags": ["AutoML", "自我改进", "RL"]
+    },
+    {
+      "domain": "ai",
+      "title": "PhiZero: A World Model Built Around Physical Language",
+      "title_zh": "PhiZero:围绕「物理语言」构建的世界模型",
+      "url": "https://arxiv.org/abs/2607.28624",
+      "hf_url": "https://huggingface.co/papers/2607.28624",
+      "authors": "Shuyao Shang、Yuqi Wang、Tieniu Tan 等",
+      "affiliation": "中科院自动化所",
+      "upvotes": 158,
+      "one_liner": "先用离散「物理语言」推演世界怎么变,再渲染画面,而不是直接猜像素。",
+      "summary_zh": "现在的物理世界模型大多直接在像素空间里预测未来视频,底层的世界动力学全隐在高维视觉预测器里、没法拿出来讲。PhiZero 学一套「物理语言」——世界状态转移的紧凑离散表示,从野外视频里自监督地学出来,然后走「先推理后渲染」:先用这套语言显式推演世界会怎么演化,再据此生成画面。把动力学从像素里拆出来单独建模,思路和今天具身那篇按阶段换挡的扩散策略是一个方向上的呼应——都想给世界模型一层可解释的中间结构。",
+      "tags": ["世界模型", "视频生成", "多模态"]
+    },
+    {
+      "domain": "ai",
+      "title": "Beacon: Knowing When and How to Perform Agentic Visual Reasoning",
+      "title_zh": "Beacon:知道何时、如何做「用工具的视觉推理」",
+      "url": "https://arxiv.org/abs/2607.28595",
+      "hf_url": "https://huggingface.co/papers/2607.28595",
+      "authors": "Qixun Wang、Yang Shi、Letian Cheng 等",
+      "affiliation": "可灵团队 Kling",
+      "upvotes": 47,
+      "one_liner": "别为了显得会推理就乱调工具——该出手时才出手,不该出手就直接答。",
+      "summary_zh": "很多多模态模型的「agentic 视觉推理」华而不实:套一堆工具调用,任务成功率没上去反而更慢。Beacon 把工具使用拆成两个维度审视——「模式自适应」(模型能不能认出这题到底需不需要工具,不需要就别调,省算力)和「工具效果」(工具真的扩展了能力,还是只是走个过场)。核心主张很朴素:agentic 推理的目标是把难题做对,不是把流程搞复杂。对做视觉 Agent 的人是个有用的清醒剂。",
+      "tags": ["多模态", "Agent", "工具使用"]
+    },
+    {
+      "domain": "ai",
+      "title": "BM25 Wins at Scale: A Scaling Study of Retrieval-Augmented Generation Paradigms",
+      "title_zh": "规模一大 BM25 就赢:RAG 各范式的成本-精度标度研究",
+      "url": "https://arxiv.org/abs/2607.26497",
+      "hf_url": "https://huggingface.co/papers/2607.26497",
+      "authors": "Pengyu Wang、Benfeng Xu、Shaohan Wang 等",
+      "affiliation": "muset.ai",
+      "upvotes": 46,
+      "one_liner": "语料规模跨 450 倍来回拉,没有谁永远赢,只有随规模翻盘的交叉点。",
+      "summary_zh": "RAG 的各种路线(词法检索、稠密检索、图索引、agentic 搜索)通常各测各的 benchmark、各用一个语料规模,谁更划算说不清。这篇做了个受控实验:固定问题和阅读器,只把语料沿 28 个严格嵌套的层级拉动约 450 倍,量精度、构建/查询 token、延迟。结论是存在「随规模翻盘的交叉点」而非无条件赢家——小语料时花哨方法有优势,规模一上去,老实的 BM25 反而在性价比上占上风。给做检索选型的人一张实在的成本地图,也正好是下面研究点的出发点之一。",
+      "tags": ["RAG", "检索", "标度律"]
+    },
+    {
+      "domain": "embodied",
+      "title": "FA-RDP: A Frequency-Adaptive Reactive Diffusion Policy for Contact-Rich Manipulation",
+      "title_zh": "FA-RDP:面向富接触操作的频率自适应反应式扩散策略",
+      "url": "https://arxiv.org/abs/2607.28596",
+      "authors": "Lifeng Zhuo、Wendi Chen、Han Xue、Cewu Lu 等",
+      "affiliation": "上海交大",
+      "upvotes": null,
+      "one_liner": "接触前慢采样保留多种走法,接触后提频率抢反应——一条策略里按阶段换挡。",
+      "summary_zh": "富接触操作里,一个动作序列的不同阶段诉求是矛盾的:接触前有好几条路都行,得保住动作的多样性;接触后受几何约束和力限制,解空间收窄,反而要对力反馈快速反应。标准扩散策略全程用固定的推理频率和采样步数,只能折中。FA-RDP 让频率随阶段自适应——接触前低频多步采样保多模态,接触后高频少步抢反应速度。抓的痛点很具体,也和今天 PhiZero「先推理后执行」的分阶段思路暗合;真机上的鲁棒性还得看更多任务的复现。",
+      "tags": ["扩散策略", "机器人操作", "VLA"]
+    },
+    {
+      "domain": "chip",
+      "title": "LightRot: A Light-Weighted Rotation Scheme and Architecture for Accurate Low-Bit Large Language Model Inference",
+      "title_zh": "LightRot:面向低比特 LLM 推理的轻量旋转方案与硬件架构",
+      "url": "https://arxiv.org/abs/2607.27704",
+      "authors": "Sangjin Kim、Yuseon Choi、Hoi-Jun Yoo 等",
+      "affiliation": "KAIST",
+      "upvotes": null,
+      "one_liner": "低比特量化想省电,旋转那步的开销先得省下来——这是块专门的旋转加速单元。",
+      "summary_zh": "低比特量化能让 LLM 推理更省电、更快,但要压住量化误差常得先对权重/激活做「旋转」(用 Hadamard 变换把离群值摊平),这一步本身又费能量费面积。LightRot 提了一套轻量旋转方案加配套硬件:分组局部旋转(GLR)、离群方向对齐(ODA),再加一个分层的快速 Hadamard 变换旋转单元。属于把量化算法和电路协同设计到一起的活儿——AI 的胃口最后总落到这类硬件小算盘上,KAIST 这组在低功耗芯片上一贯扎实。",
+      "tags": ["低比特量化", "LLM 推理", "硬件加速"]
+    },
+    {
+      "domain": "bio",
+      "title": "AMPBench-MT: A Homology-Controlled Benchmark for Antimicrobial Peptide Potency, Spectrum, and Safety Prediction",
+      "title_zh": "AMPBench-MT:同源性受控的抗菌肽活性、谱与安全性预测基准",
+      "url": "https://arxiv.org/abs/2607.25518",
+      "authors": "Ziheng Zhou、Huiyu Luo、Xiaohu Zhu 等",
+      "upvotes": null,
+      "one_liner": "别只判「是不是抗菌肽」,把活性、抗菌谱、毒性、选择性放进同一套防泄题的协议里。",
+      "summary_zh": "抗菌肽(AMP,一类能杀菌的短肽,被看作抗生素耐药问题的备选武器)的计算发现,常年只在「是/不是抗菌肽」的二分类上打转,可下游真正要拍板的是靶种活性、溶血性、毒性、选择性这些实测证据。AMPBench-MT 把这些端点统一进一套「序列同源性受控」的协议里——控住同源性是为了防止训练/测试集里近亲序列偷偷泄题、把成绩刷虚。给这个方向立了个更贴近真实决策、也更难作弊的评测标尺,对想在小样本上做肽设计的人是块干净的试金石。",
+      "tags": ["抗菌肽", "蛋白设计", "Benchmark"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Quantum Computing Enabled ab initio Molecular Dynamics Simulations",
+      "title_zh": "量子计算驱动的第一性原理分子动力学模拟",
+      "url": "https://arxiv.org/abs/2607.28548",
+      "authors": "Susanta Das、Subhamoy Bhowmik、Zhen Li 等",
+      "upvotes": null,
+      "one_liner": "量子测量 + 经典后处理,把第一性原理分子动力学的能量和受力算到化学精度。",
+      "summary_zh": "一套量子-经典混合的第一性原理分子动力学(AIMD,不靠经验参数、直接从量子力学算原子怎么动)工作流:用化学启发的 LUCJ 线路做量子测量,再用「基于采样的量子对角化(SQD)」后处理,恢复行列式子空间,给出能跑动力学的能量和解析核受力。在气相基准上,SQD 复现全组态相互作用(FCI,小体系的精确解)的能量和受力误差在 1 kcal/mol 以内,AIMD 轨迹稳定。离实用体系还远(STO-3G 最小基组、小分子),但把量子硬件真接进 AIMD 的完整闭环搭起来了,和今天能源那篇 MLIP 基座是从两头逼近同一个「算准长程分子动力学」的目标。",
+      "tags": ["量子化学", "分子动力学", "量子-经典混合"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Fast and Accurate Foundation Models for Equivariant Machine-Learned Interatomic Potentials",
+      "title_zh": "又快又准的等变机器学习原子间势基础模型",
+      "url": "https://arxiv.org/abs/2607.28461",
+      "authors": "Seán R. Kavanagh、Chuin Wei Tan、Menghang Wang 等",
+      "upvotes": null,
+      "one_liner": "把物理对称性直接刻进网络的等变势,能不能同时做到又快又准。",
+      "summary_zh": "机器学习原子间势(MLIP,用神经网络替代昂贵的量子计算来预测原子受力)已经成了材料和化学模拟的通用工具,大数据训出的「基础模型」常被拿去在特定化学空间上微调。但分子动力学这类应用既要精度、又要极高的推理和训练速度。这篇系统考察了「等变」MLIP——把平移、旋转等物理对称性直接编进网络结构——在超大数据、数据效率不再是瓶颈的regime里,能把这几个互相打架的目标推到什么极限。对做材料计算、想把 MD 跑快跑稳的人,是关于架构取舍的一份实测参考。",
+      "tags": ["原子间势", "等变网络", "材料模拟"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "lyogavin/airllm",
+      "url": "https://github.com/lyogavin/airllm",
+      "language": "Jupyter Notebook",
+      "stars": 25538,
+      "stars_today": "242",
+      "one_liner": "靠逐层加载,4GB 显存也能跑 70B 推理。",
+      "summary_zh": "把大模型按层拆开、用时才加载,让单张 4GB 显卡也能做 70B 推理(慢,但跑得动)。适合显卡拮据、只想在本地把大模型跑起来看看效果的人;要吞吐别指望它,它换来的是「能跑」而不是「跑得快」。"
+    },
+    {
+      "domain": "ai",
+      "name": "antirez/ds4",
+      "url": "https://github.com/antirez/ds4",
+      "language": "C",
+      "stars": 19948,
+      "stars_today": "187",
+      "one_liner": "antirez 手写的 DeepSeek 4 本地推理引擎,Metal/CUDA/ROCm 全支持。",
+      "summary_zh": "Redis 作者 antirez 用 C 写的 DeepSeek 4 Flash / PRO 本地推理引擎,一套代码覆盖 Metal、CUDA、ROCm 三种后端。看点是那份一贯干净、可读的 C 实现——想弄懂推理引擎底层怎么搭、或者在苹果/A 卡上跑 DeepSeek 的人值得翻源码。"
+    },
+    {
+      "domain": "ai",
+      "name": "esengine/DeepSeek-Reasonix",
+      "url": "https://github.com/esengine/DeepSeek-Reasonix",
+      "language": "Go",
+      "stars": 28979,
+      "stars_today": "389",
+      "one_liner": "围着前缀缓存稳定性设计的终端 DeepSeek 编码 Agent,挂着跑就行。",
+      "summary_zh": "一个 DeepSeek 原生的终端编码 Agent,卖点是「围绕前缀缓存(prefix-cache)稳定性做工程」——尽量让上下文前缀不变,好把缓存吃满、省 token 又降延迟,所以官方建议「一直挂着别关」。对成天在命令行里用 AI 写代码、又在意 token 账单的人,这个缓存友好的思路值得借鉴。"
+    },
+    {
+      "domain": "ai",
+      "name": "Panniantong/Agent-Reach",
+      "url": "https://github.com/Panniantong/Agent-Reach",
+      "language": "Python",
+      "stars": 64583,
+      "stars_today": "645",
+      "one_liner": "给 Agent 装上「读全网」的眼睛:一个 CLI 读遍推特/Reddit/YouTube/B 站,零 API 费。",
+      "summary_zh": "一个 CLI 工具,让 AI Agent 能读和搜推特、Reddit、YouTube、GitHub、B 站、小红书——号称零 API 费用(靠抓取而非官方接口)。适合做信息聚合、舆情/趋势类 Agent 的人。省钱是真省,但抓取本身依赖各平台的稳定性和条款,拿去做正经产品前得掂量合规风险。"
+    },
+    {
+      "domain": "ai",
+      "name": "TencentCloud/TencentDB-Agent-Memory",
+      "url": "https://github.com/TencentCloud/TencentDB-Agent-Memory",
+      "language": "TypeScript",
+      "stars": 10811,
+      "stars_today": "604",
+      "one_liner": "团队级的 Agent 记忆中枢,把对话/文档/代码沉成四类可复用记忆资产。",
+      "summary_zh": "腾讯云做的团队级 Agent 记忆中枢,把对话、文档、代码沉淀成四类可复用资产(聊天记忆、技能、LLM-Wiki、代码图谱),能在多个 Agent 和框架间共享、治理、下发。和今天 HF 榜那一排「记忆」论文正好一个主题的两端——学界在把记忆压进模型主干,工程界在把记忆做成可治理的外挂中台。想给团队搭统一 Agent 记忆层的人可以参考它的资产划分。"
+    },
+    {
+      "domain": "ai",
+      "name": "different-ai/openwork",
+      "url": "https://github.com/different-ai/openwork",
+      "language": "TypeScript",
+      "stars": 20245,
+      "stars_today": "319",
+      "one_liner": "开源版 Claude Cowork,底子是 opencode。",
+      "summary_zh": "Claude Cowork 的开源替代,基于 opencode 构建,想把多人协作式的 AI 工作台做成开源、可自托管的版本。适合不想被托管服务锁定、要自己掌控数据和工作流的团队。生态还早,更多是给你一个能改的起点而非开箱即用的成品。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "embodied",
+      "title_zh": "DeepMind 发布 Gemini Robotics 2,主打机器人全身控制",
+      "url": "https://www.therobotreport.com/google-deepmind-says-gemini-robotics-2-enables-full-body-control/",
+      "source": "The Robot Report",
+      "summary_zh": "Google DeepMind 推出 Gemini Robotics 2,称其能让机器人「对每一个动作做推理」,从而支持全身控制、解锁更广的任务范围。相比上一代把动作当离散指令,这一代强调把身体协调和推理更紧地绑在一起——具体的成功率和真机泛化,还要等更硬的评测数据。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "MIT/Google/华盛顿大学提出 Granite:按 ISA 契约模块化验证 RTL 处理器",
+      "url": "https://semiengineering.com/modular-verification-of-rtl-processors-against-isa-contracts-mit-google-uw/",
+      "source": "SemiEngineering",
+      "summary_zh": "三方联合的论文 Granite 提出一套方法,把 RTL 处理器同时按 ISA 契约做功能正确性和「非泄漏」(不通过时序侧信道泄密)的模块化验证,并证明逐周期时序满足契约。在幽灵/熔断这类微架构侧信道频发的当下,给「硬件是否守约」这件事提供了可形式化验证的路子。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "欧盟 AI 通用模型规则正式可强制执行",
+      "url": "https://www.euronews.com/my-europe/2026/08/02/eu-rules-on-ai-models-become-enforceable-whats-going-to-change",
+      "source": "Euronews / HN",
+      "summary_zh": "欧盟 AI 法案中针对通用大模型的一批规则开始进入可强制执行阶段。合规义务(透明度、训练数据披露、系统性风险评估等)从「纸面」变成「可罚」,对在欧盟市场部署基座模型的厂商是实打实的成本项,后续怎么落地执法是关键。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Reddit 股价下滑,CEO 公开质疑谷歌 AI Overviews 的价值",
+      "url": "https://arstechnica.com/ai/2026/08/reddit-ceo-on-ai-overviews-were-still-looking-for-that-win-win/",
+      "source": "Ars Technica",
+      "summary_zh": "Reddit 股价走低之际,其 CEO 质疑与谷歌授权数据、供 AI Overviews 使用的这笔交易到底划不划算,暗示可能考虑终止合作。折射出「内容平台把数据卖给 AI」这类授权协议的双方,正在重新盘算谁在真正获益——AI 抓走了流量,平台却没等来对等的回报。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "葛兰素史克与 AI 生物公司 Relation 签下最高 1.1 亿美元数据合作",
+      "url": "https://www.fiercebiotech.com/medtech/gsk-pens-110m-biological-datasets-pact-ai-biotech-relation",
+      "source": "Fierce Biotech",
+      "summary_zh": "GSK 与 AI 生物公司 Relation 达成一笔最高 1.1 亿美元的合作,聚焦生物数据集,给自家的 AI 药物发现能力加码。又一个大药厂靠「买数据 + AI」补课的案例,反映药企普遍缺的不是模型而是高质量、可训练的生物数据。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "强生预付 7.85 亿美元牵手 Sail,押注体内 CAR-T",
+      "url": "https://www.fiercebiotech.com/biotech/jj-pays-sail-785m-charting-course-possible-vivo-car-t-buyout",
+      "source": "Fierce Biotech",
+      "summary_zh": "强生预付 7.85 亿美元与 Sail Biomedicines 达成合作,拿到日后收购的选择权,方向是「体内 CAR-T」——不再把细胞取出体外改造再回输,而是直接在体内改造免疫细胞。这条路线若走通能大幅降本增效,大厂用巨额预付款先卡位,说明它被看作细胞治疗的下一站。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "诺和诺德 ziltivekimab 三期折戟,慢性肾病项目受挫",
+      "url": "https://www.fiercebiotech.com/biotech/novo-nordisk-left-praying-to-artemis-and-hermes-salvage-program-after-key-phase-3-trial-flops",
+      "source": "Fierce Biotech",
+      "summary_zh": "诺和诺德抗炎药 ziltivekimab 的一项三期试验未达主要终点,这款曾被分析师看作重磅、寄望用来丰富管线的分子前景蒙尘。公司还押注正在进行的 Artemis 和 Hermes 两项试验来挽回。在减重药之外找第二增长曲线,这一跤摔得不轻。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "中国发射神秘 TJS-27 双星,并送上新一代天链中继卫星",
+      "url": "https://spacenews.com/china-launches-secretive-tjs-27-pair-orbits-next-gen-tianlian-relay-sat/",
+      "source": "SpaceNews",
+      "summary_zh": "长征六号甲一箭把一对保密的 TJS-27 卫星送入一个「项目上全新」的轨道,同时升级了在轨的天链中继能力。天链系列是中国的数据中继骨干(相当于给低轨航天器和地面之间架天上的中转站),新一代上线意味着测控和数传带宽的抬升;TJS 系列一贯用途讳莫如深。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "太空军授予 K2 Space 2290 万美元,做在轨激光通信演示",
+      "url": "https://spacenews.com/space-force-awards-k2-space-22-9-million-for-orbital-laser-communications-demonstration/",
+      "source": "SpaceNews",
+      "summary_zh": "美国太空军给 K2 Space 一份 2290 万美元合同,让两颗 K2 卫星搭载光学终端,演示在轨互联军用系统的激光通信。激光星间链路带宽高、难被截获,是军方组网的方向;这类给新兴卫星公司的演示合同,是它们从「造星」切入「军用组网」的敲门砖。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个「RAG 选型体检」开源 harness:同一套语料按规模拉动,一图看清 BM25/稠密/图检索的成本-精度交叉点",
+      "based_on": [
+        { "title": "BM25 Wins at Scale: A Scaling Study of Retrieval-Augmented Generation Paradigms", "url": "https://arxiv.org/abs/2607.26497" },
+        { "title": "Models for minimalist RAG: B1ade 335M Embedding and 1B SLMs", "url": "https://arxiv.org/abs/2607.27506" }
+      ],
+      "why_now": "这篇刚给出「随语料规模翻盘」的结论,但没放出人人能跑的标准 harness——大多数团队选 RAG 方案还在拍脑袋。此刻做一个可复现的选型工具,正好填空白、也容易攒 star。",
+      "feasibility": "单张 24GB 卡足够(BM25 纯 CPU,稠密检索用小编码器 + 一个开源 SLM 阅读器)。核心是工程:嵌套采样语料 + 统一评测,2–3 周能出一个能用的版本。",
+      "route": [
+        "先跑通一个最小闭环:BM25(rank_bm25/Pyserini)+ 一个开源 SLM 阅读器,在一个公开 QA 集上跑出精度和 token/延迟三条基线",
+        "实现「严格嵌套」的语料分层采样(小集是大集的子集),把语料规模做成可调旋钮",
+        "加入稠密检索(bge/E5 小模型)和一个轻量图检索基线,统一 prompt 和评判协议",
+        "画出「精度 vs 构建/查询 token vs 语料规模」的交叉点图,输出一份自动选型建议",
+        "打包成 CLI + 一键复现脚本,配 README 和示例数据集"
+      ],
+      "risk": "评判协议(LLM-as-judge)和语料清洗的细节会显著影响结论,得把评测做得透明可审计,否则容易被质疑「结果取决于你怎么测」。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "把 PruneGround 的即插即用空间剪枝搬到另一个 3D grounding 模型上,验证泛化并顺带提速",
+      "based_on": [
+        { "title": "PruneGround: Plug-and-play Spatial Pruning for 3D Visual Grounding", "url": "https://arxiv.org/abs/2606.31148" },
+        { "title": "Training-Free Open-Vocabulary 3D Point-Cloud Segmentation on the Generalized Few-Shot Benchmark", "url": "https://arxiv.org/abs/2607.15331" }
+      ],
+      "why_now": "PruneGround 主打「即插即用 + 冻结模型」,这种方法最适合拿去验证跨模型泛化性——把它接到一个它没在上面调过的 3DVG 骨架上,本身就是一个低风险、可发表的扩展。",
+      "feasibility": "冻结主干、只做语言引导的空间剪枝,单张 24GB 卡跑推理即可,不用重训。ScanRefer/Nr3D 上评测,3–4 周能出泛化性和提速的完整对比。",
+      "route": [
+        "先复现 PruneGround 官方在原骨架上的结果,跑通「语言引导空间剪枝」这一步",
+        "选一个结构不同的开源 3DVG 模型作为新宿主,把剪枝模块作为前置插件接上",
+        "在杂乱场景子集上量准确率变化和推理耗时/显存的下降",
+        "用上面那篇 training-free 开放词表分割做剪枝候选区的另一种来源,做消融",
+        "整理成「即插即用方法的跨模型泛化」小报告,附失败案例分析"
+      ],
+      "risk": "剪枝对『指代依赖全局关系』的复杂语句可能误删关键区域,导致准确率不升反降——要提前圈出这类失败模式,别只报平均分。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "拿真实微调数据验证 LoRA 的 rd/n 界,做一张「按数据量选秩」的经验对照表",
+      "based_on": [
+        { "title": "Tight Sample Complexity for Low-Rank Adaptation: Matching Bounds and Rank Selection", "url": "https://arxiv.org/abs/2607.27680" }
+      ],
+      "why_now": "这篇刚把 LoRA 超额风险的上下界都收紧到 $\\tilde O(rd/n)$,还给了秩选择的理论答案,但没在真实微调任务上系统验证过——理论和实操之间正缺一座桥。",
+      "feasibility": "全是单卡 LoRA 微调(7B 级模型,24–40GB 卡),扫几组秩 r 和数据量 n 即可,不涉及预训练。2–4 周能扫出一张经验曲线。",
+      "route": [
+        "先在一个小任务上跑通标准 LoRA 微调,把「秩 r、数据量 n、验证误差」三者记成可复现的实验网格",
+        "按理论预测的 rd/n 标度,选 2–3 个任务、多档 n 各扫一遍 r,画出超额风险随 rd/n 的走势",
+        "检验论文给的秩选择规则:在给定 n 下,理论推荐的 r 是不是接近经验最优",
+        "对比常见的『固定 r=8/16』默认做法,量化按理论选秩能省多少参数或提多少精度",
+        "把结论沉成一个小工具/查询表:输入 d、n 给出推荐秩区间"
+      ],
+      "risk": "理论假设(目标适配确实低秩、损失光滑)在真实任务上未必成立,可能出现界与经验不符的情况——但那本身也是有价值的负结果,要如实报。"
+    }
+  ]
+}
