@@ -1,0 +1,366 @@
+{
+  "date": "2026-08-04",
+  "editor_note": "今天有两条主线互相咬合。一条是「世界模型」全面往里长——不再只预测「东西在哪、怎么动」,而是要么去建人的心理状态(Mental World Modeling),要么把触觉、接触力这些以前进不了模型的信号灌进去(NeoteAI 一口气放了 VTLA 和 TWAM 两篇),配合 DeepMind 放话 Gemini Robotics 2 能做全身控制,机器人这块的势头很足。另一条是「怎么让模型自己给自己发奖励/当老师」——RLSVR 把开放式任务改写成能自验证的形式,好几篇在磨 on-policy 自蒸馏的稳定性,思路都是绕开外部奖励模型这个瓶颈。最值得点开的我选 See2Think:它老老实实去查多模态模型到底有没有用上自己生成的中间视觉状态,结论偏冷,这种拆台的实证比又一个 SOTA 有用。另外 Quanta 那条「厄多斯问题正在被 AI 攻破」和今天的每日一理(傅里叶级数)放一起看挺有意思——数学味的东西正从两头被机器逼近。",
+  "math_note": {
+    "name": "傅里叶级数",
+    "name_en": "Fourier Series",
+    "field": "分析 / 调和分析",
+    "one_liner": "任何周期波,都是一堆正弦波按频率叠出来的——听懂这句,信号处理就通了一半。",
+    "statement": "一个周期为 $2\\pi$ 的函数 $f(x)$(可以是方波、锯齿这种带棱角的),都能写成一串正弦和余弦的无穷和:$f(x)=\\tfrac{a_0}{2}+\\sum_{n\\ge 1}\\big(a_n\\cos nx+b_n\\sin nx\\big)$。这里 $n$ 是「第几个谐波」(频率越高、波越密),系数 $a_n,b_n$ 说的是「这个频率占多少分量」。神奇之处在于:哪怕原函数在某点突然跳变,用足够多的正弦波也能几乎处处逼近它——只是跳变点附近会有个永不消失的过冲(吉布斯现象)。",
+    "origin": "1807 年,约瑟夫·傅里叶在研究热在金属板里怎么扩散(热传导方程)时,大胆断言「任意函数都能用三角级数表示」。当时拉格朗日、拉普拉斯这些大佬都觉得他在胡来——一个连续的三角级数怎么可能凑出带尖角的函数?争论持续了几十年,逼着后来的数学家把「函数」「收敛」「积分」这些概念一个个重新定义清楚,直接催生了现代分析学。傅里叶自己没证严格,但他赌对了方向。",
+    "derivation": [
+      { "math": "\\int_{-\\pi}^{\\pi}\\cos(mx)\\cos(nx)\\,dx=\\pi\\,\\delta_{mn}\\quad(m,n\\ge 1)", "note": "先抓住命根子:不同频率的正弦/余弦「互相垂直」——两个不同频率相乘再积一圈,正负抵消得零,只有频率相同才留下 π。这就是所谓的正交性,把它当成向量的点积来理解。" },
+      { "math": "f(x)=\\tfrac{a_0}{2}+\\sum_{n=1}^{\\infty}\\big(a_n\\cos nx+b_n\\sin nx\\big)", "note": "假设 f 真能这么展开。既然那些正弦余弦是一组「互相垂直的坐标轴」,求系数就等于求 f 在每根轴上的投影。" },
+      { "math": "a_k=\\frac{1}{\\pi}\\int_{-\\pi}^{\\pi}f(x)\\cos kx\\,dx", "note": "两边同乘 cos(kx) 再积一圈:靠上一步的正交性,右边所有项都塌成零,只剩第 k 项,系数 a_k 就被单独「筛」了出来。这一步就是把 f 往第 k 根轴上投影。" },
+      { "math": "b_k=\\frac{1}{\\pi}\\int_{-\\pi}^{\\pi}f(x)\\sin kx\\,dx", "note": "对 sin(kx) 做同样的事,拿到正弦那一族的系数。至此每个频率占多少分量都算清了——这就是「频谱」。" },
+      { "math": "S_N(x)\\;\\xrightarrow{\\,N\\to\\infty\\,}\\;\\tfrac{1}{2}\\big(f(x^-)+f(x^+)\\big)", "note": "狄利克雷定理收尾:分段光滑的话,前 N 项部分和收敛到 f 本身;在跳变点则收敛到左右极限的平均值。这解释了为什么方波拐角处级数总要「打个折中」。" }
+    ],
+    "applications": [
+      { "area": "信号处理与通信", "detail": "把时域信号拆成频率分量,滤波、压缩、调制全建立在这上面——MP3、JPEG 的核心就是留下重要频率、扔掉次要的。" },
+      { "area": "求解偏微分方程", "detail": "热传导、波动、扩散方程分离变量后,解天然是一串正弦模态的叠加,傅里叶级数把 PDE 变成一列各自独立的常微分方程。" },
+      { "area": "深度学习", "detail": "傅里叶特征(Fourier features)能让 MLP 学会高频细节,是 NeRF、隐式神经表示能拟合精细纹理的关键;神经算子(FNO)干脆在频域里做卷积。" },
+      { "area": "振动与结构分析", "detail": "把复杂振动分解成各阶固有频率,判断机械共振、桥梁颤振,做模态分析的出发点。" }
+    ],
+    "takeaway": "换一组「正交基」看问题,难缠的东西常常瞬间变简单——傅里叶级数是这个思想最漂亮的一次示范:时域里丑陋的方波,到频域只是一串 $1,\\tfrac13,\\tfrac15,\\dots$ 的干净系数。SVD、主成分、注意力里的位置编码,骨子里都在借这一招。",
+    "viz": {
+      "type": "fourier",
+      "caption": "拖滑块加谐波数:看正弦波一个个叠上去怎么逼近方波,注意拐角处那个怎么都压不平的过冲——那就是吉布斯现象。",
+      "params": { "wave": "square", "terms": 5, "maxTerms": 30 }
+    }
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "From RLVR to RLSVR: Task Transformation Induces Self-Verifiable Rewards for Open-Ended LLM Self-Improvement",
+      "title_zh": "从 RLVR 到 RLSVR:靠任务改写,让开放式任务也有可自验证的奖励",
+      "url": "https://arxiv.org/abs/2607.23802",
+      "hf_url": "https://huggingface.co/papers/2607.23802",
+      "authors": "Qinsi Wang、Jing Shi、Huazheng Wang 等",
+      "upvotes": 69,
+      "one_liner": "把「写一段话」改写成「填空/复原」,开放任务就能自己验证对错,不用再养一个奖励模型。",
+      "summary_zh": "可验证奖励的强化学习(RLVR)在数学、代码上很好用,因为对错能确定性地判定;但换到写作、对话这类开放任务就抓瞎,只能靠人类偏好或另一个模型当裁判,既贵又有偏。这篇借自监督学习的老套路——把原任务改造成一个能从数据本身推出答案的「代理任务」(比如遮住一部分让模型复原),这样正确与否可以自己验证,奖励就地长出来。思路很对:与其花大力气训裁判,不如把「可验证」这件事设计进任务本身。能推广到多广还得看,但方向讨喜。",
+      "tags": ["LLM", "RL", "自监督"]
+    },
+    {
+      "domain": "ai",
+      "title": "See2Think: Do Multimodal Models Really Use Intermediate Visual States?",
+      "title_zh": "See2Think:多模态模型真的用上了它自己生成的中间视觉状态吗?",
+      "url": "https://arxiv.org/abs/2607.26769",
+      "hf_url": "https://huggingface.co/papers/2607.26769",
+      "authors": "Siyu Yan、Zhuoran Yan、Haiying Xu 等",
+      "upvotes": 23,
+      "one_liner": "让模型「边看边想」画出中间视觉状态,结果它常常画归画、推理时并没真用——一记冷水。",
+      "summary_zh": "现在流行让多模态模型在推理链里生成中间视觉状态(画个草图、标个框)来「辅助思考」。这篇专门去查:这些中间状态到底被用上了没?通过一系列对照(打乱、替换、删掉中间视觉状态看结果变不变),发现很多情况下模型对这些自产的视觉线索并不敏感,更像是走个过场。这种拆台式实证比再刷一个榜有价值——它提醒大家「看起来在用视觉」和「真的在用」是两码事。",
+      "tags": ["多模态", "推理", "评测"]
+    },
+    {
+      "domain": "ai",
+      "title": "Mental World Modeling",
+      "title_zh": "心理世界模型",
+      "url": "https://arxiv.org/abs/2607.27201",
+      "hf_url": "https://huggingface.co/papers/2607.27201",
+      "authors": "Hao Fei、Yiran Zhao 等",
+      "upvotes": 52,
+      "one_liner": "世界模型只算「物在哪、怎么动」不够,得算清每个人心里信什么、想要什么。",
+      "summary_zh": "现有世界模型回答的是物理问题——什么东西、在哪、接下来怎么变。但人的行为是被心理状态(相信什么、想要什么、意图、情绪、觉得什么是社会允许的)驱动的,一个只跟踪物理场景、不跟踪各人心里怎么想的模型,会对「看起来一样」的场景预测出错误的动作。这篇把心理变量当成世界模型的核心组件而非事后解释,提出一套通用框架同时维护物理状态和各智能体的心理状态。理论味偏重、还缺硬碰硬的落地实验,但把「心智理论」正式塞进世界模型这个切口选得好。",
+      "tags": ["世界模型", "心智理论", "Agent"]
+    },
+    {
+      "domain": "embodied",
+      "title": "N_0-VTLA: Scaling Vision-Tactile-Language-Action Model with Latent Tactile Tokens",
+      "title_zh": "N₀-VTLA:用潜在触觉 token 把「视觉-触觉-语言-动作」模型做大",
+      "url": "https://arxiv.org/abs/2607.23782",
+      "hf_url": "https://huggingface.co/papers/2607.23782",
+      "authors": "NeoteAI Team、Fudan TEAI Team",
+      "affiliation": "NeoteAI",
+      "upvotes": 49,
+      "one_liner": "给 VLA 装上触觉:接触密集的活(插拔、拧)光靠眼睛不够,得让模型「摸」得到。",
+      "summary_zh": "接触密集的操作(插销、拧螺丝)光靠视觉常常翻车,因为关键信息藏在指尖的力和滑动里。N₀-VTLA 在视觉主干上加了触觉通道,给出一套训练配方:先做视触觉联合预训练学接触先验(基于它们的大规模数据集 NeoData),再分阶段把触觉支路接进去,最后用「优势条件」的离线策略改进从部署数据里榨性能。号称是首个这种规模的 VTLA。触觉数据一直是瓶颈,这套「大规模采+潜在 token 表示」的路子值得盯,同期他们还放了个世界模型版 TWAM。",
+      "tags": ["VLA", "触觉", "机器人操作"]
+    },
+    {
+      "domain": "ai",
+      "title": "Meshy T2: Fast Native Mesh Generation with Flow Matching",
+      "title_zh": "Meshy T2:用 flow matching 直接快速生成网格",
+      "url": "https://arxiv.org/abs/2607.28675",
+      "hf_url": "https://huggingface.co/papers/2607.28675",
+      "authors": "Jiale Xu、Rendong Liang、Yuhao Long 等",
+      "affiliation": "Meshy",
+      "upvotes": 41,
+      "one_liner": "别再一个顶点一个顶点地自回归吐网格了——一个顶点一个 latent token,并行解出来更快也更稳。",
+      "summary_zh": "主流网格生成把网格序列化成 token 串、自回归地解码,慢且容易误差累积,做不了交互式建模。Meshy T2 换成基于 flow matching 的原生网格生成:核心是一个「顶点集」VAE,把网格编码成每个顶点一个连续 latent token,再一次性解出顶点、边连接和面。对做 3D 内容、游戏/影视资产的人是好消息——生成速度和拓扑质量(接近美术手工的布线)是这行最卡脖子的两点。来自 Meshy 这种做 3D 生成的公司,工程成熟度大概率不错。",
+      "tags": ["3D生成", "网格", "flow matching"]
+    },
+    {
+      "domain": "ai",
+      "title": "Scaling Properties of Text Conditioning in Visual Generation",
+      "title_zh": "视觉生成里文本条件的 scaling 规律",
+      "url": "https://arxiv.org/abs/2607.29679",
+      "hf_url": "https://huggingface.co/papers/2607.29679",
+      "authors": "Zilong Chen、Chaorui Deng、Kunchang Li 等",
+      "affiliation": "ByteDance Seed",
+      "upvotes": 23,
+      "one_liner": "扩散损失不随 prompt 词数变,却随 prompt 里「结构化语言」的多少下降——文本条件也有自己的 scaling law。",
+      "summary_zh": "文生图/文生视频里,文本条件的 scaling 规律很少有人量过,因为扩散损失并不随 prompt 的 token 数变化。这篇发现:收敛后的扩散损失会随 prompt 里「结构化语言」的量下降,并用两个互补指标去量化——白盒的似然度量(GPG)和黑盒的属性度量(ED),损失随 GPG 近似线性下降、随 ED 走幂律。换句话说,决定生成质量的不是 prompt 有多长,而是它承载了多少结构化信息。对做数据配比和 caption 工程的人有直接指导意义。",
+      "tags": ["扩散模型", "视觉生成", "scaling law"]
+    },
+    {
+      "domain": "ai",
+      "title": "Filesystem-Based Memory for LLM Agents: Organization, Evolution, and Sustainability",
+      "title_zh": "把文件系统当 LLM Agent 的记忆:组织、演化与可持续",
+      "url": "https://arxiv.org/abs/2607.26637",
+      "hf_url": "https://huggingface.co/papers/2607.26637",
+      "authors": "Sizhe Zhou、Sheldon Yu、Hui Wei 等",
+      "upvotes": 9,
+      "one_liner": "很多 Agent 拿一堆 markdown 文件当长期记忆,但「它能不能自己保持整洁」一直没人认真测过。",
+      "summary_zh": "越来越多部署中的 Agent 直接拿文件系统(一棵 markdown 目录树)当长期记忆,自己读写重排。这篇第一次系统地考它:随着记忆越攒越多、彼此冲突、逐渐过时,Agent 到底能不能把这堆文件持续整理好,以及这种整理值不值。把问题拆成「组织、演化、可持续」三个角色去测。对正在给 Agent 搭记忆的人很及时——它戳的正是大家默认「文件多了模型自己会收拾」这个没被验证的假设,和今天 Trending 上那些 agent memory 库刚好对照着看。",
+      "tags": ["Agent", "记忆", "评测"]
+    },
+    {
+      "domain": "embodied",
+      "title": "BWM: A Low-Cost High-Fidelity World Simulator for Robot Learning",
+      "title_zh": "BWM:给机器人学习用的低成本高保真世界模拟器",
+      "url": "https://arxiv.org/abs/2607.29302",
+      "authors": "(arXiv 预印本)",
+      "upvotes": 0,
+      "one_liner": "物理引擎要搭资产、要标定还有 sim2real 沟;视频生成又管不住细粒度动作——BWM 想两头都占。",
+      "summary_zh": "可靠的机器人学习需要一个能在真机执行前预测动作后果(包括危险、会失败的后果)的世界模拟器。现有物理引擎要费力搭资产、做标定,还留着 sim-to-real 的坑;视频生成器又对精细机器人动作缺乏可控性。BWM(Boundless World Model)走中间路线,做一个开源、低成本、高保真的操作世界模拟器,兼顾动作可控与画面真实。开源这点是加分项——机器人这行最缺的就是人人能复现的模拟环境,值得动手跑一跑再下判断。",
+      "tags": ["世界模型", "机器人学习", "仿真"]
+    },
+    {
+      "domain": "chip",
+      "title": "Demystifying DRAM Read Disturbance: Bridging Experimental Characterization and Device-Level Modeling of RowHammer and RowPress",
+      "title_zh": "把 DRAM 读扰动讲清楚:RowHammer/RowPress 的实测与器件级建模对齐",
+      "url": "https://arxiv.org/abs/2607.28233",
+      "authors": "(arXiv 预印本)",
+      "upvotes": 0,
+      "one_liner": "反复读某行内存,会把邻近没被读的行的比特「震」翻——这篇把实测现象和物理机制第一次对上。",
+      "summary_zh": "DRAM 读扰动(RowHammer、RowPress)是一类要命的可靠性/安全问题:频繁访问某行内存会让其他没被访问的行发生意外比特翻转,能被拿来做安全攻击。以前要么是纯实测总结经验规律,要么是纯器件级讲物理机制,两边对不上——机制解释不了实测里的一些现象。这篇的价值在于把「实验特征」和「器件级物理」桥接起来,让缓解方案不再是拍脑袋。做内存安全、可靠性设计的该看,和今天 HN 上「SQLite 关键 CVE 还是 LLM 幻觉」那条放一起,都是在提醒底层可靠性没有想当然。",
+      "tags": ["DRAM", "RowHammer", "硬件安全"]
+    },
+    {
+      "domain": "bio",
+      "title": "GraphRareBench: An Auditable Graph-Evidence Benchmark for Phenotype-Driven Rare-Disease Diagnosis",
+      "title_zh": "GraphRareBench:可审计的图证据基准,做表型驱动的罕见病诊断",
+      "url": "https://arxiv.org/abs/2607.24878",
+      "authors": "(arXiv 预印本)",
+      "upvotes": 0,
+      "one_liner": "以往罕见病基准只报「正确诊断排第几」,却不告诉你哪些错答案排在它前面、模型看了什么证据。",
+      "summary_zh": "表型驱动的诊断基准通常只报「参考疾病排到第几名」,却从不揭示是哪些看似合理的替代诊断被排在了它前面,也不说模型在下结论前查了什么证据。GraphRareBench 换个思路:一个保留证据出处的基准,含 2365 个从本体(表型术语 HPO)推导出的病例和 18093 对「目标-混淆项」,每个病例都带粗化的表型查询、固定候选池、图定义的强混淆项和可溯源的证据记录。做医疗 LLM 的会喜欢这种「可审计」的设计——它逼着模型不光答对,还得说清凭什么,而不是让排名掩盖了推理黑箱。",
+      "tags": ["罕见病", "评测", "医疗AI"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Quantum Algorithms for Modular Factorials",
+      "title_zh": "模阶乘的量子算法",
+      "url": "https://arxiv.org/abs/2607.29453",
+      "authors": "(arXiv 预印本)",
+      "upvotes": 0,
+      "one_liner": "在特定素数条件下,量子机算 n! mod p 首次突破了经典 √p 的时间壁垒。",
+      "summary_zh": "给一个素数 p、p−1 的一个因子 q 和整数 n,如何快速算出 n! mod p(阶乘对素数取模)?经典方法卡在 √p 量级。这篇给出一个有界错误的量子算法,在 p−1 恰好有个合适大小因子的「约数承诺」下,把指数压到 1/2 以下,据称是首个在这种条件下打破 √p 壁垒的结果。核心技术是一个重构相关量的量子子程序。属于偏理论的量子算法进展,离实用还远,但「在一个具体数论问题上把经典下界压下去」本身就值得数论和量子算法两边留意。",
+      "tags": ["量子算法", "数论", "计算复杂度"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Fast and Accurate Foundation Models for Equivariant Machine-Learned Interatomic Potentials",
+      "title_zh": "又快又准的等变机器学习原子间势基座模型",
+      "url": "https://arxiv.org/abs/2607.28461",
+      "authors": "(arXiv 预印本)",
+      "upvotes": 0,
+      "one_liner": "MLIP 基座模型下游微调很香,但分子动力学要的是推理够快——这篇去逼等变模型的速度-精度极限。",
+      "summary_zh": "机器学习原子间势(MLIP,用神经网络近似原子间受力,替代昂贵的第一性原理计算)现在流行训一个大而通用的「基座模型」,再在具体化学体系上微调。但很多科学应用(尤其分子动力学模拟)既要精度也要够快的推理和训练速度。这篇专门审视等变 MLIP 的速度-精度极限——等变性(结果随分子旋转平移一起变换)通常能提精度但拖慢推理。对做材料/化学模拟的人,这类「基座+快速下游」的路线正是 AI4Science 里最实用的那部分,值得跟进。",
+      "tags": ["MLIP", "分子动力学", "材料科学"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "lyogavin/airllm",
+      "url": "https://github.com/lyogavin/airllm",
+      "language": "Jupyter Notebook",
+      "stars": 26887,
+      "stars_today": "1,081",
+      "one_liner": "4GB 显存跑 70B 推理——靠逐层加载把大模型「拆着喂」进小卡。",
+      "summary_zh": "AirLLM 让一张 4GB 的卡也能跑 70B 模型推理,核心是分层加载:算完一层就换下一层的权重进来,用时间换显存。今天同时冲上 GitHub Trending 和 HN。它不魔法、也慢,但对只有消费级卡、想在本地跑大模型做实验的人是实实在在的降门槛工具。别指望拿它做生产吞吐,当研究/尝鲜用很合适。"
+    },
+    {
+      "domain": "ai",
+      "name": "antirez/ds4",
+      "url": "https://github.com/antirez/ds4",
+      "language": "C",
+      "stars": 20310,
+      "stars_today": "385",
+      "one_liner": "Redis 之父手写的 DeepSeek 4 本地推理引擎,Metal/CUDA/ROCm 全支持。",
+      "summary_zh": "antirez(Redis 作者)用纯 C 写的 DeepSeek 4(Flash 和 PRO)本地推理引擎,同时支持苹果 Metal、CUDA 和 ROCm。一如他一贯风格:代码干净、依赖少、可读性强。想搞懂现代 LLM 推理引擎底层怎么跑、又不想啃一坨庞大框架的人,这是极好的学习范本。"
+    },
+    {
+      "domain": "ai",
+      "name": "esengine/DeepSeek-Reasonix",
+      "url": "https://github.com/esengine/DeepSeek-Reasonix",
+      "language": "Go",
+      "stars": 29831,
+      "stars_today": "877",
+      "one_liner": "为 DeepSeek 定制的终端 coding agent,主打前缀缓存稳定、「开着就别关」。",
+      "summary_zh": "一个 DeepSeek 原生的终端编码 Agent,设计上围绕前缀缓存(prefix-cache)的稳定性,鼓励长时间常驻运行以吃满缓存红利。用 Go 写,面向命令行工作流。如果你已经在用 DeepSeek 且喜欢常驻式的 agent,可以对比一下它的缓存策略;和今天几个 agent 记忆的话题算是一条线上的。"
+    },
+    {
+      "domain": "ai",
+      "name": "firecrawl/pdf-inspector",
+      "url": "https://github.com/firecrawl/pdf-inspector",
+      "language": "Rust",
+      "stars": 7860,
+      "stars_today": "1,769",
+      "one_liner": "Rust 写的快速 PDF 探测器:自动分辨扫描件还是文本 PDF,再决定要不要走 OCR。",
+      "summary_zh": "Firecrawl 出的 Rust 库,做 PDF 检查、分类和文本抽取,重点是能智能判断一份 PDF 是扫描图片还是原生文本,从而决定走不走 OCR。搭 RAG、做文档管线的人常被这一步坑——上来就 OCR 又慢又脏,这个前置分类器能省不少事。Rust 实现,吞吐是强项。"
+    },
+    {
+      "domain": "ai",
+      "name": "livekit/agents",
+      "url": "https://github.com/livekit/agents",
+      "language": "Python",
+      "stars": 11913,
+      "stars_today": "129",
+      "one_liner": "搭实时语音 AI Agent 的框架,把音视频管线这块脏活替你扛了。",
+      "summary_zh": "LiveKit 的实时语音 AI Agent 框架,处理低延迟音视频流、打断、转写这些做语音交互绕不过去的工程。想做能实时对话的语音助手/客服的人,不用自己从头造 WebRTC 管线。生态成熟、文档齐,是这个方向目前比较靠谱的开源选择。"
+    },
+    {
+      "domain": "ai4s",
+      "name": "shiyu-coder/Kronos",
+      "url": "https://github.com/shiyu-coder/Kronos",
+      "language": "Python",
+      "stars": 35793,
+      "stars_today": "217",
+      "one_liner": "一个「金融市场语言」的基座模型——把 K 线序列当 token 来预训练。",
+      "summary_zh": "Kronos 把金融市场的行情序列当成一种「语言」来做基座模型预训练,再用于下游预测任务。思路是套用 LLM 那套 tokenize + 预训练范式到量价数据上。做量化、时序预测的人可以拿来当特征提取器试;不过金融数据信噪比极低,基座模型能泛化到多少要打问号,别被 star 数冲昏头,拿自己的回测说话。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "embodied",
+      "title_zh": "DeepMind:Gemini Robotics 2 可做全身控制",
+      "url": "https://www.therobotreport.com/google-deepmind-says-gemini-robotics-2-enables-full-body-control/",
+      "source": "The Robot Report",
+      "summary_zh": "Google DeepMind 宣布新一代 Gemini Robotics 2 支持全身控制(full body control),不再局限于机械臂末端,而是协调整机运动。这是把大模型的通用推理往真机运动控制深处推的又一步,和今天 arXiv 上一堆 VLA、世界模型的工作呼应,机器人基座模型的竞争在加速。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Reimagine Robotics 走出隐身,主打「在岗边干边学」的机器人",
+      "url": "https://www.therobotreport.com/reimagine-robotics-emerges-from-stealth-with-robots-that-learn-on-the-job/",
+      "source": "The Robot Report",
+      "summary_zh": "机器人创业公司 Reimagine Robotics 结束隐身状态,卖点是能「在岗学习」(learn on the job)的机器人——部署后继续从实际作业中改进策略,而不是出厂即定型。和 arXiv 上「从部署数据做离线策略改进」的思路一个方向,能不能真在现场稳定自我提升,是这类公司要证明的核心。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "欧盟 AI 标注与透明度新规正式生效",
+      "url": "https://www.theverge.com/news/europe-ai-labeling-transparency-rules-now-in-effect",
+      "source": "The Verge",
+      "summary_zh": "欧洲的 AI 标注与透明度规则正式开始施行,要求对 AI 生成内容做标识、对系统披露相关信息。对在欧盟部署产品的 AI 公司是实打实的合规负担,也会推动生成内容水印、系统提示披露(呼应今天 AISPA 那篇审计系统提示的论文)这类工程需求上升。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "阿里巴巴再向美国 AI 霸主地位发起挑战",
+      "url": "https://www.theverge.com/news/china-alibaba-ai-supremacy",
+      "source": "The Verge",
+      "summary_zh": "阿里巴巴又一次在 AI 能力上叫板美国头部厂商,推进自家大模型的竞争力。中美开源/闭源模型的你追我赶还在继续,对开发者的直接好处是可选的强开源基座越来越多。"
+    },
+    {
+      "domain": "energy",
+      "title_zh": "德国风光发电首次超过化石能源",
+      "url": "https://news.ycombinator.com/item?id=wind-solar-germany",
+      "source": "Hacker News",
+      "summary_zh": "德国的风电加光伏发电量首次超过化石燃料,是能源结构上的一个标志性节点。对新能源、电网调度是好消息,但也把储能和电网稳定的压力顶到台前——今天 arXiv 上正好有用量子算法给电网谐振做求解器的工作,间歇性电源占比越高,电网分析的算力需求越吃紧。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "Hughes 申请破产,GEO 业务败给星链",
+      "url": "https://spacenews.com/hughes-files-for-bankruptcy-after-geo-business-loses-ground-to-starlink/",
+      "source": "SpaceNews",
+      "summary_zh": "老牌卫星通信商 Hughes 申请破产,原因是其高轨(GEO)卫星业务在与 SpaceX 星链的竞争中持续失地。低轨星座对传统高轨运营商的挤压已经从「威胁」变成「出清」,卫星通信的格局正在被重画。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "Curium 最高 80 亿美元收购放射性药物对手 Lantheus",
+      "url": "https://www.fiercebiotech.com/medtech/curium-strikes-8b-deal-radiopharma-rival-lantheus",
+      "source": "Fierce Biotech",
+      "summary_zh": "放射性药物(radiopharma)厂商 Curium 达成一笔最高 80 亿美元的交易收购同行 Lantheus。放射性药物这两年是肿瘤治疗里的热门赛道,这种大额并购说明资本正加速向该领域集中。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "GSK 与 AI 生物技术公司 Relation 签 1.1 亿美元生物数据集合作",
+      "url": "https://www.fiercebiotech.com/medtech/gsk-pens-110m-biological-datasets-pact-ai-biotech-relation",
+      "source": "Fierce Biotech",
+      "summary_zh": "葛兰素史克(GSK)与 AI 生物技术公司 Relation 签订价值 1.1 亿美元的生物数据集合作。大药企为高质量生物数据集付真金白银,印证了「数据比模型稀缺」在生物医药 AI 里尤其成立——和今天 GraphRareBench、AMPBench 强调「基准与证据质量」是一个逻辑。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "TU Dresden 造出桥接神经形态与深度网络计算的芯片",
+      "url": "https://semiengineering.com/chip-bridges-neuromorphic-and-deep-network-computing-tu-dresden/",
+      "source": "SemiEngineering",
+      "summary_zh": "德累斯顿工大(TU Dresden)展示一款芯片,试图在神经形态计算(仿脑、事件驱动、低功耗)与传统深度网络计算之间搭桥,让两种范式在同一硬件上协作。神经形态一直卡在「省电但难对接主流深度学习」,这类桥接工作是它走向实用的必经一步。"
+    },
+    {
+      "domain": "ai4s",
+      "title_zh": "Quanta:传奇的厄多斯问题正被 AI 逐个攻破",
+      "url": "https://www.quantamagazine.org/why-the-legendary-erdos-problems-are-falling-to-ai/",
+      "source": "Quanta Magazine",
+      "summary_zh": "Quanta 报道 AI(结合大模型与形式化证明工具)开始解开一批悬而未决的厄多斯(Erdős)组合数学难题。这不是简单套公式,而是 AI 参与真实数学研究的信号。和今天的每日一理(傅里叶级数)放一起看别有意味——数学既在被机器辅助发现,也依然值得我们亲手推一遍来练直觉。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个「训练无关的开放词表 3D 点云分割」一键复现库,并把它跨数据集/跨传感器泛化验证成卖点",
+      "based_on": [
+        { "title": "Training-Free Open-Vocabulary 3D Point-Cloud Segmentation on the Generalized Few-Shot Benchmark", "url": "https://arxiv.org/abs/2607.15331" },
+        { "title": "PruneGround: Plug-and-play Spatial Pruning for 3D Visual Grounding", "url": "https://arxiv.org/abs/2606.31148" }
+      ],
+      "why_now": "这篇刚把开放词表 3D 分割做到「无需训练、无需 3D 标签、甚至无需支持集标注」,复现成本极低;但训练无关方法最大的价值在于「换个数据集/换台激光雷达还灵不灵」,而这块几乎没人系统做过开源工具。此刻做正好卡在方法便宜、验证空白的窗口。",
+      "feasibility": "单张 24GB 卡足够(训练无关,主要是推理 + 2D 视觉语言先验前向)。核心是工程:统一数据接口 + 评测,2–3 周能出一个能用的版本。",
+      "route": [
+        "先跑通官方(或复现)的训练无关 3D 分割推理,在原论文数据集上复现出 base/novel 类的 mIoU 基线",
+        "把「2D 视觉语言先验 → 3D 一致化」这一步抽成可插拔模块,支持替换不同的开放词表 2D 分割器",
+        "接入第二、第三个公开点云数据集(不同场景/不同传感器密度),做零训练直接迁移,记录掉点情况",
+        "叠加 PruneGround 式的空间剪枝,看能否在杂乱场景里同时提精度、降算力",
+        "打包成 CLI + 一键复现脚本,配 README、示例数据和一张「跨数据集泛化」对比图去攒 star"
+      ],
+      "risk": "训练无关方法对 2D 先验的质量高度敏感,换域后可能大幅掉点;要把「什么场景下会崩」诚实地写进 README,否则容易被质疑挑数据集。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个给任意 HF 模型加「训练无关自我推测解码」的即插即用库 + 统一加速基准",
+      "based_on": [
+        { "title": "A Sparse Glimpse of the Whole: Train-Free Self-Speculative Decoding (SparseSpec-L)", "url": "https://arxiv.org/abs/2607.27735" }
+      ],
+      "why_now": "这篇给了一个统一的效率分析:推测长度一旦让边际接受概率低于相对起草成本,加速反而变慢——并据此提出训练无关的自我推测解码。方法不需要额外训练草稿模型,天然适合封装成人人能用的加速插件,而目前缺一个把「起草开销/接受率/推测长度」三者一起可视化的标准 harness。",
+      "feasibility": "单张 24GB 卡即可(纯推理,7B 级模型足够演示)。工作量在工程封装和评测,2–3 周可出能用版本。",
+      "route": [
+        "先在一个 7B HF 模型上复现 SparseSpec-L 的训练无关自我推测解码,量出真实 wall-clock 加速",
+        "把它包成一个 decorator/wrapper:传入任意 HF CausalLM 就能开启,自动选推测长度",
+        "实现论文那套「边际接受概率 vs 相对起草成本」的诊断面板,让用户一眼看到该不该拉长推测",
+        "在几类任务(代码、闲聊、长文)上跑统一基准,输出加速比-质量无损性对照表",
+        "配 README、一键 benchmark 脚本和示例,强调「零训练、即插即用」去攒 star"
+      ],
+      "risk": "自我推测解码的加速高度依赖模型和任务,某些场景可能几乎无收益;基准必须覆盖多种负载并公开测法,否则会被质疑「只在挑好的例子上快」。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "用 LoRA 秩选择的新理论边界,做一次「理论预测秩 vs 实际最优秩」的实证校准",
+      "based_on": [
+        { "title": "Tight Sample Complexity for Low-Rank Adaptation: Matching Bounds and Rank Selection", "url": "https://arxiv.org/abs/2607.27680" }
+      ],
+      "why_now": "LoRA 用了这么久,选秩基本还靠拍脑袋试。这篇第一次把上下界配齐(Õ(rd/n)),并给出秩选择的形式化答案。理论刚落地、还没人拿真实微调任务去检验它准不准——「理论给的最优秩」和「网格搜出来的最优秩」到底对不对得上,是个具体、可衡量、单人能做完的实证问题。",
+      "feasibility": "单张 24GB 卡足够(小/中模型 + 多组 LoRA 秩微调,可复用现成微调脚本)。主要成本是把秩当自变量系统地扫一遍,2–4 周。",
+      "route": [
+        "先复现一个标准 LoRA 微调基线(如在 7B 模型 + 一个公开指令/分类数据集上),跑通并记录验证指标",
+        "按论文公式算出给定样本量 n、维度 d 下的理论建议秩 r*",
+        "在同一任务上网格扫 r,画出验证性能随秩的曲线,标出实测最优秩",
+        "改变样本量 n 与任务难度,看理论 r* 与实测最优秩的偏差如何随 n 变化,验证边界的紧致性",
+        "把「什么时候理论准、什么时候偏」整理成一份可复现的小实证报告 + 开源脚本"
+      ],
+      "risk": "理论边界是最坏情况/渐近意义的,实际任务里常数项和数据分布可能让预测秩系统性偏离;要老实报告偏差,把结论定位成「校准与适用边界」而非「理论失效」。"
+    }
+  ]
+}
