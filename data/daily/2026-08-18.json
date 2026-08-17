@@ -1,0 +1,363 @@
+{
+  "date": "2026-08-18",
+  "editor_note": "今天两条线并着走。一条是「生成 vs 检测」:RA-Bench 把 AI 假视频的检测器摁在地上系统测,Anthropic 同天公布 Claude 文本隐形水印,亚马逊拆真书喂模型的报道又提醒你——好语料快见底了,造假、标记、找料三件事同时在紧。另一条是「把大模型塞进更便宜的硬件」:芯片组的 MoE-闪存、榜上的 Maglev 定长记忆、Dion3 砍正交化开销,加上 omlx、llmfit 这些工具,都往同一个方向使劲。最值得点开的是那篇「预测坍缩」——它老实告诉你时序基座模型碰上难预测的目标会躺平输出一条平线,是今天少有的、敢讲负面结果的论文。非 AI 这边,蛋白生成「是真创新还是检索拼装」的质疑很扎心,做生成模型的都该读读。每日一理挑了高斯散度定理,正好和 Quanta 那篇「流体理论迈入 21 世纪」对上:很多前沿计算,根还在两百年前那个「边界看整体」的公式上。",
+  "math_note": {
+    "name": "高斯散度定理",
+    "name_en": "Gauss's Divergence Theorem (Ostrogradsky's Theorem)",
+    "field": "向量微积分 / 矢量分析",
+    "one_liner": "想知道一片区域往外漏多少,数一数里面有多少「源」就够了",
+    "statement": "对一个封闭曲面 $S$ 包住的立体区域 $V$,向量场 $\\mathbf{F}$ 穿过 $S$ 往外的总通量,等于 $\\mathbf{F}$ 的散度 $\\nabla\\!\\cdot\\!\\mathbf{F}$(每一点「往外冒」的强度)在 $V$ 上的体积分:$\\oint_{S}\\mathbf{F}\\cdot d\\mathbf{S}=\\iiint_{V}\\nabla\\!\\cdot\\!\\mathbf{F}\\,dV$。左边是边界上那层「净流出」,右边是内部所有小源小汇的总账——定理说这两笔账必须相等。",
+    "origin": "高斯在 1813 年前后研究引力和静电场时用到了它的雏形,俄国数学家奥斯特罗格拉茨基 1826 年给出一般证明,所以中文也叫「奥高公式」。动机很实在:封闭曲面上的通量积分往往难算,但换成内部的体积分(或者反过来),常常一边就好算得多。它后来成了电磁学高斯定律、流体力学连续性方程的骨架。",
+    "derivation": [
+      { "math": "\\nabla\\!\\cdot\\!\\mathbf{F}=\\frac{\\partial P}{\\partial x}+\\frac{\\partial Q}{\\partial y}+\\frac{\\partial R}{\\partial z}", "note": "散度就是三个分量各自偏导之和。三项结构完全一样,先把 x 分量 P 这一项证出来,另外两项照抄。" },
+      { "math": "\\iiint_V \\frac{\\partial P}{\\partial x}\\,dV=\\iint_{D}\\Big(P\\big|_{x_\\text{出}}-P\\big|_{x_\\text{入}}\\Big)\\,dy\\,dz", "note": "把区域沿 x 方向切成一根根平行于 x 轴的「针」。每根针先对 x 积分,微积分基本定理把体内的变化全折叠到针两端(前后表面)上,只剩端点处 P 的差。" },
+      { "math": "dy\\,dz=\\pm\\,(\\mathbf{n}\\cdot\\mathbf{e}_x)\\,dS", "note": "针的两个端点正落在曲面 S 的前、后两片上。那块投影面积 dy dz,等于曲面元 dS 乘上法向量在 x 方向的分量;出口取正、入口取负,刚好和上一步的正负号对上。" },
+      { "math": "\\iiint_V \\frac{\\partial P}{\\partial x}\\,dV=\\oint_S P\\,(\\mathbf{n}\\cdot\\mathbf{e}_x)\\,dS", "note": "于是 x 分量的体积分,就等于 P 乘法向 x 分量在整个封闭曲面上的积分——体内的偏导被换成了边界上的一圈面积分。" },
+      { "math": "\\oint_S (P\\,n_x+Q\\,n_y+R\\,n_z)\\,dS=\\iiint_V \\nabla\\!\\cdot\\!\\mathbf{F}\\,dV", "note": "对 y、z 分量重复同样操作,三项相加:左边合成 $\\mathbf{F}\\cdot\\mathbf{n}$ 的面积分(净流出),右边合成散度的体积分。定理得证。" }
+    ],
+    "applications": [
+      { "area": "电磁学", "detail": "高斯定律「闭合面电通量正比于内部电荷」就是散度定理的直接产物,也是麦克斯韦方程组在积分形式与微分形式之间来回转换的桥。" },
+      { "area": "流体与空气动力学", "detail": "把「某区域的净流出=内部源汇总和」写成连续性方程,是 CFD 求解器守恒格式的基础;今天 Quanta 那篇重述流体理论,底子也在这。" },
+      { "area": "计算机图形学 / 几何处理", "detail": "用散度定理能把物体的体积、质心写成只在表面网格上的积分,三维重建和 3DGS 里算封闭网格体积就靠它。" },
+      { "area": "数值 PDE(有限体积法)", "detail": "有限体积法直接以「每个小格子通量守恒」离散方程,本质就是在每个控制体上用散度定理,所以天然守恒。" }
+    ],
+    "takeaway": "它是「边界看整体」的典范:内部逐点的微观行为 $\\nabla\\!\\cdot\\!\\mathbf{F}$ 积起来,等于边界上一圈的宏观净效果——格林公式、斯托克斯定理、乃至一维的微积分基本定理,都是这同一个思想在不同维度里的化身。",
+    "viz": {
+      "type": "vectorfield",
+      "caption": "拖动种子点,看流线从一个「源」里旋着往外冲。这个场处处散度为 2,散度定理说:穿过任意闭合边界的净流出,就等于把里面的散度全加起来。",
+      "params": { "fx": "x-y", "fy": "x+y", "xmin": -3.4, "xmax": 3.4, "ymin": -3, "ymax": 3, "density": 15, "seedX": 0.3, "seedY": 0.15, "steps": 380, "dt": 0.02 }
+    }
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Can We Defend Against AI-Generated Video Attacks on Real-World Crisis Events? A Systematic Evaluation of Detectors, Generators and Social Dissemination",
+      "title_zh": "危机事件里的 AI 假视频,还防得住吗",
+      "url": "https://arxiv.org/abs/2608.14391",
+      "hf_url": "https://huggingface.co/papers/2608.14391",
+      "authors": "Shuo Liang、Yixing Ma 等",
+      "affiliation": "Hugging Face",
+      "upvotes": 257,
+      "one_liner": "1830 条真视频当锚,给假视频检测器做一次压力测试",
+      "summary_zh": "现在的视频生成模型能编出以假乱真的战争、灾难、突发事件画面,谣言风险很实在。作者搭了 RA-Bench:用 1830 条真实视频当「锚点」,配上一万六千多条生成片段,覆盖 10 类社会风险,专门测检测器在不同生成条件、以及经过社交转发压缩后还灵不灵。结论不乐观——检测可靠性对生成方式和传播链路都很敏感。配今天 Anthropic 给 Claude 文本加水印的新闻一起看,「生成方主动标注 vs 事后检测」这条线越来越现实。",
+      "tags": ["深度伪造", "评测", "多模态"]
+    },
+    {
+      "domain": "ai",
+      "title": "Self-Supervised Visual On-Policy Distillation",
+      "title_zh": "自监督视觉在线蒸馏",
+      "url": "https://arxiv.org/abs/2608.14144",
+      "hf_url": "https://huggingface.co/papers/2608.14144",
+      "authors": "Yijiang Li、Yijun Liang 等",
+      "affiliation": "加州大学圣迭戈分校(UCSD)",
+      "upvotes": 144,
+      "one_liner": "想造老师又没有老师?那就给学生「减配」",
+      "summary_zh": "视觉领域的在线蒸馏一直得靠一个更强的老师,或者喂给老师学生看不到的特权信息(标准答案、真值框)。这篇反过来做:不给老师加料,而是从学生这边「扣掉」信息——让学生在更差的观测下学,人为造出和「老师握有额外信息」等价的学习信号,不需要任何标注或奖励。省掉了造老师这一步,思路挺巧;能不能在难任务上追平真·特权蒸馏,还得看后续实测。",
+      "tags": ["蒸馏", "自监督", "多模态"]
+    },
+    {
+      "domain": "ai",
+      "title": "Maglev: Sliding Recurrent Memory",
+      "title_zh": "Maglev:定长记忆的滑动循环 Transformer",
+      "url": "https://arxiv.org/abs/2608.02870",
+      "hf_url": "https://huggingface.co/papers/2608.02870",
+      "authors": "Bo Liu、Qiang Liu",
+      "affiliation": "得州大学奥斯汀分校(UT Austin)",
+      "upvotes": 14,
+      "one_liner": "把滑动窗口注意力升级成「训练能并行」的循环记忆",
+      "summary_zh": "长上下文要么显存爆炸,要么滑动窗口丢历史。Maglev 用两个耦合模型:一个能看全历史的「预填充器」Q 生成记忆目标,一个只用滑动窗口加循环 K/V 注入的解码器 P 做下一词预测,再靠一个记忆一致性损失把两者对齐。好处是定长记忆、训练还能并行。本质是想让循环模型拿到接近全注意力的监督信号,值得看它在真·长文上的实测。",
+      "tags": ["长上下文", "循环网络", "注意力"]
+    },
+    {
+      "domain": "ai",
+      "title": "Thought-Level Beam Search for Reasoning",
+      "title_zh": "思维级束搜索:把算力花在最有希望的推理分支上",
+      "url": "https://arxiv.org/abs/2608.08020",
+      "hf_url": "https://huggingface.co/papers/2608.08020",
+      "authors": "Lijie Yang、Hongyin Luo 等(含 Tri Dao)",
+      "affiliation": "普林斯顿大学",
+      "upvotes": 14,
+      "one_liner": "测试时算力,不是花多少,是花在哪",
+      "summary_zh": "大推理模型靠测试时堆算力提分,但堆得很浪费。这篇把它形式化成「在部分轨迹上做受限算力分配」的问题:并行采样把每条 trace 当独立的,显存瓶颈严重;剪枝又让硬件吃不饱。他们改成以「思维」为单位做束搜索,把预算主动挪向最有进展的分支。硬件利用率和效率是卖点,问题拆得清楚。",
+      "tags": ["推理", "测试时扩展", "搜索"]
+    },
+    {
+      "domain": "ai",
+      "title": "Dion3: Full-Stack Orthogonal Updates",
+      "title_zh": "Dion3:把 Muon 的正交化开销从头砍到尾",
+      "url": "https://arxiv.org/abs/2608.11612",
+      "hf_url": "https://huggingface.co/papers/2608.11612",
+      "authors": "Noah Amsel 等(含 Tri Dao、John Langford)",
+      "affiliation": "微软研究院",
+      "upvotes": 3,
+      "one_liner": "Newton-Schulz 太贵?那就每一层都省一点",
+      "summary_zh": "Muon 优化器要做 Newton-Schulz 正交化,立方复杂度,权重一分片,通信开销还叠上来,好处就被吃没了。Dion3 全栈优化:Gram 版 Newton-Schulz 降 FLOP、CuteDSL 核利用对称性加速、megabatching 减通信,还顺手改了更新规则——每步只正交化动量矩阵的一部分行。工程味很浓,对想上 Muon 又怕开销的人有用。",
+      "tags": ["优化器", "Muon", "分布式训练"]
+    },
+    {
+      "domain": "ai",
+      "title": "Forecast Collapse in Time-Series Foundation Models",
+      "title_zh": "时序基座模型的「预测坍缩」",
+      "url": "https://arxiv.org/abs/2608.14106",
+      "hf_url": "https://huggingface.co/papers/2608.14106",
+      "authors": "Shu Wan 等",
+      "affiliation": "Abel AI",
+      "upvotes": 7,
+      "one_liner": "预测越难,模型越倾向躺平输出一条平线",
+      "summary_zh": "拿时序基座模型预测 1000 支美股的小时收益,结果预测几乎变成平线、排序能力很差——作者管它叫「预测坍缩」。怪的是换成预测成交量,同样设置下问题基本消失。他们在多个时序基座、12 个深度模型、97 组 benchmark 上排查,发现坍缩和「目标本身可不可预测」强相关:可预测性低时,校准过的点预测天然压不出振幅。对拿 TSFM 做量化的人是记警钟。",
+      "tags": ["时间序列", "基座模型", "金融"]
+    },
+    {
+      "domain": "chip",
+      "title": "Beyond Capacity: Scalable MoE LLM Inference via High-Bandwidth Flash with Direct GPU and HBM Paths",
+      "title_zh": "让 MoE 专家权重住进高带宽闪存",
+      "url": "https://arxiv.org/abs/2608.14333",
+      "authors": "Seeyeon Kim、Juhyeong Jin 等",
+      "upvotes": 0,
+      "one_liner": "HBM 装不下的专家,交给闪存直连 GPU",
+      "summary_zh": "MoE 模型的专家权重涨得太快,全塞进 HBM 又贵又不够。这篇研究用「高带宽闪存」(HBF)存专家权重,而且同时开两条路给 GPU 送数据:一条从 HBF 直连 GPU,一条经 HBM 中转——过去那条直连通道常被浪费。属于把 MoE 推理的存储层次重新排布的硬件系统工作,和今天 omlx、Groq 那些「怎么把大模型塞进更便宜硬件」的动向是一路的。",
+      "tags": ["MoE", "存储", "推理硬件"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Native multi-qubit gates on a single-junction unimon circuit",
+      "title_zh": "单结 unimon 电路上的原生多比特门",
+      "url": "https://arxiv.org/abs/2608.14357",
+      "authors": "Sasu Tuohino、Mikko Möttönen 等",
+      "upvotes": 0,
+      "one_liner": "一个约瑟夫森结,直接做三比特门",
+      "summary_zh": "在含噪声的量子硬件上,能「原生」一步做多比特门,比拆成一堆两比特门更省。作者提出 multiunimon:在一段共面波导里嵌一个约瑟夫森结(超导量子电路里的非线性元件),就能编码多个比特并原生实现多比特门,还继承了 unimon 高非谐、抗电荷噪声的好处;他们设计了一个三比特器件做验证。硬件路线上的一个新点子,离实用还早,但方向有意思。",
+      "tags": ["超导量子", "量子门", "硬件"]
+    },
+    {
+      "domain": "bio",
+      "title": "Is Retrieval All You Need? Assessment and Emergence of Novelty in Protein Structure Generation",
+      "title_zh": "蛋白结构生成,是真创新还是在「检索拼装」",
+      "url": "https://arxiv.org/abs/2608.10598",
+      "authors": "Tongyue Xu、Yijie Zhang 等",
+      "upvotes": 0,
+      "one_liner": "全链相似度低≠新折叠,拆到结构域再看就露馅",
+      "summary_zh": "蛋白骨架生成模型常被夸能探索新折叠,理由是生成结果和已知蛋白的全链相似度低。作者质疑:全链不像,不代表没抄——可能只是把已知结构单元重新拼了一下。他们提出「结构域检索率」(DRR):看生成骨架里每个结构域能不能在已知库 CATH 里找到对得上的。测了八个扩散/流匹配模型,发现大多数输出里都能找到局部对得上的已知结构。给「生成即创新」这个说法泼了盆冷水,评测该做得更细。",
+      "tags": ["蛋白设计", "生成模型", "评测"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Reflex: Enabling Fast and Predictive Vision-Language-Action Models for Reaction-Critical Manipulation",
+      "title_zh": "Reflex:给 VLA 补上「反应速度」这门课",
+      "url": "https://arxiv.org/abs/2608.14379",
+      "authors": "Yuxuan Chen、Wanruo Zhang 等",
+      "upvotes": 0,
+      "one_liner": "静态抓取测够了,该测机器人躲不躲得开动的东西了",
+      "summary_zh": "现在测 VLA 大多是静态摆放的抓取任务,忽略了动态交互。作者做了 ReflexBench:六个反应关键型任务,评测框架把「仿真步进」和「机器人控制」解耦,还能配置同步/异步推理下的延迟。基于它提出 ReflexVLA,针对反应关键场景做提速。把「推理延迟」这个真实工程约束搬进评测,对做实机的人是对的方向。",
+      "tags": ["VLA", "机器人", "评测"]
+    },
+    {
+      "domain": "energy",
+      "title": "Universal Thermodynamic Interatomic Potentials for Crystalline Materials",
+      "title_zh": "会算自由能的通用原子间势",
+      "url": "https://arxiv.org/abs/2608.14502",
+      "authors": "Juno Nam、Bowen Deng 等",
+      "upvotes": 0,
+      "one_liner": "材料筛选别只看基态能量,自由能才定相稳定",
+      "summary_zh": "固态相稳定其实由自由能决定,但材料计算里大家图省事,多半只用基态能量,因为算自由能要做系综平均、很贵。这篇提出「热力学原子间势」(TIP):把通用势从静态能量扩展成热力学自洽的吉布斯自由能模型,温度、压力下的热力学响应直接靠自动微分得到;基于通用势 UMA 实现,用准谐到分子动力学不同精度的自由能训练。让高通量材料筛选能把温度效应算进去,实用价值清楚。",
+      "tags": ["材料计算", "机器学习势", "热力学"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "usestrix/strix",
+      "url": "https://github.com/usestrix/strix",
+      "language": "Python",
+      "stars": 53953,
+      "stars_today": "656",
+      "one_liner": "把渗透测试做成一个会自己找洞的 agent",
+      "summary_zh": "开源的 AI 渗透测试工具:自己扫、自己找漏洞,还给修复建议。增长很猛(单日 656 star)。做应用安全、想在 CI 里挂个自动红队的可以试试,配今天几条 AI 安全新闻一起看正合适。"
+    },
+    {
+      "domain": "ai",
+      "name": "akitaonrails/ai-memory",
+      "url": "https://github.com/akitaonrails/ai-memory",
+      "language": "Rust",
+      "stars": 1932,
+      "stars_today": "207",
+      "one_liner": "给编码 agent 做长期记忆,还能跨厂商交接",
+      "summary_zh": "解决「换个 agent 工具上下文就丢了」的痛点,做跨 vendor 的长期记忆和握手。和今天 MobileMem、LycheeMemory 那批「agent 记忆」论文是同一股风。Rust 写的。"
+    },
+    {
+      "domain": "ai",
+      "name": "nautechsystems/nautilus_trader",
+      "url": "https://github.com/nautechsystems/nautilus_trader",
+      "language": "Rust",
+      "stars": 25804,
+      "stars_today": "115",
+      "one_liner": "生产级、确定性事件驱动的 Rust 原生交易引擎",
+      "summary_zh": "面向量化的高性能交易引擎,回测和实盘共用一套确定性架构。今天正好有篇「时序基座模型预测坍缩」给量化泼冷水——越是这样,能把工程做扎实的底座越值钱。做交易系统的可以关注。"
+    },
+    {
+      "domain": "ai",
+      "name": "AlexsJones/llmfit",
+      "url": "https://github.com/AlexsJones/llmfit",
+      "language": "Rust",
+      "stars": 32165,
+      "stars_today": "239",
+      "one_liner": "一条命令告诉你,你的硬件能跑哪些模型",
+      "summary_zh": "输入你的显卡/内存,直接列出哪些开源模型跑得动、大概怎么配,覆盖上百个模型和供应商。省去一个个试的功夫,本地跑模型的人的顺手工具。"
+    },
+    {
+      "domain": "chip",
+      "name": "jundot/omlx",
+      "url": "https://github.com/jundot/omlx",
+      "language": "Python",
+      "stars": 18924,
+      "stars_today": "96",
+      "one_liner": "Apple Silicon 上的 LLM 推理服务,菜单栏就能管",
+      "summary_zh": "专为苹果芯片做的推理服务器,连续批处理加 SSD 缓存扩容,从 macOS 菜单栏管理。和今天那篇「MoE 专家权重塞进高带宽闪存」思路一脉——都是想用更便宜的存储,换得起更大的模型。"
+    },
+    {
+      "domain": "ai",
+      "name": "immich-app/immich",
+      "url": "https://github.com/immich-app/immich",
+      "language": "TypeScript",
+      "stars": 111023,
+      "stars_today": "140",
+      "one_liner": "自托管版的 Google Photos,AI 检索全本地跑",
+      "summary_zh": "高性能自托管照片视频管理,人脸/物体识别都在自己机器上跑,11 万 star 的老牌项目。想把照片从云端搬回自己盘、又要 AI 检索的,基本首选。"
+    },
+    {
+      "domain": "ai",
+      "name": "harry0703/MoneyPrinterTurbo",
+      "url": "https://github.com/harry0703/MoneyPrinterTurbo",
+      "language": "Python",
+      "stars": 105745,
+      "stars_today": "1,275",
+      "one_liner": "一句话生成高清短视频——顺便也是今天那篇论文担心的东西",
+      "summary_zh": "输入一个主题或关键词,AI 自动配文案、配音、剪成高清短视频,工具本身很成熟(单日 1275 star)。列它是因为:批量生成以假乱真内容的门槛,已经低到一条命令——正是 RA-Bench 那篇在担心的现实。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "亚马逊在拆毁珍本古籍,只为喂给 AI",
+      "url": "https://techcrunch.com/2026/08/17/amazon-once-an-online-bookseller-is-destroying-rare-books-to-train-ai-models/",
+      "source": "TechCrunch",
+      "summary_zh": "网上能爬的语料早被训光,稀缺的实体珍本成了模型眼里的新数据金矿。有报道(还有人靠塞进书里的 AirTag 佐证)称亚马逊为数字化,把一批珍稀古籍直接拆毁。真假争议暂且不论,这条把「高质量语料枯竭」的焦虑摆到了台面上。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Anthropic 说明 Claude 文本隐形水印怎么做",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/980869/anthropic-claude-watermarks-synthid-text-system",
+      "source": "The Verge",
+      "summary_zh": "为合规欧盟 AI 透明度要求,Anthropic 公布了给 Claude 生成文本加隐形水印的方案,基于开源的 SynthID-Text。争议不小——有评论直接骂它是「对写作的亵渎」(相关帖 HN 700 多分)。配今天 RA-Bench 那篇看:生成方主动标注和事后检测,正同时往前走。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "Groq 融资 3.5 亿美元,从 AI 芯片转做 neocloud",
+      "url": "https://techcrunch.com/2026/08/17/groq-raises-350m-to-fuel-its-pivot-from-ai-chips-to-neocloud/",
+      "source": "TechCrunch",
+      "summary_zh": "曾主打自研推理芯片的 Groq,以 35 亿美元估值融到 3.5 亿,重心转向 neocloud 算力租赁,还在扩它那些用 Nvidia 供电的数据中心。做芯片的转身去卖算力,这个信号值得琢磨。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "英伟达向软银数据中心开发商投资 15 亿美元",
+      "url": "https://techcrunch.com/2026/08/17/nvidia-investing-1-5b-in-softbank-data-center-developer-behind-openai-project/",
+      "source": "TechCrunch",
+      "summary_zh": "英伟达向软银旗下、承建 OpenAI 数据中心项目的开发商投 15 亿美元,等于锁定这批数据中心用自家芯片。芯片厂反向给下游数据中心注资、绑定采购,AI 基建的资本闭环越缠越紧。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Stripe 据报将以超 70 亿美元收购 OpenRouter",
+      "url": "https://techcrunch.com/2026/08/16/stripe-will-reportedly-acquire-ai-gateway-startup-openrouter-for-7b/",
+      "source": "TechCrunch",
+      "summary_zh": "有报道称支付巨头 Stripe 将以 70 亿美元+ 收购 AI 网关初创 OpenRouter——后者 CEO 自称「AI 界的 Stripe」。模型调用的聚合与计费入口,正变成大玩家想拿下的战略位置。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Gravis Robotics 融 2 亿美元做自主施工",
+      "url": "https://www.therobotreport.com/gravis-robotics-raises-200m-autonomous-construction/",
+      "source": "The Robot Report",
+      "summary_zh": "Gravis Robotics 给挖掘机等工程机械做自主 AI 加硬件,拿了 2 亿美元准备全球铺开。工地这种半结构化、重复度高又缺人的场景,是具身智能落地相对好啃的一块。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "800V 直流:AI 供电的战场从电网一路推到栅极",
+      "url": "https://semiengineering.com/800vdc-pushes-ai-power-design-from-grid-to-gate/",
+      "source": "SemiEngineering",
+      "summary_zh": "AI 数据中心的功耗瓶颈不再只在加速器内部,而是从中压交流一路降到不足 1V 硅片的整条转换链。业界开始把 800V 直流方案往里推,想在这条链上少损耗、少铜。算力军备竞赛,正把「供电」逼成一门硬工程。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "两起未披露的基因治疗死亡,拷问中国 IIT 监管路径",
+      "url": "https://www.fiercebiotech.com/biotech/after-2-undisclosed-gene-therapy-deaths-can-china-iit-alternative-regulatory-path-still-be",
+      "source": "Fierce Biotech",
+      "summary_zh": "两名患者死于高剂量病毒载体基因治疗引发的严重免疫反应,且事前未披露,引来国际对中国「研究者发起临床试验」(IIT)框架的审视——监管与透明度上的系统性缺口被摆上台面。基因治疗这条快车道,安全和合规的账迟早要还。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "长征十二号照常发射,长征二号丙为阿联酋送星",
+      "url": "https://spacenews.com/long-march-12-launches-despite-recent-7a-failure-long-march-2c-launches-satellite-for-uae/",
+      "source": "SpaceNews",
+      "summary_zh": "尽管此前长征七号甲发射失利,中国周末照常用长征十二号发射了一批「国网」星座卫星,又用长征二号丙为阿联酋发射一颗试验星。星座组网的节奏没被单次失利打断。"
+    },
+    {
+      "domain": "ai4s",
+      "title_zh": "流体理论迈入 21 世纪",
+      "url": "https://www.quantamagazine.org/theory-of-fluids-enters-the-21st-century-20260817/",
+      "source": "Quanta Magazine",
+      "summary_zh": "从 19 世纪到本世纪初,物理学家用同一套理论理解流体行为。如今他们借助一个现代视角,从最底层重新定义了流体。基础理论的更新往往不吵不闹,却会慢慢改变下游一大片计算方式——今天「每日一理」讲的高斯散度定理,正是这套流体连续性描述的数学根。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个「变换编码」KV Cache 压缩小库,一行接入任意开源模型",
+      "based_on": [
+        { "title": "KV Cache Compression Through the Lens of Transform Coding", "url": "https://arxiv.org/abs/2608.14191" }
+      ],
+      "why_now": "这篇刚把 KV Cache 压缩重新框成经典的「变换编码」问题(像 JPEG 那套:变换—量化—编码),视角新但还没有开箱即用的实现;谁先做出干净的 drop-in 库谁占坑。",
+      "feasibility": "纯推理、无需训练,单张 24GB 卡就能在 7B/14B 模型上跑通;先用固定的 PCA/KLT 变换起步,几周内能出可复现的「显存-质量」曲线。",
+      "route": [
+        "跑通一个开源模型(如 Qwen/Llama)的基础推理,dump 出各层 KV 的分布",
+        "沿通道方向估一个 PCA/KLT 变换基,搭起「变换+量化+反变换」的最小闭环",
+        "接成 HuggingFace 生成时的 hook,在长上下文任务上测显存占用与困惑度/精度",
+        "对比朴素量化和 H2O 等 KV 淘汰法,画一条压缩率-质量前沿曲线并开源"
+      ],
+      "risk": "变换基要在线估计还是离线预置,以及量化误差在自回归里会不会累积漂移,是主要不确定点。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "把训练无关的开放词表点云分割迁到新场景,验证它到底泛化到哪",
+      "based_on": [
+        { "title": "Training-Free Open-Vocabulary 3D Point-Cloud Segmentation on the Generalized Few-Shot Benchmark", "url": "https://arxiv.org/abs/2607.15331" }
+      ],
+      "why_now": "training-free 方法复现便宜,而「换个数据集、换个 2D 骨干还灵不灵」本身就是低风险、可发表的泛化性扩展——这个方向还没人系统做过跨域测。",
+      "feasibility": "全程推理、无需训练,单卡即可;把它内部依赖的 2D 开放词表模型换成不同 VLM、在室内→室外/工业点云上跑,几周能出对比。",
+      "route": [
+        "复现原方法在其基准上的分割结果,确认整条 pipeline 跑通",
+        "把内部的 2D 开放词表模型换成 2-3 个不同 VLM,记录分割 mIoU 的变化",
+        "换到分布差异大的点云(室外、工业、医疗)上测掉点情况,定位失败模式",
+        "针对最主要的失败模式加一个轻量后处理,做成消融写进报告"
+      ],
+      "risk": "若方法性能高度依赖某个特定 2D 骨干,换骨干后可能大幅掉点,需要先小规模试探再决定投入。"
+    },
+    {
+      "domain": "embodied",
+      "type": "repo",
+      "title": "做一个「注入延迟」的 VLA 评测小工具,给任意策略压反应速度测试",
+      "based_on": [
+        { "title": "Reflex: Enabling Fast and Predictive Vision-Language-Action Models for Reaction-Critical Manipulation", "url": "https://arxiv.org/abs/2608.14379" }
+      ],
+      "why_now": "ReflexBench 刚把「推理延迟解耦、可配置同步/异步」这套评测提出来,但还缺一个能挂在现成仿真(LIBERO/ManiSkill)上、对任意 VLA 一键注入延迟的通用 harness——正是攒 star 的空位。",
+      "feasibility": "纯仿真加推理,单卡即可;不训练模型,只写一层包装,把控制频率、观测延迟做成可配开关,几周能出能跑的 v0。",
+      "route": [
+        "在一个开源仿真(LIBERO 或 ManiSkill)里跑通一个现成 VLA 的官方推理",
+        "写一层 wrapper,把「仿真步进」和「策略推理」解耦,加入可配置的观测/动作延迟",
+        "接 2-3 个公开 VLA,在几个动态任务上测「延迟-成功率」曲线",
+        "封成 pip 装得上的小库,配好文档和一键示例,开源上架"
+      ],
+      "risk": "不同 VLA 的接口和动作空间不统一,适配层的工程量可能比预期大。"
+    }
+  ]
+}
