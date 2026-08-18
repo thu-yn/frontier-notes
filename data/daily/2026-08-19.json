@@ -1,0 +1,374 @@
+{
+  "date": "2026-08-19",
+  "editor_note": "今天 HF 榜被一个词刷屏了:harness(智能体的执行外壳)。从 StateM 用 15 美元跑到 Terminal-Bench 95%,到把评测本身也 agent 化的 HarnessEval-W,大家不约而同地发现——与其继续堆模型权重,不如把模型外面那层调度、状态、可恢复流程做扎实。这和芯片那边的消息正好对上:Etched 估值一个月翻倍到 210 亿、Groq 干脆从卖芯片转去做云,算力这么贵,省着用是硬道理。最值得点开的是 DeepMind 那篇用 AlphaEvolve 改进矩阵乘法指数 ω 的 note,AI 真在帮理论计算机往下抠指数了。配着今天的『每日一理』香农采样定理一起看,会有点『离散与连续互相成全』的味道。",
+  "math_note": {
+    "name": "香农采样定理",
+    "name_en": "Nyquist–Shannon Sampling Theorem",
+    "field": "信号处理 / 傅里叶分析",
+    "one_liner": "只要采样够密,离散的一串点里就藏着整条连续曲线。",
+    "statement": "如果一段信号里最高的频率成分是 $f_{\\max}$(带宽有限,没有比它更快的振荡),那么只要采样频率满足 $f_s>2f_{\\max}$,离散采到的那串点就足以把原来那条连续曲线一丝不差地还原回来;这个临界值 $2f_{\\max}$ 叫奈奎斯特率。反过来,采样太稀($f_s<2f_{\\max}$)时,高频会伪装成一条根本不存在的低频曲线,这叫混叠(aliasing)——视频里车轮倒转就是它。",
+    "origin": "这条定理有一长串名字。1920 年代贝尔实验室的 Nyquist 在研究电报能塞多少码率时,先摸到了『每秒采两倍带宽个点』这个门槛;数学家 Whittaker、苏联的 Kotelnikov 也各自推过。真正把它放进信息论骨架、讲清楚整个『采样—重建』过程的是 Shannon,在 1948–1949 年那几篇奠基之作里。动机很实际:要把连续的声音、电波变成一串数字再传出去,到底会不会丢东西?答案是——只要采够密,一点不丢。",
+    "derivation": [
+      { "math": "X(f)=0,\\quad |f|>f_{\\max}", "note": "前提是信号『带宽有限』:它的频谱在某个 $f_{\\max}$ 以上全是零,没有更高频的成分。这一条是整个定理成立的关键。" },
+      { "math": "x_s(t)=x(t)\\sum_n \\delta(t-nT_s),\\quad T_s=1/f_s", "note": "采样这个动作,数学上等于拿一把等间距的冲激梳(狄拉克梳)去乘原信号,间隔就是采样周期 $T_s$。" },
+      { "math": "X_s(f)=f_s\\sum_k X(f-kf_s)", "note": "时域相乘等于频域卷积;和冲激梳卷积的效果,是把原来的频谱复制成无穷多份,每隔 $f_s$ 摆一个副本。" },
+      { "math": "\\text{相邻副本不重叠}\\iff f_s>2f_{\\max}", "note": "每份频谱的宽度是 $2f_{\\max}$。只要副本间距 $f_s$ 比这个宽度大,相邻的两份就不会打架——信息没被搅混,这就是奈奎斯特条件。" },
+      { "math": "x(t)=\\sum_n x(nT_s)\\,\\operatorname{sinc}\\!\\Big(\\tfrac{t-nT_s}{T_s}\\Big)", "note": "重建时用一个理想低通滤波器把中间那份原始频谱切出来,时域上等价于在每个采样点摆一个 sinc 函数再叠加,曲线就完整长回来了。" }
+    ],
+    "applications": [
+      { "area": "数字音频", "detail": "人耳上限约 20kHz,所以 CD 采样率定在 44.1kHz——刚好越过两倍再留点余量,这就是那个数字的由来。" },
+      { "area": "医学与科学成像", "detail": "CT / MRI 在 k 空间里采样,采得不够密就会出现条纹状伪影,重建协议本质上都在守这条门槛。" },
+      { "area": "无线通信与 ADC", "detail": "模数转换器的采样率、抗混叠滤波器的截止频率,直接由信号带宽按这条定理反推。" },
+      { "area": "图形与 AI", "detail": "图像下采样、点云与 NeRF 采样不足会产生锯齿和摩尔纹;抗锯齿的核心思路就是『先低通、再采样』。" }
+    ],
+    "takeaway": "连续与离散并不对立:只要满足 $f_s>2f_{\\max}$,一串离散数字和一条连续曲线携带的信息完全相同。信息量由带宽而非『是否连续』决定——这也是所有数字化世界能存在的底层许可证。",
+    "viz": {
+      "type": "custom",
+      "caption": "拖动蓝色滑块改采样率 fs。fs 越过绿线(奈奎斯特率 2f0=6Hz)时,红点足以还原青色真信号;一旦欠采样,橙色虚线那条『假』低频就冒出来——它在每个采样点上都和真信号重合,这就是混叠。",
+      "html": "<canvas id='nyqcanvas' width='600' height='300' style='width:100%;max-width:600px;height:auto;display:block;margin:0 auto;'></canvas>",
+      "script": "(function(){var c=el.querySelector('#nyqcanvas');if(!c)return;var ctx=c.getContext('2d');var W=c.width,H=c.height;var padL=18,padR=18,padT=28,padB=44;var f0=3;var fs=8;var trackY=H-18,trackL=padL+56,trackR=W-padR-16;function TX(t){return padL+t*(W-padL-padR);}var mid=(padT+(H-padB))/2,amp=(H-padB-padT)/2*0.92;function TY(y){return mid-y*amp;}function knobX(){return trackL+(fs-2)/18*(trackR-trackL);}function alias(){var m=Math.round(f0/fs);return f0-fs*m;}function draw(){ctx.clearRect(0,0,W,H);ctx.strokeStyle='rgba(130,130,140,0.45)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(padL,TY(0));ctx.lineTo(W-padR,TY(0));ctx.stroke();ctx.strokeStyle='#14b8a6';ctx.lineWidth=2;ctx.beginPath();for(var i=0;i<=400;i++){var t=i/400,X=TX(t),Y=TY(Math.sin(2*Math.PI*f0*t));if(i===0)ctx.moveTo(X,Y);else ctx.lineTo(X,Y);}ctx.stroke();var fa=alias();var aliasing=Math.abs(fa)<f0-1e-6;if(aliasing){ctx.strokeStyle='#f59e0b';ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.beginPath();for(var j=0;j<=400;j++){var t2=j/400,X2=TX(t2),Y2=TY(Math.sin(2*Math.PI*fa*t2));if(j===0)ctx.moveTo(X2,Y2);else ctx.lineTo(X2,Y2);}ctx.stroke();ctx.setLineDash([]);}ctx.fillStyle='#ef4444';for(var k=0;k<=Math.floor(fs)+1;k++){var tk=k/fs;if(tk>1.0001)break;var Xk=TX(tk),Yk=TY(Math.sin(2*Math.PI*f0*tk));ctx.strokeStyle='rgba(239,68,68,0.3)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(Xk,TY(0));ctx.lineTo(Xk,Yk);ctx.stroke();ctx.beginPath();ctx.arc(Xk,Yk,3.5,0,7);ctx.fill();}ctx.strokeStyle='rgba(130,130,140,0.6)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(trackL,trackY);ctx.lineTo(trackR,trackY);ctx.stroke();var nyqX=trackL+(2*f0-2)/18*(trackR-trackL);ctx.strokeStyle='#22c55e';ctx.setLineDash([3,3]);ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(nyqX,trackY-9);ctx.lineTo(nyqX,trackY+9);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#22c55e';ctx.font='11px sans-serif';ctx.fillText('2f0',nyqX-8,trackY-13);ctx.fillStyle='#3b82f6';ctx.beginPath();ctx.arc(knobX(),trackY,8,0,7);ctx.fill();ctx.font='12px sans-serif';ctx.fillStyle='#3b82f6';ctx.fillText('fs='+fs.toFixed(1),padL,trackY+4);ctx.font='13px sans-serif';ctx.fillStyle='#14b8a6';ctx.fillText('真实信号 f0=3Hz',padL,18);if(aliasing){ctx.fillStyle='#f59e0b';ctx.fillText('欠采样,混叠成 '+Math.abs(fa).toFixed(1)+'Hz 的假信号',padL+130,18);}else{ctx.fillStyle='#22c55e';ctx.fillText('fs>2f0,可完美重建',padL+130,18);}}function setFs(mx){var v=2+(mx-trackL)/(trackR-trackL)*18;v=Math.max(2,Math.min(20,v));fs=Math.round(v*2)/2;draw();}var drag=false;function px(e){var r=c.getBoundingClientRect();return (e.clientX-r.left)*(W/r.width);}c.addEventListener('mousedown',function(e){drag=true;setFs(px(e));});window.addEventListener('mousemove',function(e){if(drag)setFs(px(e));});window.addEventListener('mouseup',function(){drag=false;});c.addEventListener('touchstart',function(e){if(e.touches[0]){drag=true;var r=c.getBoundingClientRect();setFs((e.touches[0].clientX-r.left)*(W/r.width));e.preventDefault();}},{passive:false});c.addEventListener('touchmove',function(e){if(drag&&e.touches[0]){var r=c.getBoundingClientRect();setFs((e.touches[0].clientX-r.left)*(W/r.width));e.preventDefault();}},{passive:false});c.addEventListener('touchend',function(){drag=false;});draw();})();"
+    }
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "HarnessEval-W: Agentifying the Evaluation of Visual Worlds",
+      "title_zh": "HarnessEval-W:把视觉世界的评测也做成智能体流程",
+      "url": "https://arxiv.org/abs/2608.16859",
+      "hf_url": "https://huggingface.co/papers/2608.16859",
+      "authors": "Weiliang Chen、Haowen Sun、Jun Gao 等",
+      "affiliation": "MirroS",
+      "upvotes": 108,
+      "one_liner": "打分不稀奇,能把打分的理由摊开给你看才稀奇。",
+      "summary_zh": "把评测世界模型这件事本身做成了一个 agent 流程。以前给世界模型打分,要么人工要么硬算指标,给个分数却说不清为什么。它让一个主 agent 把『这段 rollout 物理、因果对不对』拆成可测的子问题,派专门的子 agent 各查一块,最后主 agent 汇总成一棵能审的证据树。在 18 个世界模型、330 个 case 上和人类判断挺一致。评测可解释这个方向对,但一层层 agent 跑下来成本不低。",
+      "tags": ["world model", "evaluation", "agent"]
+    },
+    {
+      "domain": "ai",
+      "title": "StateM: Reaching 95.3% Raw Accuracy, or a $15 Frontier Run, on Terminal-Bench 2.1 via Harness Scaling",
+      "title_zh": "StateM:靠打磨执行外壳,在 Terminal-Bench 2.1 上做到 95.3%",
+      "url": "https://arxiv.org/abs/2608.15089",
+      "hf_url": "https://huggingface.co/papers/2608.15089",
+      "authors": "Ziheng Qin、Yaxin Lu、Zhangyang Wang 等",
+      "upvotes": 40,
+      "one_liner": "模型不动,把外壳做扎实,长任务照样起飞。",
+      "summary_zh": "赌『把模型外面那层执行系统做好』能顶替换模型权重。长任务里 agent 常常不是不会做某一步,而是丢了状态、忘了之前学到的教训、或者提前收工。StateM 给 agent 配了持久状态、阶段化上下文、可检查的状态转移和能回滚的 runbook,在 Terminal-Bench 2.1 上做到 95.3% 原始准确率,还有一档 15 美元就能跑的便宜配置。harness scaling 这个思路今天满榜都是。",
+      "tags": ["agent", "harness", "benchmark"]
+    },
+    {
+      "domain": "ai",
+      "title": "MOSS-VL Technical Report",
+      "title_zh": "MOSS-VL 技术报告:边看边说的实时视觉语言模型",
+      "url": "https://arxiv.org/abs/2608.15045",
+      "hf_url": "https://huggingface.co/papers/2608.15045",
+      "authors": "Pengyu Wang、Chenkun Tan、Shaojun Zhou 等",
+      "affiliation": "OpenMOSS",
+      "upvotes": 37,
+      "one_liner": "不是看完再答,而是边看边接话。",
+      "summary_zh": "一个开源视觉语言模型,主打『边看边说』的实时交互。做法是让语言解码器只通过门控交叉注意力去看画面,所以生成回答的同时还能接着看新帧;再用合成的交互语料教它什么时候该开口、什么时候闭嘴、什么时候改口。全栈一起设计,把实时相关的训练集中在最后一小段。想做实时视频助手、陪看类应用的可以关注。",
+      "tags": ["VLM", "multimodal", "realtime"]
+    },
+    {
+      "domain": "ai",
+      "title": "Learn What's Left, Not What's Mastered: Saturation Aware Advantage Reweighting for Multi-Reward Policy Optimization",
+      "title_zh": "学还没学会的,别练已经掌握的:多奖励策略优化的饱和感知加权",
+      "url": "https://arxiv.org/abs/2608.16072",
+      "hf_url": "https://huggingface.co/papers/2608.16072",
+      "authors": "Yixuan Wang、Yifei Chen、Haichao Zhang 等",
+      "affiliation": "加州大学圣地亚哥分校(UCSD)",
+      "upvotes": 43,
+      "one_liner": "别再练已经会的,把梯度让给还没学会的。",
+      "summary_zh": "针对多目标 RL 后训练的一个小而实的修正。现在给推理模型做 RL 常把好几个奖励加权求和再标准化,问题是奖励结构完全不同的两条 rollout 可能拿到一样的优势值,而且已经练饱的目标还在继续吃梯度。他们按每个目标当前的『饱和度』重新加权优势,把梯度让给还没学好的目标。思路清楚,属于那种看完就能往自己 pipeline 里加的改动。",
+      "tags": ["RL", "post-training", "LLM"]
+    },
+    {
+      "domain": "ai",
+      "title": "An Empirical Study of Training Pixel-Space Text-to-Image Diffusion Models",
+      "title_zh": "训练像素空间文生图扩散模型的一份经验研究",
+      "url": "https://arxiv.org/abs/2608.16887",
+      "hf_url": "https://huggingface.co/papers/2608.16887",
+      "authors": "Dengyang Jiang、Ruoyi Du、Zhennan Chen 等",
+      "affiliation": "通义 MAI(Tongyi-MAI)",
+      "upvotes": 23,
+      "one_liner": "绕开 VAE 直接画像素,慢是真慢,但有配方了。",
+      "summary_zh": "一篇踏实的经验研究:到底怎么训一个直接在像素空间(不走 latent VAE)的文生图扩散模型,能不能追上 latent 的效果。他们发现像素空间直接大规模预训练收敛慢得多,于是提出先在 latent 里学、再迁到像素的两段式配方。没有炫技,给的是能照着复现的 recipe,做生成的值得存着。",
+      "tags": ["diffusion", "text-to-image"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Improving the matrix multiplication exponent with modern optimization and AlphaEvolve",
+      "title_zh": "用现代优化与 AlphaEvolve 改进矩阵乘法指数",
+      "url": "https://arxiv.org/abs/2608.16884",
+      "hf_url": "https://huggingface.co/papers/2608.16884",
+      "authors": "Emilien Dupont、Marvin Eisenberger、Josh Alman 等",
+      "affiliation": "DeepMind",
+      "upvotes": 10,
+      "one_liner": "让 AI 去搜优化问题,把矩阵乘法的指数再抠下来一点。",
+      "summary_zh": "用现代优化加 AlphaEvolve 去啃矩阵乘法指数 ω 的上界。当前最好的界来自 laser 方法的一种精细化(combination loss analysis),核心是个很难的优化问题;他们重新表述这个问题让它能在更大范围求解,再用 ML 设计的新优化算法去搜,把 ω 的界又往下压了一点。AI 帮理论计算机往前挪指数,这类工作会越来越多。",
+      "tags": ["theory", "optimization", "AlphaEvolve"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Don't Drop the BATON: Long-Horizon Robot Manipulation via Agentic Subtask Exploration and Transition-aware Memory",
+      "title_zh": "别掉棒:用智能体子任务探索与转移感知记忆做长时程操作",
+      "url": "https://arxiv.org/abs/2608.16889",
+      "authors": "Bingxin Xu、Yuzhang Shang、Emilio Ferrara",
+      "upvotes": null,
+      "one_liner": "VLA 只管接触那几下,规划和记忆交给 LLM 总指挥。",
+      "summary_zh": "长时程操作(把一串接触密集的技能连成多阶段任务)老出问题:单个技能 VLA 已经会做,但连起来误差会累积,前一步还会悄悄卡死后一步。BATON 的配方是冻住 VLA,让一个 LLM agent 当总指挥——用语言做规划、在自由空间用解析原语移动、只在真正需要接触的片段才叫 VLA 出手,并把适配经验写进语言记忆。分工明确,是当下长时程操作比较务实的一路。",
+      "tags": ["VLA", "manipulation", "long-horizon"]
+    },
+    {
+      "domain": "embodied",
+      "title": "τ₀-VLA: a Hierarchical Robot Foundation Model with World-Model-Guided Test-Time Computation",
+      "title_zh": "τ₀-VLA:世界模型引导测试时算力的分层机器人基座",
+      "url": "https://arxiv.org/abs/2608.16885",
+      "authors": "Xiaowei Cai、Yunuo Cai、Bingao Chen 等",
+      "upvotes": null,
+      "one_liner": "好钢用在刀刃上——难的决策多想一会儿。",
+      "summary_zh": "同样冲长时程操作,但发力点在『测试时算力怎么分』。大多数分层 VLA 每个高层决策都只前向一次,难的和简单的一视同仁。τ₀-VLA 把高层子任务生成变成一个可按算力伸缩的推理问题,用世界模型引导,在关键、难的决策上多花点计算。把 test-time compute 引进机器人决策,值得看它 scaling 曲线怎么走。",
+      "tags": ["VLA", "test-time compute", "world model"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Hundred-hertz quantum circuit iteration rate in a reusable neutral-atom array",
+      "title_zh": "可复用中性原子阵列跑出百赫兹的量子线路迭代率",
+      "url": "https://arxiv.org/abs/2608.16815",
+      "authors": "Liang Chen、Wen-Yi Zhu、Dong-Qi Ma 等",
+      "upvotes": null,
+      "one_liner": "测完原子还能留在原地——量子线路终于能跑快点了。",
+      "summary_zh": "中性原子量子处理器的规模和相干性都上来了,但『每秒能跑几轮线路』(线路迭代率 qCIR)一直是瓶颈——测一次原子往往就飞了,得重新装载。这组人用非破坏性读出加原子复用,在 10 比特阵列上做到 99.7% 的原子保持率、原始 qCIR 达到 101Hz。吞吐率是量子纠错和实用化绕不开的坎,这是实打实往前推的一步。",
+      "tags": ["quantum", "neutral atom", "hardware"]
+    },
+    {
+      "domain": "bio",
+      "title": "Probing and steering biology across Boltz-1s trunk-diffusion boundary",
+      "title_zh": "给 Boltz-1 开颅:探测并操控信息如何跨过主干与扩散的边界",
+      "url": "https://arxiv.org/abs/2608.11475",
+      "authors": "Piotr Jedryszek、Tongmeng Xie、Adam Winnifrith 等",
+      "upvotes": null,
+      "one_liner": "给 AlphaFold 式模型开颅,看生物信息怎么变成坐标。",
+      "summary_zh": "把机制可解释性的工具箱(线性探针、稀疏自编码器、因果干预)对准了 AlphaFold3 类结构预测模型的内部。这类模型分两段:一个处理序列与上下文的『主干』,一个生成原子坐标的扩散模块。他们想搞清楚生物信息跨过这道结构边界时发生了什么——发现二级结构、无序区等几何信息和序列化学信息在主干里怎么编码、又如何被扩散模块读取,甚至能干预着去『掰』结果。给蛋白质模型做可解释,方向挺新。",
+      "tags": ["protein", "interpretability", "diffusion"]
+    },
+    {
+      "domain": "energy",
+      "title": "Extracting a nitrile-centered, ether-assisted motif hierarchy for lithium-battery electrolyte design from billion-scale molecular space",
+      "title_zh": "从十亿级分子空间里提炼锂电池电解液的『腈核醚辅』基序层级",
+      "url": "https://arxiv.org/abs/2608.16364",
+      "authors": "Yifeng Xia、Guanghui Wang、Sining Wang 等",
+      "upvotes": null,
+      "one_liner": "从十亿分子里筛出锂电解液的『腈+醚』黄金搭配。",
+      "summary_zh": "从近十亿个 GDB13 分子里,用电子—溶剂化描述符(不预设官能团)去捞锂电池电解液的候选,结果自己浮现出一套『腈基为核、醚基辅助』的结构基序层级。以前高通量筛选只给你一个排名,说不清为什么好、边界在哪;这篇给的是可解释的设计规律。做电池电解液的可以拿这套基序当先验。",
+      "tags": ["battery", "electrolyte", "materials", "ML"]
+    },
+    {
+      "domain": "chip",
+      "title": "Beyond Capacity: Scalable MoE LLM Inference via High-Bandwidth Flash with Direct GPU and HBM Paths",
+      "title_zh": "不只是扩容:用高带宽闪存双通路扩展 MoE 大模型推理",
+      "url": "https://arxiv.org/abs/2608.14333",
+      "authors": "Seeyeon Kim、Juhyeong Jin、Joo-Young Kim",
+      "upvotes": null,
+      "one_liner": "让 GPU 双通道取专家,把闲置的闪存带宽榨出来。",
+      "summary_zh": "MoE 大模型的专家权重涨太快,全塞进 HBM 又贵又不够。这篇用『高带宽闪存』(HBF)存专家,关键点是别再让数据都绕道 HBM——他们让 GPU 既能走 HBM、也能直连 HBF,两条独立通路同时取专家权重,把原本闲置的直连带宽用起来。属于 AI 算力成本压力下很接地气的存储层优化。",
+      "tags": ["MoE", "inference", "memory", "hardware"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "volcengine/OpenViking",
+      "url": "https://github.com/volcengine/OpenViking",
+      "language": "Python",
+      "stars": 29244,
+      "stars_today": "298",
+      "one_liner": "把 agent 的记忆、RAG、技能收进一个会自进化的库。",
+      "summary_zh": "字节开源的 agent 上下文数据库,想把 agent 的记忆、知识 RAG 和技能统一到一层里,还带『自进化』。做长期运行的 agent 老被记忆和检索割裂困扰,这类一体化基建值得试。"
+    },
+    {
+      "domain": "ai",
+      "name": "akitaonrails/ai-memory",
+      "url": "https://github.com/akitaonrails/ai-memory",
+      "language": "Rust",
+      "stars": 2632,
+      "stars_today": "730",
+      "one_liner": "换个 coding agent 也不用重讲一遍来龙去脉。",
+      "summary_zh": "给编码类 agent CLI 做长期记忆,并方便在不同厂商的 agent 之间交接。Rust 写的,一天涨 700 星。你要是同时用好几个 coding agent、老要手动搬上下文,这个能省事。"
+    },
+    {
+      "domain": "ai",
+      "name": "jundot/omlx",
+      "url": "https://github.com/jundot/omlx",
+      "language": "Python",
+      "stars": 19326,
+      "stars_today": "366",
+      "one_liner": "把 Mac 变成一台本地 LLM 服务器,菜单栏一键管。",
+      "summary_zh": "Apple Silicon 上的 LLM 推理服务器,带连续批处理和 SSD 缓存,还能从 macOS 菜单栏管。想在 Mac 上把本地模型当服务跑的,这个照顾得很细。"
+    },
+    {
+      "domain": "ai",
+      "name": "bojieli/ai-agent-book",
+      "url": "https://github.com/bojieli/ai-agent-book",
+      "language": "Python",
+      "stars": 39037,
+      "stars_today": "556",
+      "one_liner": "一本讲透 AI Agent 工程的中文书,连代码带 PDF 全开源。",
+      "summary_zh": "李博杰《深入理解 AI Agent:设计原理与工程实践》的开源主仓库,正文、编译版 PDF 和按章配套代码都在。中文、成体系,想系统补 agent 工程的读者可以从这入门。"
+    },
+    {
+      "domain": "ai",
+      "name": "chaitanyagiri/munder-difflin",
+      "url": "https://github.com/chaitanyagiri/munder-difflin",
+      "language": "TypeScript",
+      "stars": 1914,
+      "stars_today": "256",
+      "one_liner": "本地就能跑的多 agent 外壳,轻。",
+      "summary_zh": "一个本地跑的多智能体 harness,正好呼应今天满榜的 harness 话题。规模不大但一天涨 256 星,想在本地搭个多 agent 协作骨架、又不想上重框架的可以看看。"
+    },
+    {
+      "domain": "embodied",
+      "name": "NawfalMotii79/PLFM_RADAR",
+      "url": "https://github.com/NawfalMotii79/PLFM_RADAR",
+      "language": "PLSQL",
+      "stars": 24254,
+      "stars_today": "204",
+      "one_liner": "几百块料件搓一台开源相控阵雷达。",
+      "summary_zh": "开源、低成本的 10.5 GHz 相控阵雷达系统。硬件圈少见的完整开源项目,做无人机/机器人感知、或想自己折腾雷达原理的,这是难得的动手素材。"
+    },
+    {
+      "domain": "ai",
+      "name": "mukul975/Anthropic-Cybersecurity-Skills",
+      "url": "https://github.com/mukul975/Anthropic-Cybersecurity-Skills",
+      "language": "Python",
+      "stars": 29033,
+      "stars_today": "726",
+      "one_liner": "817 个安全技能打包好,给你的 agent 装上防御手册。",
+      "summary_zh": "817 个结构化的网络安全技能,映射到 MITRE ATT&CK、NIST CSF 2.0 等 6 套框架,给 AI agent 当防御侧工具用。偏清单,但成体系、可直接接进 agent,做安全自动化的能省不少整理功夫。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "Anthropic 年化收入冲到 650 亿美元,两个月加了 180 亿",
+      "url": "https://techcrunch.com/2026/08/17/anthropics-annualized-revenue-surges-to-65b/",
+      "source": "TechCrunch",
+      "summary_zh": "Anthropic 年化收入冲到 650 亿美元,短短两个月就加了 180 亿。增速离谱,基本是被企业 API 和 Claude Code 一类的高强度用量推上去的。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "Etched 估值一个月翻倍到 210 亿美元",
+      "url": "https://techcrunch.com/2026/08/18/etcheds-valuation-doubles-to-21b-in-a-month/",
+      "source": "TechCrunch",
+      "summary_zh": "Transformer 专用芯片公司 Etched 估值一个月翻倍到 210 亿美元。Jane Street 装了它第一套出货的 AI 集群,用下来很满意,直接又领投了一轮。专用 ASIC 这条路看来真有人买单。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "Groq 融资 3.5 亿,从卖 AI 芯片转做 neocloud",
+      "url": "https://techcrunch.com/2026/08/17/groq-raises-350m-to-fuel-its-pivot-from-ai-chips-to-neocloud/",
+      "source": "TechCrunch",
+      "summary_zh": "Groq 以 35 亿估值融了 3.5 亿美元,但方向变了——这家原来卖 AI 推理芯片的公司转去做 neocloud(云服务),还在扩用 Nvidia 卡的数据中心。自家芯片没撑起商业模式,先靠卖算力活着。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Anthropic 说明 Claude 生成文本的隐形水印怎么加",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/980869/anthropic-claude-watermarks-synthid-text-system",
+      "source": "The Verge",
+      "summary_zh": "Anthropic 讲了 Claude 生成文本要怎么加隐形水印:用的是 SynthID-Text 那套,为的是合规欧盟 AI 透明度要求。对经常用模型产文的人,意味着以后 AI 文本可能自带可检测的暗记。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Hugging Face 出事后,OpenAI 加了一批安全防护",
+      "url": "https://techcrunch.com/2026/08/18/openai-institutes-new-safeguards-after-hugging-face-breach/",
+      "source": "TechCrunch",
+      "summary_zh": "OpenAI 在 Hugging Face 那边出了安全事故后加了一堆防护:开发期更细的模型监控、后训练阶段更强调对齐和安全。具体泄了什么没细说,但整改动作不小。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "前 SpaceX 工程师要建一座造钢件的机器人工厂",
+      "url": "https://arstechnica.com/ai/2026/08/former-spacex-engineers-are-building-a-robotic-factory-for-making-steel-parts/",
+      "source": "Ars Technica",
+      "summary_zh": "一群前 SpaceX 工程师在搞一座造钢制零件的机器人工厂。他们的说法是『不教条地奔着全自动去』,先把能自动的自动掉。制造业机器人化又多了一支硬核团队。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Gravis Robotics 融资 2 亿美元做自主施工",
+      "url": "https://www.therobotreport.com/gravis-robotics-raises-200m-autonomous-construction/",
+      "source": "The Robot Report",
+      "summary_zh": "自主施工公司 Gravis Robotics 融了 2 亿美元,做的是给挖掘机等各类工程机械配自主 AI 和硬件,准备全球铺开。工地无人化是块被低估的大市场。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "在海上漂了 24 天,SpaceX 终于把星舰拖回港",
+      "url": "https://arstechnica.com/space/2026/08/its-christmastime-at-spacex-as-company-salvages-starship-from-indian-ocean/",
+      "source": "Ars Technica",
+      "summary_zh": "SpaceX 好不容易把一艘星舰(Starship)从印度洋里捞起来、在海上拖了 24 天才进港,工程师正赶去做进一步分析。回收这一步比想象中难得多。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "长征 7A 失利后,长征 12 照常发射国网星座卫星",
+      "url": "https://spacenews.com/long-march-12-launches-despite-recent-7a-failure-long-march-2c-launches-satellite-for-uae/",
+      "source": "SpaceNews",
+      "summary_zh": "中国在长征 7A 近期发射失利后,照常用长征 12 发射了一批国网(Guowang)星座卫星,又用长征 2C 给阿联酋发了颗试验星。一次失利没打乱星座部署的节奏。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "FDA 批准 Lantheus 的阿尔茨海默病 PET 显像剂 Tauklarify",
+      "url": "https://www.fiercebiotech.com/medtech/fda-clears-lantheus-alzheimers-pet-imaging-agent-tauklarify",
+      "source": "Fierce Biotech",
+      "summary_zh": "FDA 批了 Lantheus 的阿尔茨海默病 PET 显像剂 Tauklarify——一种给大脑 tau 蛋白成像的放射性药物。这家公司最近刚同意被同行 Curium 以 80 亿美元收购。脑病早筛的影像工具又添一个。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "把『零训练开放词汇 3D 点云分割』搬到室外 LiDAR,验证泛化边界",
+      "based_on": [
+        { "title": "Training-Free Open-Vocabulary 3D Point-Cloud Segmentation on the Generalized Few-Shot Benchmark", "url": "https://arxiv.org/abs/2607.15331" }
+      ],
+      "why_now": "这篇刚把开放词汇 3D 分割做到零训练、零 3D 标注、连 few-shot 支持样本都不要,只靠冻结的 3D 视觉-语言先验去和场景对齐。但它只在室内 benchmark 上验证过,室外稀疏 LiDAR 还没人测——这正是最容易出成果的空白。",
+      "feasibility": "全程用冻结模型推理,单张 24–40GB 卡够用,不需要训练;2–4 周能出一份跨域评测。",
+      "route": [
+        "先跑通官方室内推理,复现论文报的几个点",
+        "接入 nuScenes / SemanticKITTI 的一个小子集,把点云和类别词表对齐",
+        "换一两个冻结先验(不同 CLIP / 3D-VL 骨干),看哪种在室外更稳",
+        "统计掉点情况,定位失败模式(稀疏、遮挡、远处小目标),写成一份诚实的泛化报告"
+      ],
+      "risk": "室外点云比室内稀疏得多,冻结先验可能直接崩,需要准备好回退到『半室外』场景讲故事。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个『给 3D-LLM 换低成本点云编码器』的即插即用适配层 + 统一评测",
+      "based_on": [
+        { "title": "On the Efficacy of Self-Supervised Point Cloud Encoders for Efficient 3D Large Language Models", "url": "https://arxiv.org/abs/2607.29136" }
+      ],
+      "why_now": "这篇证明了用 Point-MAE / PCP-MAE 这种低成本自监督编码器,能替代要 8×A100 才能训的 ULIP-2,而效果不差。但社区还没有一个统一的 harness 让人一键换编码器做对比——这种『缺开源实现』的空白最适合转成攒 star 的小库。",
+      "feasibility": "以 MiniGPT-3D 为测试台,单卡可跑;工程量集中在封装接口和评测脚本,几周内能发一个能用的 repo。",
+      "route": [
+        "先在单卡上复现 MiniGPT-3D 接一个自监督编码器的最简 pipeline",
+        "抽象出一个 encoder-swap 接口,把 token 维度对齐、投影层自动适配",
+        "配 2–3 个下游数据集的评测脚本,一条命令跑完出对比表",
+        "写清 README 和一张『编码器 × 显存 × 精度』的雷达图,发 repo 收集反馈"
+      ],
+      "risk": "不同编码器的 token 维度和归一化不一致,对齐层要仔细调,否则对比不公平。"
+    },
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "复现『不建触觉仿真的 Sim2Real』并做 sim2sim 跨传感器迁移",
+      "based_on": [
+        { "title": "Tactile Sim2Real without Tactile Simulation via Bottlenecked Latent Reconstruction", "url": "https://arxiv.org/abs/2608.15897" }
+      ],
+      "why_now": "触觉传感器种类多、更新快,一个个在仿真里建模又费力又不准。SBLR 干脆用仿真原生的『oracle 传感器』(点云 + 指尖力)训策略,再靠瓶颈式潜变量重建绕开建模。方法清爽,但只在少数任务验证过,拿来做跨任务/跨传感器的泛化测试正合适。",
+      "feasibility": "全程在仿真里做(ManiSkill 类环境),单卡可跑,先只做 sim2sim 就能出结论,不必碰真机;3–5 周。",
+      "route": [
+        "跑通 oracle 传感器上的操作策略,确认基线能收敛",
+        "接上瓶颈式潜变量重建这一环,复现论文里的迁移效果",
+        "换一个接触任务(如插销/拧盖),测策略是否还能迁过去",
+        "改变『模拟触觉』的形态(改点云密度或力的表示),量化重建瓶颈对泛化的影响"
+      ],
+      "risk": "论文最终价值指向真机,纯 sim2sim 结论说服力有限,需要在写作时把定位限定在『泛化机理』而非落地。"
+    }
+  ]
+}
