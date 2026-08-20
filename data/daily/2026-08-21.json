@@ -1,0 +1,354 @@
+{
+  "date": "2026-08-21",
+  "editor_note": "今天最扎眼的关键词是 harness / skills——HF 榜上从 PLC 代码生成、具身闭环到 agentic RL 一水儿在谈「agent 的外壳」,GitHub 热榜也被各种 skills 框架刷屏。配着看反而是 UCSD 那篇《拆解 Agent Skills》最清醒:技能不是万能钥匙,检索太难、标注太糙时它会帮倒忙,值得先点开。另一头,金融和物理层面的「算力焦虑」同时冒头——英伟达张罗 5000 亿把 GPU 做成资产类别,伯克利的 FreeToken 却在教你把个人电脑榨成弹性推理平台,一个往上堆杠杆、一个往下抠边缘,挺有意思的对照。生物这边默沙东 / Moderna 的个性化癌症疫苗三期达标,是今天最硬的一条进展。每日一理挑了 Johnson–Lindenstrauss 引理,正好和热榜上的 turbovec 向量索引对上:高维数据其实「压得住」。",
+  "math_note": {
+    "name": "约翰逊–林登斯特劳斯引理",
+    "name_en": "Johnson–Lindenstrauss Lemma",
+    "field": "概率论 / 高维几何 / 随机投影",
+    "one_liner": "随手乘一个随机矩阵,几千维塌成几百维,点跟点的距离几乎原封不动。",
+    "statement": "有一堆高维向量(比如 $n$ 个点、每个几千维),你想降维又不想弄乱它们之间的远近关系。JL 引理说:总存在一个线性映射 $f$,把它们打到只有 $k=O(\\varepsilon^{-2}\\ln n)$ 维的空间里,任意两点的距离几乎不变——$(1-\\varepsilon)\\lVert u-v\\rVert^2\\le\\lVert f(u)-f(v)\\rVert^2\\le(1+\\varepsilon)\\lVert u-v\\rVert^2$,这里 $\\varepsilon$ 是你能容忍的相对误差。最反直觉的是:目标维度 $k$ 只跟点数的对数 $\\ln n$ 挂钩,跟原始维度 $d$ 一点关系都没有。",
+    "origin": "1984 年,William B. Johnson 和 Joram Lindenstrauss 在研究「如何把只定义在部分点上的 Lipschitz 映射延拓到整个空间」这个泛函分析问题时,顺手证了这么一个引理。当时它只是主证明里的一块垫脚石,谁也没想到它后来会成为高维数据处理和随机算法的基石——降维、sketching、压缩感知背后都有它的影子。",
+    "derivation": [
+      { "math": "f(x)=\\tfrac{1}{\\sqrt{k}}\\,Rx,\\quad R\\in\\mathbb{R}^{k\\times d}", "note": "用一个每个元素独立标准高斯的随机矩阵 R,把 d 维向量投到 k 维,再除以 √k 归一化。为什么用随机?因为它不看数据、对所有点一视同仁。" },
+      { "math": "\\mathbb{E}\\,\\lVert f(x)\\rVert^2=\\lVert x\\rVert^2", "note": "先算期望:归一化后,投影向量的期望长度平方正好等于原长度平方——平均意义上「不缩不胀」。" },
+      { "math": "\\Pr\\!\\big[\\,\\lvert\\,\\lVert f(x)\\rVert^2-\\lVert x\\rVert^2\\rvert>\\varepsilon\\lVert x\\rVert^2\\,\\big]\\le 2e^{-c\\varepsilon^2 k}", "note": "关键一步:投影长度平方是 k 个独立项之和(卡方型),集中不等式告诉我们它偏离期望超过 ε 的概率,随 k 指数级变小。" },
+      { "math": "k=O\\!\\left(\\varepsilon^{-2}\\ln n\\right)", "note": "对 n 个点的 C(n,2) 个点对做 union bound:只要 k 取到 ε⁻²·ln n 量级,所有点对同时保距的失败概率就被压到 1 以下。" },
+      { "math": "(1-\\varepsilon)\\lVert u-v\\rVert^2\\le\\lVert f(u)-f(v)\\rVert^2\\le(1+\\varepsilon)\\lVert u-v\\rVert^2", "note": "失败概率 <1,就意味着「存在」一个投影同时对所有点对成立——非构造性地证明了那个保距映射存在。注意 k 只跟 ln n 有关,跟原维度 d 无关。" }
+    ],
+    "applications": [
+      { "area": "向量检索 / 近邻搜索", "detail": "把上千维的 embedding 随机投到几百维再建索引,最近邻结果基本不变却快很多——今天热榜的 turbovec 这类向量索引就吃这一套。" },
+      { "area": "大规模机器学习", "detail": "随机特征、数据 sketching、压缩线性回归里,用随机投影把特征维度砍下来,省内存又几乎不掉精度。" },
+      { "area": "点云与 3D 描述子", "detail": "高维几何描述子降维后再做匹配 / 检索,既加速又不破坏点与点之间的相对结构。" },
+      { "area": "流式与压缩感知", "detail": "count-sketch、JL 变换是很多亚线性内存流算法和压缩感知理论的出发点。" }
+    ],
+    "takeaway": "距离信息其实「压得住」:只要你只在乎点与点之间的远近,维度可以砍到跟数据量对数一个量级,而与原始维度无关。而且做成这件事的,往往不是精心设计的投影,而是一记随机矩阵——高维空间里,随机常常比刻意更省事。",
+    "viz": {
+      "type": "custom",
+      "caption": "拖滑块调低维投影的目标维度 k:k 小时散点在对角线附近乱飞,k 变大后所有点对都紧贴对角线——原始距离和投影后距离几乎相等,这就是 JL 引理说的「随机投影保距」。",
+      "html": "<div style=\"font-family:sans-serif;color:inherit\"><canvas id=\"jl\" width=\"600\" height=\"340\" style=\"max-width:100%\"></canvas><div style=\"margin-top:8px\">目标维度 k = <span id=\"kv\">32</span> / 128 &nbsp;<input id=\"ks\" type=\"range\" min=\"2\" max=\"128\" value=\"32\" style=\"width:260px;vertical-align:middle\"></div></div>",
+      "script": "(function(){var c=el.querySelector('#jl'),ctx=c.getContext('2d');var slider=el.querySelector('#ks'),kv=el.querySelector('#kv');var d=128,N=28,maxK=128;function mk(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}var rnd=mk(12345);function gauss(){var u=0,v=0;while(u===0)u=rnd();while(v===0)v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}var P=[];for(var i=0;i<N;i++){var row=[];for(var j=0;j<d;j++)row.push(gauss());P.push(row);}var G=[];for(var a=0;a<maxK;a++){var gr=[];for(var b=0;b<d;b++)gr.push(gauss());G.push(gr);}var pairs=[];for(var i2=0;i2<N;i2++)for(var j2=i2+1;j2<N;j2++){var s=0;for(var t=0;t<d;t++){var x=P[i2][t]-P[j2][t];s+=x*x;}pairs.push([i2,j2,Math.sqrt(s)]);}var maxD=0;pairs.forEach(function(p){if(p[2]>maxD)maxD=p[2];});function proj(idx,k){var out=new Array(k);var Pi=P[idx];for(var a=0;a<k;a++){var s=0;var Ga=G[a];for(var b=0;b<d;b++)s+=Ga[b]*Pi[b];out[a]=s/Math.sqrt(k);}return out;}function draw(k){var W=600,H=340,m=44;ctx.clearRect(0,0,W,H);var cache={};function pd(i){if(!cache[i])cache[i]=proj(i,k);return cache[i];}ctx.strokeStyle='#8a8a8a';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(m,H-m);ctx.lineTo(W-10,H-m);ctx.moveTo(m,H-m);ctx.lineTo(m,12);ctx.stroke();var sc=Math.min(W-10-m,H-m-12)/maxD;ctx.strokeStyle='#4f8cff';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(m,H-m);ctx.lineTo(m+maxD*sc,H-m-maxD*sc);ctx.stroke();var eps=Math.sqrt(8*Math.log(N)/k);if(eps>0.9)eps=0.9;ctx.strokeStyle='rgba(140,140,140,0.45)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(m,H-m);ctx.lineTo(m+maxD*sc,H-m-maxD*sc*(1+eps));ctx.moveTo(m,H-m);ctx.lineTo(m+maxD*sc,H-m-maxD*sc*(1-eps));ctx.stroke();ctx.fillStyle='#e0663a';pairs.forEach(function(p){var a=pd(p[0]),b=pd(p[1]);var s=0;for(var t=0;t<k;t++){var x=a[t]-b[t];s+=x*x;}var dp=Math.sqrt(s);var px=m+p[2]*sc,py=H-m-dp*sc;ctx.beginPath();ctx.arc(px,py,2.6,0,2*Math.PI);ctx.fill();});ctx.fillStyle='#888';ctx.font='12px sans-serif';ctx.fillText('原始距离 →',W-104,H-m+24);ctx.save();ctx.translate(14,150);ctx.rotate(-Math.PI/2);ctx.fillText('投影后距离 →',0,0);ctx.restore();}slider.addEventListener('input',function(){kv.textContent=slider.value;draw(+slider.value);});draw(+slider.value);})();"
+    }
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Demystifying Agent Skills: Why They Work-Until They Don't",
+      "title_zh": "拆解 Agent Skills:它们为什么有用,又在哪里失灵",
+      "url": "https://arxiv.org/abs/2608.14036",
+      "hf_url": "https://huggingface.co/papers/2608.14036",
+      "authors": "Zhiyuan Jiang、Fangrui Huang、Hanwen Xing 等",
+      "affiliation": "加州大学圣地亚哥分校(UCSD)",
+      "upvotes": 152,
+      "one_liner": "skills 不是万能钥匙——检索太难、标注太糙时,它反而拖后腿。",
+      "summary_zh": "现在到处都在给 agent 塞「技能包」(结构化的知识片段),但大家只统计「整体成功率涨没涨」。这篇做了一堆受控实验,把技能的作用拆成表示方式、结果标注、检索难度、跨框架鲁棒性几个变量,想搞清楚它到底什么时候帮忙、什么时候帮倒忙。结论挺清醒:技能有用是有条件的,检索不到或写得含糊时收益就没了。今天 GitHub 上 skills 框架刷屏,配这篇正好泼盆冷水。",
+      "tags": ["Agent", "LLM", "Skills"]
+    },
+    {
+      "domain": "ai",
+      "title": "Co-RL: Unsupervised Reasoning Emerges from Diverse Cohort in Multi-agent RL",
+      "title_zh": "Co-RL:让推理能力从「多智能体群体」里自发涌现",
+      "url": "https://arxiv.org/abs/2608.17253",
+      "hf_url": "https://huggingface.co/papers/2608.17253",
+      "authors": "Yunhao Yang、Yuexin Bian、Yunjie Tian 等",
+      "affiliation": "加州大学圣地亚哥分校(UCSD)",
+      "upvotes": 80,
+      "one_liner": "一个模型自己奖励自己会越练越窄,拉一群不一样的进来互相纠偏。",
+      "summary_zh": "自奖励 RL 想摆脱人工标注,但只吃自己生成的反馈,容易强化偏见、多样性坍缩,最后输出同质化甚至训练崩掉。Co-RL 让一群不同的 agent 组成 cohort 互相当参照,从群体差异里提取奖励信号,缓解单模型自我强化的问题。思路是「三个臭皮匠」式的互监督。能不能真稳住训练不塌,还得看更大规模的复现。",
+      "tags": ["RL", "Reasoning", "Multi-Agent"]
+    },
+    {
+      "domain": "ai",
+      "title": "FreeToken: Efficient Edge-Native MoE Serving with Bandwidth-Adaptive Execution",
+      "title_zh": "FreeToken:把个人电脑当成弹性推理平台,在边缘跑 MoE 大模型",
+      "url": "https://arxiv.org/abs/2608.16157",
+      "hf_url": "https://huggingface.co/papers/2608.16157",
+      "authors": "Shuo Yang、Xiaoze Fan、Melissa Pan 等",
+      "affiliation": "加州大学伯克利分校",
+      "upvotes": 68,
+      "one_liner": "别再假设伺服大模型必须上数据中心,一台个人机也能弹性调度专家。",
+      "summary_zh": "开源大模型越来越多,但伺服还默认要数据中心。FreeToken 把一台个人机器当作统一、可伸缩的推理平台,围绕两个现实做全栈协同设计:agent 负载的执行模式一直在变、边缘硬件的 CPU/GPU/内存配比各不相同。它不锁死一种 offloading 策略,而是带宽自适应地在 CPU-GPU 之间调度专家。对想在本地跑 MoE 的人挺实用,和今天英伟达那条「算力金融化」的新闻正好一上一下。",
+      "tags": ["MoE", "Inference", "Edge"]
+    },
+    {
+      "domain": "ai",
+      "title": "V-RAE: Rethinking Video Latent Spaces for Generation",
+      "title_zh": "V-RAE:重新想视频生成的隐空间",
+      "url": "https://arxiv.org/abs/2608.13556",
+      "hf_url": "https://huggingface.co/papers/2608.13556",
+      "authors": "Minghui Guo、Shengqiong Wu、Hao Fei",
+      "affiliation": "新加坡国立大学",
+      "upvotes": 24,
+      "one_liner": "重建最优的隐空间未必好生成,干脆在基础模型表征上另起炉灶。",
+      "summary_zh": "视频生成靠自编码器压出一个隐空间,但这些隐空间一直是为「像素级重建」优化的,语义结构很弱——而重建最优不等于生成最优。V-RAE 在冻结的视觉基础模型表征上搭生成隐空间,用一个轻量时间池化模块去掉时间冗余、保住语义,再解码回视频。把「给生成用的隐空间」和「给重建用的隐空间」分开想,这个角度我觉得对。",
+      "tags": ["Video", "Generation", "Autoencoder"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Zetta ζ: An Efficient Closed-Loop Embodied Harness for Self-Evolving Physical Intelligence",
+      "title_zh": "Zetta:一个自进化的闭环具身「外壳」",
+      "url": "https://arxiv.org/abs/2608.16590",
+      "hf_url": "https://huggingface.co/papers/2608.16590",
+      "authors": "Xin Ding、Liang Mi、Mingzhe Huang 等",
+      "upvotes": 129,
+      "one_liner": "事后反思管不住物理交互,得让 agent 在动作展开的当下就纠偏。",
+      "summary_zh": "现在的具身 agent 外壳大多是开环的——照着固定技能走完一整个 episode 再反思,可物理交互要求在过程中就随时纠偏,而大模型的决策频率跟不上环境变化。Zetta 在保持底层策略冻结的前提下,在线进化「代码化的运行时评审器」和恢复技能,用时间尺度分离让高层慢思考、低层快执行。把「执行中治理」而不是「事后复盘」当核心,是对的方向。",
+      "tags": ["Embodied", "Agent", "Closed-Loop"]
+    },
+    {
+      "domain": "embodied",
+      "title": "RoboEdit: Turning Human Manipulation Videos into Scalable Robot Experience",
+      "title_zh": "RoboEdit:把人类操作视频「改写」成可训练的机器人经验",
+      "url": "https://arxiv.org/abs/2608.18948",
+      "authors": "(arXiv 未标注前列作者机构)",
+      "upvotes": 0,
+      "one_liner": "把网上的人手操作视频,批量翻译成机器人能学的经验。",
+      "summary_zh": "采机器人手-物交互数据又贵又绑定本体,而海量人类操作视频却用不上。RoboEdit 是一套人到机器人的视频编辑工具,把人手视频改写成动作一致、物理合理的机器人视频,还对齐了 3D 手部状态;配套的自动管线从 RGB 视频重建并跨本体重定向,生成了 1400 万规模的数据集(RoboEdit-14M)。数据够不够干净、retarget 会不会失真,还得看下游策略实测,但把人类视频「翻译」成机器人数据这条思路一直很诱人。",
+      "tags": ["Embodied", "Video", "Dataset"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Quantum Speedups Require Structure or Depth",
+      "title_zh": "量子加速要么靠结构,要么靠深度",
+      "url": "https://arxiv.org/abs/2608.19158",
+      "authors": "(arXiv 预印本)",
+      "upvotes": 0,
+      "one_liner": "想要指数级量子加速,没有问题结构就得拿电路深度来换。",
+      "summary_zh": "量子复杂度里有个基本猜想:任何 $t$ 次查询的量子算法,在大多数输入上都能被 poly(t) 次查询的经典算法模拟——若成立,就说明量子加速离不开问题结构。这篇对「并行」量子算法把它证下来了:$t$ 次查询、$d$ 轮的量子算法,能用 $t^{O(d^2)}$ 次经典查询在多数输入上模拟。言下之意,无结构问题想要超多项式加速,就得堆电路深度。偏理论,但对「量子优势到底从哪来」这个问题是硬结论。",
+      "tags": ["Quantum", "Complexity", "Theory"]
+    },
+    {
+      "domain": "bio",
+      "title": "Monroe: A Molecular Foundation Model for In-Context Probabilistic Inference",
+      "title_zh": "Monroe:做上下文概率推断的分子基础模型",
+      "url": "https://arxiv.org/abs/2608.18982",
+      "authors": "(arXiv 预印本)",
+      "upvotes": 0,
+      "one_liner": "药物数据永远不够用,那就让分子模型学会「带着不确定性猜」。",
+      "summary_zh": "药物发现的数据常常很少,因为每个活性数据都要湿实验烧钱烧时间。Monroe 是个分子基础模型,在 8100 万分子上预训练,主打在数据稀缺时用「上下文概率推断」做生物活性预测——不是给一个点估计,而是带不确定性的推断,对小样本 bioassay 更友好。规模是上去了,真实迁移能力还得看外部验证。",
+      "tags": ["Bio", "Foundation Model", "Drug Discovery"]
+    },
+    {
+      "domain": "energy",
+      "title": "Universal Machine-learning Molecular Dynamics at the Speed of Empirical Potentials",
+      "title_zh": "DPA4C:精度接近第一性原理、速度追平经验势的通用分子动力学",
+      "url": "https://arxiv.org/abs/2608.19041",
+      "authors": "(arXiv 预印本)",
+      "upvotes": 0,
+      "one_liner": "精度、通用、速度这个「不可能三角」,这次被一个等变势按住了。",
+      "summary_zh": "一直没有一种原子间势能能同时做到跨化学通用、接近第一性原理精度、又有经验势的速度。DPA4C 是个等变势,架构和压缩过的 CUDA 算子在部署约束下协同设计,五个变体覆盖 49 倍参数范围,最大那个精度逼近 MACE-Omat,速度却快约两个数量级。对做电池材料、催化这类高通量模拟是实打实的提速——分子动力学快一个量级,能筛的候选就多一个量级。",
+      "tags": ["AI4Science", "Molecular Dynamics", "Materials"]
+    },
+    {
+      "domain": "chip",
+      "title": "ETHEREAL: A 25.6-μs/inf. Low-latency Event-driven Graph-neural-network Processor for High-resolution Vision at the Edge",
+      "title_zh": "ETHEREAL:给事件相机做的低延迟图神经网络处理器",
+      "url": "https://arxiv.org/abs/2608.17787",
+      "authors": "(arXiv 预印本)",
+      "upvotes": 0,
+      "one_liner": "微秒级事件相机配上专用 GNN 芯片,单次推理压到 25.6 微秒。",
+      "summary_zh": "动态视觉传感器(DVS,只在像素变化时才发事件的相机)能做到微秒级时间分辨率,但要用好这种稀疏时空事件流,得有配套的算法和硬件。事件驱动图神经网络(EV-GNN)在算法侧兼顾了精度和效率,却一直没有专用芯片。ETHEREAL 是首个高效支持它的处理器,单次推理 25.6 微秒。边缘视觉想压到亚毫秒延迟,这条软硬协同的路线值得盯。",
+      "tags": ["Chip", "Neuromorphic", "Edge"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "The Problem Is the Problem: Towards Scalable Mathematical Discovery",
+      "title_zh": "问题本身才是问题:面向可扩展的数学发现",
+      "url": "https://arxiv.org/abs/2608.16977",
+      "hf_url": "https://huggingface.co/papers/2608.16977",
+      "authors": "Zeyu Zheng、Shengtong Zhang、Jeremy Avigad 等",
+      "affiliation": "卡内基梅隆大学(CMU)",
+      "upvotes": 3,
+      "one_liner": "AI 做数学的瓶颈不在证明,在于「选对问题」和「审得过来」。",
+      "summary_zh": "AI 越来越能参与数学研究,但前沿模型的推理和专家评审都是稀缺资源,现在人力集中在开头「选题」和结尾「审稿」这两头,而它们正成为瓶颈。这篇提出一种人机协作的新范式,重点是重新分配这两处稀缺资源,让 AI 辅助的数学发现更高效。配今天 The Verge 那篇《数学界的 AI 危机》看,正好一个业内视角、一个媒体视角。",
+      "tags": ["AI4Science", "Math", "Agent"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "modular/modular",
+      "url": "https://github.com/modular/modular",
+      "language": "Mojo",
+      "stars": 27802,
+      "stars_today": "340",
+      "one_liner": "Mojo 正式开源,想给 AI 栈一门「像 Python、跑得像 C」的语言。",
+      "summary_zh": "Modular 的平台(含 MAX 与 Mojo),今天因为 Mojo 宣布开源冲上热榜、HN 也在热议。Mojo 想做一门语法接近 Python、性能接近系统语言、专为 AI/GPU 编程设计的语言。关心底层推理性能、想摆脱 CUDA 锁定的人可以开始关注。"
+    },
+    {
+      "domain": "ai",
+      "name": "volcengine/OpenViking",
+      "url": "https://github.com/volcengine/OpenViking",
+      "language": "Python",
+      "stars": 30924,
+      "stars_today": "955",
+      "one_liner": "把 agent 的记忆、知识 RAG 和技能统一进一个「会自进化」的上下文数据库。",
+      "summary_zh": "面向 AI agent 的自进化上下文数据库,把长期记忆、知识 RAG 和 skills 统一管理。今天正好和几篇 agent memory / skills 的论文呼应——大家都在解「agent 怎么攒和复用经验」这件事。做 agent 长期记忆的可以对比着看。"
+    },
+    {
+      "domain": "ai",
+      "name": "RyanCodrai/turbovec",
+      "url": "https://github.com/RyanCodrai/turbovec",
+      "language": "Rust",
+      "stars": 15876,
+      "stars_today": "251",
+      "one_liner": "基于 TurboQuant 的向量索引,Rust 写、带 Python 绑定。",
+      "summary_zh": "一个构建在 TurboQuant 之上的向量索引,Rust 实现、提供 Python 绑定,主打高性能的向量检索。做 RAG、embedding 检索的人适合上手。今天「每日一理」讲的 Johnson–Lindenstrauss,正是这类降维 / 近邻检索的理论底座。"
+    },
+    {
+      "domain": "ai",
+      "name": "akitaonrails/ai-memory",
+      "url": "https://github.com/akitaonrails/ai-memory",
+      "language": "Rust",
+      "stars": 3512,
+      "stars_today": "335",
+      "one_liner": "给编码 agent 做长期记忆,还想解决不同厂商 CLI 之间的交接。",
+      "summary_zh": "为 AI 编码 CLI 提供长期记忆的方案,并想让不同 agent 厂商之间能顺畅交接上下文。跨工具搬家时不用从零重新喂背景,是它想解决的痛点。天天在 Claude Code / Cursor 之间横跳的人会有共鸣。"
+    },
+    {
+      "domain": "ai",
+      "name": "Tencent/AI-Infra-Guard",
+      "url": "https://github.com/Tencent/AI-Infra-Guard",
+      "language": "Python",
+      "stars": 4879,
+      "stars_today": "28",
+      "one_liner": "一站式 AI 红队平台:扫 agent、扫 skills、扫 MCP、测越狱。",
+      "summary_zh": "腾讯开源的 AI 红队平台,覆盖 Agent 扫描、Skills 扫描、MCP 扫描、AI 基础设施扫描和大模型越狱评估。今天有 Grok 被「加密指令注入」绕过护栏的新闻,这类防御侧工具的价值正在上升。做 AI 安全的可以上手。"
+    },
+    {
+      "domain": "ai",
+      "name": "chaitanyagiri/munder-difflin",
+      "url": "https://github.com/chaitanyagiri/munder-difflin",
+      "language": "TypeScript",
+      "stars": 3067,
+      "stars_today": "517",
+      "one_liner": "一个能在本地跑的多智能体 harness。",
+      "summary_zh": "一个本地多智能体 harness(编排 agent 的运行外壳)。今天 HF 榜上一半论文都在谈 harness——从 PLC 代码生成到具身闭环再到 agentic RL,「外壳」正被当成 agent 系统的核心部件,这个 repo 是能上手玩的那一版。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "英伟达联手六大资管巨头,张罗 5000 亿美元给算力「上杠杆」",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/981668/nvidias-goldman-blackrock-gpu-compute-asset",
+      "source": "The Verge",
+      "summary_zh": "阿波罗、贝莱德、黑石、Brookfield、高盛、KKR 六家正和英伟达一起组织约 5000 亿美元融资,把「算力」当成一种新的资产类别来做金融化运作。The Verge 的口气偏讽刺——这套把 GPU 当抵押的玩法,和当年的金融创新有几分神似。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Stripe 收购 OpenRouter,看中的不是「奇点」而是模型路由这门生意",
+      "url": "https://techcrunch.com/2026/08/19/stripe-didnt-really-buy-openrouter-because-of-the-singularity/",
+      "source": "TechCrunch",
+      "summary_zh": "支付巨头 Stripe 买下在不同大模型之间路由 prompt 的初创 OpenRouter。官方说法拿「奇点」当噱头,真实动机更实在:模型调用正成为一门要计量、要结算的生意,而结算正是 Stripe 的主场。同一天 Ramp 也上线了自己的模型路由 Router——「路由层」突然成了兵家必争之地。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "默沙东 / Moderna 个性化癌症疫苗三期达标,冲刺加速审批",
+      "url": "https://www.fiercebiotech.com/biotech/merck-and-modernas-personalized-cancer-vaccine-slows-recurrence-ph-3-trial",
+      "source": "Fierce Biotech",
+      "summary_zh": "默沙东和 Moderna 的个性化 mRNA 癌症疫苗,联用 Keytruda 在高危黑色素瘤患者中显著延长了无复发生存期,三期成功。两家准备据此申请加速审批。个性化肿瘤疫苗这条线,终于跑出关键性三期数据。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "Chai Discovery 牵手 BMS,做 AI 抗体发现",
+      "url": "https://www.fiercebiotech.com/medtech/chai-tees-bristol-myers-squibb-ai-antibody-discovery-collab-deal",
+      "source": "Fierce Biotech",
+      "summary_zh": "拿到 4 亿美元 C 轮融资一个月后,AI 药物发现公司 Chai Discovery 与百时美施贵宝(BMS)达成合作,聚焦 AI 驱动的抗体发现。大药企继续用真金白银给「AI 设计生物药」这条路线背书。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "首个获 FDA 批准的自动抽血机器人 Aletta",
+      "url": "https://www.fiercebiotech.com/medtech/meet-aletta-first-fda-approved-robotic-blood-draw-device",
+      "source": "Fierce Biotech",
+      "summary_zh": "FDA 批准了 Vitestro 的 Aletta,这是美国首个无需人工上手、能独立完成抽血的机器人设备。把「扎针抽血」这种高频、依赖手感的操作交给机器,是医疗自动化里一个具体又难啃的落点。"
+    },
+    {
+      "domain": "energy",
+      "title_zh": "聚变初创 Inertia 把燃料填充从一周压到几小时",
+      "url": "https://techcrunch.com/2026/08/20/inertia-enterprises-finds-a-way-to-make-its-fusion-fuel-fast/",
+      "source": "TechCrunch",
+      "summary_zh": "聚变初创 Inertia Enterprises 把燃料填充流程从一周缩短到几小时。公司自己说,这是通往可盈利聚变电站要跨过的十道坎之一——单点提速不等于闯关成功,但工程节奏在实打实往前挪。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "定制 HBM 这门生意到底怎么做,业界还没有标准答案",
+      "url": "https://semiengineering.com/how-will-the-custom-hbm-business-work/",
+      "source": "SemiEngineering",
+      "summary_zh": "随着 AI 芯片对显存带宽的胃口越来越大,「定制 HBM」被摆上桌面,但 SemiEngineering 的判断是:没有一刀切的方案。不同客户、不同封装和接口需求,决定了定制高带宽内存会走向多种形态,而非单一标准。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "宇树 IPO 之后,人形机器人这波会有谁跟上",
+      "url": "https://www.therobotreport.com/what-does-unitree-robotics-ipo-mean-for-humanoid-industry/",
+      "source": "The Robot Report",
+      "summary_zh": "宇树(Unitree)完成 IPO,The Robot Report 借此讨论下一批可能上市的人形机器人公司。一家头部厂商登陆资本市场,往往会带动整条赛道的融资和估值预期。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "Muon Space 融资 2.5 亿美元,扩产小卫星",
+      "url": "https://spacenews.com/muon-space-raises-250-million-to-ramp-up-satellite-production/",
+      "source": "SpaceNews",
+      "summary_zh": "小卫星公司 Muon Space 融到 2.5 亿美元,用来向更大、更强的航天器和星座扩张、拉高产能。商业遥感 / 星座这条线的资本还在持续加注。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "中国嫦娥七号周日发射,去月球南极找水冰",
+      "url": "https://spacenews.com/chinas-change-7-lunar-ice-hunting-mission-set-for-sunday-launch/",
+      "source": "SpaceNews",
+      "summary_zh": "中国将于周日晚发射嫦娥七号,一次复杂的多航天器任务,前往月球南极着陆并勘测,重点之一是找水冰存在的证据。月球南极的水冰是未来长期驻月和补给的关键,各国都在抢这块。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个「低成本点云编码器 + 3D-LLM」的开箱即用微调脚手架",
+      "based_on": [
+        { "title": "On the Efficacy of Self-Supervised Point Cloud Encoders for Efficient 3D Large Language Models", "url": "https://arxiv.org/abs/2607.29136" }
+      ],
+      "why_now": "主流 3D-LLM 还在用 ULIP-2 这种要 8×A100 做图文点云对齐的重编码器,门槛太高;这篇刚验证 Point-MAE / PCP-MAE 这类自监督编码器能在 MiniGPT-3D 上顶上,单人复现和封装的窗口正好。",
+      "feasibility": "编码器和 3D-LLM 都是单卡(24-40GB)能跑的量级,主要工作是把编码器接口标准化、写训练 / 评测脚本,几周内能出一个能跑的 repo。",
+      "route": [
+        "跑通 MiniGPT-3D 官方推理,确认 baseline 数字",
+        "把 Point-MAE / PCP-MAE 预训练权重接进统一 encoder 接口,先冻结编码器做对齐",
+        "在 ScanQA / 3D captioning 上微调 projector,画出「精度 vs 显存」对比 ULIP-2 版的曲线",
+        "把编码器切换、数据加载、评测封成一键脚本,配 README 攒 star"
+      ],
+      "risk": "自监督编码器的语义可能不如对齐编码器,某些任务会掉点,得靠 projector 或数据来弥补。"
+    },
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "把 training-free 开放词表 3D 分割迁到新场景,验证它到底多能泛化",
+      "based_on": [
+        { "title": "Training-Free Open-Vocabulary 3D Point-Cloud Segmentation on the Generalized Few-Shot Benchmark", "url": "https://arxiv.org/abs/2607.15331" }
+      ],
+      "why_now": "这方法不用训练、不用 3D 标注、连 few-shot support 都不要,复现极便宜;但作者只在特定 benchmark 上验过,换到室外 / 航拍 / 机器人自采点云的泛化性还没人系统测。",
+      "feasibility": "纯推理,单卡足够;主要成本是搭几个跨域数据集的评测,2-3 周能出一版泛化性报告。",
+      "route": [
+        "复现原方法在原 benchmark 上的分割结果",
+        "接入一个跨域点云集(如航拍或室内 ScanNet 变体)直接做零样本推理",
+        "定位掉点的类别 / 场景,分析是 2D 先验错还是 3D 融合错",
+        "换更强的 2D 开放词表模型做消融,看提升上限在哪"
+      ],
+      "risk": "跨域后 2D-3D 对应关系可能崩,training-free 的上限也许就在那,结论可能是「泛化有限」——但这本身也是有价值的负结果。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "攒一个可复现的「Agent Skills 评测 harness」,把技能到底帮不帮忙量出来",
+      "based_on": [
+        { "title": "Demystifying Agent Skills: Why They Work-Until They Don't", "url": "https://arxiv.org/abs/2608.14036" },
+        { "title": "chaitanyagiri/munder-difflin (本地多智能体 harness)", "url": "https://github.com/chaitanyagiri/munder-difflin" }
+      ],
+      "why_now": "今天满屏 skills 框架却缺统一评测——这篇刚把技能拆成表示 / 标注 / 检索难度 / 跨框架四个变量,正好照着它做一个开源 harness,填「没有统一评测」的空。",
+      "feasibility": "用开源权重模型单卡跑推理即可,核心不依赖闭源 API;工作量在数据集接入和指标实现,几周能出可跑的 repo。",
+      "route": [
+        "选 1-2 个公开 agent benchmark,跑通「带技能 vs 不带技能」的基线对比",
+        "把技能表示、结果标注、检索难度做成可配置开关",
+        "对每个变量做受控扫描,画出收益曲线,复刻论文里的结论",
+        "封成 CLI + 配置文件,附一份「你的技能到底有没有用」的诊断报告模板"
+      ],
+      "risk": "不同 benchmark 的技能格式不统一,标准化接入是主要工程量;结论可能因模型而异,需要多模型交叉验证。"
+    }
+  ]
+}
