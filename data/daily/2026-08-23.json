@@ -1,0 +1,346 @@
+{
+  "date": "2026-08-23",
+  "editor_note": "今天满屏都是「harness」——从 Google 的 EnvHarness 给静态环境套插件、让智能体自我进化，到 Zetta 的闭环具身 harness，再到 Nvidia 那篇「真正的主角是 harness 不是模型」的观察，大家心照不宣：模型见顶之后，把模型摆进什么样的循环里、给它配什么样的环境和反馈，才是这一轮的胜负手。非 AI 那边冷静得多——量子把 12 个原子塞进光纤微腔，往可编程节点又挪了一步；芯片的 HYDRA 在替 Transformer-Mamba 混合模型算 chiplet 该怎么拼，又是一处「模型架构一动、硬件就得重排」的咬合。最想让你点开的是 4DAnyone，手机随手拍一段就想拉出能自由换视角的动态高斯人，做 3D 的别错过。每日一理今天聊柯西-施瓦茨不等式——你天天用的余弦相似度为什么永远落在 [-1,1]，根子就在这里。",
+  "math_note": {
+    "name": "柯西-施瓦茨不等式",
+    "name_en": "Cauchy–Schwarz Inequality",
+    "field": "线性代数 / 内积空间 / 泛函分析",
+    "one_liner": "投影再长也长不过原向量——一句不等式，锁死了所有相似度、相关性和不确定性。",
+    "statement": "柯西-施瓦茨不等式说：在任何内积空间里，两个向量 u、v 的内积大小，永远不会超过它们各自长度的乘积——$|\\langle u,v\\rangle|\\le \\|u\\|\\,\\|v\\|$。这里 $\\langle u,v\\rangle$ 是内积（有限维就是逐分量相乘再相加），$\\|u\\|=\\sqrt{\\langle u,u\\rangle}$ 是向量的长度。等号只在 u、v 共线（一个是另一个的倍数）时取到。换句话说，$|\\cos\\theta|=|\\langle u,v\\rangle|/(\\|u\\|\\,\\|v\\|)\\le 1$，两向量夹角的余弦不可能超过 1。",
+    "origin": "最早由柯西（Cauchy）在 1821 年针对有限和的形式给出；1859 年布尼亚科夫斯基（Bunyakovsky）把它推广到积分；1888 年施瓦茨（Schwarz）在研究极小曲面时又独立给出了积分形式的现代证明，三个人的名字就这么并在了一起。它诞生的动机很朴素——做各种估计时，人们需要一个「内积不会失控地大」的普适上界。",
+    "derivation": [
+      { "math": "f(t)=\\|u-t\\,v\\|^2\\ge 0,\\quad \\forall t\\in\\mathbb{R}", "note": "先造一个一定非负的量：u 减去 v 的任意倍数，长度的平方总是 ≥0。这就是整个证明的钩子。" },
+      { "math": "f(t)=\\|u\\|^2-2t\\,\\langle u,v\\rangle+t^2\\|v\\|^2", "note": "用内积的双线性把它展开，得到一个关于 t 的二次函数，它的系数正好是我们关心的三个量。" },
+      { "math": "\\Delta=4\\langle u,v\\rangle^2-4\\|u\\|^2\\|v\\|^2\\le 0", "note": "这个二次函数开口向上、又永远不为负，说明它顶多和横轴相切，判别式不能为正。" },
+      { "math": "\\langle u,v\\rangle^2\\le \\|u\\|^2\\,\\|v\\|^2", "note": "把判别式 ≤0 整理一下，两边开方就得到 $|\\langle u,v\\rangle|\\le\\|u\\|\\,\\|v\\|$。" },
+      { "math": "\\Delta=0\\iff u=t\\,v", "note": "等号成立当且仅当判别式为 0，也就是存在某个 t 让 u−tv=0，即两向量共线——此时投影正好铺满，余弦为 ±1。" }
+    ],
+    "applications": [
+      { "area": "机器学习与检索", "detail": "余弦相似度 $\\langle u,v\\rangle/(\\|u\\|\\,\\|v\\|)$ 之所以稳稳落在 $[-1,1]$、能当相似度用，正是柯西-施瓦茨保证的；嵌入检索、注意力打分都建在这条上界上。" },
+      { "area": "概率与统计", "detail": "相关系数 $|\\rho|\\le 1$、协方差不等式 $\\mathrm{Cov}(X,Y)^2\\le \\mathrm{Var}(X)\\,\\mathrm{Var}(Y)$，都是它在「随机变量内积」下的化身。" },
+      { "area": "量子力学", "detail": "海森堡不确定性原理的推导，核心一步就是对两个算符作用后的态用柯西-施瓦茨，从而给出测量涨落的下界。" },
+      { "area": "数值分析与优化", "detail": "误差估计和收敛性证明里，常靠它把讨厌的交叉项压住，是不等式工具箱里最常被抽出来的那一把。" }
+    ],
+    "takeaway": "内积说到底就是 $\\langle u,v\\rangle=\\|u\\|\\,\\|v\\|\\cos\\theta$，柯西-施瓦茨不过是把「$|\\cos\\theta|\\le 1$」搬进任意内积空间的抽象版——投影再长也长不过原向量。它是把几何直觉带进无穷维函数空间的通行证。",
+    "viz": {
+      "type": "custom",
+      "caption": "拖动蓝色 u 和粉色 v 两个向量：绿色粗线是 v 在 u 方向上的投影。顶部数字实时算出 |⟨u,v⟩| 始终不超过 |u|·|v|，只有当你把两个向量转到共线时，比值才升到 1（取等号）。",
+      "html": "<div style='width:100%;max-width:520px;margin:0 auto'><div class='jxgbox' style='width:100%;aspect-ratio:1/1'></div></div>",
+      "script": "(function(){var host=el.querySelector('.jxgbox');if(!host||!window.JXG){return;}if(!host.id){host.id='cs-jxg-board';}var b=JXG.JSXGraph.initBoard(host.id,{boundingbox:[-6,6,6,-6],axis:true,keepaspectratio:true,showNavigation:false,showCopyright:false});var O=b.create('point',[0,0],{fixed:true,name:'',size:1,color:'#94a3b8'});var U=b.create('point',[3.4,1.2],{name:'u',size:4,color:'#2563eb',label:{fontSize:16}});var V=b.create('point',[1.0,3.2],{name:'v',size:4,color:'#db2777',label:{fontSize:16}});b.create('arrow',[O,U],{strokeColor:'#2563eb',strokeWidth:3});b.create('arrow',[O,V],{strokeColor:'#db2777',strokeWidth:3});function tval(){var d=U.X()*U.X()+U.Y()*U.Y();if(d<1e-9){d=1e-9;}return (U.X()*V.X()+U.Y()*V.Y())/d;}var P=b.create('point',[function(){return tval()*U.X();},function(){return tval()*U.Y();}],{visible:false});b.create('segment',[V,P],{dash:2,strokeColor:'#db2777',strokeWidth:1});b.create('segment',[O,P],{strokeColor:'#16a34a',strokeWidth:5,opacity:0.55});b.create('text',[-5.6,-4.9,function(){var dot=U.X()*V.X()+U.Y()*V.Y();var nu=Math.sqrt(U.X()*U.X()+U.Y()*U.Y());var nv=Math.sqrt(V.X()*V.X()+V.Y()*V.Y());var lhs=Math.abs(dot);var rhs=nu*nv;var r=rhs>1e-9?(lhs/rhs):0;return '|⟨u,v⟩| = '+lhs.toFixed(2)+'   ≤   |u||v| = '+rhs.toFixed(2)+'    比值 '+r.toFixed(3);}],{fontSize:15,fixed:true,color:'#0f172a'});return function(){try{JXG.JSXGraph.freeBoard(b);}catch(e){}};})()"
+    }
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "EnvHarness: Awakening Static Worlds for Agent Learning",
+      "title_zh": "环境适配器：唤醒静态世界供智能体自我训练",
+      "url": "https://arxiv.org/abs/2608.19880",
+      "hf_url": "https://huggingface.co/papers/2608.19880",
+      "authors": "Chengsong Huang、Zifeng Wang 等",
+      "affiliation": "Google",
+      "upvotes": 246,
+      "one_liner": "不重造环境，给旧环境套一层「插件」，让它跟着智能体一起进化。",
+      "summary_zh": "LLM 智能体靠和环境交互变强，但训练环境大多是手搭的、静态的——看不见智能体的短板，智能体一变强就过时。EnvHarness 不重写环境，而是在静态环境外面套一层可编程的插件组件，动态改变它的行为（加难度、造反例、补反馈），不用为每个任务重造一套流水线。思路很像给强化学习环境加中间件，工程量小、可复用，是「环境自动课程」这条线里比较落地的一篇。",
+      "tags": ["Agent", "RL", "环境生成"]
+    },
+    {
+      "domain": "ai",
+      "title": "Co-RL: Unsupervised Reasoning Emerges from Diverse Cohort in Multi-agent RL",
+      "title_zh": "Co-RL：多智能体强化学习中，推理能力从「多样群体」里自发涌现",
+      "url": "https://arxiv.org/abs/2608.17253",
+      "hf_url": "https://huggingface.co/papers/2608.17253",
+      "authors": "Yunhao Yang、Yuexin Bian 等",
+      "affiliation": "加州大学圣地亚哥分校（UCSD）",
+      "upvotes": 91,
+      "one_liner": "一群模型互相当裁判，不靠标准答案也能练出推理。",
+      "summary_zh": "强化学习提升推理，最强的做法还是依赖可验证的标准答案，可这种标注越来越贵、越来越难拿——当推理超出人类能可靠判断的范围就更是如此。自奖励 RL 让模型给自己打分来省标注，但只用自己的反馈容易强化既有偏见、越练越偏。Co-RL 让一个「多样化群体」的模型互相提供奖励信号，用群体的分歧来纠偏。角度有意思，但无监督自奖励这条路容易崩，得看它在真正难的任务上稳不稳。",
+      "tags": ["RL", "推理", "多智能体"]
+    },
+    {
+      "domain": "ai",
+      "title": "OmniScientist: An Omni-Modal Omni-Discipline AI Scientist",
+      "title_zh": "OmniScientist：全模态、全学科的 AI 科学家",
+      "url": "https://arxiv.org/abs/2608.13558",
+      "hf_url": "https://huggingface.co/papers/2608.13558",
+      "authors": "Bobo Li、Hao Fei 等",
+      "affiliation": "新加坡国立大学（NUS）",
+      "upvotes": 88,
+      "one_liner": "让 AI 科学家不只读文本和代码，还能「看见」空间、时间和跨通道的证据。",
+      "summary_zh": "现在的 AI 科学家能把研究流程从提假设、跑代码到写论文都串起来，但覆盖流程不等于拿到了发现所需的全部证据——多数系统只在文本、代码、标签或预处理好的摘要上推理，把空间、时间、跨通道、操作过程这些关键关系挡在门外。OmniScientist 做的是端到端的全模态 AI 科学家，想把这些被丢掉的证据接回来。方向对，但「全模态全学科」野心很大，真正能在哪个具体学科跑出结果值得盯。",
+      "tags": ["AI4Science", "Agent", "多模态"]
+    },
+    {
+      "domain": "ai",
+      "title": "4DAnyone: Create Anyone in 4D from a Casual Monocular Video",
+      "title_zh": "4DAnyone：用一段随手拍的单目视频重建任意人物的 4D 形象",
+      "url": "https://arxiv.org/abs/2608.20335",
+      "hf_url": "https://huggingface.co/papers/2608.20335",
+      "authors": "Yudong Jin、Tao Xie 等",
+      "affiliation": "蚂蚁研究院",
+      "upvotes": 64,
+      "one_liner": "手机随手一拍，就想拉出能自由换视角的动态高斯人。",
+      "summary_zh": "从没标定的单目视频重建会动的 4D 人体，难在要先生成「重建级」的多视角一致视频，再抬升成 4D 高斯泼溅（4DGS）。现有可控相机的视频扩散模型能编出看着合理的新视角，但一放大到 4DGS 需要的几十个目标视角就前后不一致——作者把病根归为「注意力上下文有限」：视角一超过单次前向能装下的量就得分组，一分组就露馅。做法是针对性补齐分组之间的一致性。对做 3D、数字人的读者是好料，先看它对复杂动作和遮挡扛不扛得住。",
+      "tags": ["4DGS", "视频扩散", "数字人"]
+    },
+    {
+      "domain": "ai",
+      "title": "SWE-bench Science: Can Coding Agents Resolve Engineering Tasks in Science?",
+      "title_zh": "SWE-bench Science：编码智能体能修好科学软件里的工程 bug 吗？",
+      "url": "https://arxiv.org/abs/2608.19799",
+      "hf_url": "https://huggingface.co/papers/2608.19799",
+      "authors": "Zhipeng Xu、Jiahao Lu 等",
+      "affiliation": "OpenMOSS（复旦大学）",
+      "upvotes": 58,
+      "one_liner": "科学代码错了，错的可能是论文结论——给 agent 出了一套专门的考卷。",
+      "summary_zh": "软件本身正在变成科学仪器的一部分，科学代码出错不只是程序崩了，还可能动摇结论赖以成立的证据基础。现有对编码智能体的评测多看总体通过率，说不清 agent 修科学软件时到底为什么会失败。SWE-bench Science 收了来自 98 个仓库、覆盖 20 个科学领域的 119 个真实任务，按类型分层，专门用来诊断失败原因。对做科研工具链和 coding agent 的人，是一份务实的诊断基准。",
+      "tags": ["Benchmark", "Coding Agent", "AI4Science"]
+    },
+    {
+      "domain": "ai",
+      "title": "FlashPrefill V2: Block-Sparse Prefill Attention for Long-Context LLM Serving",
+      "title_zh": "FlashPrefill V2：面向长上下文服务的块稀疏预填充注意力",
+      "url": "https://arxiv.org/abs/2608.19758",
+      "hf_url": "https://huggingface.co/papers/2608.19758",
+      "authors": "Qihang Fan、Huaibo Huang 等",
+      "affiliation": "腾讯",
+      "upvotes": 14,
+      "one_liner": "把「聪明但只是原型」的稀疏预填充，真正推到能上线的程度。",
+      "summary_zh": "长上下文的瓶颈在注意力的二次复杂度，尤其是计算密集的预填充（prefill）阶段。前作 FlashPrefill 用即时的模式发现和基于最大值的动态阈值来省算力，但只是个算法原型，离生产部署还远。V2 从三个方向把它往实用推：更工程化的块稀疏实现、更贴近真实服务的调度等。对自建推理栈、被长文档 prefill 拖慢的团队，值得看看它的实测吞吐。",
+      "tags": ["长上下文", "稀疏注意力", "推理加速"]
+    },
+    {
+      "domain": "embodied",
+      "title": "τ_0-VLA: a Hierarchical Robot Foundation Model with World-Model-Guided Test-Time Computation",
+      "title_zh": "τ₀-VLA：带世界模型引导、能在推理时「多想一会儿」的分层机器人基座",
+      "url": "https://arxiv.org/abs/2608.16885",
+      "hf_url": "https://huggingface.co/papers/2608.16885",
+      "authors": "Xiaowei Cai、Yunuo Cai 等",
+      "affiliation": "上海创智学院",
+      "upvotes": 9,
+      "one_liner": "难的那一步就多算一会儿——给 VLA 装上按需分配算力的脑子。",
+      "summary_zh": "长时程操作要求机器人既把单个技能做稳，又能把技能连贯地串起来。多数分层 VLA 每个决策只用一次前向，遇到难的、要紧的选择也没法多花点算力。τ₀-VLA 把高层子任务生成变成一个「可扩展算力」的推理问题：用世界模型在推理时做测试时计算，难处多想几步。思路和大模型的 test-time scaling 对上了，搬到具身上很自然，关键看世界模型在真机上准不准。",
+      "tags": ["VLA", "世界模型", "test-time scaling"]
+    },
+    {
+      "domain": "chip",
+      "title": "HYDRA: A Heterogeneous Chiplet DSE Framework for Serving Dynamic Hybrid LLM Workloads",
+      "title_zh": "HYDRA：面向动态混合 LLM 负载的异构 chiplet 设计空间探索框架",
+      "url": "https://arxiv.org/abs/2608.19395",
+      "authors": "Jiahao Lin、Alish Kanani 等",
+      "one_liner": "Transformer 混 Mamba 的新架构，芯片该怎么拼 chiplet。",
+      "summary_zh": "Transformer-Mamba 混合大模型（用 Mamba 这类状态空间层提升长上下文效率）算得快，但计算和通信模式不均匀，硬件加速难做。Chiplet（把不同功能的小芯粒拼进一块封装里）是可扩展的解法，可「静态架构配置 + 动态运行时策略」的设计空间大到没法穷举。HYDRA 就是把这个空间自动化探索出来的框架。芯片和 AI 算力这条线越来越咬合——模型架构一变，封装和调度就得跟着重算，这篇是个具体例子。",
+      "tags": ["Chiplet", "LLM 加速", "设计空间探索"]
+    },
+    {
+      "domain": "bio",
+      "title": "Monroe: A Molecular Foundation Model for In-Context Probabilistic Inference",
+      "title_zh": "Monroe：做上下文概率推断的分子基础模型",
+      "url": "https://arxiv.org/abs/2608.18982",
+      "authors": "Blazej Banaszewski、Andrew W. Fitzgibbon",
+      "one_liner": "药物活性数据太贵，就让基础模型「看几个例子」现学。",
+      "summary_zh": "生物活性预测常年缺数据——药物发现的数据要靠又慢又贵的湿实验产生。分子基础模型（MFM）想把通用化学知识编码进分子表示，在数据稀缺时也能泛化。Monroe 相比现有 SOTA 做了几处改进：扩大规模、支持上下文（in-context）概率推断，即给几个样本就能对新任务现学现推。对做计算药物早期筛选、数据总是不够的人，是值得一试的方向。",
+      "tags": ["分子基础模型", "药物发现", "in-context"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Programmable cavity QED with a fiber-integrated atomic array",
+      "title_zh": "光纤集成原子阵列上的可编程腔量子电动力学",
+      "url": "https://arxiv.org/abs/2608.20291",
+      "authors": "Stephan Roschinski、Johannes Schabbauer 等",
+      "one_liner": "把 12 个能单独寻址的原子塞进光纤微腔，做可编程的强耦合。",
+      "summary_zh": "光腔里强的原子-光子相互作用，是量子信息、量子网络的关键资源；光镊阵列能对中性原子做可扩展、位点分辨的操控，但和高协同度的腔 QED 系统集成一直很难。这项工作把 12 个位点的铷-87 光镊阵列放进高协同度的光纤法布里-珀罗微腔里，阵列正好落在腔模上、能逐个寻址。这是把「可扩展原子阵列」和「强耦合腔」两条硬件路线拼起来的一步，离可编程量子节点更近了些。",
+      "tags": ["腔QED", "中性原子", "量子网络"]
+    },
+    {
+      "domain": "energy",
+      "title": "An end-to-end differentiable transient vapor-compression framework for automated machine sizing and unified optimal control",
+      "title_zh": "端到端可微的瞬态蒸气压缩框架：自动选型 + 统一最优控制",
+      "url": "https://arxiv.org/abs/2608.19552",
+      "authors": "Sam Yang",
+      "one_liner": "用 JAX 把热泵从选型到控制，全变成可求导的一件事。",
+      "summary_zh": "热能电气化要靠能随电网动态响应的蒸气压缩热泵，但设备工程一直被割裂成三块：静态额定点选型、又硬又难算的多相瞬态仿真、基于梯度的最优控制。这篇用 JAX 原生实现了端到端可微的有限体积蒸气压缩框架，直接从热负荷需求自动做机器选型，并把动态仿真和最优控制统一起来。可微物理在能源装备设计上的一次漂亮落地，单人单卡就能玩，做 AI4Science、新能源的可以看看。",
+      "tags": ["可微物理", "热泵", "JAX"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "openai/codex",
+      "url": "https://github.com/openai/codex",
+      "language": "Rust",
+      "stars": 112922,
+      "stars_today": "4,159",
+      "one_liner": "跑在终端里的轻量编码智能体，热度还在猛涨。",
+      "summary_zh": "OpenAI 的开源终端编码智能体，Rust 写的，主打轻量、跑在本地终端。单日涨四千多 star，是当前 coding agent 竞赛里最受关注的开源项之一。想要一个不绑生态、能塞进自己工作流的命令行 agent，可以看它。"
+    },
+    {
+      "domain": "ai",
+      "name": "Tencent/AI-Infra-Guard",
+      "url": "https://github.com/Tencent/AI-Infra-Guard",
+      "language": "Python",
+      "stars": 5434,
+      "stars_today": "161",
+      "one_liner": "给 AI 生态做红队的全栈平台：扫 Agent、Skills、MCP、越狱。",
+      "summary_zh": "腾讯开源的 AI 红队平台，覆盖 Agent 扫描、Skills 扫描、MCP 扫描、AI 基础设施扫描和 LLM 越狱评测。随着 agent/MCP/skills 这套栈铺开，配套的安全审计需求也起来了，做 AI 安全、或要给自家 agent 上线前体检的团队用得上。"
+    },
+    {
+      "domain": "ai",
+      "name": "n8n-io/n8n",
+      "url": "https://github.com/n8n-io/n8n",
+      "language": "TypeScript",
+      "stars": 201728,
+      "stars_today": "202",
+      "one_liner": "自带 AI 能力的工作流自动化平台，可视化搭和写代码都行。",
+      "summary_zh": "老牌的公平代码（fair-code）工作流自动化平台，400+ 集成，可自托管。近来主打原生 AI 能力，把可视化编排和自定义代码结合起来。想把 LLM 塞进业务流程、又不想全从零写的团队，常拿它当骨架。"
+    },
+    {
+      "domain": "chip",
+      "name": "modular/modular",
+      "url": "https://github.com/modular/modular",
+      "language": "Mojo",
+      "stars": 28811,
+      "stars_today": "395",
+      "one_liner": "Mojo 语言 + MAX 推理栈，想把 AI 算力底座重做一遍。",
+      "summary_zh": "Modular 平台的开源仓，含 MAX 推理引擎和 Mojo 语言。目标是给 AI 提供一套跨硬件、高性能的统一底座，绕开 CUDA 锁定。关注异构算力、推理性能和编译器栈的人该盯着它。"
+    },
+    {
+      "domain": "ai",
+      "name": "cursor/plugins",
+      "url": "https://github.com/cursor/plugins",
+      "language": "TypeScript",
+      "stars": 4607,
+      "stars_today": "286",
+      "one_liner": "Cursor 的插件规范和官方插件，AI 编辑器开始开生态。",
+      "summary_zh": "Cursor 放出的插件规范与官方插件仓。这是 AI 编程编辑器从「内置功能」走向「开放插件生态」的信号，想给 Cursor 扩功能、或研究它扩展模型的人可以看。"
+    },
+    {
+      "domain": "ai",
+      "name": "PostHog/posthog",
+      "url": "https://github.com/PostHog/posthog",
+      "language": "Python",
+      "stars": 38546,
+      "stars_today": "288",
+      "one_liner": "自带 AI 可观测性的产品分析平台。",
+      "summary_zh": "面向产品的一体化平台，做分析、会话回放、特性开关，近来补上了 LLM 应用的可观测性（AI observability）。做 AI 产品、想盯住线上模型调用和用户行为的团队用得上。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "Nvidia：真正的主角是「harness」，不是模型本身",
+      "url": "https://techcrunch.com/2026/08/21/nvidia-just-showed-that-the-harness-not-the-ai-model-is-now-the-real-hero/",
+      "source": "TechCrunch",
+      "summary_zh": "Nvidia 的一项研究显示，就算底层模型在某任务上并不出色，通过微调和恰当的「harness」（把模型摆进什么样的循环、给什么反馈），AI 智能体也能表现良好、不至于跑偏。这和今天几篇 EnvHarness、闭环具身 harness 的论文遥相呼应：模型见顶后，围绕模型的那套脚手架成了胜负手。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "DeepMind 系初创 Inherent 称其 AI「队友」在复现论文上超过了 Anthropic 和 OpenAI",
+      "url": "https://techcrunch.com/2026/08/22/inherent-founded-by-deepmind-alumni-says-its-ai-teammate-just-outperformed-anthropic-and-openai-at-replicating-research/",
+      "source": "TechCrunch",
+      "summary_zh": "英国 AI 实验室 Inherent（创始人来自 DeepMind）发布了名为 Faraday 的 AI 智能体，主打复现科学论文的能力，自称在这一项上超过了 Anthropic 和 OpenAI 的系统。公司把「能自动复现研究」视为推动创新的一块垫脚石。放在今天 OmniScientist、SWE-bench Science 的语境里看，「AI 做科研」这条线的竞争在明显升温。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "Starcloud 融资 2.5 亿美元建轨道数据中心，地面发射窗口正变紧",
+      "url": "https://techcrunch.com/2026/08/21/starcloud-raises-200-million-for-orbital-data-centers-as-launch-options-dry-up/",
+      "source": "TechCrunch",
+      "summary_zh": "Starcloud 拿到 2.5 亿美元，要把数据中心搬上轨道。文章提到发射运力吃紧，一场抢占太空入口的争夺正在酝酿。把 AI 算力和商业航天绑在一起的叙事又多了一个大额下注，能不能落地要看散热、供电和发射成本这三座大山。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "Novaspace 预测：到 2035 年将发射 6500+ 颗对地观测卫星",
+      "url": "https://spacenews.com/new-novaspace-forecast-6500-eo-satellites-to-launch-by-2035/",
+      "source": "SpaceNews",
+      "summary_zh": "咨询机构 Novaspace 最新预测，到 2035 年将有超过 6500 颗对地观测（EO）卫星发射，带来约 1559 亿美元的制造收入，主要驱动力是各国扩充自主的情报、监视与侦察能力。对地观测正从少数大卫星走向大规模星座，制造和数据下行两端都是机会。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "舍弗勒计划 2027 年量产人形机器人用谐波减速器",
+      "url": "https://www.therobotreport.com/schaeffler-plans-to-mass-manufacture-gearboxes-for-humanoids-in-2027/",
+      "source": "The Robot Report",
+      "summary_zh": "汽车零部件巨头舍弗勒（Schaeffler）宣布计划在 2027 年量产人形机器人用的谐波（strain wave）减速器，靠一种成形工艺来支撑大规模生产。减速器一直是人形机器人成本和产能的卡脖子环节，传统工业巨头下场量产，是这条供应链走向成熟的信号。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "中国机器人跑完 100 米，用时快过博尔特的世界纪录",
+      "url": "https://www.theguardian.com/sport/2026/aug/22/chinese-robot-runs-100m-sprint-quicker-usain-bolt-world-record",
+      "source": "The Guardian",
+      "summary_zh": "一台中国造机器人跑完 100 米短跑，成绩快过博尔特保持的人类世界纪录。噱头成分不小——赛道、启动方式和人类比赛并不对等，但作为双足高动态运动控制的一次公开展示，还是说明腿式机器人的爆发力和步态稳定性上了个台阶。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "默克-Moderna 癌症疫苗三期数据亮眼，市值大涨并引发对标 Keytruda 的猜想",
+      "url": "https://www.fiercebiotech.com/biotech/merck-moderna-cancer-vaccine-data-spur-speculation-keytruda-impact",
+      "source": "Fierce Biotech",
+      "summary_zh": "默克与 Moderna 合作的个性化癌症疫苗公布三期数据后，给 Moderna 市值加了约 450 亿美元。分析师开始追问一个可能定义未来癌症治疗的问题：这款疫苗的适用面能不能像 Keytruda 那样铺得很广。mRNA 个性化癌症疫苗从概念走到关键期数据，是这一年生物医药最实打实的进展之一。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "首个 FDA 批准的机器人采血设备 Aletta 面世",
+      "url": "https://www.fiercebiotech.com/medtech/meet-aletta-first-fda-approved-robotic-blood-draw-device",
+      "source": "Fierce Biotech",
+      "summary_zh": "FDA 批准了 Vitestro 的 Aletta，这是美国首台无需人工上手、能独立完成抽血的机器人设备。采血是最高频、最依赖手感的医疗操作之一，把它自动化既是具身智能在医疗场景的落地，也直接对着护理人手短缺这个真问题去。"
+    },
+    {
+      "domain": "ai4s",
+      "title_zh": "Quanta：三十年来「失衡数学」迎来重大突破",
+      "url": "https://www.quantamagazine.org/huge-breakthrough-in-the-math-of-imbalance-20260821/",
+      "source": "Quanta Magazine",
+      "summary_zh": "三十年来第一次，计算机科学家找到了把一堆对象更均匀地分到两组的更优方法——这属于「差异理论（discrepancy）」这一分支的核心问题。听着抽象，但均匀分配的下界直接关系到抽样、去偏、随机算法的质量，和机器学习里的数据划分、误差控制暗暗相通。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "给 RL credit-assignment 内核做一个「一键接入 + 统一基准」的小库",
+      "based_on": [
+        { "title": "rl-triton: High-Performance Triton GPU Kernels for RL Credit Assignment", "url": "https://arxiv.org/abs/2608.17641" }
+      ],
+      "why_now": "库刚开源，把 GAE / V-Trace / TD(λ) 等七种 RL 估计统一成一个 O(log T) 的 associative scan，很干净；但还缺「接进现有训练栈」的胶水层和跨库基准，这块空白正好做成工具攒 star。",
+      "feasibility": "单卡即可（内核本身就是为单 GPU 长序列设计的），不用训练大模型，主要成本是工程和数值对拍，约 2–4 周。",
+      "route": [
+        "跑通 rl-triton 官方 benchmark，复现七种估计的 associative-scan 内核在长序列上的加速比；",
+        "写一层薄适配器，把这些内核作为 drop-in 替换接进一个主流 RL 库（如 CleanRL 或 verl）的优势计算；",
+        "做统一的正确性对拍（和 naive 循环实现逐元素比对）＋ 吞吐/显存基准表；",
+        "覆盖变长 episode、bootstrap、mask 等边界情形，补齐单元测试；",
+        "打包成 pip 可装的小库，配 README 和一张加速曲线图。"
+      ],
+      "risk": "核心加速已由原库给出，增量价值全在「易用性和覆盖度」，得靠工程打磨和文档取胜，而非算法新意。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "把「训练无关的开放词表 3D 点云分割」迁到新数据集验证泛化",
+      "based_on": [
+        { "title": "Training-Free Open-Vocabulary 3D Point-Cloud Segmentation on the Generalized Few-Shot Benchmark", "url": "https://arxiv.org/abs/2607.15331" }
+      ],
+      "why_now": "这篇刚把「无训练、无 3D 标签、连 few-shot 支持都不要」推到能跑；training-free 方法迁到新场景验证泛化，本身就是低风险、可发表的扩展，而目前还没人系统做它的跨域评测。",
+      "feasibility": "以纯推理为主，单卡 <40GB 即可跑冻结的 3D 视觉-语言先验，约 2–3 周。",
+      "route": [
+        "跑通官方在 GFS-PCS benchmark 上的训练无关推理，复现其 novel 类指标；",
+        "换一个域差异更大的数据集（室外 LiDAR / 植物器官 / 工业点云）做零改动迁移，量化掉多少；",
+        "针对掉点最狠的场景，只调「先验与几何一致性的调和策略」（不训练）做消融；",
+        "补一个统一评测脚本，把 base 类和 novel 类的指标分开报告。"
+      ],
+      "risk": "训练无关方法在域差异大时可能直接崩，得准备好「负结果也是结果」的叙事，或退一步引入极少量适配。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "用低成本自监督点云编码器给 3D-LLM 减负，并扩到更多编码器",
+      "based_on": [
+        { "title": "On the Efficacy of Self-Supervised Point Cloud Encoders for Efficient 3D LLMs", "url": "https://arxiv.org/abs/2607.29136" }
+      ],
+      "why_now": "原文证明了 8×A100 级的多模态编码器（如 ULIP-2）不是必需、单卡自监督编码器（Point-MAE 等）可平替，正好顺着做「更多编码器 + 轻量对齐」的扩展，门槛低、结论直接可用。",
+      "feasibility": "MiniGPT-3D 本就是低算力测试床，单卡可微调；主要成本是跑多组对比实验，约 3–4 周。",
+      "route": [
+        "用 MiniGPT-3D 作 testbed，复现把 ULIP-2 换成 Point-MAE / PCP-MAE 的基线结论；",
+        "再接 2–3 个新的自监督点云编码器（如 PointGPT、ReCon）做同样对比，补齐「编码器选型」表；",
+        "加一个轻量对齐/蒸馏步骤，看能否把自监督编码器和 LLM 的对齐差距补回来；",
+        "报告精度-算力权衡曲线，给「低成本 3D-LLM」一份选型指南。"
+      ],
+      "risk": "自监督编码器的语义可能不如多模态对齐充分，某些任务上平替会掉点，需要靠对齐或蒸馏来补。"
+    }
+  ]
+}
