@@ -1,0 +1,358 @@
+{
+  "date": "2026-08-25",
+  "editor_note": "今天最抢眼的传闻是 Hugging Face 传出 130 亿美元被收购的谈判——一个靠社区起家的开放平台要不要卖身,本身就是这几年 AI 开源生态的一个缩影,创始人自己都在犹豫。论文这边有个很清楚的信号:大家不再只堆模型规模,而是想尽办法把「多花的算力」花在刀刃上——ParaTempo 让并行推理按时间置信度剪枝,FlashPrefill V2 把稀疏 prefill 从原型做进生产,τ_0-VLA 干脆让机器人在难决策的地方多想几步。这跟芯片新闻里「2nm 之后拼多芯粒封装」是一回事:单点算力堆不动了,就在系统调度和结构上抠效率。生物医学今天是硬货扎堆,罗氏/礼来的阿尔茨海默血检获批、默沙东-Moderna 的癌症疫苗三期数据,都是能改临床的进展。每日一理挑了巴拿赫不动点定理——你今天读到的 RL 值迭代、扩散采样、agent 自我演化,骨子里都是「反复迭代直到不动」,这条定理讲的就是它凭什么一定收敛。",
+  "math_note": {
+    "name": "巴拿赫不动点定理",
+    "name_en": "Banach Fixed-Point Theorem (Contraction Mapping Principle)",
+    "field": "泛函分析 / 度量空间",
+    "one_liner": "只要每步把误差按固定比例压小,收敛就是命中注定,还带利率。",
+    "statement": "在一个「没有窟窿」的完备度量空间里(任何柯西序列都收敛),如果一个映射 $T$ 是压缩映射——即存在常数 $0\\le k<1$,使任意两点被 $T$ 搬过去后距离都缩小到原来的 $k$ 倍以内,$d(Tx,Ty)\\le k\\,d(x,y)$(这里 $d$ 是两点距离,$k$ 是压缩率)——那么 $T$ 有且只有一个不动点 $x^\\*$,满足 $x^\\*=Tx^\\*$。而且从任何起点 $x_0$ 出发反复迭代 $x_{n+1}=Tx_n$ 都会收敛到它,速度是几何级的,误差满足 $d(x_n,x^\\*)\\le\\frac{k^{\\,n}}{1-k}\\,d(x_1,x_0)$。",
+    "origin": "1922 年,波兰数学家斯特凡·巴拿赫(Stefan Banach)在博士论文里把它抽象出来。当时数学家们已经会用「逐次逼近法」(Picard 迭代)证明微分方程和积分方程有解,但每次都要重来一遍。巴拿赫看穿了这些证明共用的骨架:只要迭代算子把误差稳定地压小,解就一定存在、唯一、还能算出来。他把这层结构从具体方程里剥出来,写成一条只依赖「距离」和「完备」的定理,成了泛函分析的奠基石之一。",
+    "derivation": [
+      { "math": "x_{n+1}=Tx_n", "note": "先定下玩法:随便找个起点,拿 T 反复作用,得到一串点。我们要证明这串点会稳稳停在某处。" },
+      { "math": "d(x_{n+1},x_n)\\le k\\,d(x_n,x_{n-1})\\le k^{\\,n}\\,d(x_1,x_0)", "note": "关键一击:压缩性说相邻两步的间距每走一步就乘上 k。因为 k<1,间距像等比数列一样越来越小。" },
+      { "math": "d(x_{n+p},x_n)\\le\\sum_{i=n}^{n+p-1}k^{\\,i}\\,d(x_1,x_0)\\le\\frac{k^{\\,n}}{1-k}\\,d(x_1,x_0)", "note": "用三角不等式把中间一段路加起来,再套等比级数求和。n 一大,这个上界趋于 0——说明这串点是柯西序列,后面的点挤得越来越紧。" },
+      { "math": "x_n\\to x^\\*,\\qquad x^\\*=\\lim_{n\\to\\infty}Tx_{n-1}=Tx^\\*", "note": "空间完备,柯西序列必有极限 x*。压缩映射天然连续,所以极限号能穿过 T,得到 x* 就是不动点——存在性到手。" },
+      { "math": "d(x^\\*,y^\\*)=d(Tx^\\*,Ty^\\*)\\le k\\,d(x^\\*,y^\\*)\\Rightarrow d(x^\\*,y^\\*)=0", "note": "假如有两个不动点,它们的距离被自己压小到 k 倍以内,而 k<1,唯一出路是距离为 0。唯一性也拿下。" }
+    ],
+    "applications": [
+      { "area": "微分方程", "detail": "Picard–Lindelöf 存在唯一性定理:把 ODE 写成积分算子,证明它在小区间上是压缩映射,一步得到「初值问题有唯一解」。" },
+      { "area": "数值计算", "detail": "不动点迭代、牛顿法在根附近都是压缩映射,定理既保证收敛又给出几何收敛速率和误差上界,能提前估计要迭代几次。" },
+      { "area": "强化学习", "detail": "贝尔曼最优算子在无穷范数下是 γ-压缩(γ 是折扣因子),值迭代因此必然收敛到唯一最优价值函数——这就是 Q-learning 收敛性的底层依据。" },
+      { "area": "深度学习", "detail": "深度平衡模型(DEQ)、扩散采样的隐式步骤本质是解不动点方程,压缩性是它们数值稳定、能反向传播的前提。" }
+    ],
+    "takeaway": "「压缩」这一个条件,一次性买到了存在、唯一和可计算三样东西:$k<1$ 是那道分水岭,过了它迭代就一定收敛,差 $\\varepsilon$ 就永远在原地打转。工程上你看到的一切「反复迭代直到稳定」,能不能信,先看它是不是压缩。",
+    "viz": {
+      "type": "cobweb",
+      "caption": "拖动起点 x0,看蛛网图一圈圈被吸进 y=x 与 cos(x) 的交点(约 0.739)——因为在那附近 |cos'(x)|<1,cos 是压缩映射,所以从哪儿出发都收敛到同一点。",
+      "params": { "fn": "cos(x)", "x0": 2.5, "xmin": -0.2, "xmax": 3.3, "iterations": 14 }
+    }
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "4DAnyone: Create Anyone in 4D from a Casual Monocular Video",
+      "title_zh": "4DAnyone:一段随手拍的单目视频,重建出会动的 4D 人",
+      "url": "https://arxiv.org/abs/2608.20335",
+      "hf_url": "https://huggingface.co/papers/2608.20335",
+      "authors": "Yudong Jin、Tao Xie、周晓巍 等",
+      "affiliation": "蚂蚁研究院 / 浙江大学",
+      "upvotes": 73,
+      "one_liner": "手机随手拍一段,人就能在 4D 里任意换视角看,难点是让几十个新视角别打架。",
+      "summary_zh": "目标是从一段没标定相机的普通单目视频,重建出可自由换视角、随时间变化的 4D 人体(用 4D 高斯泼溅表示)。作者点出的核心痛点很实在:现有相机可控的视频扩散模型生成单个新视角还行,但 4DGS 重建需要几十个视角同时一致,视角一多注意力上下文就撑不住、开始互相矛盾。他们把这归结为「注意力上下文受限」问题并针对性地解决。思路清晰,不过单目输入的固有歧义摆在那儿,对遮挡和大动作的鲁棒性还得看实测。",
+      "tags": ["4DGS", "视频扩散", "人体重建"]
+    },
+    {
+      "domain": "ai",
+      "title": "SWE-bench Science: Can Coding Agents Resolve Engineering Tasks in Science?",
+      "title_zh": "SWE-bench Science:编程 agent 能不能修好科研软件的 bug?",
+      "url": "https://arxiv.org/abs/2608.19799",
+      "hf_url": "https://huggingface.co/papers/2608.19799",
+      "authors": "Zhipeng Xu、Jiahao Lu、邱锡鹏 等",
+      "affiliation": "复旦大学 OpenMOSS",
+      "upvotes": 61,
+      "one_liner": "科研代码错了会连带把结论也带偏,这个 benchmark 专问 agent 为什么修不好。",
+      "summary_zh": "提出一个仓库级的科研软件工程 benchmark,含 119 个任务,针对性地考编程 agent 修复科学计算代码的能力。作者的动机很到位:科研软件本身就是「实验仪器」的一部分,代码出错不只是程序崩,还会污染背后科学结论的证据链。现有评测只看整体通过率,不告诉你 agent 为什么在科研代码上栽跟头。这类「垂直领域 + 诊断失败原因」的评测比刷分榜有用,值得做 agent 的人留意。",
+      "tags": ["Agent", "代码", "Benchmark"]
+    },
+    {
+      "domain": "ai",
+      "title": "Let's Scale Step by Step: Compute-Efficient Hyperparameter Transfer for Large-Scale Mixture-of-Experts",
+      "title_zh": "一步步放大:给大规模 MoE 做省算力的超参迁移",
+      "url": "https://arxiv.org/abs/2608.20061",
+      "hf_url": "https://huggingface.co/papers/2608.20061",
+      "authors": "Nayeon Kim、Hojin Lee、Yunju Bak 等",
+      "affiliation": "Kakao",
+      "upvotes": 31,
+      "one_liner": "别在大模型上瞎试学习率,先在小模型上标定,再两步外推过去。",
+      "summary_zh": "解决一个很花钱的实际问题:MoE 模型在极大规模(模型大 + token 多)下调学习率,靠网格搜索几乎不可承受。作者提出两步走的超参迁移框架,先在小规模上估计最优学习率,再沿模型规模和数据规模两个维度分别外推到目标大模型。属于 μP 一路「小规模标定、大规模外推」思路在 MoE 上的落地,对真在训大模型的团队是能省真金白银的工程点。",
+      "tags": ["MoE", "超参迁移", "预训练"]
+    },
+    {
+      "domain": "ai",
+      "title": "SkillEvo: Self-Renewing Evolution Gradients from Multi-Turn Interaction Feedback",
+      "title_zh": "SkillEvo:从多轮交互失败里持续挤出「进化梯度」的 agent 技能库",
+      "url": "https://arxiv.org/abs/2608.13120",
+      "hf_url": "https://huggingface.co/papers/2608.13120",
+      "authors": "Qianxi Yan、Chunrong Chen、Jiuzhou Zhao 等",
+      "affiliation": "腾讯",
+      "upvotes": 30,
+      "one_liner": "单轮问答的反馈很快就榨干了,真正的坑得靠多轮交互才暴露。",
+      "summary_zh": "针对 agent 技能自我进化的一个真问题:现有工作要么手写技能、要么一次性生成,即便有闭环也只从单轮问答取反馈——第一轮能发现的漏洞补完,进化梯度就迅速衰减了。SkillEvo 改成从多轮交互的真实失败里取反馈,专门抓那些只有在跨轮交互中才显形的缺陷。观点抓得准:很多 agent 缺陷是「累积型」的,单轮评测天生看不见。做长程 agent 的可以参考这套反馈信号的取法。",
+      "tags": ["Agent", "技能进化", "自我改进"]
+    },
+    {
+      "domain": "ai",
+      "title": "ParaTempo: Efficient Parallel Reasoning via Temporal Confidence",
+      "title_zh": "ParaTempo:用「时间置信度」给并行推理剪枝",
+      "url": "https://arxiv.org/abs/2608.16425",
+      "hf_url": "https://huggingface.co/papers/2608.16425",
+      "authors": "Xuteng Zhang、Wenhao Zeng、顾小东 等",
+      "affiliation": "上海交通大学",
+      "upvotes": 25,
+      "one_liner": "并行探多条推理路很贵,关键是及时掐掉那些注定走不通的分支。",
+      "summary_zh": "并行推理靠多探几条解题路径提升准确率和稳健性,但成本随深度和分支数暴涨。已有的分支管理信号——最终答案投票、局部 token 置信度、孤立中间探针——要么滞后、要么和真实推理进展关系弱、要么太吵。ParaTempo 改用「时间置信度」做分支级动态控制,盯的是一条路径随时间推进的置信轨迹而非某个瞬时点。属于把测试时算力花在刀刃上的一类工作,和今天几篇「省推理算力」的论文是同一股风。",
+      "tags": ["推理", "并行解码", "测试时算力"]
+    },
+    {
+      "domain": "ai",
+      "title": "FlashPrefill V2: Block-Sparse Prefill Attention for Long-Context LLM Serving",
+      "title_zh": "FlashPrefill V2:把长上下文 prefill 的块稀疏注意力做进生产",
+      "url": "https://arxiv.org/abs/2608.19758",
+      "hf_url": "https://huggingface.co/papers/2608.19758",
+      "authors": "Qihang Fan、黄怀波、Zhiying Wu 等",
+      "affiliation": "腾讯",
+      "upvotes": 17,
+      "one_liner": "上一版是能跑的原型,这一版是能上线的工程。",
+      "summary_zh": "接着上一代 FlashPrefill 做:长上下文最烧算力的是 prefill 阶段的二次方注意力开销,前作用即时模式发现 + 动态阈值缓解了它,但停留在算法原型、离部署还远。V2 把它工程化,补上真正上线要处理的那些细节(块稀疏结构、调度)。这类工作亮点不在新概念而在「从能跑到能服务」的一公里,对做推理系统的团队参考价值比刷 benchmark 大。",
+      "tags": ["长上下文", "稀疏注意力", "推理系统"]
+    },
+    {
+      "domain": "embodied",
+      "title": "τ_0-VLA: a Hierarchical Robot Foundation Model with World-Model-Guided Test-Time Computation",
+      "title_zh": "τ_0-VLA:让机器人在难决策处「多想几步」的分层基座模型",
+      "url": "https://arxiv.org/abs/2608.16885",
+      "hf_url": "https://huggingface.co/papers/2608.16885",
+      "authors": "Xiaowei Cai、Yunuo Cai、Bingao Chen 等",
+      "affiliation": "上海创智学院",
+      "upvotes": 15,
+      "one_liner": "长程操作里不是每一步都同样难,难的那步就该多分点算力去想。",
+      "summary_zh": "针对长程机器人操作:既要单个技能做得稳,又要把技能连贯地串成长任务。现有分层 VLA 每个高层决策都是一次前向搞定,难题和易题一视同仁,没法在关键决策上多花算力。τ_0-VLA 把高层子任务生成变成一个「可扩算力」的推理问题,用世界模型引导、在测试时对困难或后果重的决策多算几轮。相当于把 LLM 那套「测试时算力扩展」搬到机器人分层决策上,思路顺,就看世界模型的引导有多准。",
+      "tags": ["VLA", "世界模型", "测试时算力"]
+    },
+    {
+      "domain": "embodied",
+      "title": "ViTacPhys: Physical Property-Aware Grasping from Human Visual-Tactile Demonstrations",
+      "title_zh": "ViTacPhys:从人手的视觉-触觉演示里学会「掂量」物体再抓",
+      "url": "https://arxiv.org/abs/2608.21355",
+      "authors": "Yiwen Liu、Yujun Zhu、贾奎 等",
+      "upvotes": null,
+      "one_liner": "抓一杯水和抓一块砖该用不同的劲——先估物理属性再定策略。",
+      "summary_zh": "现有视觉动作模型抓取能力不弱,但很少显式利用物体的物理属性去调整策略。ViTacPhys 提出一套视觉-触觉框架加采集系统,从人的操作演示里估计物体的质量、摩擦系数类别,以及连续的刚度,再把这些喂给抓取策略。在 60 个刚性和可变形物体上采数据训练。方向对——「先感知物理属性、再决定怎么用力」是让抓取从「能夹住」走向「会掂量」的必经一步,不过 60 个物体的规模还小,泛化性先观望。",
+      "tags": ["抓取", "视触觉", "物理属性"]
+    },
+    {
+      "domain": "bio",
+      "title": "Resource-Efficient Bio-Molecular Docking on a NISQ-era Digital Quantum Computer",
+      "title_zh": "在 NISQ 量子计算机上做省资源的生物分子对接",
+      "url": "https://arxiv.org/abs/2608.19868",
+      "authors": "Tianqi Chen、Adrian M. Mak、Jianguo Li 等",
+      "upvotes": null,
+      "one_liner": "把分子对接改写成图上的最大加权团问题,再塞进现在能用的量子机器里。",
+      "summary_zh": "分子对接是药物发现里的核心计算:找配体和靶蛋白的最佳结合构象,但可能构象组合爆炸,大而柔的分子尤其难。作者延续「把对接重述成最大顶点加权团问题」的思路,给出一套能在当下含噪声中等规模(NISQ)数字量子计算机上省资源跑的方案。属于量子计算在生物医学里少数有具体锚点的尝试,现实意义大不大取决于它相对经典启发式算法有没有真优势——这一步还得看后续硬数据,但把问题映射清楚本身有价值。",
+      "tags": ["分子对接", "量子计算", "药物发现"]
+    },
+    {
+      "domain": "chip",
+      "title": "SPICE: Speculative Prefetching with Low-Rank Expert Surrogates and Heterogeneous Orchestration for MoE Inference Acceleration",
+      "title_zh": "SPICE:用低秩替身预测该调哪个专家,提前把它搬进显存",
+      "url": "https://arxiv.org/abs/2608.21240",
+      "authors": "Yongxiang Lyu、Ning Li、Bonian Jia",
+      "upvotes": null,
+      "one_liner": "MoE 推理的瓶颈常常不是算,而是等专家参数从主存搬过 PCIe。",
+      "summary_zh": "MoE 靠稀疏激活把模型容量和计算成本解耦,但专家参数总量往往塞不进显存,推理延迟被主存到显存的 PCIe 搬运主导。SPICE 做投机预取:用轻量的低秩「专家替身」提前预测下一步会激活哪些专家、带置信度地把它们预搬进显存,再配异构编排调度。是典型的「用便宜的预测换昂贵的传输等待」系统优化,和今天几篇省 LLM 推理算力的论文一脉相承,对做 MoE 部署卸载的工程团队直接有用。",
+      "tags": ["MoE", "推理加速", "内存卸载"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Scalable photoexcitation-induced molecular dynamics with machine-learned Hamiltonians",
+      "title_zh": "用机器学习的哈密顿量做可扩展的光激发分子动力学",
+      "url": "https://arxiv.org/abs/2608.20994",
+      "authors": "Leyu Cai、Yunzhe Jia、Daqiang Chen、孟胜 等",
+      "upvotes": null,
+      "one_liner": "把电子演化学进模型,才能算清光一照原子怎么动。",
+      "summary_zh": "超快光激发能可控地驱动固体里的结构变化,但要预测非平衡电子激发如何在大时空尺度上带动晶格运动,一直是计算硬骨头。作者提出 TDAP-eML,把电子演化显式塞进可扩展模拟框架——用机器学习的哈密顿量描述电子态,让光激发诱导的晶格动力学能算到更大体系、更长时间。是 AI4Science 里「用 ML 替代最贵的第一性原理计算内核」的典型路子,关键看学出来的哈密顿量在偏离训练分布的激发条件下还准不准。",
+      "tags": ["分子动力学", "机器学习势", "凝聚态"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "openai/codex",
+      "url": "https://github.com/openai/codex",
+      "language": "Rust",
+      "stars": 116926,
+      "stars_today": "1,990",
+      "one_liner": "跑在终端里的轻量编程 agent,Rust 写的,还在猛涨。",
+      "summary_zh": "OpenAI 的命令行编程 agent,直接在终端里读代码、改代码、跑命令。今天单日又进近两千 star,持续霸榜。想找一个装好即用、不绑 IDE 的 CLI coding agent 的人可以拿它和 Claude Code 对比着用。"
+    },
+    {
+      "domain": "ai",
+      "name": "MadsLorentzen/ai-job-search",
+      "url": "https://github.com/MadsLorentzen/ai-job-search",
+      "language": "Python",
+      "stars": 33850,
+      "stars_today": "378",
+      "one_liner": "把找工作这件苦差事拆成 agent 流水线,在自己机器上跑。",
+      "summary_zh": "一个建在 Claude Code 上的求职自动化框架:评估岗位、按 JD 定制简历、写求职信、准备面试,全在本地跑不上传数据。适合正在海投、又不想把简历喂给第三方 SaaS 的人。本质是个把 agent 用在具体生活场景的好范例,不只是又一个 chatbot。"
+    },
+    {
+      "domain": "ai",
+      "name": "AgriciDaniel/claude-obsidian",
+      "url": "https://github.com/AgriciDaniel/claude-obsidian",
+      "language": "Python",
+      "stars": 11750,
+      "stars_today": "272",
+      "one_liner": "把任意资料丢进去,Claude 自己读、自己建链、自己归档进知识图谱。",
+      "summary_zh": "给 Obsidian 配的自组织「第二大脑」:丢进任何来源,Claude 读完后自动做双链、分类、归档成一张相互连接的纯 Markdown 知识网。对重度用 Obsidian 又懒得手动维护链接的人很对味,本质是把 LLM 当成一个持续整理笔记的后台工。"
+    },
+    {
+      "domain": "ai",
+      "name": "PostHog/posthog",
+      "url": "https://github.com/PostHog/posthog",
+      "language": "Python",
+      "stars": 38931,
+      "stars_today": "106",
+      "one_liner": "开源的产品分析全家桶,现在也把 AI 可观测性一块收了。",
+      "summary_zh": "一站式产品工具平台:产品分析、会话回放、特性开关、A/B 实验,近来加进了针对 LLM 应用的可观测性(observability)。做 AI 产品要盯 token 花销、prompt 效果、用户行为的团队,可以拿它当自托管的一体化后端,省得拼七八个 SaaS。"
+    },
+    {
+      "domain": "ai",
+      "name": "rohitg00/ai-engineering-from-scratch",
+      "url": "https://github.com/rohitg00/ai-engineering-from-scratch",
+      "language": "Python",
+      "stars": 48190,
+      "stars_today": "330",
+      "one_liner": "从零手搓 AI 工程,学一个、造一个、再交付给别人用。",
+      "summary_zh": "一套「学它、造它、交付它」路线的 AI 工程实践教程仓库,偏动手而非讲概念。适合想系统补齐从模型到落地这条链路、又更信「跟着敲一遍」的人。这类高质量学习仓库最近很吃香,值得收藏当路线图。"
+    },
+    {
+      "domain": "ai",
+      "name": "freestylefly/awesome-gpt-image-2",
+      "url": "https://github.com/freestylefly/awesome-gpt-image-2",
+      "language": "JavaScript",
+      "stars": 15362,
+      "stars_today": "2,442",
+      "one_liner": "把 530+ 个图像生成案例逆向成可复用模板,今天单日冲了两千多 star。",
+      "summary_zh": "面向 GPT-Image2 的提示词工程库:逆向拆解 500 多个案例、沉淀出 20 多套工业级模板,还提炼成可调用的 skills,持续更新。名字带 awesome 但内容不是链接堆,是能直接抄的提示词资产。做图像生成、需要稳定出图套路的人可以当模板库用——今天的爆发式增长也说明这类「提示词工程化」需求很旺。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "传 Hugging Face 谈判被收购,估值约 130 亿美元",
+      "url": "https://techcrunch.com/2026/08/24/hugging-face-reportedly-in-talks-to-be-acquired-for-13b/",
+      "source": "TechCrunch",
+      "summary_zh": "据报道 Hugging Face 正在接触收购要约,估值约 130 亿美元。但创始人对社区的责任感让这桩交易充满不确定——一个靠开放社区起家的平台要不要卖身,本身就是当下 AI 开源生态处境的缩影。目前仍是传闻,未有官方确认。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "General Intuition 拟以 60 亿美元估值融资,押注「空间智能」进军机器人",
+      "url": "https://techcrunch.com/2026/08/24/valor-point72-back-general-intuition-at-6b-valuation-as-ai-startup-pushes-into-robotics/",
+      "source": "TechCrunch",
+      "summary_zh": "主攻「让 AI agent 学会在空间和时间中移动」的基座模型公司 General Intuition,正洽谈以 60 亿美元投前估值融资,新投资方包括 Valor Ventures、Point72 Ventures 和 Seven Seven Six。公司同时把方向推向机器人。又一笔押注空间/具身基座模型的大额融资,资本对「通用运动智能」的兴趣不减。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "英伟达一名高级经理被指卷入向中国走私 AI 服务器案",
+      "url": "https://arstechnica.com/tech-policy/2026/08/nvidia-senior-manager-linked-to-supermicro-scheme-smuggling-ai-servers-to-china/",
+      "source": "Ars Technica",
+      "summary_zh": "一名英伟达员工在向中国走私 AI 服务器的案件中被起诉,该计划涉及 Supermicro,黄仁勋此前曾就此对 Supermicro 提出批评。案件说明出口管制之下,高端算力硬件的灰色流通与执法博弈仍在持续升温。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "2nm 及以下节点,多芯粒封装开始成为主流",
+      "url": "https://semiengineering.com/multi-die-assemblies-dominate-at-2nm-and-below/",
+      "source": "SemiEngineering",
+      "summary_zh": "行业分析指出,进入 2nm 及更先进节点后,芯片正变得更大、更模块化,多芯粒(multi-die)组装从长期研究走向量产主流。单颗芯片继续缩小已越来越难,把功能拆成多个芯粒再先进封装到一起,成了继续提升算力密度的主路径——这和 AI 算力需求的膨胀直接挂钩。"
+    },
+    {
+      "domain": "quantum",
+      "title_zh": "EuroHPC 启动 6 项量子计算招标,总额 1.19 亿欧元",
+      "url": "https://www.hpcwire.com/off-the-wire/eurohpc-launches-6-quantum-calls-with-e119m-in-funding/",
+      "source": "HPCwire",
+      "summary_zh": "欧洲高性能计算联合体 EuroHPC 一口气发布 6 项量子计算相关招标,提供 1.19 亿欧元资金。延续欧洲把量子硬件与超算基础设施捆绑推进的思路,持续的公共资金投入是这一领域从实验走向可用的重要托底。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "罗氏、礼来阿尔茨海默血液生物标志物检测获 FDA 批准,系同类首个",
+      "url": "https://www.fiercebiotech.com/medtech/roche-eli-lilly-net-fda-approval-first-its-kind-alzheimers-biomarker-blood-test",
+      "source": "Fierce Biotech",
+      "summary_zh": "罗氏和礼来的阿尔茨海默病血液生物标志物检测获 FDA 批准,为同类首款。相比 PET 扫描或腰穿取脑脊液,一管血就能查标志物意味着筛查门槛大幅降低,对早期诊断和后续药物匹配是实打实的临床工具进步。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "默沙东-Moderna 癌症疫苗三期数据积极,市值单日大涨,被寄望复制 Keytruda 路径",
+      "url": "https://www.fiercebiotech.com/biotech/merck-moderna-cancer-vaccine-data-spur-speculation-keytruda-impact",
+      "source": "Fierce Biotech",
+      "summary_zh": "默沙东与 Moderna 合作的个性化癌症疫苗三期数据公布,给 Moderna 市值增添约 450 亿美元。分析师开始追问:这款 mRNA 疫苗能否像 Keytruda 那样拓展到广谱适应症。若成立,可能重塑未来的肿瘤治疗格局——这是 mRNA 平台从传染病走向肿瘤的关键验证。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "全球首台获 FDA 批准的机器人采血设备 Aletta 问世",
+      "url": "https://www.fiercebiotech.com/medtech/meet-aletta-first-fda-approved-robotic-blood-draw-device",
+      "source": "Fierce Biotech",
+      "summary_zh": "FDA 批准了 Vitestro 的 Aletta,这是美国首款无需人工上手、可独立完成抽血的机器人设备。把一个高度依赖护士手感的操作交给机器,是医疗机器人从「辅助」走向「独立执行」的一个具体节点,也直接冲着采血这类高频、缺人的场景去。"
+    },
+    {
+      "domain": "energy",
+      "title_zh": "尽管遭政策打压,美国清洁能源今年新增装机仍创纪录",
+      "url": "https://arstechnica.com/science/2026/08/trump-tried-to-curb-clean-energy-its-booming-anyway/",
+      "source": "Ars Technica",
+      "summary_zh": "据 S&P Global 数据,美国今年清洁能源新增装机预计达创纪录的 45GW,尽管特朗普政府试图抑制。经济性一旦跑通,行政层面的阻力也难挡装机增长——这也从侧面回答了 AI 数据中心暴涨的电力需求要靠什么来喂。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "Hot Chips 2026:英伟达让 CUDA 瞄准 RISC-V",
+      "url": "https://chipsandcheese.com/p/hot-chips-2026-cuda-targets-risc",
+      "source": "Chips and Cheese",
+      "summary_zh": "Hot Chips 2026 上的一个信号:英伟达把 CUDA 生态往 RISC-V 架构上延伸。CUDA 一直是英伟达最深的护城河,它主动向开放指令集靠拢,既反映 RISC-V 在数据中心的分量上升,也值得关注这会给国产/开放算力生态留出多大口子。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "把「恰可察觉差异」token 压缩迁到一个开源 VLA 上,量它在 LIBERO 里的延迟-成功率折中",
+      "based_on": [
+        { "title": "Just Noticeable Difference Modeling for Token Compression in Vision-Language-Action Models", "url": "https://arxiv.org/abs/2608.21247" }
+      ],
+      "why_now": "VLA 推理延迟直接影响闭环控制成功率,而这套用「恰可察觉差异(JND)」指导 token 压缩的思路是 training-free 的——上周刚放出,还没人验证它换个 VLA、换个仿真环境是否照样有效。training-free 方法「迁到另一个模型/场景验证泛化」本身就是低风险可发表的扩展。",
+      "feasibility": "单卡 24–40GB 即可,只做推理不训练;拿 OpenVLA 或 π0 类开源权重在 LIBERO/SIMPLER 上跑评测,约 3–4 周。",
+      "route": [
+        "第一步(1–2 天):在 LIBERO 上跑通某个开源 VLA 的官方推理,记录基线成功率和单步延迟。",
+        "复现论文里的 JND token 压缩逻辑,先套在原论文用的模型上对齐它报告的数字。",
+        "把压缩模块接到另一个 VLA 骨干上,不改训练、只在推理时压 token。",
+        "扫压缩率,画「延迟 vs 成功率」曲线,和 token 剪枝/KV 复用等基线对比。",
+        "分任务类型看压缩在哪类任务掉点最狠(接触密集 vs 自由移动),给出使用边界。"
+      ],
+      "risk": "JND 阈值可能对具体骨干和相机分辨率敏感,换模型后需要重新标定,泛化性不一定像原论文那么好——但这本身就是值得报告的结论。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个小库:把「实体-结构索引 RAG」对上「朴素分块 RAG」,给长文档 QA 一张诚实对照表",
+      "based_on": [
+        { "title": "EnSI-RAG: Entity-Structure-Indexed Retrieval-Augmented Generation for Long-Document Question Answering", "url": "https://arxiv.org/abs/2608.21252" }
+      ],
+      "why_now": "长文档多跳 QA 里,分块边界一旦把实体和证据切开,朴素向量检索就掉链子。实体-结构索引是个具体改进方向,但这类方法普遍缺统一开源实现和可复现 harness——正好适合做成一个轻量库攒 star。",
+      "feasibility": "纯推理 + 检索,单卡甚至纯 CPU + 一个开源 embedding 模型即可;两种索引各封一个统一接口,2–3 周能出可跑的库和基准表。",
+      "route": [
+        "第一步(1–2 天):在一个公开长文档 QA 数据集(如 NarrativeQA / 长文 HotpotQA 子集)上搭好朴素分块 RAG 基线,跑通检索+回答。",
+        "实现实体-结构索引:抽实体、按实体和关系组织检索单元,封成和基线同一套接口。",
+        "统一评测:同一批问题、同一个生成模型,只换索引方式,对比命中率和最终答案准确率。",
+        "把两条管线打包成 pip 可装的小库,配置化切换索引策略,附一键复现脚本。",
+        "写一张诚实对照表(含失败案例),标清各自在多跳/单跳、短文/长文上的强弱。"
+      ],
+      "risk": "实体抽取质量会主导效果,抽得差可能让结构索引不如朴素分块;要在 README 里讲清依赖哪套 NER/图构建,别把上限说满。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "复现一版「agent 技能什么时候可迁移、什么时候帮倒忙」的小规模对照研究",
+      "based_on": [
+        { "title": "Break It Down, Pass It On: Cross-Task Skill Transfer in LLM Agents", "url": "https://arxiv.org/abs/2608.20274" }
+      ],
+      "why_now": "越来越多 agent 框架靠「从完成的任务里诱导技能、以后复用」变强,但诱导出的技能有时迁移不稳、甚至坑到复用它的 agent。原论文刚给出受控研究,单人拿开源 agent 复现「任务级 vs 子任务级诱导」的差异,是个便宜又有信息量的验证点。",
+      "feasibility": "只调 API/推理不训练,单卡跑本地开源模型或直接用开源 agent 框架即可;控制变量做几组对照,3 周内能出结论。",
+      "route": [
+        "第一步(1–2 天):在一个开源 agent benchmark(如 AppWorld/WebArena 子集)上跑通基线,让 agent 从完成的任务里导出可复用技能。",
+        "分别用任务级和子任务级两种粒度诱导技能,存进技能库。",
+        "在新任务上检索复用,记录哪些技能提升、哪些反而拉低成功率。",
+        "做消融:文本描述 vs 代码化技能、跨域 vs 同域,量化各自的迁移可靠性。",
+        "总结「技能可靠迁移的条件」,给做 agent 记忆库的人一份实操性清单。"
+      ],
+      "risk": "结论可能对具体 benchmark 和底座模型敏感,单一环境的结果外推要谨慎;需明确标注适用范围,别把它当成普适定律。"
+    }
+  ]
+}
