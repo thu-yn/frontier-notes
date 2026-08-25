@@ -1,0 +1,347 @@
+{
+  "date": "2026-08-26",
+  "editor_note": "今天翻下来,两个词绕不开:世界模型和「免训练」。EchoWM、ReWorld、Hydra-0、GeoWAM……一屏都是能走进去、能生成音画、能当模拟器的世界模型,资本那头 General Intuition 也在拿 60 亿美元估值赌「空间智能」,论文和钱正好对上。另一条暗线是省钱:ParaTempo 靠时间置信度砍并行推理的无效分支、SparsePR 免训练做稀疏注意力,都是不重训、迁移就能验的活,对单卡玩家友好——今天的三条研究点也顺着这个思路出。硬件两端同时在卷:OpenAI 自研推理芯片 Jalapeño 跑分叫板英伟达,英伟达 Jetson Orin Nano 2 把边缘推理翻倍塞进机器人本体,一个抢云、一个抢端。要我挑最该点开的,是那篇 AI4Science 的负结果——训了个没毛病的神经代理却发现「照样加速不了」,还把为什么讲清楚了,比又一篇「提速 X 倍」实在得多。",
+  "math_note": {
+    "name": "谢尔曼–莫里森–伍德伯里公式",
+    "name_en": "Sherman–Morrison–Woodbury Formula",
+    "field": "线性代数 / 数值计算",
+    "one_liner": "大矩阵动了个低秩的手脚,别重算逆——补一小块就行",
+    "statement": "你有个已经会解的大矩阵 $A$(比如它的逆 $A^{-1}$ 已经算好),现在被加了个低秩修正,变成 $A+UCV$——其中 $U,V$ 是瘦高/矮胖的矩阵、$C$ 是个小方阵,合起来只改动了 $A$ 的一个低维子空间。公式说:新矩阵的逆不用从头算,只要 $(A+UCV)^{-1}=A^{-1}-A^{-1}U\\,(C^{-1}+VA^{-1}U)^{-1}\\,VA^{-1}$。右边真正要新求逆的只有中间那个 $C^{-1}+VA^{-1}U$,它的尺寸等于修正的秩 $k$——哪怕 $A$ 是万维的,只要 $k$ 很小,这就是一次小矩阵求逆。秩为 1 的特例($U,V$ 退化成向量)就是更有名的 Sherman–Morrison 公式。",
+    "origin": "二战后到 1950 年前后,统计学家 Max Woodbury,以及 Jack Sherman 和 Winifred Morrison,在做「数据来一条、模型更新一次」的最小二乘与协方差更新时反复撞上同一件事:每加一个样本,系统矩阵只变了个秩一的量,却要把整个逆重算一遍,太浪费。他们把「低秩修正下逆怎么增量更新」写成了闭式公式。它后来成了卡尔曼滤波、递推最小二乘这类在线更新算法的数学心脏。",
+    "derivation": [
+      { "math": "M=A+UCV", "note": "从被低秩项 UCV 修正过的矩阵出发;A 的逆已知,目标是别对 M 重做一次昂贵的求逆。" },
+      { "math": "\\begin{bmatrix}A & U\\\\ V & -C^{-1}\\end{bmatrix}", "note": "把问题嵌进一个更大的分块矩阵,引入辅助块 -C^{-1}。同一个大矩阵用两种顺序做块消元,消掉的东西不一样,这是全部技巧所在。" },
+      { "math": "M = A - U(-C^{-1})^{-1}V", "note": "先消右下角那块:对大矩阵做 Schur 补,落到 A 这一角上得到的补,正好就是我们要的 M。" },
+      { "math": "S = -C^{-1} - VA^{-1}U", "note": "换个顺序、先消左上角的 A:这次得到的 Schur 补是关于 C 那一块的,尺寸只有 k×k,便宜。" },
+      { "math": "M^{-1}=A^{-1}-A^{-1}U\\,(C^{-1}+VA^{-1}U)^{-1}\\,VA^{-1}", "note": "两种消元算的是同一个大矩阵的逆,把两边对应的块对照起来,就把 M 的逆写成了 A^{-1} 加一个只含 k×k 求逆的修正项。" }
+    ],
+    "applications": [
+      { "area": "卡尔曼滤波 / 递推最小二乘", "detail": "每来一个新观测,协方差矩阵只受一个低秩更新,用公式增量改逆,不用每步重解整个系统。" },
+      { "area": "高斯过程 / 核方法", "detail": "往训练集里加少量点时,核矩阵的逆可以低秩增量更新,省掉重算的 O(n^3)。" },
+      { "area": "LoRA 等低秩微调", "detail": "LoRA 把权重写成 W+BA 这种低秩增量;凡是要对基座加低秩修正求逆或解线性系统的地方,Woodbury 就是那把钥匙。" },
+      { "area": "拟牛顿优化", "detail": "BFGS 等每步对 Hessian 的逆做秩一/秩二修正,正是靠 Sherman–Morrison 型公式把逆的更新压到廉价。" }
+    ],
+    "takeaway": "$A$ 的逆是「全局的贵」,低秩修正是「局部的便宜」——公式的本质,是把对 $n\\times n$ 的重新求逆换成对 $k\\times k$($k\\ll n$)的一次小求逆,代价只跟你真正改动的维数有关,而不是矩阵有多大。这正是一切增量/在线更新算法能跑起来的底层理由。"
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Apodex 1.1: Scaling Agentic Intelligence for Complex Work",
+      "title_zh": "Apodex 1.1:把智能体扩到能干「复杂活」",
+      "url": "https://arxiv.org/abs/2608.23283",
+      "hf_url": "https://huggingface.co/papers/2608.23283",
+      "authors": "Apodex Team 等",
+      "affiliation": "Apodex",
+      "upvotes": 170,
+      "one_liner": "长任务智能体的两条 scaling 轴:环境多样性 + 协作分解",
+      "summary_zh": "Apodex 团队把「能持续干活」拆成两件事:一是把可执行、可验证的文件/搜索/代码环境做多做杂(Environment Scaling),二是训练智能体学会长任务分解、失败恢复、协调子代理(Agentic Coordination Scaling)。方向不算新,但把「可验证的真实交付」当成训练目标、而不是刷 benchmark,这点值得看。技术报告体量的东西,含金量要看它到底放出多少可复现的部分。",
+      "tags": ["Agent", "LLM"]
+    },
+    {
+      "domain": "ai",
+      "title": "EchoWM: Open and Enterable Omnimodal World Models",
+      "title_zh": "EchoWM:能走进去、还带声音的全模态世界模型",
+      "url": "https://arxiv.org/abs/2608.23189",
+      "hf_url": "https://huggingface.co/papers/2608.23189",
+      "authors": "Songchun Zhang、Yaowei Li 等",
+      "affiliation": "京东(JD.com)",
+      "upvotes": 63,
+      "one_liner": "720p 视频 + 环境音 + 音乐 + 语音,边导航边一起生成",
+      "summary_zh": "京东开源的世界模型,在响应连续导航输入的同时,联合生成 720p 视频、环境声、音乐和语音。它把离散指令和连续位姿都映射到一套统一的 6-DoF 相对轨迹,第一/第三人称场景共用同一表示,不必为每种视角单独做控制器。多模态一起出是亮点,但「可进入的交互世界模型」现在扎堆,真正要看的是长时程一致性和音画同步。",
+      "tags": ["世界模型", "多模态"]
+    },
+    {
+      "domain": "ai",
+      "title": "Unlocking the Potential of Image Editing via Concept Scaling and Dense Supervision",
+      "title_zh": "用「概念扩展 + 密集监督」把图像编辑做细",
+      "url": "https://arxiv.org/abs/2608.16812",
+      "hf_url": "https://huggingface.co/papers/2608.16812",
+      "authors": "Long Cui、Xiaoqian Liu 等",
+      "affiliation": "inclusionAI",
+      "upvotes": 45,
+      "one_liner": "1000+ 细粒度编辑概念、1200 万数据对,补编辑训练的两个短板",
+      "summary_zh": "现在的图像编辑大多沿用文生图那套训练法,作者指出两个毛病:对「编辑概念」的粒度不够细,监督信号太稀疏导致训练低效。他们建了一套 1000 多个细粒度编辑概念的分层体系,并合成 1200 万高质量编辑对(ConceptEdit-12M)来喂。思路朴素但对路:编辑比生成更吃精确对齐,数据配得上概念粒度才谈得上可控。",
+      "tags": ["图像编辑", "扩散模型"]
+    },
+    {
+      "domain": "ai",
+      "title": "ParaTempo: Efficient Parallel Reasoning via Temporal Confidence",
+      "title_zh": "ParaTempo:用「时间上的置信度」管并行推理",
+      "url": "https://arxiv.org/abs/2608.16425",
+      "hf_url": "https://huggingface.co/papers/2608.16425",
+      "authors": "Xuteng Zhang、Wenhao Zeng 等",
+      "affiliation": "上海交大",
+      "upvotes": 31,
+      "one_liner": "免训练,靠推理进度信号异步砍掉没戏的分支",
+      "summary_zh": "并行推理(多路探索再取共识)能提准确率,但深度和分支一多就烧算力。已有做法要么等最终答案投票、要么看局部 token 置信度,信号要么太晚要么太吵。ParaTempo 不训练,改用「时间维度上的置信度」判断每条分支的推理进展,异步地早停没戏的路径。免训练这点让复现和迁移都便宜,适合拿别的模型验一验。",
+      "tags": ["推理加速", "LLM"]
+    },
+    {
+      "domain": "ai",
+      "title": "Block3D: Efficient Text-to-3D Generation via Block-Wise Diffusion",
+      "title_zh": "Block3D:分块扩散把文生 3D 做快",
+      "url": "https://arxiv.org/abs/2608.19567",
+      "hf_url": "https://huggingface.co/papers/2608.19567",
+      "authors": "Bowen Cui、Weijie Wang 等",
+      "affiliation": "浙江大学",
+      "upvotes": 24,
+      "one_liner": "既不逐 token 自回归、也不每步重算整个 3D 表示",
+      "summary_zh": "文生 3D 现在两条路都有代价:自回归解 shape token 是顺序的、错了改不回来;扩散/流匹配每步都要处理整个 3D 表示,质量越高越贵。Block3D 把离散 shape 表示切成块、按块做扩散,既能局部修正又不用每步全量算。冲的是「高保真 + 低推理成本」这个老难题,思路干净,值得看它在几何细节上的实际表现。",
+      "tags": ["3D 生成", "扩散模型"]
+    },
+    {
+      "domain": "ai",
+      "title": "Partition the Support, Reconstruct the Residual: Training-Free Sparse Attention for Video Generation and World Models",
+      "title_zh": "SparsePR:免训练的视频/世界模型稀疏注意力",
+      "url": "https://arxiv.org/abs/2608.18484",
+      "hf_url": "https://huggingface.co/papers/2608.18484",
+      "authors": "Pardis Taghavi、Reza Langari 等",
+      "affiliation": "德州农工(Texas A&M)",
+      "upvotes": 8,
+      "one_liner": "光看注意力集中度不够,还得管好被跳过部分的残差",
+      "summary_zh": "免训练的块稀疏注意力能给视频 transformer 提速,但作者点出一个被忽视的问题:同一路由块里的 query 覆盖范围可能对不齐,而「保留了多少注意力质量」并不能决定跳过那些交互后的真实误差。SparsePR 用「响应耦合的分块」加「探针拟合的残差重建」两招补上。免训练、专打世界模型这类长序列场景,复现成本低,是拿来迁移验证泛化性的好底子。",
+      "tags": ["稀疏注意力", "视频生成"]
+    },
+    {
+      "domain": "bio",
+      "title": "RIBOSPAN: A Long-Context RNA Foundation Model for Versatile RNA Modeling",
+      "title_zh": "RIBOSPAN:长上下文的 RNA 基础模型",
+      "url": "https://arxiv.org/abs/2608.22849",
+      "hf_url": "https://huggingface.co/papers/2608.22849",
+      "authors": "Ziyuan Wang、Bohao Tang 等",
+      "affiliation": "SII-GAIR",
+      "upvotes": 3,
+      "one_liner": "16 亿参数、原生上下文一万核苷酸,一整条 mRNA 都装得下",
+      "summary_zh": "现有 RNA 基础模型的预训练上下文往往装不下一整条 mRNA,做全长转录本的单核苷酸建模就受限。RIBOSPAN 是个 16 亿参数的双向 RNA 基础模型,原生预训练上下文拉到 10240 个核苷酸,想用一套权重覆盖多种下游 RNA 建模任务。RNA 序列天然长、二级结构又强,长上下文对它比对普通文本更实在;对做核酸药物、mRNA 设计的人是可以先接来试的底座,好不好用要看开源程度和微调成本。",
+      "tags": ["RNA", "基础模型"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Reward-Free Continual Adaptation for Resilient Space Robots",
+      "title_zh": "没有奖励信号也能在轨自适应的太空机器人",
+      "url": "https://arxiv.org/abs/2608.23452",
+      "authors": "Andrej Orsula、Miguel Olivares-Mendez 等",
+      "one_liner": "太空里算不出 reward,那就别依赖 reward 做在线适应",
+      "summary_zh": "太空机器人在极端环境里硬件会退化,持续强化学习本可以在线适应,但它得有奖励信号——而太空里缺外部跟踪、环境又复杂,精确算 reward 常常做不到。作者提出一套免奖励的持续适应方法,绕开「部署时拿不到 reward」这个死结。问题设得实在,是把 continual RL 往真实部署条件上逼的一类工作。",
+      "tags": ["强化学习", "空间机器人"]
+    },
+    {
+      "domain": "chip",
+      "title": "A Process-Aware Hybrid Si/IGO Monolithic-3D 6T SRAM with BEOL Pass-Gates for the 2nm Node",
+      "title_zh": "面向 2nm 的硅/IGO 单片三维 6T SRAM",
+      "url": "https://arxiv.org/abs/2608.22741",
+      "authors": "Po-Chuan Wang、Dongwon Jang 等",
+      "one_liner": "把传输管挪到后段做成氧化物晶体管,给 2nm SRAM 挤面积",
+      "summary_zh": "一个 2nm 节点的单片三维(M3D)6T SRAM 设计:把传输管(pass-gate,SRAM 里控制读写通路的晶体管)用后段工艺的 IGO 氧化物晶体管来做、和全硅纳米片的锁存器叠在一起,配埋入式电源轨和 Ru 互连。SRAM 微缩到先进节点越来越难,把器件往垂直方向和后段挪是业界重点方向之一。这篇是 TCAD 加虚拟制造级别的「工艺感知」版图评估,离真流片还远,但可行性算得比较细。",
+      "tags": ["SRAM", "先进制程"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Exact Fock-State Preparation with n^{1/4} Circuit Depth",
+      "title_zh": "电路深度只要 n^{1/4} 的精确 Fock 态制备",
+      "url": "https://arxiv.org/abs/2608.23389",
+      "authors": "Tanay Roy",
+      "one_liner": "把 Fock 态制备转成二维振幅放大,深度只开四次根",
+      "summary_zh": "大 Fock 态(光子/玻色子数确定的量子态)的高保真、确定性制备,是把玻色量子技术推向高激发能标的关键。作者提出一个确定性单参数协议,把无穷维希尔伯特空间里的 Fock 态制备映射成二维的振幅放大问题:从一个 |α|≈√n 的相干态出发,电路深度随目标光子数 n 只按 n^{1/4} 增长。深度标度对可扩展性很关键,理论漂亮,能不能扛住真实硬件的噪声是下一步。",
+      "tags": ["玻色量子", "态制备"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "When a neural surrogate cannot accelerate a solver: runtime share, closed-loop drift, and the economics of uncertainty gating in a stiff coupled simulation",
+      "title_zh": "神经代理什么时候「加速不了」求解器:一个诚实的负结果",
+      "url": "https://arxiv.org/abs/2608.23075",
+      "authors": "L. Thümmler、T. Kuroda",
+      "one_liner": "训了个没毛病的网络,却发现照样快不起来——问题不在网络",
+      "summary_zh": "大家都想用学习到的代理模型替换多物理仿真里最贵的内层求解块来提速。这篇给了个完整、端到端的负结果:在广义相对论辐射流体力学里最贵的中子辐射-物质隐式牛顿求解上,他们训的网络本身没毛病,加速却没发生,并归纳出三个结构性障碍——单次调用成本 vs 运行时占比、闭环漂移、不确定性门控的经济性。这种把「为什么没用」讲清楚的负结果,比又一篇「我们提速了 X 倍」有用。",
+      "tags": ["科学计算", "代理模型"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "apache/maka",
+      "url": "https://github.com/apache/maka",
+      "language": "TypeScript",
+      "stars": 3260,
+      "stars_today": "538",
+      "one_liner": "把智能体的每一步都记成可审计的追加日志",
+      "summary_zh": "本地优先的 AI 智能体工作台,已进 Apache 孵化器。设计核心是把智能体运行中的每件事——模型消息、工具调用与结果、权限决策、终止事件——都写成只追加(append-only)的日志,做到可回放、可审计。对在乎 agent 可观测性和合规的人有用,不是又一个 chat UI。"
+    },
+    {
+      "domain": "ai",
+      "name": "TauricResearch/TradingAgents",
+      "url": "https://github.com/TauricResearch/TradingAgents",
+      "language": "Python",
+      "stars": 100090,
+      "stars_today": "191",
+      "one_liner": "一群 LLM 智能体分角色做交易决策的开源框架",
+      "summary_zh": "把金融交易拆给多个 LLM 智能体分角色协作(分析、辩论、下单等)的框架,已到十万星量级。多智能体用在交易上噱头不小,真要用得掂量回测口径和过拟合;当学习多智能体协作架构的样板看,比当赚钱工具靠谱。"
+    },
+    {
+      "domain": "ai",
+      "name": "AgriciDaniel/claude-obsidian",
+      "url": "https://github.com/AgriciDaniel/claude-obsidian",
+      "language": "Python",
+      "stars": 12562,
+      "stars_today": "810",
+      "one_liner": "把任何素材丢进去,自动读、连、归档成你的知识图谱",
+      "summary_zh": "给 Obsidian + Claude Code 做的「自组织第二大脑」:把任意来源丢进去,Claude 帮你读、建立链接、归档进一张纯 Markdown 的知识图谱,数据都在本地你自己手里。适合已经用 Obsidian 记笔记、又想让 AI 帮着串联的人。"
+    },
+    {
+      "domain": "ai",
+      "name": "openai/codex",
+      "url": "https://github.com/openai/codex",
+      "language": "Rust",
+      "stars": 118007,
+      "stars_today": "1,183",
+      "one_liner": "终端里的轻量编码智能体,Rust 重写",
+      "summary_zh": "OpenAI 的开源终端编码智能体,Rust 实现,主打轻量、跑在你自己的终端里。coding agent 现在是兵家必争之地,codex 的看点是本地化和开源程度;和各家 CLI agent 摆一起对比着用比较有意思。"
+    },
+    {
+      "domain": "ai",
+      "name": "marin-community/marin",
+      "url": "https://github.com/marin-community/marin",
+      "language": "Python",
+      "stars": 2050,
+      "stars_today": "277",
+      "one_liner": "把基础模型的研发全流程做成开源框架",
+      "summary_zh": "面向基础模型研究与开发的开源框架,想把从数据到训练到评测的研发流程标准化、可复现。对想认真做(而不只是调用)基础模型的团队和研究者有参考价值,关键看它的文档和实际可跑性。"
+    },
+    {
+      "domain": "ai",
+      "name": "asciimoo/hister",
+      "url": "https://github.com/asciimoo/hister",
+      "language": "Go",
+      "stars": 2693,
+      "stars_today": "166",
+      "one_liner": "自建你自己的搜索引擎,Go 写的",
+      "summary_zh": "一个让你自己搭搜索引擎的开源项目(Go)。在「什么都要喂给 agent 检索」的当下,自托管、可控的搜索后端反而稀缺。适合想给自己的 agent 或知识库接一个私有搜索层的人。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "chip",
+      "title_zh": "OpenAI 自研推理芯片 Jalapeño 跑分叫板英伟达",
+      "url": "https://techcrunch.com/2026/08/25/openais-jalapeno-chip-is-built-for-fast-inference-at-scale-benchmarks-show/",
+      "source": "TechCrunch / The Verge",
+      "summary_zh": "OpenAI 公布自研 AI 芯片 Jalapeño,官方称专为大规模推理设计。在 SemiAnalysis 的 InferenceX 基准上,它的单用户 token 数和每千瓦吞吐都超过当前最强在售方案,硬件副总裁 Richard Ho 称其「低延迟、高吞吐兼得」。云厂商自研推理芯片这条线又添一员,真实竞争力还要看量产和生态。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Hugging Face 传出以约 130 亿美元被收购的洽谈",
+      "url": "https://techcrunch.com/2026/08/24/hugging-face-reportedly-in-talks-to-be-acquired-for-13b/",
+      "source": "TechCrunch",
+      "summary_zh": "据报道 Hugging Face 正在接触估值约 130 亿美元的收购要约,但创始人对开源社区的责任感让交易能否成交存疑。作为开源 AI 事实上的枢纽,它的归属变动会牵动整个生态。另一头,OpenAI 也因此前的 HF 数据泄露事件被亚拉巴马州总检察长传唤,平台的安全与合规风险同时在发酵。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Stability AI 再融 7600 万美元,累计达 2.32 亿",
+      "url": "https://techcrunch.com/2026/08/25/stability-ai-maker-of-image-generator-stable-diffusion-raises-76-million-in-fresh-funding/",
+      "source": "TechCrunch",
+      "summary_zh": "Stable Diffusion 的母公司 Stability AI 完成 7600 万美元新融资,累计融资达 2.32 亿美元。经历过一轮动荡后靠新钱续命,开源图像生成这条线还留在牌桌上。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "小鹏人形机器人子公司 Dogotix 融资 9 亿美元",
+      "url": "https://www.therobotreport.com/xpeng-motors-humanoid-robot-unit-dogotix-raises-900m/",
+      "source": "The Robot Report",
+      "summary_zh": "小鹏汽车旗下人形机器人公司 Dogotix 完成 9 亿美元融资,估值达 63 亿美元,并计划规模化量产机器人。车企下场做人形、且直接冲量产,是今年具身赛道资本最集中的方向之一。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "英伟达 Jetson Orin Nano 2 边缘推理性能翻倍",
+      "url": "https://www.therobotreport.com/jetson-orin-nano-2-doubles-inference-performance-robotics-edge-says-nvidia/",
+      "source": "The Robot Report",
+      "summary_zh": "英伟达推出 Jetson Orin Nano 2,称边缘推理性能比上代翻倍,让「前沿智能」能实时跑在机器人本体上。边缘算力翻番,对不依赖云、要低延迟的具身场景是实打实的利好。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "训练 AI「在时空中移动」的 General Intuition 洽谈 60 亿美元估值融资",
+      "url": "https://techcrunch.com/2026/08/24/valor-point72-back-general-intuition-at-6b-valuation-as-ai-startup-pushes-into-robotics/",
+      "source": "TechCrunch",
+      "summary_zh": "主打训练通用智能体「在空间与时间中移动」的基础模型公司 General Intuition,正以 60 亿美元投前估值洽谈新融资,投资方包括 Valor、Point72 等,并向机器人方向扩张。和今天一堆世界模型/VLA 论文对上:资本也在赌「空间智能」这条线。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "罗氏 25 亿美元拿下韩美一款临床期减肥药",
+      "url": "https://www.fiercebiotech.com/biotech/roche-pens-25b-pact-hanmis-clinical-stage-obesity-drug-targeting-less-used-mechanism",
+      "source": "Fierce Biotech",
+      "summary_zh": "罗氏以 1.9 亿美元首付、总额约 25 亿美元的协议,引进韩国韩美药业一款处于临床阶段的 urocortin-2 类似物减肥药。罗氏押的是一个较少人碰的机制,减肥药军备竞赛开始往非 GLP-1 的新靶点铺。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "SpaceX 上市后回落至发行价,特朗普此前曾入股",
+      "url": "https://techcrunch.com/2026/08/24/trump-bought-spacex-shares-two-weeks-after-blockbuster-ipo/",
+      "source": "TechCrunch",
+      "summary_zh": "SpaceX 上市后股价一度冲到 150 多美元,周一收盘回到 135 美元的 IPO 发行价。特朗普在 IPO 两周后、股价处于 150 多美元区间时买入了 SpaceX 股票。商业航天头号玩家上市后的价格波动与政治关联,都会是后续看点。"
+    },
+    {
+      "domain": "energy",
+      "title_zh": "美国清洁能源逆势狂飙,今年新增装机将创纪录 45GW",
+      "url": "https://arstechnica.com/science/2026/08/trump-tried-to-curb-clean-energy-its-booming-anyway/",
+      "source": "Ars Technica",
+      "summary_zh": "据标普全球能源,尽管政策层面试图给清洁能源踩刹车,美国今年清洁能源新增装机仍将达到创纪录的 45GW。装机惯性和成本曲线摆在那,政策短期难扭转大势。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "斯坦福研究:AI 冲击最狠的是入门级岗位",
+      "url": "https://arstechnica.com/ai/2026/08/ai-is-hitting-entry-level-jobs-hardest-stanford-study-finds/",
+      "source": "Ars Technica",
+      "summary_zh": "斯坦福一项研究发现,在受 AI 影响的行业里,年轻人就业相比 AI 难替代的职业下滑了 19%,冲击集中在入门级、经验尚浅的岗位。对「先做脏活攒经验」的职业路径,这是个真问题。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "用便宜的自监督点云编码器搭 3D-LLM,替掉八卡级的 ULIP-2",
+      "based_on": [
+        { "title": "On the Efficacy of Self-Supervised Point Cloud Encoders for Efficient 3D LLMs", "url": "https://arxiv.org/abs/2607.29136" }
+      ],
+      "why_now": "现有 3D-LLM 大多绑在 ULIP-2 这类要图-文-点云对齐、8×A100 级别算力的编码器上,门槛高;这篇刚系统验证了 Point-MAE / PCP-MAE 这种低成本自监督编码器能不能顶上,正好留了「换编码器 + 调对齐层」的空档。",
+      "feasibility": "单卡 24-40GB 可行:冻住一个小 LLM、只训点云编码器到 LLM 的投影/适配层,数据用现成的 3D 问答/描述集,预计 3-4 周能出对比结论。",
+      "route": [
+        "先跑通 Point-MAE 官方预训练权重的推理,确认能从点云吐出特征",
+        "接一个轻量投影层到冻结的小 LLM(如 7B 以下),在 3D caption/QA 数据上只训投影层",
+        "分别用 Point-MAE、PCP-MAE、ULIP-2 特征做同一套下游评测,对齐算力口径",
+        "画出「编码器算力 vs 下游精度」曲线,找性价比拐点"
+      ],
+      "risk": "自监督编码器缺乏语言对齐,投影层可能吃不满其表征,弱任务上差距或被放大。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "把 SparsePR 的免训练稀疏注意力迁到另一个开源视频/世界模型,验证泛化与加速比",
+      "based_on": [
+        { "title": "SparsePR: Training-Free Sparse Attention for Video Generation and World Models", "url": "https://arxiv.org/abs/2608.18484" }
+      ],
+      "why_now": "SparsePR 免训练、只改推理路径,复现便宜;但论文只在自己的设定上测过,「换一个开源视频扩散/世界模型还成不成立」本身就是低风险、可发表的泛化性验证。",
+      "feasibility": "纯推理任务,单卡即可:把它的分块 + 残差重建两步接到另一个开源模型的注意力上,不用训练,2-3 周能量出加速比和质量掉点。",
+      "route": [
+        "先复现 SparsePR 官方推理,确认加速比和质量数字对得上",
+        "选一个结构不同的开源视频/世界模型,定位它的注意力模块",
+        "把「响应耦合分块 + 探针残差重建」两步移植进去,保持接口最小改动",
+        "在统一分辨率/帧数下测 FLOPs、时延与生成质量,和 dense 基线对比"
+      ],
+      "risk": "不同模型的注意力稀疏结构差异大,残差重建的探针拟合可能需重新调参,迁移后加速或缩水。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个统一评测「免训练推理加速」方法的小 harness",
+      "based_on": [
+        { "title": "ParaTempo: Efficient Parallel Reasoning via Temporal Confidence", "url": "https://arxiv.org/abs/2608.16425" },
+        { "title": "Prime Agent: A Self-Improving RLM Harness", "url": "https://arxiv.org/abs/2608.23552" }
+      ],
+      "why_now": "ParaTempo、各类并行推理/早停/自一致方法现在各测各的口径,横向比不了;缺一个统一 harness 把「同一模型 + 同一预算」下的准确率-延迟-token 三条线拉齐,这类工具最容易攒 star。",
+      "feasibility": "无需训练,单卡或纯 API 皆可(注意选开源模型跑本地以免依赖闭源):核心是插件化的方法接口 + 统一的预算/指标记录,2-4 周可出可用版本。",
+      "route": [
+        "先用一个开源推理模型跑通单条「贪心解码 + 固定 token 预算」的基线并记录指标",
+        "定义方法插件接口(输入 prompt 与预算,输出答案 + 实际耗费),先接自一致性投票",
+        "接入 ParaTempo 式的时间置信度早停作为第二个插件",
+        "在数学/代码若干基准上统一跑,自动画准确率-延迟-token 帕累托前沿,写好 README"
+      ],
+      "risk": "各方法对'推理预算'的定义不一致,统一口径本身要仔细设计,否则对比会不公平引来质疑。"
+    }
+  ]
+}
