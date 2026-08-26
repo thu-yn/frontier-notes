@@ -1,0 +1,358 @@
+{
+  "date": "2026-08-27",
+  "editor_note": "今天两家做 AI 芯片的同一天放料：OpenAI 晒自研的 Jalapeño，微软的 Maia 200 直接把论文挂上 arXiv，讲的都是「怎么把数据搬运而不是线程当一等公民」——推理成本压不下来，大家就只能自己下场造硬件。模型层面 GigaBrain-0.7 把 VLA 往「三套系统 + 更杂的数据」推，具身这条线在闷声堆规模。另一条暗线是安全：SecOPD 想用 on-policy 蒸馏堵提示注入，「The Mask Is Not the Model」教你两次前向就能揪出序列模型的因果泄漏，现实里 Boston Scientific 又被勒索软件打了——攻防在同一天正反打脸。最想点开的是 FDA 批了 Revolution Medicines 那款泛 RAS 抑制剂治胰腺癌，胰腺癌能有新药是真值得高兴。每日一理今天讲奇异值分解，正好跟今天那篇 LoRA 微调呼应——低秩的道理，SVD 早就写好了。",
+  "math_note": {
+    "name": "奇异值分解",
+    "name_en": "Singular Value Decomposition (SVD)",
+    "field": "线性代数 / 数值线性代数",
+    "one_liner": "任何矩阵都是「转一下、拉伸、再转一下」，奇异值就是各方向的重要性排名。",
+    "statement": "SVD 说的是：任何一个实矩阵 $A$（$m\\times n$，长方也行）都能拆成三块相乘 $A=U\\Sigma V^{\\top}$。这里 $U,V$ 是正交矩阵（列两两垂直、长度为 1，几何上就是旋转或翻转），$\\Sigma$ 是对角阵，对角线上是一串非负的数 $\\sigma_1\\ge\\sigma_2\\ge\\cdots\\ge 0$，叫奇异值（singular value，衡量每个方向被拉伸多少）。翻成人话：一个线性变换无论多复杂，本质都是「先旋转 $V^{\\top}$，再沿坐标轴各自拉伸 $\\Sigma$，最后再旋转 $U$」；一个单位球被它一映射，就变成一个椭球，椭球的半轴长正好是那些 $\\sigma_i$。",
+    "origin": "最早是 Beltrami(1873) 和 Jordan(1874) 各自为了研究双线性型，在方阵上鼓捣出来的；随后 Sylvester 也独立发现。真正让它火起来的是 1936 年 Eckart 和 Young 证明「截断 SVD 是最好的低秩逼近」，把它和数据压缩挂上了钩；到 1965 年 Golub 和 Kahan 给出稳定的数值算法，SVD 才成了今天工程师天天用的工具。",
+    "derivation": [
+      { "math": "A^{\\top}A = V\\Lambda V^{\\top},\\quad \\Lambda=\\mathrm{diag}(\\lambda_1,\\dots,\\lambda_n),\\ \\lambda_i\\ge 0", "note": "直接盯着 A 不好下手，先看 A^T A：它对称又半正定，谱定理保证能被一组正交特征向量对角化，特征值都非负。" },
+      { "math": "\\sigma_i=\\sqrt{\\lambda_i},\\qquad \\sigma_1\\ge\\sigma_2\\ge\\cdots\\ge 0", "note": "把特征值开平方就定义成奇异值，天然非负，再按从大到小排好队。" },
+      { "math": "u_i=\\tfrac{1}{\\sigma_i}Av_i\\ (\\sigma_i>0),\\qquad u_i^{\\top}u_j=\\delta_{ij}", "note": "把右边的特征向量 v_i 送过 A 再归一化，得到左边一组向量 u_i；用 A^T A v_i=σ_i² v_i 一代，就能验出它们也两两正交。" },
+      { "math": "Av_i=\\sigma_i u_i\\ \\Longrightarrow\\ AV=U\\Sigma", "note": "于是每个基向量的像都是「某个方向 u_i 乘上拉伸量 σ_i」，把 n 个方程并排写成矩阵，就是 AV=UΣ。" },
+      { "math": "A=U\\Sigma V^{\\top}", "note": "V 是正交阵，V^{-1}=V^T，两边右乘 V^T 收尾，分解式就出来了。" },
+      { "math": "A_k=\\sum_{i=1}^{k}\\sigma_i u_i v_i^{\\top}=\\arg\\min_{\\mathrm{rank}(B)\\le k}\\lVert A-B\\rVert", "note": "只留前 k 个大奇异值，Eckart–Young 说这就是秩 k 的最优逼近——丢小奇异值 = 最省信息的压缩，PCA、低秩、LoRA 全是这一招。" }
+    ],
+    "applications": [
+      { "area": "机器学习 / 降维", "detail": "PCA 本质就是对（中心化后的）数据矩阵做 SVD，取前几个奇异向量当主成分，把高维数据压到低维还保住大部分方差。" },
+      { "area": "大模型微调", "detail": "LoRA 用低秩的 BA 去近似权重更新，只训练两个瘦长矩阵，省显存又快——今天正好有一篇讲 LoRA 微调的论文。" },
+      { "area": "推荐系统", "detail": "把用户-物品评分矩阵做低秩近似来补全缺失评分，当年 Netflix Prize 那批算法的地基。" },
+      { "area": "数值计算", "detail": "最小二乘、病态方程用 SVD 求伪逆最稳，截掉接近零的小奇异值能压住噪声被放大的问题。" }
+    ],
+    "takeaway": "SVD 把「一个变换有多复杂」量化成了一串排好序的数：$A=\\sum_i\\sigma_i u_i v_i^{\\top}$，大奇异值是主干、小奇异值是细节。想压缩、想去噪、想降维，砍掉尾巴上的小 $\\sigma$ 就是数学上可证明的最优解。",
+    "viz": {
+      "type": "custom",
+      "caption": "拖动蓝点绕单位圆走一圈，它的像（红点）就描出一个椭圆——椭圆的两条半轴长正是矩阵 A 的两个奇异值，半轴方向就是奇异向量。",
+      "html": "<canvas id=\"svdc\" width=\"560\" height=\"340\" style=\"max-width:100%;touch-action:none;cursor:grab\"></canvas>",
+      "script": "(function(){var cv=el.querySelector('#svdc');if(!cv)return;var ctx=cv.getContext('2d');var W=cv.width,H=cv.height,cx=W/2,cy=H/2,s=72;var A=[[1.7,0.8],[0.5,1.3]];function ap(x,y){return[A[0][0]*x+A[0][1]*y,A[1][0]*x+A[1][1]*y];}function P(x,y){return[cx+x*s,cy-y*s];}var th=0.6,drag=false;function draw(){ctx.clearRect(0,0,W,H);ctx.strokeStyle='#d0d5dd';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(W,cy);ctx.moveTo(cx,0);ctx.lineTo(cx,H);ctx.stroke();ctx.strokeStyle='#3b82f6';ctx.lineWidth=2;ctx.beginPath();for(var i=0;i<=100;i++){var a=i/100*2*Math.PI,p=P(Math.cos(a),Math.sin(a));if(i===0)ctx.moveTo(p[0],p[1]);else ctx.lineTo(p[0],p[1]);}ctx.stroke();ctx.strokeStyle='#ef4444';ctx.beginPath();for(var j=0;j<=100;j++){var b=j/100*2*Math.PI,q=ap(Math.cos(b),Math.sin(b)),pp=P(q[0],q[1]);if(j===0)ctx.moveTo(pp[0],pp[1]);else ctx.lineTo(pp[0],pp[1]);}ctx.stroke();var v=[Math.cos(th),Math.sin(th)],av=ap(v[0],v[1]);var pv=P(v[0],v[1]),pa=P(av[0],av[1]),o=P(0,0);ctx.strokeStyle='#93c5fd';ctx.beginPath();ctx.moveTo(o[0],o[1]);ctx.lineTo(pv[0],pv[1]);ctx.stroke();ctx.strokeStyle='#fca5a5';ctx.beginPath();ctx.moveTo(o[0],o[1]);ctx.lineTo(pa[0],pa[1]);ctx.stroke();ctx.fillStyle='#3b82f6';ctx.beginPath();ctx.arc(pv[0],pv[1],7,0,2*Math.PI);ctx.fill();ctx.fillStyle='#ef4444';ctx.beginPath();ctx.arc(pa[0],pa[1],6,0,2*Math.PI);ctx.fill();var stretch=Math.hypot(av[0],av[1]);ctx.fillStyle='#475467';ctx.font='13px sans-serif';ctx.fillText('拉伸倍数 |Av| = '+stretch.toFixed(2),12,20);ctx.fillStyle='#3b82f6';ctx.fillText('单位圆 (输入 v)',12,H-28);ctx.fillStyle='#ef4444';ctx.fillText('像椭圆 (输出 Av)',12,H-10);}function pos(e){var r=cv.getBoundingClientRect(),cxx=(e.touches?e.touches[0].clientX:e.clientX)-r.left,cyy=(e.touches?e.touches[0].clientY:e.clientY)-r.top;return[(cxx*(W/r.width)-cx)/s,-(cyy*(H/r.height)-cy)/s];}function set(e){var m=pos(e);th=Math.atan2(m[1],m[0]);draw();}cv.addEventListener('pointerdown',function(e){drag=true;cv.style.cursor='grabbing';set(e);});cv.addEventListener('pointermove',function(e){if(drag){e.preventDefault();set(e);}});window.addEventListener('pointerup',function(){drag=false;cv.style.cursor='grab';});draw();})();"
+    }
+  },
+  "papers": [
+    {
+      "domain": "embodied",
+      "title": "GigaBrain-0.7: Scaling Embodied Foundation Models to Emergent Capabilities with a Three-System Architecture",
+      "title_zh": "GigaBrain-0.7：用三系统架构把具身基座模型堆到涌现能力",
+      "url": "https://arxiv.org/abs/2608.15875",
+      "hf_url": "https://huggingface.co/papers/2608.15875",
+      "authors": "GigaBrain Team、Angen Ye 等",
+      "affiliation": "GigaAI",
+      "upvotes": 90,
+      "one_liner": "VLA 的「更大更杂数据 + 分工架构」路线，还在往上顶。",
+      "summary_zh": "把「理解、预测、动作」拆成三套子系统，再往更大规模、更异构的机器人数据上灌，目标是让一个基座模型跨不同机器人本体都能干活。宣称在多本体、长程任务上的泛化明显变好。方向上没什么新奇招式，就是老老实实做 scaling，但具身领域最缺的恰恰是这种把数据和架构一起往上推的工程活。",
+      "tags": ["VLA", "具身基座", "scaling"]
+    },
+    {
+      "domain": "ai",
+      "title": "Annotations as Rollouts: Efficient and Scalable Reinforcement Learning for Video MLLMs",
+      "title_zh": "把标注当 rollout：给视频多模态大模型做高效可扩展的强化学习",
+      "url": "https://arxiv.org/abs/2608.20492",
+      "hf_url": "https://huggingface.co/papers/2608.20492",
+      "authors": "Yunheng Li、Guohong Mu 等",
+      "upvotes": 88,
+      "one_liner": "现成的人工标注别只拿来打分，直接塞进 on-policy 组当满分样本。",
+      "summary_zh": "视频 MLLM 做 RL 后训练时，采样一组回答里高质量的太少，采样成本还高。这篇（OraRL）的点子是：数据集里现成的标注答案，除了给别的回答打分，本身就可以作为一个「满分 rollout」直接进 on-policy 组当正向优化目标。听着简单，但直接塞会拉高整组基线导致训练崩，他们花了力气处理这个副作用。省采样这条思路对预算有限的团队挺实在。",
+      "tags": ["RL", "视频MLLM", "后训练"]
+    },
+    {
+      "domain": "ai",
+      "title": "AutoSaddler: Automatic Harness Optimization with Durable Updates from Agent Execution Traces",
+      "title_zh": "AutoSaddler：从 Agent 执行轨迹里自动优化「脚手架」",
+      "url": "https://arxiv.org/abs/2608.23041",
+      "hf_url": "https://huggingface.co/papers/2608.23041",
+      "authors": "Sungho Park、Wonjoong Kim 等",
+      "affiliation": "Microsoft",
+      "upvotes": 49,
+      "one_liner": "把 agent 的外层脚手架当代码来自动迭代，靠失败轨迹打补丁。",
+      "summary_zh": "长程任务里 agent 一个小失误会滚雪球，外层 harness（提示、工具配置、控制逻辑）能救场，但现在都是手工调、贵得要死。这篇把「优化 harness」当成离线学习问题：诊断失败轨迹、把 harness 当代码生成结构化补丁、再拿验证信号 gate 一下，小批量迭代更新。思路很像给 prompt 工程做自动化 CI，落地价值取决于诊断-补丁那步够不够准。",
+      "tags": ["Agent", "自动优化", "harness"]
+    },
+    {
+      "domain": "ai",
+      "title": "On-Policy Self-Distillation in Diffusion Models",
+      "title_zh": "扩散模型里的 on-policy 自蒸馏",
+      "url": "https://arxiv.org/abs/2608.24646",
+      "hf_url": "https://huggingface.co/papers/2608.24646",
+      "authors": "Wei Zhou、Xiongwei Zhu 等",
+      "affiliation": "ByteDance Seed",
+      "upvotes": 48,
+      "one_liner": "奖励只告诉你终点好不好，这篇把它翻译成每一步该怎么改。",
+      "summary_zh": "RL 对齐扩散模型有个尴尬：终点的奖励并没告诉你中间某一步去噪该往哪调。DiffusionOPSD 用冻结的行为策略先跑轨迹、取锚点，再用奖励梯度在锚点附近构造有界的正负目标，让可训练策略去拟合这些「脱离梯度的监督」，配合 EMA 更新。等于把图像级奖励下沉成对干净输出预测的逐步目标。工程细节偏多，能不能稳训练是关键。",
+      "tags": ["扩散模型", "RL对齐", "自蒸馏"]
+    },
+    {
+      "domain": "ai",
+      "title": "SecOPD: Mitigating Adaptive Prompt Injections by On-Policy Distillation",
+      "title_zh": "SecOPD：用 on-policy 蒸馏抵御自适应提示注入",
+      "url": "https://arxiv.org/abs/2608.21500",
+      "hf_url": "https://huggingface.co/papers/2608.21500",
+      "authors": "Yibo Peng、Long Lian、David Wagner、Sizhe Chen",
+      "upvotes": 36,
+      "one_liner": "防注入训练总失败，是因为你在按整段输出打分，而不是盯着那几个坏 token。",
+      "summary_zh": "提示注入被列为 AI agent 的头号威胁，现有的防御性微调（DPO/GRPO 那套）对自适应攻击成功率接近 100%。作者的诊断很到位：这些方法用的是序列级反馈，把整段输出一视同仁，模型学不到「到底哪几个 token 不安全」。SecOPD 改用 on-policy 蒸馏给出更细粒度的监督。安全这块，能把「哪里错」定位到 token 级是实打实的进步。",
+      "tags": ["提示注入", "AI安全", "蒸馏"]
+    },
+    {
+      "domain": "ai",
+      "title": "The Mask Is Not the Model: Auditing Prefix Invariance in Attention, State-Space, and Hybrid Sequence Models",
+      "title_zh": "掩码不等于模型：审计注意力/状态空间/混合序列模型的前缀不变性",
+      "url": "https://arxiv.org/abs/2608.22876",
+      "hf_url": "https://huggingface.co/papers/2608.22876",
+      "authors": "Taebong Kim、Youngsik Hong 等",
+      "affiliation": "VIDraft",
+      "upvotes": 29,
+      "one_liner": "两次前向、不训练不求梯度，就能揪出模型偷看未来的地方。",
+      "summary_zh": "前缀不变性说的是：位置 t 的表示不能依赖未来输入。作者给了个极轻量的审计：只要两次前向，就能精确定位因果在哪儿破了。关键发现是——光看注意力掩码不够，泄漏可能藏在 scan 或归一化里，掩码看着对其实漏。192 个注入故障里掩码检查一个没抓到，他们的方法 192/192 全中，还顺手在 Zamba2 和 Nemotron-H 里查出真 bug。这种能直接改造成开源小工具的活我很喜欢。",
+      "tags": ["因果性", "SSM", "审计工具"]
+    },
+    {
+      "domain": "ai",
+      "title": "Quantization-Aware Healing: A Practical Recipe for Recovering Compressed, 4-Bit LLMs",
+      "title_zh": "量化感知修复：把压缩过的 4-bit 大模型救回来的实用配方",
+      "url": "https://arxiv.org/abs/2608.20953",
+      "hf_url": "https://huggingface.co/papers/2608.20953",
+      "authors": "Bakbergen Ryskulov、Iker García-Ferrero 等",
+      "affiliation": "Multiverse Computing",
+      "upvotes": 9,
+      "one_liner": "结构压缩 + 4-bit 之后模型变笨，别硬拿标签 QAT，改用蒸馏式「healing」。",
+      "summary_zh": "又压结构又压到 4-bit，模型在推理、数学、代码、长上下文上会明显退化，部署前得先「疗伤」。他们发现默认的 QAT（拿硬标签重训）收敛慢还会过峰崩掉；改成 QAH，把压缩前的 bf16 checkpoint 当成蒸馏出来的近似目标去恢复，稳得多。对想在便宜硬件上跑自己模型的人来说，是一份能直接抄的配方。",
+      "tags": ["量化", "模型压缩", "LLM部署"]
+    },
+    {
+      "domain": "chip",
+      "title": "Maia 200: A Software Defined Dataflow System for Large-scale AI Acceleration",
+      "title_zh": "Maia 200：面向大规模 AI 加速的软件定义数据流系统",
+      "url": "https://arxiv.org/abs/2608.24664",
+      "authors": "Sherry Xu、Marco Heddes 等",
+      "affiliation": "Microsoft",
+      "upvotes": 3,
+      "one_liner": "把架构重心从「线程」搬到「数据搬运」，微软自研 AI 加速器的设计哲学。",
+      "summary_zh": "微软的 AI 加速器 Maia 200，750W 功耗做到 FP4 10145 Tflop/s、FP8 5072 Tflop/s、HBM 带宽 7 TB/s。核心是它自称的 SDLA（软件定义本地访问数据流架构）：显式编程数据流引擎去调度专用内存和数据搬运，把关注点从传统的「线程中心」挪到「数据搬运中心」。跟今天 OpenAI 晒 Jalapeño 撞车，大厂都在自造硅片这条路上加速，值得跟一跟。",
+      "tags": ["AI加速器", "数据流架构", "算力"]
+    },
+    {
+      "domain": "bio",
+      "title": "RIBOSPAN: A Long-Context RNA Foundation Model for Versatile RNA Modeling",
+      "title_zh": "RIBOSPAN：面向多任务的长上下文 RNA 基座模型",
+      "url": "https://arxiv.org/abs/2608.22849",
+      "hf_url": "https://huggingface.co/papers/2608.22849",
+      "authors": "Ziyuan Wang、Bohao Tang 等",
+      "affiliation": "SII-GAIR",
+      "upvotes": 3,
+      "one_liner": "现有 RNA 模型上下文太短，装不下一整条 mRNA，这个直接拉到 1 万核苷酸。",
+      "summary_zh": "全长 RNA（尤其 mRNA）经常超出现有 RNA 基座模型的上下文长度，导致没法在单核苷酸分辨率上建模整条转录本。RIBOSPAN 是个 16.1 亿参数的双向模型，原生支持最长 10240 nt 的上下文，靠稠密双向注意力、单核苷酸分词、注意力隔离的序列打包来撑住长序列。对做 mRNA 设计、RNA 结构预测的人是个能上手的新底座——生物领域「长上下文」的价值和 NLP 一样实在。",
+      "tags": ["RNA", "基座模型", "长上下文"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "What AstroPT knows about galaxies, and what that can teach us about LLMs",
+      "title_zh": "AstroPT 懂星系吗——顺便教教我们怎么看懂大模型",
+      "url": "https://arxiv.org/abs/2608.22614",
+      "hf_url": "https://huggingface.co/papers/2608.22614",
+      "authors": "UniverseTBD、Kshitij Duraphe 等",
+      "upvotes": 4,
+      "one_liner": "用天文当「有标准答案」的实验场，去校准 LLM 可解释性里的那些猜测。",
+      "summary_zh": "可解释性研究老在问：概念在训练的哪一步冒出来、线性探针探到的是不是真结构？可惜语言里没有概念的「标准难度排序」，验不了。作者拿 AstroPT（一个在几百万张星系图上训练的类 LLM）当校准台——天文里概念的难度顺序和相互关系是先验已知的。在冻结表示上跨 checkpoint、层、模型规模去探，看星系属性怎么涌现。用一个有 ground truth 的领域反过来验 LLM 的解释方法，角度挺巧。",
+      "tags": ["可解释性", "AI4Science", "表示学习"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "browser-use/browser-use",
+      "url": "https://github.com/browser-use/browser-use",
+      "language": "Python",
+      "stars": 110897,
+      "stars_today": "135",
+      "one_liner": "让网页对 AI agent「可访问」，把浏览器操作交给模型。",
+      "summary_zh": "把网站封装成 agent 能理解和操作的形式，用来自动化在线任务——填表、点按、抓取都能托管给模型。十一万星的老牌项目，做 web agent 或 RPA 类应用的可以直接拿它当底座。"
+    },
+    {
+      "domain": "ai",
+      "name": "marin-community/marin",
+      "url": "https://github.com/marin-community/marin",
+      "language": "Python",
+      "stars": 2427,
+      "stars_today": "443",
+      "one_liner": "开源的基座模型研发框架，从数据到训练一条龙。",
+      "summary_zh": "面向基础模型研究与开发的开源框架，把预训练、数据处理、实验流程这些环节整合起来。今天单日涨了 400 多星，适合想复现或魔改基座模型训练流程、又不想从零搭工程的团队。"
+    },
+    {
+      "domain": "ai4s",
+      "name": "K-Dense-AI/scientific-agent-skills",
+      "url": "https://github.com/K-Dense-AI/scientific-agent-skills",
+      "language": "Python",
+      "stars": 34686,
+      "stars_today": "130",
+      "one_liner": "163 个验证过的「科学家技能」，把通用 agent 变成科研助手。",
+      "summary_zh": "一个面向科研的 agent skills 库，号称被 17.5 万科学家用过，提供 163 个开箱即用、验证过的技能。兼容 Claude Code 等多种 agent。做 AI4Science、想给自己搭个能查文献跑分析的科研 agent 的人值得翻翻。"
+    },
+    {
+      "domain": "ai",
+      "name": "tinyhumansai/openhuman",
+      "url": "https://github.com/tinyhumansai/openhuman",
+      "language": "Rust",
+      "stars": 38157,
+      "stars_today": "522",
+      "one_liner": "本地优先的个人 AI「大脑」，攒你的生活记忆、编排 agent 舰队。",
+      "summary_zh": "定位是本地优先的个人 AI：给你的生活建一个本地记忆库，同时当 agent 编排器和深度研究工具。用 Rust 写的，主打隐私和本地运行。对在意数据不出本机、又想要个人助理的人有吸引力，但这类「第二大脑」的实际粘性还得用久了才知道。"
+    },
+    {
+      "domain": "ai",
+      "name": "tt-a1i/archify",
+      "url": "https://github.com/tt-a1i/archify",
+      "language": "HTML",
+      "stars": 17677,
+      "stars_today": "1,002",
+      "one_liner": "让 agent 画出能验证、能导出的架构/流程/时序图。",
+      "summary_zh": "一个 agent skill，专门生成漂亮又可验证的架构图、流程图、时序图、数据流图，输出是自包含、带动效、能清晰导出的 HTML。写技术文档、画系统设计图的时候能省不少手工排版的功夫。"
+    },
+    {
+      "domain": "ai",
+      "name": "DietrichGebert/ponytail",
+      "url": "https://github.com/DietrichGebert/ponytail",
+      "language": "JavaScript",
+      "stars": 112434,
+      "stars_today": "1,598",
+      "one_liner": "让你的 AI agent 像「全屋最懒的资深工程师」那样思考——最好的代码是不写的代码。",
+      "summary_zh": "一个引导 agent「能不写就不写」的提示/技能项目，核心哲学是最好的代码就是你压根没写的那行。十一万星，态度鲜明。当下 agent 动不动过度生成代码，这种反向克制的思路本身就是一种有用的提醒。"
+    },
+    {
+      "domain": "ai",
+      "name": "anthropics/claude-plugins-official",
+      "url": "https://github.com/anthropics/claude-plugins-official",
+      "language": "Python",
+      "stars": 34334,
+      "stars_today": "307",
+      "one_liner": "Anthropic 官方维护的 Claude Code 高质量插件目录。",
+      "summary_zh": "官方托管的 Claude Code 插件目录，收录经过筛选的高质量插件。想给自己的 Claude Code 工作流加能力、又不想在野生仓库里踩雷的，从这里挑比较稳。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "chip",
+      "title_zh": "OpenAI 自研 AI 芯片 Jalapeño 亮相，主打低延迟高吞吐",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/984290/openai-jalapeno-ai-chip-benchmarks",
+      "source": "The Verge",
+      "summary_zh": "OpenAI 发博客称其新 AI 芯片 Jalapeño 完成任务更省、响应更快。硬件副总裁 Richard Ho 说它做到了「两全其美」——延迟更低、吞吐更高。跟同一天微软 Maia 200 的论文一起看，头部玩家自造硅片的节奏明显在加快。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Google 发布 Gemini 3.5 Transcribe 语音转写，铺向 Chrome 等更多产品",
+      "url": "https://arstechnica.com/ai/2026/08/google-announces-gemini-3-5-transcribe-for-ai-powered-speech-to-text/",
+      "source": "Ars Technica",
+      "summary_zh": "Google 推出 Gemini 3.5 Transcribe 语音转文字，就是给 Gboard 里 Rambler 供能的那套 AI，现在扩到包括 Chrome 在内的更多 Google 产品。另有报道称新版转写能自动剪掉「嗯」「啊」这类口头语。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "IBM 发布 Granite 4.2，押注本地 LLM 与企业级可预测部署",
+      "url": "https://arstechnica.com/ai/2026/08/ibms-new-granite-4-2-models-ride-the-wave-of-interest-in-local-llms/",
+      "source": "Ars Technica",
+      "summary_zh": "IBM 推出新一代 Granite 4.2 模型，重点放在 agentic 能力和企业可预测的部署，顺着本地 LLM 这波热度走。跟 OpenHuman 这类本地优先项目一起，说明「模型跑在自己机器上」正在从爱好者话题变成企业采购项。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "神秘开源模型 Ox Alpha 揭盖：背后是 Z.ai，权重即将放出",
+      "url": "https://techcrunch.com/2026/08/26/surprise-z-ai-is-the-ai-lab-behind-the-mysterious-ox-alpha-model/",
+      "source": "TechCrunch",
+      "summary_zh": "此前在各大榜单登顶、来路不明的开源模型 Ox Alpha，Z.ai 确认是自家作品，权重不久就会公开。又一个来自中国实验室、直接开源冲榜的例子。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "机器人创业公司 Generalist 估值达 30 亿美元",
+      "url": "https://techcrunch.com/2026/08/25/robotics-startup-generalist-reaches-3b-valuation-sources-say/",
+      "source": "TechCrunch",
+      "summary_zh": "据消息人士，物理 AI 公司 Generalist 通过 2 亿美元的扩展轮把估值推到 30 亿美元，距离它上一轮 20 亿估值才过去几个月。具身/物理 AI 这条赛道的资本热度还在往上冲。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Gatik 融资 2 亿美元，继续扩张自动驾驶货运",
+      "url": "https://www.therobotreport.com/gatik-brings-in-200m-to-continue-expanding-autonomous-trucking-operations/",
+      "source": "The Robot Report",
+      "summary_zh": "自动驾驶货运公司 Gatik 拿到 2 亿美元，用于扩张它主打的「连接配送中心与门店的高频区域路线」模式。相比长途干线，这种短途、路线固定的场景更容易先跑通商业闭环。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "英伟达 Jetson Orin Nano 2 发布，边缘机器人推理性能翻倍",
+      "url": "https://www.therobotreport.com/jetson-orin-nano-2-doubles-inference-performance-robotics-edge-says-nvidia/",
+      "source": "The Robot Report",
+      "summary_zh": "英伟达称 Jetson Orin Nano 2 把边缘推理性能翻了一倍，「前沿智能」现在能实时跑在边缘设备上。对做机器人、想把大模型塞进本体又受制于算力和功耗的团队，这类边缘芯片的进步最实用。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "NASA 提出双模核火箭新设计，大幅缩短深空航行时间",
+      "url": "https://spectrum.ieee.org/bimodal-nuclear-spacecraft",
+      "source": "IEEE Spectrum",
+      "summary_zh": "NASA 与业界工程师提出「同步双模核火箭」(S-BNR)，把核热推进和核电推进合到一个反应堆里，用两条独立流体回路和对应的燃料分区，省掉了复杂的模式切换阀门，同时兼顾高推力和高效率，目标是显著缩短去火星等目的地的航行时间。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "FDA 批准 Revolution Medicines 泛 RAS 抑制剂治疗转移性胰腺癌",
+      "url": "https://www.fiercebiotech.com/pharma/fda-greenlights-revolution-medicines-pancreatic-cancer-gamechanger",
+      "source": "Fierce Biotech",
+      "summary_zh": "继今年 5 月 ASCO 大会上那份让全场起立鼓掌的数据后，Revolution Medicines 的 RAS 抑制剂 daraxonrasib 获 FDA 批准，用于治疗转移性胰腺癌。胰腺癌长期缺有效药，能有新武器是真正的好消息。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "麦克森 22.5 亿美元收购 Precision Medicine Group",
+      "url": "https://www.fiercebiotech.com/pharma/mckesson-strikes-225-billion-deal-precision-medicine-group",
+      "source": "Fierce Biotech",
+      "summary_zh": "医疗巨头麦克森（McKesson，财富 500 强第八）以 22.5 亿美元收购私有公司 Precision Medicine Group，并入其肿瘤业务线，延续它做大高利润癌症和生物制药板块的思路。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个「前缀不变性审计器」开源小库：两次前向查因果泄漏",
+      "based_on": [
+        { "title": "The Mask Is Not the Model: Auditing Prefix Invariance in Attention, State-Space, and Hybrid Sequence Models", "url": "https://arxiv.org/abs/2608.22876" }
+      ],
+      "why_now": "论文刚提出「两次前向、不训练不求梯度」就能定位因果破口，还顺手在 Zamba2、Nemotron-H 里查出真 bug，但目前没有一个开箱即用、能对任意 HuggingFace 模型跑的通用工具——正好卡在「有方法、没工具」的窗口。",
+      "feasibility": "纯推理，单张消费级 GPU（甚至部分小模型 CPU）就够；核心是两次前向 + 表示比对，2–3 周能出一个能跑注意力/SSM/混合三类模型的 CLI + pytest。",
+      "route": [
+        "先按论文复现最小审计：对一个已知因果正确的小 GPT 做两次前向（改动某个未来位置的输入），确认前缀位置表示不变。",
+        "把审计逻辑抽象成对任意 nn.Module 的 hook：逐层记录表示，定位第一处随未来输入改变的层。",
+        "接三类代表模型各一个（如 GPT-2、Mamba、一个混合架构），复现论文那个『掩码看着对但 scan/归一化漏了』的场景。",
+        "封装成 pip 包 + CLI：`prefix-audit <model>` 输出泄漏位置报告，配 CI 里能跑的注入故障测试集。"
+      ],
+      "risk": "不同架构的前向接口和缓存实现差异大，写通用 hook 可能要为每类模型做适配；先支持 2–3 类、把接口留活口即可。"
+    },
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "把 training-free 开放词汇 3D 点云分割迁到新场景，验证泛化",
+      "based_on": [
+        { "title": "Training-Free Open-Vocabulary 3D Point-Cloud Segmentation on the Generalized Few-Shot Benchmark", "url": "https://arxiv.org/abs/2607.15331" }
+      ],
+      "why_now": "这套方法把冻结的 3D 视觉-语言模型(RegionPLC)当稠密先验、配冻结的可提示分割器(SAM3)做 reconciliation，做到无训练、无 3D 标注、连 few-shot 支持都不要——training-free 方法复现便宜，『换个场景验证泛化』本身就是低风险的可发表扩展。",
+      "feasibility": "全程冻结模型做推理，单张 24–40GB GPU 能跑；主要工作量在数据接入和评测协议，3–4 周能出一份跨场景对比。",
+      "route": [
+        "先跑通论文在原 benchmark 上的官方推理，确认无训练管线能复现出报告的分数。",
+        "换一个域差异明显的点云数据（如室外/驾驶场景或机器人操作台场景），把两个冻结模块的输入适配上去。",
+        "量化『无训练 vs 需训练 SOTA』在新域上的差距，重点看 novel class 的表现掉多少。",
+        "针对失败样本分析是先验(RegionPLC)还是分割器(SAM3)的锅，写成一份泛化性诊断。"
+      ],
+      "risk": "室外/稀疏点云和室内稠密点云差异大，冻结先验可能直接失效；先挑与原设置最接近的新域，逐步拉大域差异。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "用低成本自监督点云编码器替换 3D-LLM 的多模态编码器",
+      "based_on": [
+        { "title": "On the Efficacy of Self-Supervised Point Cloud Encoders for Efficient 3D Large Language Models", "url": "https://arxiv.org/abs/2607.29136" }
+      ],
+      "why_now": "现有 3D-LLM 依赖 ULIP-2 这类需要 8×A100 规模做图文点云对齐的多模态编码器，门槛高得离谱；这篇已经用 MiniGPT-3D 当试验台系统比了 7 种编码器初始化，把『穷人也能玩 3D-LLM』的口子撕开了，正好接着往下推。",
+      "feasibility": "以 MiniGPT-3D 为 testbed、换 PCP-MAE/Point-MAE 等自监督编码器，冻结主干只训接口，单张 24GB 卡可行；每组实验小，3–4 周能扫完一轮对比。",
+      "route": [
+        "先跑通 MiniGPT-3D 官方推理与评测，锁定一个能复现的基线分数。",
+        "接入一个自监督点云编码器(Point-MAE)，只训 projection、冻结 LLM，跑通端到端。",
+        "对比多模态基线(ULIP-2)与若干自监督初始化在下游理解任务上的差距，找出性价比拐点。",
+        "把最优自监督配置迁到另一个 3D-LLM 或另一批点云数据，验证结论不是过拟合单一 testbed。"
+      ],
+      "risk": "自监督编码器和 LLM 的语义空间没对齐，可能靠只训 projection 补不回来；必要时加一层轻量对齐或小规模 LoRA，仍控制在单卡预算内。"
+    }
+  ]
+}
