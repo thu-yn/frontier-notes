@@ -1,0 +1,368 @@
+{
+  "date": "2026-08-30",
+  "editor_note": "今天最扎堆的是「世界模型」——HF 榜上的 Agentic Game Development 想给空间生成找到像编译器之于代码那样可验证的奖励,arXiv 上 CLAP 和 Riemann-1.0 又一个补数据、一个统一策略与模拟的接口,GameWAM、Zero-WAM 也在同一条线上。另一半热闹在「测试时怎么继续压榨模型」:TTPO 的不对称伪标签、Prefix Sliding 的中途丢 token、进化策略反过来比 GRPO 覆盖更广,思路各不相同但都在回答同一个问题。要点一条的话,我最想让你点开 Agentic Game Development,它把「世界模型缺 reward」这个老毛病指向了一个现成的可执行环境。新闻这边 Anthropic 一天两条——被索尼华纳告版权、又赢下五角大楼的「供应链风险」标签官司,配上 Lambda 举债 10 亿买卡、EPA 想让数据中心少报污染,AI 的账单正一路摊到法庭、电网和社区头上。每日一理配了拉格朗日乘子法,受约束 RL 背后就是这套「给约束配个价格」的语言。",
+  "math_note": {
+    "name": "拉格朗日乘子法",
+    "name_en": "Method of Lagrange Multipliers",
+    "field": "多元微积分 / 最优化",
+    "one_liner": "最优点上,目标的上坡方向必和约束的法线重合——不然你总还能沿约束再往上挪一步。",
+    "statement": "想在约束 $g(x)=0$ 下求 $f(x)$ 的极值(极大或极小),那么在最优点处,目标函数的梯度一定和约束的梯度平行:$\\nabla f(x)=\\lambda\\,\\nabla g(x)$。这里 $\\lambda$ 叫拉格朗日乘子(一个待定的比例系数),$\\nabla f$(读作「nabla f」)是让 $f$ 上升最快的方向。直觉是:如果 $\\nabla f$ 在「贴着约束面」的方向上还留着分量,你就能沿约束再挪一点把 $f$ 抬高;所以真正的极值点上,$\\nabla f$ 只能垂直于约束面,也就是和法线方向 $\\nabla g$ 共线。",
+    "origin": "拉格朗日(Joseph-Louis Lagrange)在 1780 年前后写《分析力学》时把它系统化。他想要一套不靠画几何图、纯用代数就能处理带约束力学问题的方法——比如一颗珠子被限制在一条曲线上滑动,约束会产生看不见的约束力。他的巧思是:与其去硬算这些约束力,不如给每个约束配一个待定系数 λ,把约束「吸收」进一个统一的函数里一起解。这套语言后来从力学溢出到优化、经济学,一直用到今天的机器学习。",
+    "derivation": [
+      { "math": "\\max_{x} f(x)\\quad\\text{s.t.}\\quad g(x)=0", "note": "问题长这样:在一条约束曲面 g=0 上找 f 的最大点,不能自由乱走,只能贴着约束面动。" },
+      { "math": "\\nabla g(x)\\cdot v=0", "note": "任何「合法」的移动方向 v,都得让约束 g 保持为 0,也就是贴着约束面走——这等价于 v 和约束梯度 ∇g 垂直(∇g 指向约束面的法线)。" },
+      { "math": "\\nabla f(x)\\cdot v=0,\\quad \\forall\\, v\\perp\\nabla g", "note": "在最优点上,沿任何合法方向 f 都不能再增大,否则就不是最大点。所以 ∇f 对所有「贴着约束的方向」投影全为零。" },
+      { "math": "\\nabla f(x)=\\lambda\\,\\nabla g(x)", "note": "一个向量若和某个平面里所有向量都垂直,它就只能沿这个平面的法线方向——也就是和 ∇g 共线,比例系数 λ 就是拉格朗日乘子。" },
+      { "math": "L(x,\\lambda)=f(x)-\\lambda\\,g(x),\\quad \\nabla_{x,\\lambda}L=0", "note": "把上面这条和约束 g=0 打包进一个函数 L,对 x 和 λ 同时求驻点,就把「带约束」化成了「无约束」的一组方程,直接解。" }
+    ],
+    "applications": [
+      { "area": "机器学习(SVM)", "detail": "支持向量机在「最大间隔」约束下最小化权重范数,正是靠拉格朗日乘子导出对偶问题和 KKT 条件,支持向量对应非零的乘子。" },
+      { "area": "受约束强化学习", "detail": "把「回报最大、同时安全或代价不超标」写成带约束优化,用拉格朗日乘子(常叫对偶变量)在训练里动态平衡目标与约束——今天 TTPO 那类策略优化底下也是这套语言。" },
+      { "area": "经济学与资源分配", "detail": "预算约束下最大化效用,乘子 λ 恰好是「影子价格」:多给一单位预算能多换来多少效用。" },
+      { "area": "约束力学", "detail": "拉格朗日力学里,刚性连杆之类的约束引入的乘子,正好对应那份看不见的约束力的大小。" }
+    ],
+    "takeaway": "带约束的难题,常能靠「给约束配一个价格 $\\lambda$」翻译成无约束问题——最优处目标与约束的梯度必然共线。这个「梯度对齐」的几何直觉,一路贯穿 SVM 对偶、KKT 到受约束 RL。",
+    "viz": {
+      "type": "custom",
+      "caption": "拖滑块让黑点沿约束圆 x²+y²=1 移动:蓝箭头是目标 f=x+y 的梯度(恒指向右上),橙箭头是约束的梯度(沿半径向外)。走到两箭头正好平行那一点,f 取到约束下的最大值——这就是拉格朗日乘子法说的 ∇f=λ∇g。",
+      "html": "<div><canvas id=\"lgc\" width=\"560\" height=\"340\" style=\"max-width:100%;touch-action:none\"></canvas><br><label style=\"font:13px sans-serif;color:#374151\">沿约束移动 θ&nbsp;<input id=\"lgs\" type=\"range\" min=\"0\" max=\"360\" value=\"18\" step=\"1\" style=\"vertical-align:middle;width:220px\"></label></div>",
+      "script": "(function(){var cv=el.querySelector('#lgc'),sl=el.querySelector('#lgs');if(!cv||!sl)return;var ctx=cv.getContext('2d'),W=cv.width,H=cv.height,cx=W*0.5,cy=H*0.56,S=104;function X(x){return cx+x*S;}function Y(y){return cy-y*S;}function arrow(x0,y0,x1,y1,col){ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);ctx.stroke();var a=Math.atan2(y1-y0,x1-x0);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x1-9*Math.cos(a-0.4),y1-9*Math.sin(a-0.4));ctx.lineTo(x1-9*Math.cos(a+0.4),y1-9*Math.sin(a+0.4));ctx.closePath();ctx.fill();}function draw(){var th=sl.value*Math.PI/180,px=Math.cos(th),py=Math.sin(th);ctx.clearRect(0,0,W,H);ctx.strokeStyle='#e5e7eb';ctx.lineWidth=1;for(var c=-2;c<=2.01;c+=0.5){ctx.beginPath();ctx.moveTo(X(-1.7),Y(c+1.7));ctx.lineTo(X(1.7),Y(c-1.7));ctx.stroke();}ctx.strokeStyle='#9ca3af';ctx.beginPath();ctx.moveTo(X(-1.7),Y(0));ctx.lineTo(X(1.7),Y(0));ctx.moveTo(X(0),Y(-1.6));ctx.lineTo(X(0),Y(1.6));ctx.stroke();ctx.strokeStyle='#111827';ctx.lineWidth=2;ctx.beginPath();ctx.arc(X(0),Y(0),S,0,7);ctx.stroke();var cP=px+py;ctx.strokeStyle='#2563eb';ctx.lineWidth=1.5;ctx.setLineDash([5,4]);ctx.beginPath();ctx.moveTo(X(-1.7),Y(cP+1.7));ctx.lineTo(X(1.7),Y(cP-1.7));ctx.stroke();ctx.setLineDash([]);var g=0.5;arrow(X(px),Y(py),X(px+g*0.7071),Y(py+g*0.7071),'#2563eb');arrow(X(px),Y(py),X(px+g*px),Y(py+g*py),'#f59e0b');ctx.fillStyle='#111827';ctx.beginPath();ctx.arc(X(px),Y(py),5,0,7);ctx.fill();var dot=0.7071*px+0.7071*py,aligned=Math.abs(dot)>0.986;ctx.textAlign='left';ctx.font='14px sans-serif';ctx.fillStyle='#374151';ctx.fillText('目标 f = x+y = '+cP.toFixed(3),14,22);ctx.fillStyle=aligned?'#16a34a':'#6b7280';ctx.fillText(aligned?'∇f ∥ ∇g → 约束下的最优点!':'两个梯度还没对齐,沿圆再走走',14,42);ctx.font='12px sans-serif';ctx.fillStyle='#2563eb';ctx.fillText('■ ∇f(目标梯度,恒指(1,1))',14,H-28);ctx.fillStyle='#f59e0b';ctx.fillText('■ ∇g(约束梯度,沿半径)',14,H-12);}sl.addEventListener('input',draw);draw();})();"
+    }
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "VoiceMem: Streaming Dual-Brain Memory for Real-Time Interaction",
+      "title_zh": "VoiceMem:实时语音交互的「双脑」流式记忆",
+      "url": "https://arxiv.org/abs/2608.26005",
+      "hf_url": "https://huggingface.co/papers/2608.26005",
+      "authors": "Zhifei Xie、Jiaqi Lang、Ze An 等",
+      "affiliation": "南洋理工大学(NTU Singapore)",
+      "upvotes": 166,
+      "one_liner": "给语音大模型装了个既会记事、又会共情的双脑记忆。",
+      "summary_zh": "给全双工语音模型(边听边说的那种)配一套流式记忆:一个「左脑」管事实性信息检索,一个「右脑」管情感与人设。左脑在 top-5 检索下比 Mem0 在 top-200 时还高近 30 分,右脑在三个 persona 基准上刷了 SOTA,记忆后端还能插拔、解耦部署。噱头是「双脑」这个比喻,但把情感归因和事实检索拆开单独优化,这件事本身是合理的。",
+      "tags": ["语音大模型", "记忆", "Agent"]
+    },
+    {
+      "domain": "ai",
+      "title": "Agentic Game Development as a Verifiable Trajectory Data Engine for Scaling World Models",
+      "title_zh": "把游戏开发当成世界模型的可验证轨迹数据引擎",
+      "url": "https://arxiv.org/abs/2608.25518",
+      "hf_url": "https://huggingface.co/papers/2608.25518",
+      "authors": "Pengfei Zhou、Hexin Wang、You Yang 等",
+      "affiliation": "新加坡国立大学(NUS)",
+      "upvotes": 132,
+      "one_liner": "想给空间世界模型找到像编译器之于代码那样可验证的奖励。",
+      "summary_zh": "论点是:光靠爬更多视频加堆算力来扩世界模型是低效的,缺的是像代码那样能给出确定奖励的环境。游戏引擎恰好是「可执行的世界规格」——碰撞、物理、可导航性、可玩性都能被引擎自动核验,于是可以拿来给空间生成做 RL 后训练,而不是继续依赖 CLIP 分这种模糊代理。方向选得准,把「世界模型缺 reward」这个老问题指向了一个现成的可验证环境。",
+      "tags": ["世界模型", "RL", "游戏"]
+    },
+    {
+      "domain": "ai",
+      "title": "TTPO: Test-Time Policy Optimization",
+      "title_zh": "TTPO:测试时策略优化",
+      "url": "https://arxiv.org/abs/2608.27448",
+      "hf_url": "https://huggingface.co/papers/2608.27448",
+      "authors": "Aozhe Wang、Zhengxi Lu、Jianze Wang 等",
+      "upvotes": 69,
+      "one_liner": "多数投票当伪标签会翻车,不如只信「和多数唱反调的基本就是错的」这一条。",
+      "summary_zh": "想在没有真值标签的测试阶段继续优化推理策略。多数投票伪标签很脆——投错一次整批 token 都被带偏。作者发现一个不对称现象:和伪标签唱反调的 rollout 基本都是错的,不管投票本身对不对。于是把「同意的」用 on-policy 蒸馏拉近、「反对的」用分组 RL 惩罚,再做 token 级筛选。这个不对称观察挺锋利,是它比朴素伪标签稳的关键。",
+      "tags": ["RL", "test-time", "推理"]
+    },
+    {
+      "domain": "ai",
+      "title": "Self-OPD: On-Policy Distillation for Flow Matching Models without Teacher",
+      "title_zh": "Self-OPD:无需教师的流匹配模型在线蒸馏",
+      "url": "https://arxiv.org/abs/2608.26872",
+      "hf_url": "https://huggingface.co/papers/2608.26872",
+      "authors": "Shiyi Zhang、Mushui Liu、Yunze Tong 等",
+      "upvotes": 68,
+      "one_liner": "让学生自己探索出监督信号,省掉给每个任务单独训一个教师。",
+      "summary_zh": "on-policy 蒸馏在 LLM 上很有效,搬到流匹配(flow matching)生成模型上却有两个痛:每换一个目标就得训一个专用教师,成本高;教师和学生分布不一致还会沿生成轨迹累积误差。Self-OPD 干脆不用教师:每一步把确定性的下一步预测分叉成 K 个随机 SDE 候选,用 ODE 采样器滚出去,拿它们的奖励互相比,把学生自己的探索变成逐步监督。省掉教师这一步,对复现成本是实打实的降低。",
+      "tags": ["扩散/流匹配", "蒸馏"]
+    },
+    {
+      "domain": "ai",
+      "title": "Understanding Evolution Strategies for LLM Reasoning: Broader Reasoning Coverage than GRPO",
+      "title_zh": "重新理解进化策略做 LLM 推理:比 GRPO 覆盖更广的推理空间",
+      "url": "https://arxiv.org/abs/2608.27351",
+      "hf_url": "https://huggingface.co/papers/2608.27351",
+      "authors": "Yunpeng Ba、Zhi Zheng、Yue Xie 等",
+      "upvotes": 15,
+      "one_liner": "ES 不塌熵、Pass@K 比 GRPO 高——省显存的后训练又多了一张牌。",
+      "summary_zh": "进化策略(ES,一种不算梯度、靠随机扰动加加权更新的黑箱优化)最近被当成省显存的 LLM 后训练路子,但大家不清楚它到底强在哪。这篇从理论和实验都指出 ES 能带来更广的推理覆盖:GRPO 会熵塌缩,ES 则在提升 Pass@1 的同时拿到比 GRPO 更高的 Pass@K,还把 ES 种群的 verifier 投影 JS 多样性和 Pass@K 挂上了钩。给「到底该用 RL 还是 ES」这个选择加了可操作的判据。",
+      "tags": ["RL", "进化策略", "推理"]
+    },
+    {
+      "domain": "embodied",
+      "title": "CLAP: Cross-Embodiment Video World Models are Zero-Shot Physical Simulators",
+      "title_zh": "CLAP:跨本体视频世界模型,可零样本当物理模拟器用",
+      "url": "https://arxiv.org/abs/2608.27406",
+      "authors": "Kechen Liu、Ola Shorinwa",
+      "upvotes": 0,
+      "one_liner": "人类视频和各种机器人一起喂,训完零样本当物理模拟器。",
+      "summary_zh": "现有动作条件视频模型大多绑死单一机器人本体,用不上海量异构视频。CLAP 想跨本体训练——把人和各种机器人的互联网级视频一起用,赌的是「物理规律和谁在动无关」。难点在不同平台动作表示差异大、视频里又常常没有动作标注,它给出了统一动作表示的处理办法,训练完能零样本当物理模拟器。世界模型今天扎堆,这条走的是「用人类视频补机器人数据荒」的路。",
+      "tags": ["世界模型", "VLA", "视频生成"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Riemann-1.0: An Embodied World Action Model for Physical AI",
+      "title_zh": "Riemann-1.0:面向物理 AI 的具身世界-动作模型",
+      "url": "https://arxiv.org/abs/2608.27033",
+      "authors": "Haofeng Sun、Jiangbo Pei、Fei Kang 等",
+      "upvotes": 0,
+      "one_liner": "一个模型同时当机器人策略和多本体世界模拟器。",
+      "summary_zh": "一个全因果自回归的「世界-动作模型」(WAM),把多视角观测、机器人状态、各本体动作放进同一条因果序列,把动作和世界演化都表示成因果状态转移。和以往「联合生成/视频优先/解耦建模」不同,它把在线策略执行和动作条件世界模拟统一进一个模型——既能当可执行策略,又能当多本体视觉模拟器。和 CLAP 是今天世界模型里的一对,思路互补:一个补数据、一个统一接口。",
+      "tags": ["世界模型", "具身智能", "自回归"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Pushing the Limits of High-Resolution Weather Forecasting through Data Scaling",
+      "title_zh": "用「搬数据而非搬模型」把高分辨率天气预报做上去",
+      "url": "https://arxiv.org/abs/2608.14652",
+      "hf_url": "https://huggingface.co/papers/2608.14652",
+      "authors": "Yang Zhao、Peisong Niu、Tian Zhou 等",
+      "affiliation": "NJUHML",
+      "upvotes": 4,
+      "one_liner": "0.1° 高分辨率数据不够?那就用超分把它「造」出来。",
+      "summary_zh": "基于机器学习的 0.1°(约 10 公里)全球天气预报,卡在高分辨率数据太少——几十年再分析资料只有 0.25°。以往做法是拿少量 0.1° 样本去微调 0.25° 模型,但作者指出粗分辨率预报本身有不可逆的信息损失,迁移不动。BaguanHR 换思路:不迁模型、迁数据,先论证超分(SR)比预报的条件熵更低,再用逐变量超分从 ERA5 合成大量 0.1° 数据来训。把「该迁移什么」想清楚了,是这篇的巧劲。",
+      "tags": ["AI4Science", "气象", "超分辨率"]
+    },
+    {
+      "domain": "bio",
+      "title": "LibriBrain100: One Hundred Hours of Broad and Deep MEG Data for Neural Speech Decoding at Scale",
+      "title_zh": "LibriBrain100:100 小时脑磁图数据,把神经语音解码做到「有规模」",
+      "url": "https://arxiv.org/abs/2608.25204",
+      "hf_url": "https://huggingface.co/papers/2608.25204",
+      "authors": "Francesco Mantegna、Dulhan Jayalath、Gereon Elvers 等",
+      "affiliation": "Parker Jones 神经处理实验室(PNPL)",
+      "upvotes": 2,
+      "one_liner": "单被试就攒了 80 小时脑磁图,深度优先给无创脑机解码铺路。",
+      "summary_zh": "一个大规模 MEG(脑磁图,一种无创记录大脑磁场的技术)语音解码数据集,规模翻倍到 100+ 小时,其中约 80 小时来自同一个被试——单被试深度是同类里的 8 倍、比其它数据集多约 80 倍。被试听自然连续语音时采集,配了标准化的词分类评测,用现成解码模型就刷到 SOTA。既验证了数据质量,也说明「对单人深挖」这条路对无创脑到文本解码是有用的。",
+      "tags": ["脑科学", "MEG", "数据集"]
+    },
+    {
+      "domain": "chip",
+      "title": "Redwood: A Frontier AI Accelerator Designed, Verified, and Deployed from Scratch in 2 Weeks by AI",
+      "title_zh": "Redwood:一颗由 AI 从零设计、验证并部署的 AI 加速器,只花两周",
+      "url": "https://arxiv.org/abs/2608.26418",
+      "authors": "Architect Labs",
+      "affiliation": "Architect Labs",
+      "upvotes": 0,
+      "one_liner": "把软件到硅的整条栈塌进一个优化环,两周端到端做出一颗加速器。",
+      "summary_zh": "冲着一个老矛盾去:芯片架构要提前好几年定死量产,而目标负载几个月就变,于是被迫在巨大不确定性下决策,还要为「通用性对冲」和「新负载映射不上」付两遍代价。Redwood 把软件到硅整条栈塌进单个优化环,硬件和软件协同设计、协同验证,号称两周内由 AI 端到端搞定一颗加速器。数字要打个问号(两周、「frontier」都挺营销),但「用 AI 把芯片设计周期压到和负载同频」这个方向值得盯。",
+      "tags": ["AI 加速器", "芯片设计", "EDA"]
+    },
+    {
+      "domain": "bio",
+      "title": "RegimeFormer: A Large Protein Model of Global Perturbation Regimes",
+      "title_zh": "RegimeFormer:刻画蛋白质「扰动响应」的大型蛋白模型",
+      "url": "https://arxiv.org/abs/2608.26586",
+      "authors": "Siyuan Ma、Yi Chai、Yi Wu 等",
+      "upvotes": 0,
+      "one_liner": "蛋白语言模型会读序列和结构,但缺一张「突变后会怎样」的全局图。",
+      "summary_zh": "蛋白语言模型在序列和结构上组织得很好,却缺一个「蛋白质如何响应突变」的全局表示。RegimeFormer 配套一个 RegimeAtlas,把跨生命之树的约 2 亿条非冗余蛋白序列做了统一索引,再取一个保多样性的百万蛋白子集当高分辨率训练/推理层,能按需给出残基级、替换特异的预测,在实验深度突变扫描等多个基准上对齐。是把「突变效应预测」往基座模型规模推的一步。",
+      "tags": ["蛋白质", "突变效应", "基座模型"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "tt-a1i/archify",
+      "url": "https://github.com/tt-a1i/archify",
+      "language": "JavaScript",
+      "stars": 30770,
+      "stars_today": "3,927",
+      "one_liner": "让 agent 画出好看又能核对的架构/流程图,产出自包含 HTML。",
+      "summary_zh": "一个 agent skill,把架构图、流程图、时序图、数据流、生命周期图生成成自包含的 HTML,带动效、能清晰导出。今天冲上 trending 一天加了近 4000 星。适合想让 AI 编程助手顺手产出「能给人看、还能核对」工程图的人。"
+    },
+    {
+      "domain": "space",
+      "name": "bilawalsidhu/gods-eye-view",
+      "url": "https://github.com/bilawalsidhu/gods-eye-view",
+      "language": "JavaScript",
+      "stars": 12486,
+      "stars_today": "1,870",
+      "one_liner": "浏览器里的「间谍卫星」模拟器,只是数据是真的。",
+      "summary_zh": "在光照真实感的 3D 地球上做开源空间情报(OSINT):把公开的卫星等实时数据叠到地球上,玩起来像间谍卫星模拟器,只是数据都是真实的。对关注商业遥感、开源情报、地理可视化的人是个好玩又能上手的样板。"
+    },
+    {
+      "domain": "ai",
+      "name": "THU-MAIC/OpenMAIC",
+      "url": "https://github.com/THU-MAIC/OpenMAIC",
+      "language": "TypeScript",
+      "stars": 22109,
+      "stars_today": "907",
+      "one_liner": "一键起一个多智能体互动课堂。",
+      "summary_zh": "清华团队的开源「多智能体互动课堂」,一键就能进入一个多个 agent 协作的沉浸式学习场景。适合想看多智能体协作怎么落到教育/对话产品里的人拿来拆解。"
+    },
+    {
+      "domain": "ai",
+      "name": "p-e-w/heretic",
+      "url": "https://github.com/p-e-w/heretic",
+      "language": "Python",
+      "stars": 28640,
+      "stars_today": "150",
+      "one_liner": "全自动给开源模型「去审查」——争议,但对研究拒答鲁棒性有用。",
+      "summary_zh": "一个全自动移除语言模型内容审查(拒答对齐)的工具。从对齐研究的角度看,它能用来探究模型的拒答边界、检验安全对齐到底有多鲁棒;当然它本身很有争议,拿来做什么取决于用的人。列在这儿是因为它这周在 trending 上很显眼,值得知道有这么个东西存在。"
+    },
+    {
+      "domain": "ai",
+      "name": "calesthio/OpenMontage",
+      "url": "https://github.com/calesthio/OpenMontage",
+      "language": "Python",
+      "stars": 53990,
+      "stars_today": "809",
+      "one_liner": "把 AI 编程助手变成一整套视频制作工作室。",
+      "summary_zh": "开源的 agentic 视频制作系统,12 条制作流水线、100+ 工具、700+ 技能与制作知识文件,目标是把 AI 编程助手直接变成一个完整的视频制作 studio。适合想把 agent 工作流搬到内容生产上的人。"
+    },
+    {
+      "domain": "ai",
+      "name": "workweave/router",
+      "url": "https://github.com/workweave/router",
+      "language": "Go",
+      "stars": 2645,
+      "stars_today": "284",
+      "one_liner": "给 agent 系统的模型路由器,50ms 内把每个 prompt 派给对的模型。",
+      "summary_zh": "面向 agent 系统的模型路由器,号称在 50ms 内把每个 prompt 路由到最合适的模型,只改个 endpoint 就能省 40–70% 成本。对在多模型之间做成本/质量权衡的工程团队,是个现成可插的件。"
+    },
+    {
+      "domain": "ai4s",
+      "name": "K-Dense-AI/scientific-agent-skills",
+      "url": "https://github.com/K-Dense-AI/scientific-agent-skills",
+      "language": "Python",
+      "stars": 37866,
+      "stars_today": "1,604",
+      "one_liner": "把任意 agent 变成「AI 科学家」的技能库,165 个验证过的技能。",
+      "summary_zh": "面向科研的 agent 技能库,提供 165 个验证过的技能加 100+ 科学数据库,覆盖生物、化学、医药、药物发现,兼容 Cursor/Claude Code/Codex 等。宣传口径很响(「#1」「19 万科学家在用」),但真正值钱的是那批接好了科学数据库的现成技能,做 AI4Science 工程的可以挑着用。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "索尼音乐、华纳起诉 Anthropic,指控大规模盗版侵权",
+      "url": "https://techcrunch.com/2026/08/29/sony-music-warner-sue-anthropic-alleging-a-brazen-campaign-of-intellectual-property-theft/",
+      "source": "TechCrunch",
+      "summary_zh": "索尼音乐和华纳对 Anthropic 提起诉讼,指控其「明目张胆」地盗用受版权保护的音乐内容,诉状范围很广、重点落在非法盗版这一点上。这是唱片业对 AI 训练数据来源的又一次正面开火,和此前出版界、图库的诉讼是一条线。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "法院裁定:特朗普政府把 Anthropic 列为「供应链风险」违法",
+      "url": "https://techcrunch.com/2026/08/28/anthropic-gets-its-first-court-win-over-the-pentagons-supply-chain-risk-label/",
+      "source": "TechCrunch",
+      "summary_zh": "联邦法官裁定,特朗普政府将 Anthropic 贴上「供应链风险」标签的做法违法,Anthropic 拿下与五角大楼的第一场官司,另一场诉讼仍在华盛顿进行。此前它还因被指「woke」列入黑名单,同样被判违法。AI 公司和政府采购体系的摩擦正走向法庭。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "英伟达的护城河正从 GPU 本身转向「数据中心系统」",
+      "url": "https://techcrunch.com/2026/08/29/nvidias-ai-advantage-is-moving-beyond-the-gpu/",
+      "source": "TechCrunch",
+      "summary_zh": "新一代数据中心系统靠更聪明的流量调度提升效率,而不只是堆处理器周期——英伟达的优势正从单颗 GPU 扩到互联、网络与整机系统。这和今天芯片圈「光互联、先进封装」的讨论是一条线:算力瓶颈越来越在「搬数据」而非「算数据」。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "云厂商 Lambda 举债 10 亿美元买芯片,再租给微软",
+      "url": "https://techcrunch.com/2026/08/28/neocloud-lambda-secures-1b-in-debt-to-buy-more-chips/",
+      "source": "TechCrunch",
+      "summary_zh": "Neocloud 厂商 Lambda 拿下 10 亿美元私募债去买英伟达 AI 芯片,再租给微软,这是它一连串借贷里最新一笔。反映 AI 算力扩张的高昂成本,也说明「借钱买卡再出租」的 neocloud 模式还在加杠杆。"
+    },
+    {
+      "domain": "energy",
+      "title_zh": "特朗普政府 EPA 拟让数据中心少披露空气污染",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/986176/data-center-pollution-epa-rule-change-air-permit",
+      "source": "The Verge",
+      "summary_zh": "就在新建数据中心遭周边社区反对之际,美国环保署(EPA)打算修改空气许可规则,让公众更难对数据中心造成的污染发表意见。AI 的算力扩张正把能耗和排放的账单摊给电网和社区,这条监管松动值得留意。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Locus 收购 Nexera,补上仓储机器人最难的一环:抓取",
+      "url": "https://www.therobotreport.com/locus-getting-grasp-one-robotics-biggest-challenges-manipulation/",
+      "source": "The Robot Report",
+      "summary_zh": "仓储机器人公司 Locus Robotics 收购了做柔性拾取技术的 Nexera Robotics,补强抓取/操作能力。抓取一直是移动仓储机器人从「搬运」走向「拣选」的最大卡点,靠软体拾取来啃这块硬骨头是当下一条主流路线。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "铁电调谐给 LLM 训练的晶圆级光互联减负",
+      "url": "https://semiengineering.com/ferroelectric-tuning-reduces-optical-interconnect-stalls-in-llm-training-georgia-tech/",
+      "source": "SemiEngineering",
+      "summary_zh": "佐治亚理工的技术论文分析了 MoE 大模型训练里晶圆级光互联的热调谐开销,并提出用铁电材料来缓解——光互联要靠加热来调谐波长,这份开销在大规模训练里会拖慢通信。把「光互联的热账」摆进跨层分析里,是给 AI 算力互联省电的一条具体路子。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "FDA 批准 Revolution Medicines 的胰腺癌 RAS 抑制剂",
+      "url": "https://www.fiercebiotech.com/pharma/fda-greenlights-revolution-medicines-pancreatic-cancer-gamechanger",
+      "source": "Fierce Biotech",
+      "summary_zh": "在今年 5 月 ASCO 会上拿到全场起立鼓掌的数据后,Revolution Medicines 的泛 RAS 抑制剂 daraxonrasib 获 FDA 批准,用于转移性胰腺癌。RAS 长期被视为「不可成药」的靶点,这次落地是该领域一个实打实的进展。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "重新盘算核动力火箭发动机",
+      "url": "https://spectrum.ieee.org/bimodal-nuclear-engine",
+      "source": "IEEE Spectrum",
+      "summary_zh": "IEEE Spectrum 一篇长文重新审视双模式核热/核电推进的工程可行性——用反应堆同时提供推力和电力,给深空任务省下大量推进剂。核动力推进是商业航天和深空探测绕不开的老话题,这轮讨论把工程细节又摊开重算了一遍。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Anthropic 研究者展示了「自我改进 AI」的一角",
+      "url": "https://techcrunch.com/2026/08/28/an-anthropic-researcher-just-gave-us-a-peek-at-self-improving-ai/",
+      "source": "TechCrunch",
+      "summary_zh": "给定 10 个针对特定错位行为的基准,自动化系统能在每一个上都提升表现、且不拉低整体性能——Anthropic 研究者借此展示了自我改进 AI 的一瞥。和今天论文里那批「让系统自己迭代」的思路(TTPO、以及各种技能进化工作)正好呼应,也是安全侧最该盯紧的方向。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "把「Prefix Sliding」做成 transformers/vLLM 的即插即用长推理显存压缩库",
+      "based_on": [
+        { "title": "Prefix Sliding for efficient test-time scaling", "url": "https://arxiv.org/abs/2608.26070" }
+      ],
+      "why_now": "Prefix Sliding 刚提出,是个 training-free 的思路(只丢中间推理 token、留住 prefix 和最近窗口),目前还没有开箱即用的通用实现;而长思维链推理时显存爆炸,是当下几乎每个人都会撞上的痛点。",
+      "feasibility": "单张 24–40GB 卡即可,纯推理、零训练;做成一个 KV/attention 层的 hook,2–3 周能出可用版本。",
+      "route": [
+        "跑通一个开源推理模型(如 Qwen 或 DeepSeek-R1 蒸馏版)在 AIME/GPQA 上的长思维链基线,记录峰值显存和准确率",
+        "按论文实现「保留 prefix + 最近 N 千 token 窗口、丢弃中间 token」的 KV 裁剪,先在 transformers 里做成一个 forward hook",
+        "扫 window 大小,画出「显存 vs Pass@1」曲线,找到不掉点的最小窗口",
+        "封装成 pip 可装的小库,同时支持 transformers 和 vLLM 后端,附一键 benchmark 脚本",
+        "再迁到 1–2 个别的模型验证泛化性,把适用/失效场景写清楚"
+      ],
+      "risk": "中间 token 的重要性因任务而异,某些需要回看早期推理链的题可能明显掉点,得把失效边界讲清楚、别宣传成万能。"
+    },
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "把「零训练开放词表点云分割」迁到航拍/户外场景,量它的泛化边界",
+      "based_on": [
+        { "title": "Training-Free Open-Vocabulary 3D Point-Cloud Segmentation on the Generalized Few-Shot Benchmark", "url": "https://arxiv.org/abs/2607.15331" },
+        { "title": "COSTA: Annotation-Free Open-Set Semantic Segmentation of Aerial Point Clouds", "url": "https://arxiv.org/abs/2608.18479" }
+      ],
+      "why_now": "这套方法把冻结的 3D 视觉-语言先验(RegionPLC)和冻结的可提示分割器(SAM3)拼起来,不训练、不用 3D 标签、连 few-shot 支持集都不要;training-free 方法「迁到另一个场景验证泛化性」本身就是低风险、可发表的扩展,而它只在室内 GFS 基准上试过。",
+      "feasibility": "单卡(24GB 够)纯推理,主要成本是数据准备和评测脚本;3–4 周能跑出一张跨场景对比表。",
+      "route": [
+        "先照原论文在室内基准上复现出可用的推理管线,确认拿到接近文中的分数",
+        "换成航拍/户外点云(如 COSTA 用的数据),处理好点密度、类别表和坐标尺度的差异",
+        "在户外场景上跑同一套 frozen 先验 + 可提示分割器,记录 novel 类的表现掉多少",
+        "针对户外的失效模式(远景稀疏、大尺度类别)调 prompt 或后处理聚类,做消融",
+        "整理出「哪些设定能零样本迁移、哪些必须补东西」的结论"
+      ],
+      "risk": "室内到户外的域差(点稀疏、类别语义不同)可能让 novel 类直接崩,若掉点太狠,得把它当成「诊断泛化极限」的负结果来写,而不是硬凑提升。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "单卡复现 Self-OPD 无教师蒸馏,再换采样器/任务验证它的迁移性",
+      "based_on": [
+        { "title": "Self-OPD: On-Policy Distillation for Flow Matching Models without Teacher", "url": "https://arxiv.org/abs/2608.26872" }
+      ],
+      "why_now": "Self-OPD 上周刚提出,卖点就是「无教师、便宜复现」;而无教师/training-free 方法迁到另一个采样器或另一个任务上验证泛化性,是最典型的低风险可发表扩展。",
+      "feasibility": "单张 24GB 卡跑得动的小流匹配/扩散模型(小分辨率图像或分子生成之类),纯微调量级,约 3–4 周。",
+      "route": [
+        "先跑通一个小流匹配模型的基线采样,复现出它原本的生成质量",
+        "实现核心机制:每步分叉 K 个 SDE 候选、用 ODE 采样器滚出、按 reward 做自蒸馏",
+        "在一个有明确 reward 的任务上复现出论文所述的提升,确认机制生效",
+        "换一个 ODE/SDE solver,或换一个任务,看提升能否保留",
+        "扫 K 和 reward 设计,记录结果对它们有多敏感,给出实用配方"
+      ],
+      "risk": "效果高度依赖 reward 设计和 K 的选择;reward 噪声大时,自蒸馏可能自我强化偏差,需要早停或正则来兜底。"
+    }
+  ]
+}
