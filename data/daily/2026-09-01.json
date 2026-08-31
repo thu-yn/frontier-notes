@@ -1,0 +1,367 @@
+{
+  "date": "2026-09-01",
+  "editor_note": "今天有股「把训练成本往地上砸」的劲儿:清华 PACMAN 用一张 5090、正好 5090 美元把 Qwen2-1.5B 从头训了出来,GitHub 上 minimind 让你两小时训个 64M 玩具模型——预训练这件事正在从「大厂专利」变成「周末项目」。另一条暗线是「别急着堆参数,先把奖励信号搞对」:NUS 那篇把游戏开发当成世界模型的可验证奖励引擎,和微软那句直白的「滑动窗口注意力其实打得过线性注意力」,都是在提醒别被漂亮叙事带跑。非 AI 这边我偏爱两条——量子纠错解码器用神经消息传递把去极化伪阈值翻了近一倍,以及那颗「AI 两周从零设计并流片的加速器 Redwood」,后者读起来像 EDA 圈的科幻,但确实上了 arXiv。最值得点开的还是 Puro-2B,它把每一分钱花在哪都写清楚了,对独立研究者是难得的诚实账本。每日一理今天讲李雅普诺夫稳定性——不解方程,只找一个「只跌不涨」的能量函数就断定系统会不会安分,这套路你在优化和 RL 的收敛证明里天天见,只是没人告诉你它来自 1892 年的一篇博士论文。",
+  "math_note": {
+    "name": "李雅普诺夫稳定性定理",
+    "name_en": "Lyapunov Stability Theorem (Direct Method)",
+    "field": "微分方程 / 动力系统 / 控制理论",
+    "one_liner": "不解方程,只找一个「只跌不涨」的能量,就断定系统终将安分。",
+    "statement": "给一个自治系统 $\\dot{x}=f(x)$(状态 $x$ 随时间怎么变,由 $f$ 决定),$x^*$ 是它的平衡点(待在那儿就不动了,即 $f(x^*)=0$)。定理说:只要你能构造一个「能量函数」$V(x)$,在平衡点附近正定——即 $V(x^*)=0$、别处 $V(x)>0$——并且它沿着系统真实运动的时间导数满足 $\\dot{V}(x)\\le 0$,那平衡点就是稳定的(扰动后不会跑远);如果更强地有 $\\dot{V}(x)<0$,则是渐近稳定(扰动后会慢慢收敛回去)。妙处在于:你完全不用把微分方程解出来,只看这个能量是升是降就够了。",
+    "origin": "出自亚历山大·李雅普诺夫 1892 年的博士论文《运动稳定性的一般问题》。当时天体力学和常微分方程里到处是「这个平衡状态受点扰动还稳不稳」的问题,而绝大多数方程根本解不出显式解。李雅普诺夫的洞见是:与其去追每条轨迹的具体走向,不如借物理里「能量总往低处走」的直觉,造一个抽象的能量标尺,让它替你监视整个系统。这套「直接法」沉寂了几十年,直到二十世纪中叶控制论兴起才被奉为基石。",
+    "derivation": [
+      { "math": "\\dot{x}=f(x),\\qquad f(x^*)=0", "note": "先把问题摆好:系统由 $f$ 驱动,平衡点 $x^*$ 就是让 $f$ 归零、待着不动的点。为方便把坐标平移到 $x^*=0$。" },
+      { "math": "V(0)=0,\\quad V(x)>0\\ (x\\ne 0)", "note": "挑一个正定的「能量」$V$:在平衡点是谷底 0,四周都比它高。像给系统状态配了个海拔计,越远离平衡海拔越高。" },
+      { "math": "\\dot{V}(x)=\\nabla V(x)\\cdot f(x)", "note": "关键一步:$V$ 沿真实轨迹的变化率,用链式法则等于梯度点乘 $f$。注意右边只含 $x$ 和已知的 $f$,不需要先解出 $x(t)$——这正是「不解方程」的来源。" },
+      { "math": "\\dot{V}\\le 0\\ \\Rightarrow\\ V(x(t))\\le V(x(0))", "note": "若这个变化率处处不正,能量就单调不增,轨迹被锁在某个 $\\{V\\le c\\}$ 的水平集里出不去——这就是「稳定」:扰动有界,不会发散。" },
+      { "math": "\\dot{V}<0\\ \\Rightarrow\\ V(x(t))\\to 0\\ \\Rightarrow\\ x(t)\\to 0", "note": "若能量严格下降又有下界 0,它只能一路跌到底,把状态也拖回平衡点——即渐近稳定。等号情形则要靠 LaSalle 不变原理,看轨迹最终落在 $\\dot V=0$ 的最大不变集里。" },
+      { "math": "\\dot{x}=y,\\ \\dot{y}=-x-y;\\quad V=x^2+y^2,\\ \\dot{V}=-2y^2\\le 0", "note": "拿个阻尼振子练手:取最朴素的 $V=x^2+y^2$,代进去 $\\dot V=2x\\dot x+2y\\dot y=2xy-2xy-2y^2=-2y^2$,恒不为正,于是断定原点稳定——全程没解过这方程。" }
+    ],
+    "applications": [
+      { "area": "控制与机器人", "detail": "设计控制律时用「控制李雅普诺夫函数」证明闭环稳定,保证机械臂、腿足或无人机受扰后能回到目标姿态而不是越抖越远。" },
+      { "area": "安全强化学习 / 自适应控制", "detail": "把 Lyapunov 条件当约束加进策略学习,或用它给自适应律做稳定性背书,让「学出来的控制器」也有不发散的硬保证。" },
+      { "area": "电力系统", "detail": "用能量函数判断电网受大扰动(如短路)后,各发电机能否重新拉回同步运行点,即暂态稳定分析。" },
+      { "area": "优化与算法收敛", "detail": "把梯度下降/梯度流看成动力系统,拿损失函数当 Lyapunov 函数证明它单调下降并收敛——现代优化和训练收敛证明的通用套路就源于此。" }
+    ],
+    "takeaway": "与其追踪每条轨迹的命运,不如造一个「只减不增」的标量 $V$,让它一个人替你监视整个系统——这套「找个单调量」的思路,从 1892 年的天体力学一直用到今天的优化与 RL 收敛证明。",
+    "viz": {
+      "type": "vectorfield",
+      "caption": "拖动那个可移动的种子点选不同初始状态,看轨迹如何盘旋着掉回原点。整个流场里能量 $V=x^2+y^2$ 一路只减不增,这就是渐近稳定的样子。",
+      "params": { "fx": "y", "fy": "-x - y", "xmin": -3, "xmax": 3, "ymin": -3, "ymax": 3, "density": 15, "seedX": 2.5, "seedY": 0, "steps": 500, "dt": 0.03 }
+    }
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Agentic Game Development as a Verifiable Trajectory Data Engine for Scaling World Models",
+      "title_zh": "把游戏开发当作可验证的轨迹数据引擎,来扩展世界模型",
+      "url": "https://arxiv.org/abs/2608.25518",
+      "hf_url": "https://huggingface.co/papers/2608.25518",
+      "authors": "Pengfei Zhou、Hexin Wang、Kaipeng Zhang、Yang You 等",
+      "affiliation": "新加坡国立大学(NUS)",
+      "upvotes": 185,
+      "one_liner": "代码有编译器给奖励,世界模型也该有个「能自动判对错」的沙盒。",
+      "summary_zh": "作者的观点很尖锐:光靠爬更多视频、堆更多算力来扩展世界模型是低效的,因为空间生成一直缺一个「靠谱的奖励信号」,现在只能用 CLIP 分数这种模糊代理。他们类比代码 Agent——代码能跑,编译器和运行时就能给出高质量奖励支撑 RL 后训练——提出让 Agent 去做游戏开发,把可执行的游戏环境当成世界模型的奖励来源和轨迹数据引擎。思路比结果更有意思:它把「可验证性」这个 RL 后训练的命门,从代码搬到了空间生成。能不能真规模化还得看后续,但这个类比方向值得盯。",
+      "tags": ["世界模型", "RL", "Agent"]
+    },
+    {
+      "domain": "ai",
+      "title": "J-Zero: Unified Challenger--Solver--Judge Co-Evolution from Zero Data",
+      "title_zh": "J-Zero:出题者—解题者—裁判从零数据里共同进化",
+      "url": "https://arxiv.org/abs/2608.26582",
+      "hf_url": "https://huggingface.co/papers/2608.26582",
+      "authors": "Gyouk Chu、Myeongho Jeon、Eunho Yang",
+      "affiliation": "KAIST AI",
+      "upvotes": 35,
+      "one_liner": "在没有标准答案的领域,让模型自己养一个会打分的裁判。",
+      "summary_zh": "自进化语言模型在「有客观对错」的领域(数学、代码)已经玩得不错,难点是那些没法自动验证的领域。J-Zero 让三个角色一起进化:出题者不断造更难的题,解题者学着答得更好,而裁判(Judge)也同步共适应——这是相比以往「裁判固定」方案的关键区别,想解决的是不可验证领域里奖励信号本身不可靠的问题。从零数据起步、三方对抗共演化的设定很漂亮,但裁判自己在进化会不会和解题者「合谋」放水,是这类方法最该警惕的地方,得看它的评测有多硬。",
+      "tags": ["自进化", "LLM", "RL"]
+    },
+    {
+      "domain": "ai",
+      "title": "Puro-2B: Poor Lab's Qwen2-1.5B Trained on RTX 5090 within $5090",
+      "title_zh": "Puro-2B:穷实验室在一张 RTX 5090 上、花 5090 美元训出的 Qwen2-1.5B",
+      "url": "https://arxiv.org/abs/2608.27370",
+      "hf_url": "https://huggingface.co/papers/2608.27370",
+      "authors": "Kairong Luo、Jiarui Cui、Shengqi Chen、Mingzhe Zhang 等",
+      "affiliation": "清华大学 PACMAN 组",
+      "upvotes": 27,
+      "one_liner": "把预训练的门槛,写成一张普通人看得懂的账单。",
+      "summary_zh": "预训练几乎成了「烧钱」的同义词——文中提到光复现 Llama-3.2-3B 就要一百多万美元。这份报告给的是一整套面向消费级硬件的开源预训练配方:用一张 RTX 5090、FP8 精度,在最多 1.4 万亿 token 上从头训出一系列 Puro-2B 模型,名字里的 5090 既是显卡也是预算(美元)。价值不在于模型多强,而在于它把「用什么卡、花多少钱、训多少 token」这本账彻底公开,对学术界和开源社区是很实在的降门槛。想自己动手训个小基座的人,这是当下最该抄的作业。",
+      "tags": ["预训练", "低成本", "FP8"]
+    },
+    {
+      "domain": "ai",
+      "title": "Sliding-window beats linear attention",
+      "title_zh": "滑动窗口注意力,其实打得过线性注意力",
+      "url": "https://arxiv.org/abs/2608.28444",
+      "hf_url": "https://huggingface.co/papers/2608.28444",
+      "authors": "Alexia Jolicoeur-Martineau、Rhea Sanjay Sukthanker、Pashmina Cameron 等",
+      "affiliation": "Microsoft",
+      "upvotes": 11,
+      "one_liner": "在为难题造复杂解法之前,先老老实实和最笨的基线比一比。",
+      "summary_zh": "为了摆脱注意力的二次方开销,「把 LLM 改造成线性注意力」这条路吸引了大量关注,号称能低成本达到 SOTA。这篇的做法很朴素也很扎心:它把线性注意力和一个被长期忽视的简单基线——滑动窗口注意力(SWA,只看最近固定长度的一段)——认真对比,结论是 SWA 在同等条件下反而更好。没有花哨方法,就是提醒整个方向:很多「新架构战胜二次方」的结论,可能根本没和该比的简单基线比过。对做高效推理的人是一盆有用的冷水。",
+      "tags": ["高效注意力", "长上下文", "架构"]
+    },
+    {
+      "domain": "ai",
+      "title": "Luce: Relightable Gaussians for 3D Asset Generation",
+      "title_zh": "Luce:可重光照的高斯,用于 3D 资产生成",
+      "url": "https://arxiv.org/abs/2608.23943",
+      "hf_url": "https://huggingface.co/papers/2608.23943",
+      "authors": "Mayank Singh、Michele Stoppa、Rui Yu、Behrooz Shahsavari 等",
+      "affiliation": "Apple",
+      "upvotes": 14,
+      "one_liner": "生成的 3D 资产不只是好看,还能塞进现成渲染管线里重新打光。",
+      "summary_zh": "从单张图生成高质量 3D,难点是既要几何又要外观,还得能重光照、能接进标准渲染流程。Luce 把几何和基于物理的渲染(PBR)材质——反照率、金属度—粗糙度、法线——统一编进一团体素化的多模态高斯云,每种模态用专门的高斯基元表示,再用 VAE 压进一个材质感知的隐空间,最后靠一个 rectified-flow Transformer 从单图生成。它解决的是 3D 生成落地时的真痛点:生成物能不能直接被引擎当资产用。来自 Apple,工程完整度值得关注,适合做 3D 内容管线的人。",
+      "tags": ["3D生成", "高斯泼溅", "PBR"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Beyond Data Scaling: Representation-Centric Continued Pre-training for Vision-Language-Action Models",
+      "title_zh": "超越数据扩张:以表征为中心的 VLA 模型继续预训练",
+      "url": "https://arxiv.org/abs/2608.27550",
+      "hf_url": "https://huggingface.co/papers/2608.27550",
+      "authors": "Senqiao Yang、Chengyao Wang、Yuxin Chen、Changsheng Lu 等",
+      "upvotes": 59,
+      "one_liner": "机器人数据本来就少,与其硬扩量,不如把每条轨迹榨出更多可迁移的表征。",
+      "summary_zh": "VLA(视觉—语言—动作)模型想变通用,卡在机器人轨迹数据太贵、覆盖的物理世界太稀疏,没法像图文那样海量扩。作者主张:在固定的机器人数据预算下,真正的瓶颈是表征质量——继续预训练应该把有限轨迹变成「可迁移的视觉—动作知识」,而不是单纯拟合动作。他们的 VLAct 用一个 VLA 导向的 VLM 骨干,先在广泛、异构、多本体的机器人数据上训,保住 VLM 的先验,并鼓励不同本体之间共享动作语义。方向对路:具身领域「加数据」的边际收益越来越低,转向「怎么用好数据」是务实选择。",
+      "tags": ["VLA", "机器人", "预训练"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Aero Hand Open: A Simulation-Ready Tendon-Driven Hand for Dexterous Manipulation Learning",
+      "title_zh": "Aero Hand Open:一只仿真友好的腱驱灵巧手",
+      "url": "https://arxiv.org/abs/2608.28578",
+      "authors": "(arXiv 提交,作者见原文)",
+      "upvotes": 0,
+      "one_liner": "把便宜又难仿真的腱驱手,做成能在仿真里学、又开源的硬件。",
+      "summary_zh": "腱驱手(tendon-driven,用钢缆把力从电机传到关节,而不是每个关节塞一个电机)之所以便宜、拟人,是因为电机可以挪出关节、一根缆还能带多个关节;代价是它「欠驱动」的传动很难在仿真里精确建模,学起来也比直驱手难。这个工作给出一只面向仿真的开源腱驱手设计,把这套难仿真的传动如何在模拟器里可靠表达当成核心问题。对想在有限预算下做灵巧操作、又不想被昂贵手件卡住的实验室,是个可复制的起点。",
+      "tags": ["灵巧手", "腱驱", "仿真"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Learning to Decode Concatenated Quantum Codes with Hierarchical Message Passing",
+      "title_zh": "用分层消息传递学习解码级联量子码",
+      "url": "https://arxiv.org/abs/2608.28571",
+      "authors": "(arXiv 提交,作者见原文)",
+      "affiliation": "",
+      "upvotes": 0,
+      "one_liner": "让神经网络只学「怎么汇总消息」,把量子纠错的解码阈值顶上去。",
+      "summary_zh": "量子纠错里,「解码器」负责根据测量到的错误征兆推断实际出了什么错,解码得越准,能容忍的物理错误率(阈值)就越高。这篇给级联稳定子码提出一套神经消息传递框架:软信念在级联的各层之间双向传播,而轻量神经网络只负责学「怎么聚合传入的消息」。在级联的 [[15,7,3]] 量子汉明码上,去极化噪声下的伪阈值几乎翻倍,从 6.5% 提到 12.3%,明显超过此前最好的双向硬判决解码器。把纠错解码这种结构化推理交给「学聚合」的小网络,是量子容错里性价比很高的一路。",
+      "tags": ["量子纠错", "解码器", "消息传递"]
+    },
+    {
+      "domain": "chip",
+      "title": "Redwood: A Frontier AI Accelerator Designed, Verified, and Deployed from Scratch in 2 Weeks by AI",
+      "title_zh": "Redwood:由 AI 在两周内从零设计、验证并部署的前沿 AI 加速器",
+      "url": "https://arxiv.org/abs/2608.26418",
+      "authors": "(arXiv 提交,作者见原文)",
+      "upvotes": 0,
+      "one_liner": "芯片架构一冻结就落后,那就让设计周期快到跟得上负载变化。",
+      "summary_zh": "AI 负载和跑它的硬件节奏对不上:架构定义要提前量产芯片好几年,而负载几个月就变一次,于是设计决策总在巨大不确定下拍板,还要为「押错」和「留冗余」双重付费。作者提出一套端到端的 AI 系统,把从软件到硅片的设计流程大幅压缩,声称能在两周内从零设计、验证并部署一颗名为 Redwood 的加速器。读起来像 EDA 圈的科幻,可信度需要业界复核,但它戳中的问题是真的:摩尔定律放缓后,专用化是能效的主要来源,而专用化的前提是设计周期得快到跟得上负载。",
+      "tags": ["AI加速器", "EDA", "芯片设计"]
+    },
+    {
+      "domain": "bio",
+      "title": "CIR-DDG: backbone-agnostic residual correction of antibody-antigen affinity changes with explicit cross-chain geometry",
+      "title_zh": "CIR-DDG:显式建模跨链几何、对抗体—抗原亲和力变化做残差校正",
+      "url": "https://arxiv.org/abs/2608.27530",
+      "authors": "(arXiv 提交,作者见原文)",
+      "upvotes": 0,
+      "one_liner": "标签稀缺时,别硬训大模型,给现成预测加一层看得懂的残差修正。",
+      "summary_zh": "预测「一个突变会让抗体和抗原结合得更紧还是更松」(即结合自由能变化 ΔΔG)对抗体亲和力成熟很关键,但这类实验标签稀缺、界面几何又复杂,模型很难泛化。CIR-DDG 是个轻量的残差适配器:在一个固定的基础预测之上,叠加 22 个可解释的描述符——刻画跨链距离、接触密度、突变位点与结合伙伴的上下文——专门补回「基础模型在最终标量输出里丢掉的跨链信号」。思路务实:与其在小数据上从头训一个几何大模型,不如给已有预测打一个便宜、可解释又对症的补丁。做抗体工程的人可以拿去当即插即用的一层。",
+      "tags": ["抗体设计", "蛋白结合", "ΔΔG"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Towards Stellarator Geometry Optimisation for Nuclear Fusion",
+      "title_zh": "迈向核聚变仿星器的几何优化",
+      "url": "https://arxiv.org/abs/2608.28224",
+      "authors": "(arXiv 提交,作者见原文)",
+      "upvotes": 0,
+      "one_liner": "用一个 2D 隐表征加局部精修,把仿星器几何优化刷上榜首。",
+      "summary_zh": "仿星器(stellarator)是一种靠精心扭曲的三维磁场线圈约束等离子体的聚变装置,它不像托卡马克那样对称,几何设计的自由度极大、也极难优化。这份短报告给出一个局部几何精修方法加一个二维隐表征,凭它在 2026 年 5 月登上了 ConStellaration 几何任务排行榜榜首。内容不长,亮点是把「高维几何优化」压成一个低维隐空间里的可搜索问题——这正是 AI4Science 常见的招式,能不能推广到更完整的物理约束还得看后续。做设计优化、代理模型的人可以借鉴它的降维思路。",
+      "tags": ["核聚变", "仿星器", "几何优化"]
+    },
+    {
+      "domain": "energy",
+      "title": "QUBO-Compatible Active Learning for Inverse Design of High-Entropy Alloys",
+      "title_zh": "面向高熵合金逆向设计的 QUBO 兼容主动学习",
+      "url": "https://arxiv.org/abs/2608.28239",
+      "authors": "(arXiv 提交,作者见原文)",
+      "upvotes": 0,
+      "one_liner": "让材料逆向设计的搜索,恰好能塞进量子退火器爱吃的 QUBO 形式。",
+      "summary_zh": "机器学习正向模型能飞快预测合金性能,但拿它做「逆向设计」(指定目标性能去反推配方)时,想保持和量子退火/组合优化器兼容的 QUBO(二次无约束二值优化)形式就很别扭。这篇搭了一套 QUBO 兼容的主动学习框架,做高熵合金的逆向设计:用一个预训练图神经网络当固定的性能预言机,用一个「性质引导的二值 VAE」给出二值隐表征,再用一组二次因子分解机来挑候选样本。它把「材料设计」和「能上量子/退火硬件的优化」这两头对接起来,是个把 AI 代理模型嵌进组合优化循环的实用样板。",
+      "tags": ["高熵合金", "逆向设计", "QUBO"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "jingyaogong/minimind",
+      "url": "https://github.com/jingyaogong/minimind",
+      "language": "Python",
+      "stars": 56059,
+      "stars_today": "472",
+      "one_liner": "两小时、从零,把 LLM 训练这件事变成看得见摸得着的教学项目。",
+      "summary_zh": "号称两小时从头训一个 64M 参数的小 LLM,把预训练、SFT、LoRA 这一整套流程用最小可跑的代码摊开给你看。它不是要你训个能用的模型,而是让「训练大模型」不再是黑箱——想真正理解每一步在干嘛的人,这是最好的动手教材,和今天 Puro-2B 那份省钱配方是一对好搭子。"
+    },
+    {
+      "domain": "embodied",
+      "name": "pollen-robotics/microduck_rl",
+      "url": "https://github.com/pollen-robotics/microduck_rl",
+      "language": "Python",
+      "stars": 1120,
+      "stars_today": "384",
+      "one_liner": "给小鸭子机器人配好的 RL 训练环境,开箱就能练腿。",
+      "summary_zh": "为 Microduck(基于 mjlab 的小型腿足机器人)提供的强化学习训练环境。它把仿真环境、奖励、训练脚手架都搭好,让你能直接在里面训步态和运动策略。对想低成本上手腿足/具身 RL、又不想从零搭仿真的人,是个门槛很低的练手台。"
+    },
+    {
+      "domain": "ai",
+      "name": "p-e-w/heretic",
+      "url": "https://github.com/p-e-w/heretic",
+      "language": "Python",
+      "stars": 29627,
+      "stars_today": "536",
+      "one_liner": "一键给开源模型「去审查」,也是研究拒答机制的现成解剖刀。",
+      "summary_zh": "自动化地移除语言模型的拒答/审查行为(俗称 abliteration),不用重新训练就改掉模型的安全对齐方向。技术上它是研究「拒绝行为在权重里长什么样」的好工具,但用途明显是双刃的。放这儿是因为它在 trending 上很热、也确实反映了对齐鲁棒性这个真问题——想研究安全对齐能不能被轻易绕过的人值得看,使用请自负其责。"
+    },
+    {
+      "domain": "ai",
+      "name": "K-Dense-AI/scientific-agent-skills",
+      "url": "https://github.com/K-Dense-AI/scientific-agent-skills",
+      "language": "Python",
+      "stars": 40681,
+      "stars_today": "1,968",
+      "one_liner": "把科研常用工具打包成一堆 Agent「技能」,让通用 Agent 干专业活。",
+      "summary_zh": "一套面向科学场景的 Agent 技能库,收了一百多个现成技能,想把通用 AI Agent 改造成能做具体科研任务的助手。宣传口吻偏营销(「#1」「190,000+ 科学家」听听就好),但里面确实是能跑的工具集合,而非纯 awesome 清单。做 AI4Science 工作流、想省掉自己封装工具那步的人可以翻翻。"
+    },
+    {
+      "domain": "ai",
+      "name": "firecrawl/pdf-inspector",
+      "url": "https://github.com/firecrawl/pdf-inspector",
+      "language": "Rust",
+      "stars": 17335,
+      "stars_today": "199",
+      "one_liner": "Rust 写的 PDF 体检工具:先分清扫描件还是文本件,再决定怎么抽。",
+      "summary_zh": "一个快速的 PDF 检查、分类与文本抽取库,能智能判断一份 PDF 是扫描图像还是可提取文本,从而选对处理路径。对做 RAG、文档解析、数据管线的人是很实用的前置一环——很多抽取失败其实败在没先分清 PDF 类型,这个库正好补这一步。"
+    },
+    {
+      "domain": "ai",
+      "name": "THU-MAIC/OpenMAIC",
+      "url": "https://github.com/THU-MAIC/OpenMAIC",
+      "language": "TypeScript",
+      "stars": 26886,
+      "stars_today": "2,819",
+      "one_liner": "多智能体拼出的沉浸式课堂,一键就能开一节 AI 陪读课。",
+      "summary_zh": "开源的多智能体互动课堂(Multi-Agent Interactive Classroom),用多个协作的 Agent 搭出一个沉浸式学习体验,一键就能起。它是当下「多 Agent 应用」落到教育场景的一个具体样本,对想看多智能体协作怎么组织成完整产品的人,可以当参考实现来读。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "chip",
+      "title_zh": "英伟达 35 亿美元入股联发科,给自建 AI 芯片的大厂上把锁",
+      "url": "https://techcrunch.com/2026/08/31/nvidias-3-5b-mediatek-bet-reveals-its-plan-for-tackling-big-techs-ai-chip-buildout/",
+      "source": "TechCrunch AI",
+      "summary_zh": "英伟达向台湾芯片厂联发科投资 35 亿美元。分析认为,这笔钱透露了英伟达的算盘:在谷歌、亚马逊等大厂纷纷自研 AI 芯片的当口,通过绑定联发科来守住自己在 AI 基础设施里不可替代的位置。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "华为、苏黎世联邦理工提出 FLINT:用高带宽闪存扩 LLM 推理的显存墙",
+      "url": "https://semiengineering.com/workload-driven-hbf-substrate-for-capacity-scalable-llm-inference-huawei-eth-zurich-hust/",
+      "source": "SemiEngineering",
+      "summary_zh": "华为、苏黎世联邦理工与华中科大发表技术论文 FLINT,针对「LLM 推理越来越受限于加速器显存容量而非算力」的现实,提出用高带宽闪存(HBF)作为可扩容量的存储衬底,来支撑大模型推理。切的是当下推理落地里最实的那道容量墙。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Skild AI 发布旗舰机器人基础模型 S1:看一遍视频就学会新任务",
+      "url": "https://www.therobotreport.com/skild-ai-unveils-s1-flagship-robot-foundation-model/",
+      "source": "The Robot Report",
+      "summary_zh": "Skild AI 推出旗舰机器人基础模型 S1,官方称机器人只要看一段某任务被演示的视频,就能学会去做。是机器人基础模型赛道又一家把「从演示视频泛化」当卖点的选手,实际泛化边界如何还需第三方验证,但方向和今天 VLAct 那篇「表征优先」的思路呼应。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Reframe Systems 融资 4000 万美元,把造房子的机器人微工厂铺到社区旁",
+      "url": "https://www.therobotreport.com/reframe-systems-raises-40m-scale-robotic-microfactories-home-building/",
+      "source": "The Robot Report",
+      "summary_zh": "Reframe Systems 拿到 4000 万美元融资,计划在需要住房的社区附近建一张自动化「微工厂」网络,用机器人就近生产房屋部件。是把工业机器人往建筑这个传统低自动化行业推的一次下注,看点是「就近微工厂」这个分布式制造模式能不能跑通经济账。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "ChatGPT 被欧盟划为超大在线搜索引擎,迎来 DSA 最严监管",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/986682/openai-chatgpt-eu-dsa",
+      "source": "The Verge AI",
+      "summary_zh": "因用户规模,ChatGPT 被欧盟按《数字服务法》(DSA)认定为「超大在线搜索引擎」,自此要为其对未成年人、用户心理健康及非法内容传播的影响承担缓释义务。这是生成式 AI 首次被套进为大型平台设计的最严一档合规框架,Reddit 也同批被纳入。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "礼来 28.8 亿美元收购 Merida,押注「选择性降解致病自身抗体」",
+      "url": "https://www.fiercebiotech.com/biotech/eli-lilly-inks-29b-merida-buyout-autoimmune-drugs-against-rogue-antibodies",
+      "source": "Fierce Biotech",
+      "summary_zh": "礼来达成协议,以最高 28.75 亿美元收购 Merida Biosciences,切入通过「选择性降解致病性自身抗体」来治疗自身免疫病的方向。这条路想绕开广谱免疫抑制,只精准清掉惹祸的那类抗体,给礼来在自免领域立了个桥头堡。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "诺华、百时美因免疫相关不良事件叫停多项自免 CAR-T 试验",
+      "url": "https://www.fiercebiotech.com/biotech/novartis-bristol-myers-squibb-halt-car-t-cell-trials-due-immune-events",
+      "source": "Fierce Biotech",
+      "summary_zh": "据 Fierce 获悉,诺华与百时美施贵宝因免疫相关不良事件,已叫停多项针对自身免疫疾病的 CAR-T 试验。CAR-T 从肿瘤扩到自免本是今年的热门叙事,这盆冷水提醒:把强效细胞疗法用到非致命的自免病人身上,安全性门槛要高得多——正好和礼来押注自免形成一冷一热的对照。"
+    },
+    {
+      "domain": "energy",
+      "title_zh": "马斯克要自铸燃气轮机叶片提速供电,却背上污染争议",
+      "url": "https://techcrunch.com/2026/08/30/musks-faster-path-to-more-gas-turbines-comes-with-pollution-problem/",
+      "source": "TechCrunch AI",
+      "summary_zh": "马斯克称一座隐秘的 SpaceX 铸造厂将让他自铸燃气轮机叶片,比别人快 18 个月把燃气发电装机上线——多半是为 AI 数据中心的电力缺口。但这是押注一种已在多地引发诉讼和健康研究的化石燃料,提速的代价是绕不开的排放与污染争议。AI 算力的电从哪来,正把矛盾摊到台面上。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "NASA 下一座「大天文台」罗曼望远镜启动巡天任务",
+      "url": "https://arstechnica.com/space/2026/08/nasas-next-great-observatory-begins-mission-to-widen-our-view-of-the-universe/",
+      "source": "Ars Technica Science",
+      "summary_zh": "NASA 的罗曼太空望远镜作为下一座「大天文台」正式开始任务,视场极广——官方形容,要完整显示它最大巡天里的单张图像,得用五十多万台 4K 电视拼起来。它主打大视场巡天,补的是哈勃、韦布「看得深但看得窄」的短板。"
+    },
+    {
+      "domain": "ai4s",
+      "title_zh": "「惊艳」的渗流证明,了结相变领域一道悬了几十年的难题",
+      "url": "https://www.quantamagazine.org/stunning-percolation-proof-solves-decades-old-puzzle-about-phase-transitions-20260831/",
+      "source": "Quanta Magazine",
+      "summary_zh": "数学家证明了一大类网络会在越过某个临界点时突然改变整体行为,了结了渗流(percolation)与相变领域一个悬置数十年的猜想。渗流是研究「连通性如何随密度突变」的经典模型,和物理相变、网络鲁棒性都挂钩,这个结果给「临界点处行为为何骤变」提供了严格的数学答案。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个模块化、可复现的 3DGS 压缩基准与后处理小库",
+      "based_on": [
+        { "title": "KISS-GS: 3D Gaussian Splatting Compression Kept Simple", "url": "https://arxiv.org/abs/2608.26948" },
+        { "title": "KISS-GS 模块化压缩管线(把压缩与训练解耦)", "url": "https://arxiv.org/abs/2608.26948" }
+      ],
+      "why_now": "3DGS 部署普遍卡在文件动辄几百 MB,现有压缩系统把多种策略混在一起,说不清增益来自哪一步。KISS-GS 刚提出「把压缩彻底和训练解耦」的模块化思路,但社区缺一个统一、可 pip 安装、能公平对比各压缩组件的 harness——这正是攒 star 的空档。",
+      "feasibility": "纯后处理/评测,不训练大模型,单张 24GB 卡足够甚至纯 CPU 即可;主要是工程活,2–4 周能出一个能跑几个公开场景、给出「大小 vs. PSNR/SSIM」曲线的 v0.1。",
+      "route": [
+        "先跑通一个现成 3DGS 场景(如官方 demo 或 Mip-NeRF360 单场景)的训练/加载,拿到 .ply 高斯参数",
+        "把「量化 / 剪枝 / 属性编码 / 熵编码」拆成独立可插拔模块,每个都能单独开关",
+        "接一个统一评测:对同一场景跑不同模块组合,输出文件大小与渲染质量(PSNR/SSIM/LPIPS)对照表",
+        "配 2–3 个公开场景的一键复现脚本和 README 曲线图,发布到 GitHub 并写清每个组件的边际增益"
+      ],
+      "risk": "3DGS 各实现的参数格式不统一,做通用加载/导出的适配工作量可能被低估;先锁定一种主流格式再扩展。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "把便宜的自监督点云编码器迁移到别的 3D-LLM 骨干,验证泛化性",
+      "based_on": [
+        { "title": "On the Efficacy of Self-Supervised Point Cloud Encoders for Efficient 3D Large Language Models", "url": "https://arxiv.org/abs/2607.29136" }
+      ],
+      "why_now": "现有 3D-LLM 多依赖 ULIP-2 这类需要 8×A100 级图文点云对齐的昂贵编码器,门槛极高。这篇刚验证了 PCP-MAE、Point-MAE 等低成本自监督编码器能在 MiniGPT-3D 上替代它——但只在一个骨干上验证,「换个 3D-LLM 还成不成立」是天然、低风险的可发表扩展。",
+      "feasibility": "只微调投影层/适配层,冻结自监督编码器,单张 24–40GB 卡可行;每组配置几小时到一两天,总体 3–5 周能覆盖 2 个编码器 × 2 个骨干的小矩阵。",
+      "route": [
+        "复现原文:在 MiniGPT-3D 上用 PCP-MAE/Point-MAE 替换重编码器,对齐其报告指标当基线",
+        "换一个不同的开源 3D-LLM 骨干(或不同 LLM 尺寸),接入同一批自监督编码器",
+        "在同一批 3D 问答/描述基准上评测,记录「编码器 × 骨干」的兼容性与掉点情况",
+        "整理成一张兼容性小表 + 一句可迁移性结论,附最省显存的推荐组合"
+      ],
+      "risk": "不同骨干的点云 token 接口差异大,接入适配可能比想象费劲;选接口相近的两个骨干可降低风险。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "给小模型的 KV cache 淘汰做一个「因果保真度」统一评测台",
+      "based_on": [
+        { "title": "TwinKV: A Composable Repair Pass for KV Cache Eviction via Pairwise Key Redundancy", "url": "https://arxiv.org/abs/2608.27128" },
+        { "title": "A Probabilistic Interpretation of KV Cache Eviction", "url": "https://arxiv.org/abs/2608.28293" }
+      ],
+      "why_now": "KV cache 淘汰方法一堆,大多靠注意力幅度这类启发式;TwinKV 用留一法探针发现注意力幅度和 token 的真实因果贡献几乎无关(Spearman ρ≈-0.004),等于给整个领域的评价标准打了个问号。现在缺一个统一、开源的 harness 去按「因果保真度」而非「注意力分数」横向比各方法。",
+      "feasibility": "只做推理和探针评测,小模型(1.5B–7B)单张 24GB 卡即可,长上下文靠 CPU offload 兜底;2–4 周能出一个跑通 3–4 种主流淘汰策略的评测台。",
+      "route": [
+        "先在一个小模型上跑通某种现成 KV 淘汰(如 StreamingLLM/H2O)的长上下文推理",
+        "实现留一法因果探针:逐个「保留/剔除」某 token,量它对最终答案的真实影响,作为金标准",
+        "把 3–4 种淘汰策略接进同一接口,在若干长上下文任务上按因果保真度而非注意力分数排名",
+        "输出一张「方法 × 保真度 × 吞吐」对照表,开源成可复现 harness 并给出选型建议"
+      ],
+      "risk": "留一法探针在长上下文上开销大,需要做近似或采样;先在中等长度上验证方法,再逐步放大上下文。"
+    }
+  ]
+}
