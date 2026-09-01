@@ -1,6 +1,15 @@
 {
   "items": [
     {
+      "id": "2026-09-01:news:9ac813af30",
+      "date": "2026-09-01",
+      "section": "news",
+      "domain": "embodied",
+      "title": "Skild AI 发布旗舰机器人基础模型 S1:看一遍视频就学会新任务",
+      "url": "https://www.therobotreport.com/skild-ai-unveils-s1-flagship-robot-foundation-model/",
+      "liked_at": "2026-09-01T04:19:49.938Z"
+    },
+    {
       "id": "2026-09-01:repos:b1f15b8a23",
       "date": "2026-09-01",
       "section": "repos",
