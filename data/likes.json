@@ -1,6 +1,15 @@
 {
   "items": [
     {
+      "id": "2026-09-01:repos:b1f15b8a23",
+      "date": "2026-09-01",
+      "section": "repos",
+      "domain": "embodied",
+      "title": "pollen-robotics/microduck_rl",
+      "url": "https://github.com/pollen-robotics/microduck_rl",
+      "liked_at": "2026-09-01T04:19:15.314Z"
+    },
+    {
       "id": "2026-07-24:repos:2955e31aa2",
       "date": "2026-07-24",
       "section": "repos",
