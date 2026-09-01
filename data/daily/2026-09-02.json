@@ -1,0 +1,360 @@
+{
+  "date": "2026-09-02",
+  "editor_note": "今天的关键词是「别硬训,先想清楚增益到底从哪来」。普渡那篇拆穿在线蒸馏——学生的进步八成来自自己多产好样本,而非老师打分多准;NoRA 只归一化一下 LoRA 的下投影、投机解码那篇让草稿模型预演验证,都是「小改动撬训练动态」的路子,比堆参数实在。硬件侧两条新闻和 CHIPSMORE 论文串成一条线:LLM 推理的瓶颈正从「算得快」移到「内存和互连塞不塞得下」,华为的 HBF、英伟达押注联发科都是在这条账上排兵。最值得点开的是抗菌肽那篇——330 个序列描述子喂 TabPFN、一次前向不训练就打过结构大模型,提醒我们表格基座在生物筛选里被低估了。配套的「每日一理」选了高斯散度定理,和今天满屏的扩散/生成模型其实是一根筋:概率密度怎么流动,答案就写在速度场的散度里。",
+  "math_note": {
+    "name": "高斯散度定理",
+    "name_en": "Gauss's Divergence Theorem",
+    "field": "向量分析 / 多元微积分",
+    "one_liner": "边界上流出多少,内部就「产」了多少——通量守恒的一本账",
+    "statement": "设 $\\mathbf{F}$ 是空间里的一个向量场(比如水的流速、电场),$V$ 是一块封闭区域、$\\partial V$ 是它的外表面。定理说:场穿过表面往外的总通量,等于场的散度在整块区域上的积分:$\\oint_{\\partial V}\\mathbf{F}\\cdot\\mathbf{n}\\,dS=\\iiint_V(\\nabla\\cdot\\mathbf{F})\\,dV$。这里 $\\mathbf{n}$ 是表面朝外的单位法向,散度 $\\nabla\\cdot\\mathbf{F}=\\partial_xF_x+\\partial_yF_y+\\partial_zF_z$ 衡量某点是「源」(往外冒,正)还是「汇」(往里吸,负)。一句话:只看边界,就能知道内部一共冒出/吸走了多少。",
+    "origin": "高斯在 1810–1830 年代研究引力与静电时,需要把场的整体行为和边界联系起来;俄国的奥斯特罗格拉茨基(Ostrogradsky)1826 年给出一般证明,所以也叫高斯–奥公式。真正的动机很朴素:一个点电荷或点质量放在里面,它的「总量」可以用包住它的任意曲面上的通量算出来——这正是高斯定律的数学根。",
+    "derivation": [
+      { "math": "\\Phi=\\oint_{\\partial V}\\mathbf{F}\\cdot\\mathbf{n}\\,dS", "note": "先盯住一个极小的立方体,算它六个面加起来净往外流出的通量。" },
+      { "math": "\\text{右面}-\\text{左面}\\approx\\frac{\\partial F_x}{\\partial x}\\,dx\\,dy\\,dz", "note": "一对相对的面,净流出就是 $F_x$ 沿 x 的变化率乘以小体积;三对面加起来正好是散度乘体积。" },
+      { "math": "d\\Phi\\approx(\\nabla\\cdot\\mathbf{F})\\,dV", "note": "于是每个小盒子的净流出 = 该点散度 × 它的体积——散度的物理含义就是「单位体积的冒出率」。" },
+      { "math": "\\sum_i d\\Phi_i\\;\\longrightarrow\\;\\iiint_V(\\nabla\\cdot\\mathbf{F})\\,dV", "note": "把整块区域切成许多小盒子求和,内部相邻盒子共享的那些面,一个的流出正好是另一个的流入,全部抵消。" },
+      { "math": "\\text{只剩最外层}\\;\\Rightarrow\\;\\oint_{\\partial V}\\mathbf{F}\\cdot\\mathbf{n}\\,dS", "note": "抵消完只剩没有邻居的最外层面,加起来就是外表面的总通量;取极限,左右两边相等,定理成立。" }
+    ],
+    "applications": [
+      { "area": "电磁学", "detail": "高斯定律 $\\oint\\mathbf{E}\\cdot d\\mathbf{S}=Q/\\varepsilon_0$,用包住电荷的任意曲面反推电场;麦克斯韦方程的积分形式与微分形式互译全靠它。" },
+      { "area": "流体与传热", "detail": "把「流入 = 流出 + 内部积累」写成连续性方程 $\\partial_t\\rho+\\nabla\\cdot(\\rho\\mathbf{v})=0$,是质量、能量守恒的标准数学形式。" },
+      { "area": "生成模型", "detail": "连续归一化流与扩散模型的概率流 ODE 里,概率密度沿轨迹的变化由速度场的散度决定,算 log-likelihood 时要的就是 $\\nabla\\cdot\\mathbf{v}$。" },
+      { "area": "图形与几何", "detail": "用散度定理把体积分变成面积分,一个封闭三角网格的体积、重心只靠表面三角形就能精确算出。" }
+    ],
+    "takeaway": "想知道一团东西内部发生了什么,不必钻进去——守恒律让你只在边界上记账就够了;「局部源汇之和 = 边界净流出」这条直觉,从麦克斯韦一路用到扩散模型。",
+    "viz": {
+      "type": "vectorfield",
+      "caption": "拖动种子点看流线:这个场处处朝外发散(散度恒为正,是个「源」),所以你随手圈住原点的任何闭合面,净流出都等于散度在里面的积分;把 fx、fy 换成指向原点的场,就会看到「汇」。",
+      "params": { "fx": "x", "fy": "y", "xmin": -3, "xmax": 3, "ymin": -3, "ymax": 3, "density": 13, "seedX": 1.1, "seedY": 0.7, "steps": 400, "dt": 0.02 }
+    }
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Does On-Policy Distillation Really Distill? From Noisy Teacher to Self-Improvement",
+      "title_zh": "在线蒸馏真的在「蒸馏」吗?从带噪老师到自我提升",
+      "url": "https://arxiv.org/abs/2608.31046",
+      "hf_url": "https://huggingface.co/papers/2608.31046",
+      "authors": "Yi Ding、Ruqi Zhang",
+      "affiliation": "普渡大学",
+      "upvotes": 91,
+      "one_liner": "学生进步不靠老师教得准,而是老师逼它多产好样本",
+      "summary_zh": "在线蒸馏(OPD)让老师模型给学生自己生成的轨迹逐 token 打分,被当成 RLVR 稀疏奖励的替代。作者量化了这些监督信号,发现噪声不小、而且老师越大噪声越多;可诡异的是,把噪声监督留着还是去掉,学生最后收敛到的水平差不多。结论是:OPD 的增益主要来自「让学生在自己的策略分布上多采样、多自我提升」,而非老师打分有多可靠——某种意义上更接近自蒸馏。对做 RLHF/蒸馏的人是个提醒:别高估 teacher scoring 的作用。",
+      "tags": ["蒸馏", "RLVR", "LLM"]
+    },
+    {
+      "domain": "ai",
+      "title": "DreamX-Creator: Democratizing Native Audio-Video Generation at 2K Resolution",
+      "title_zh": "DreamX-Creator:把原生音画同生做到 2K",
+      "url": "https://arxiv.org/abs/2608.31106",
+      "hf_url": "https://huggingface.co/papers/2608.31106",
+      "authors": "Jiashu Zhu、Yanhao Zheng、Ruitian Tian 等",
+      "affiliation": "高德 AMAP-ML",
+      "upvotes": 86,
+      "one_liner": "音频和视频在同一个网络里一起去噪,声画不再各说各话",
+      "summary_zh": "现在的视频生成大多不带音,或把音频单独一步合成,导致画面动作和声音事件对不上。DreamX-Creator 用一个 7B 生成器,给定首帧加文本提示,把音频流和视频流放进同一网络联合去噪:前半程各走各的、后半程用门控跨模态注意力耦合,输出能到 2K。卖点是「原生联合」而非事后配音,模型也不算大。音画同步这条线最近很热,能开源、参数量克制的话值得跟。",
+      "tags": ["视频生成", "音视频", "扩散"]
+    },
+    {
+      "domain": "ai",
+      "title": "GenFirst: Generation Before Reconstruction for Stable End-to-End Latent Generative Modeling",
+      "title_zh": "GenFirst:先生成再重建,让端到端隐空间生成更稳",
+      "url": "https://arxiv.org/abs/2608.29335",
+      "hf_url": "https://huggingface.co/papers/2608.29335",
+      "authors": "Guangting Zheng、Yiyuan Zhang、Tao Yang 等",
+      "affiliation": "字节跳动 Seed",
+      "upvotes": 58,
+      "one_liner": "把 VAE 和生成器一起练的老大难,靠一个熵项和调换顺序摁住了",
+      "summary_zh": "隐空间生成通常两段式:先训 VAE 重建、再在冻结的隐空间上训生成器,但重建友好的隐空间不一定生成友好。端到端联合训一直难,容易隐空间坍缩,又有「重建 vs 生成」目标打架。作者发现 KL 里的熵项是防坍缩的关键,并把「先生成后重建」的顺序理顺,让联合训练稳下来。属于把生成式建模底层管线做扎实的一类工作,想做 latent diffusion 训练的可以参考它的诊断。",
+      "tags": ["隐空间生成", "VAE", "扩散"]
+    },
+    {
+      "domain": "ai",
+      "title": "Normalized Low-Rank Adaptation",
+      "title_zh": "NoRA:给 LoRA 的下投影做个归一化",
+      "url": "https://arxiv.org/abs/2608.31036",
+      "hf_url": "https://huggingface.co/papers/2608.31036",
+      "authors": "Jiale Kang、Ziyin Yue、Zheng Zhan 等",
+      "upvotes": 38,
+      "one_liner": "LoRA 早期全靠下投影带节奏,那就把它 normalize 一下",
+      "summary_zh": "LoRA 把上投影初始化为零,所以训练早期的动态几乎全由下投影矩阵决定。基于这个观察,NoRA 在训练中对下投影做归一化;更省事的是,只在初始化时归一化一次,也能改善普通 LoRA,不用全程反复归一。在预训练、SFT 等多个场景都验证有效。改动很小、几乎零成本,值得在自己的 LoRA 训练里 A/B 一下。",
+      "tags": ["LoRA", "PEFT", "微调"]
+    },
+    {
+      "domain": "ai",
+      "title": "On the Design of Qwen3.8-Next Architecture: Evaluation, Efficiency, and Training Stability",
+      "title_zh": "Qwen3.8-Next 架构解析:评测、效率与训练稳定性",
+      "url": "https://arxiv.org/abs/2608.30320",
+      "hf_url": "https://huggingface.co/papers/2608.30320",
+      "authors": "Zihan Qiu、Zekun Wang、Xiao Li 等",
+      "affiliation": "阿里通义 Qwen",
+      "upvotes": 32,
+      "one_liner": "125B 稀疏 MoE 只激活 6B,还把 n-gram 词表甩到加速器外面",
+      "summary_zh": "通义团队公布了 Qwen3.8-Flash-Next 的架构与消融:125B 参数的稀疏 MoE,每 token 只激活 6B,另有 51B 的 n-gram embedding 表放在加速器之外。在 14 个预训练基准上,用 1/3 激活参数、1/3 训练 token、约 1/9 训练 FLOPs,就在 8 项上超过 397B 的上一代、其余最多落后 2.6 分。token mixing 用 Gated DeltaNet 和全注意力按层混合(每四层一层全注意力),续训阶段再把全注意力换成 Qwen 稀疏注意力(QSA)。想了解线性注意力 + MoE 怎么组合压成本,这篇是很实的工程记录。",
+      "tags": ["MoE", "注意力", "Qwen"]
+    },
+    {
+      "domain": "ai",
+      "title": "Verification-Aware Training for Speculative Decoding",
+      "title_zh": "让草稿模型「预演验证」:面向投机解码的训练法",
+      "url": "https://arxiv.org/abs/2608.30135",
+      "hf_url": "https://huggingface.co/papers/2608.30135",
+      "authors": "Geonmo Gu、Byeongho Heo、HeeJae Jun 等",
+      "affiliation": "NAVER AI Lab",
+      "upvotes": 4,
+      "one_liner": "草稿模型别只学模仿,得学会预判自己哪几个 token 会被拒",
+      "summary_zh": "投机解码用草稿模型先猜一串 token、目标模型一次前向验证,但从第一个被拒的位置起后面全丢。现有草稿训练只是逐 token 模仿目标模型、每个位置固定权重,既不管「验证是顺序的」也不管「被拒会截断」。VAT 在训练每一步都模拟一遍验证,把接受/拒绝的模式变成监督:加一个轻量验证头预测每个位置会不会被接受,再据此加权。是个即插即用的框架,想提升自家投机解码接受率的可以直接试。",
+      "tags": ["投机解码", "推理加速", "LLM"]
+    },
+    {
+      "domain": "embodied",
+      "title": "LightNav-0: Eliciting VLM Spatial Intelligence for Generalist Embodied Navigation",
+      "title_zh": "LightNav-0:把 VLM 的空间直觉直接调出来做导航",
+      "url": "https://arxiv.org/abs/2608.30935",
+      "hf_url": "https://huggingface.co/papers/2608.30935",
+      "authors": "Shaoan Wang、Aocheng Luo、Fei Huang 等",
+      "affiliation": "Light Origins",
+      "upvotes": 24,
+      "one_liner": "不给导航搭一堆专用模块,直接榨 VLM 已有的空间理解",
+      "summary_zh": "具身导航要把五花八门的目标和视觉观测翻译成动作,还要跨任务、跨环境、跨机器人本体。作者的观点是:现成 VLM 其实已经会视觉定位、空间推理和指点,只是很少被直接拿来控制机器人。LightNav-0 是个紧凑的通才导航模型,把预训练 VLM 的空间智能对齐到导航上,不再依赖任务或本体专用的组件。思路挺对味——与其堆管线不如复用大模型已有能力,能否在真机上稳住是关键。",
+      "tags": ["具身导航", "VLM", "泛化"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Zeva: In-Context Causal Learning for Generalizable Embodied Manipulation",
+      "title_zh": "Zeva:冻结策略也能「边做边学」的因果上下文学习",
+      "url": "https://arxiv.org/abs/2608.30880",
+      "authors": "Fu Chen、Xin Ding、Bingjia Huang 等",
+      "one_liner": "机器人拿自己刚试出来的因果当上下文,策略权重一动不动",
+      "summary_zh": "光靠预训练很难让操作策略适应现实里没见过的物理条件。Zeva 让机器人在部署时从自己的物理交互里即时学习,而且策略模型保持冻结:一个因果交互提取器把「执行的动作 + 引起的状态变化」编码成因果信号,存进双时间尺度的因果记忆,用来指导后续动作。等于把 in-context learning 搬到真机操作上、完全不碰权重。想法新颖,但因果信号提取得多准、记忆会不会漂,得看实测。",
+      "tags": ["具身操作", "上下文学习", "因果"]
+    },
+    {
+      "domain": "quantum",
+      "title": "\"Train classical, deploy quantum\" requires rethinking generalization",
+      "title_zh": "「经典训练、量子部署」需要重新想清楚泛化",
+      "url": "https://arxiv.org/abs/2608.31117",
+      "authors": "Snehal Raj、Natansh Mathur、Alejandro Perdomo-Ortiz",
+      "one_liner": "在经典机上训好量子生成模型再上量子机采样?泛化没那么简单",
+      "summary_zh": "量子生成模型被看好,因为量子线路天然能从它编码的分布里采样,而合适线路的分布据信经典机难以复现。一个主流策略是:在经典计算机上训模型(只要 loss 能在经典机上算),把量子设备只留给部署时采样。作者指出这条路对「泛化」的理解要重做——能在经典机上评估训练损失,恰恰意味着这个分布某种程度上「可经典触及」,和「量子优势来自难以经典模拟」之间存在张力。给量子机器学习泼了盆有用的冷水。",
+      "tags": ["量子机器学习", "生成模型", "泛化"]
+    },
+    {
+      "domain": "bio",
+      "title": "Coarse composition suffices: tabular in-context learning for multi-activity antimicrobial peptide profiling",
+      "title_zh": "抗菌肽多活性预测:粗糙的序列成分 + 表格基座就够了",
+      "url": "https://arxiv.org/abs/2608.30337",
+      "authors": "Raunak Kumar、Anuj Pal、Dhruvi Solanki 等",
+      "one_liner": "别急着上结构大模型,330 个序列描述子喂 TabPFN 一次前向就赢了",
+      "summary_zh": "抗菌肽常同时对多类病原体有效,所以多标签活性预测比「是不是抗菌」的二分类更贴近真实筛选。现有强方法多是多模态、带结构条件的深度模型,训练调参都贵。作者证明:只用序列,把 330 个可解释的序列描述子丢给表格基座模型 TabPFN,靠一次前向的 in-context 预测(不训练、不调超参),就能追平甚至超过它们。对做肽段/小分子筛选的独立研究者,是个省钱又能打的基线。",
+      "tags": ["抗菌肽", "TabPFN", "蛋白"]
+    },
+    {
+      "domain": "chip",
+      "title": "CHIPSMORE: Compute-in-Interconnect and -Memory Chiplets for Multi-Mode Multi-Request LLM Inference Acceleration",
+      "title_zh": "CHIPSMORE:把计算搬进互连与存储的 chiplet,专治 LLM 推理的多变负载",
+      "url": "https://arxiv.org/abs/2608.30509",
+      "authors": "Yue Jiet Chong、Yimin Wang、Zhen Wu 等",
+      "one_liner": "base 和 LoRA、长短上下文、并发高低——一块存算 chiplet 全接住",
+      "summary_zh": "LLM 推理的负载在适配模式、上下文长度、并发数上变化极大,存内计算(CIM)加速器很难一直保持高利用率。CHIPSMORE 把「互连中计算」和存内计算结合,用异构处理单元(RRAM 模拟存内计算 + SRAM 数字存内计算)同时支持基础模式和 LoRA 推理。这是把 AI 推理的工作负载特性直接吃进硬件架构的一次尝试,和今天 AI 侧对 LoRA、长上下文的诉求正好对上。做存算一体或推理芯片的值得读。",
+      "tags": ["存内计算", "chiplet", "LLM推理"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Cartesian tensor equivariant machine-learning force field for spin-dependent atomistic simulations",
+      "title_zh": "面向自旋的等变机器学习力场:让磁性材料模拟跟上尺度",
+      "url": "https://arxiv.org/abs/2608.30338",
+      "authors": "Junjie Wang、Yijie Zhu、Zhongwei Zhang 等",
+      "one_liner": "把原子磁矩当成显式的轴矢量,时间反演对称性也一并带上",
+      "summary_zh": "磁性材料里原子结构和自旋强耦合,做跨尺度的原子级模拟一直很难。HotPP-Spin 在等变消息传递(笛卡尔张量)的力场里,把原子磁矩当作显式的轴矢量自由度,并让空间反演和时间反演的宇称通过张量耦合正确传递,从而统一表示交换主导和自旋相关的相互作用。AI4S 里「把物理对称性硬编码进网络」这条路又添一例,做磁性/自旋电子学模拟的可以关注。",
+      "tags": ["机器学习力场", "等变网络", "磁性材料"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "jingyaogong/minimind",
+      "url": "https://github.com/jingyaogong/minimind",
+      "language": "Python",
+      "stars": 56982,
+      "stars_today": "1,005",
+      "one_liner": "从零 2 小时训一个 64M 的 LLM,拿来搞懂全流程最合适",
+      "summary_zh": "把 LLM 全流程(tokenizer、预训练、SFT、DPO 等)拆开、可在单卡两小时内从零训出 64M 小模型的教学向项目。代码短、依赖少、中文注释友好,适合想真正跑通「数据→预训练→对齐」闭环、而不是只调 API 的人。5.7 万 star,是入门 LLM 内部机制的高性价比路径。"
+    },
+    {
+      "domain": "ai",
+      "name": "unclecode/crawl4ai",
+      "url": "https://github.com/unclecode/crawl4ai",
+      "language": "Python",
+      "stars": 80810,
+      "stars_today": "179",
+      "one_liner": "给 LLM 喂料的爬虫,直接吐干净 Markdown",
+      "summary_zh": "面向 LLM 的开源网页爬虫/抓取器,把网页转成干净、结构化的 Markdown,方便直接进 RAG 或喂给模型。8 万 star 的老牌工具,做检索增强、数据管线、Agent 联网时常用。要批量把网页变成模型友好文本,先看它。"
+    },
+    {
+      "domain": "ai",
+      "name": "firecrawl/pdf-inspector",
+      "url": "https://github.com/firecrawl/pdf-inspector",
+      "language": "Rust",
+      "stars": 17863,
+      "stars_today": "545",
+      "one_liner": "先分清扫描件还是文字版 PDF,再决定走 OCR 还是直接抽",
+      "summary_zh": "firecrawl 出的 Rust 库,专做 PDF 的检查、分类和文本抽取,能智能判断 PDF 是扫描件还是文字版,从而决定要不要走 OCR。文档解析管线里「路由」这一步经常被忽视,做得糙就白烧算力。做 RAG、文档入库的可以拿它当前置分流器。"
+    },
+    {
+      "domain": "ai",
+      "name": "browser-use/video-use",
+      "url": "https://github.com/browser-use/video-use",
+      "language": "Python",
+      "stars": 22854,
+      "stars_today": "509",
+      "one_liner": "让 coding agent 来剪视频",
+      "summary_zh": "browser-use 团队的新项目,把视频编辑交给编码 Agent 来做——用自然语言/代码驱动剪辑。属于「Agent 操作专业软件」这条线的又一落点,和它家浏览器自动化一脉相承。想探索 Agent + 多媒体工作流的可以玩玩,成熟度还早。"
+    },
+    {
+      "domain": "ai",
+      "name": "debpalash/VoiceStudio",
+      "url": "https://github.com/debpalash/VoiceStudio",
+      "language": "Python",
+      "stars": 13737,
+      "stars_today": "745",
+      "one_liner": "全本地跑的 ElevenLabs 平替,声音克隆到配音一条龙",
+      "summary_zh": "开源、完全本地运行的语音套件,对标 ElevenLabs:声音克隆、音色设计、视频配音、听写转录、有声书生成都做。主打隐私、不依赖云端 API。做语音应用又不想把数据送出去的独立开发者,可以拿它起步。"
+    },
+    {
+      "domain": "ai",
+      "name": "3b1b/manim",
+      "url": "https://github.com/3b1b/manim",
+      "language": "Python",
+      "stars": 92515,
+      "stars_today": "74",
+      "one_liner": "3Blue1Brown 的数学动画引擎,今天「每日一理」的配图灵感也在这条线上",
+      "summary_zh": "3Blue1Brown 开源的数学解释动画引擎,用 Python 描述几何、公式、变换的动画,渲染出那种教科书级别的可视化。9 万多 star 的常青项目。想把抽象定理讲清楚、或做技术科普视频的,这是事实标准。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "Anthropic 发布 Fable 5.1:更便宜、限制更少",
+      "url": "https://techcrunch.com/2026/09/01/anthropics-new-fable-release-is-cheaper-less-restrictive/",
+      "source": "TechCrunch",
+      "summary_zh": "Anthropic 推出新版 Fable(连同 Mythos 5.1),官方口径是价格更低、内容限制更宽松,Hacker News 上同步热议这次发布。对在成本和「过度拒答」之间纠结的开发者是利好,具体降幅和放宽尺度要看实际调用。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "抱抱脸被黑,OpenAI 推迟新模型 Astra 发布",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/987695/openai-astra-unreleased-model-cybersecurity-delay",
+      "source": "The Verge",
+      "summary_zh": "据 The Verge,OpenAI 因为 Hugging Face 遭入侵、出于网络安全考量,推迟了新模型(代号 Astra)的开发/发布。而 TechCrunch 此前报道这款 Astra「很擅长攻破计算机系统」。一边是攻防能力见长的模型,一边是上游平台被黑连累发布节奏,供应链与模型安全的连锁反应值得盯。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "英伟达 35 亿美元押注联发科,布局 AI 芯片供应",
+      "url": "https://techcrunch.com/2026/08/31/nvidias-3-5b-mediatek-bet-reveals-its-plan-for-tackling-big-techs-ai-chip-buildout/",
+      "source": "TechCrunch",
+      "summary_zh": "英伟达向联发科投入 35 亿美元,被解读为应对大厂自研 AI 芯片浪潮的一步棋——绑定联发科的设计能力,巩固自己在 AI 算力供应链里的位置。在自研 ASIC 兴起、客户想「去英伟达化」的背景下,这笔钱买的是生态卡位。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "华为联合 ETH、华科提出面向 LLM 推理的 HBF 基板",
+      "url": "https://semiengineering.com/workload-driven-hbf-substrate-for-capacity-scalable-llm-inference-huawei-eth-zurich-hust/",
+      "source": "SemiEngineering",
+      "summary_zh": "华为、苏黎世联邦理工与华中科技大学的技术论文,提出一种工作负载驱动的 HBF(高带宽闪存)基板方案,目标是让 LLM 推理的容量可扩展。思路是针对推理时「要塞得下超大上下文和权重」的容量瓶颈做存储层设计。和今天 CHIPSMORE 那篇存内计算论文正好呼应:推理这本账,越来越要在内存和互连上算。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Skild AI 发布旗舰机器人基础模型 S1",
+      "url": "https://www.therobotreport.com/skild-ai-unveils-s1-flagship-robot-foundation-model/",
+      "source": "The Robot Report",
+      "summary_zh": "Skild AI 推出旗舰机器人基础模型 S1,主打通用的机器人「大脑」,此前已在「看一遍视频就学会新任务」的演示里露过面。这类通用具身基座今年扎堆发布,S1 的真正看点在跨本体、跨任务的泛化到底有多实。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Reframe Systems 融资 4000 万美元,扩张造房机器人微工厂",
+      "url": "https://www.therobotreport.com/reframe-systems-raises-40m-scale-robotic-microfactories-home-building/",
+      "source": "The Robot Report",
+      "summary_zh": "建筑机器人公司 Reframe Systems 融到 4000 万美元,用于扩张它的「机器人微工厂」——用自动化产线在本地小规模造房子。切的是建筑业劳动力短缺和成本痛点。物理 AI 落到真实产业的又一个案例,能不能跑通单位经济学是关键。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "GSK 的 mRNA 流感疫苗三期胜出,优于标准疫苗",
+      "url": "https://www.fiercebiotech.com/biotech/gsk-catches-phase-3-fever-after-mrna-flu-vaccine-beats-standard-shots",
+      "source": "Fierce Biotech",
+      "summary_zh": "GSK 的 mRNA 流感疫苗在三期试验里表现优于现有标准流感疫苗。这是 mRNA 平台在新冠之后向季节性流感等常规疫苗扩张的又一个实打实的临床信号,若顺利推进获批,对传统流感疫苗格局是不小的冲击。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "三例死亡后,诺华叫停自免 CAR-T 试验,BMS 也暂停",
+      "url": "https://www.fiercebiotech.com/biotech/novartis-bristol-myers-squibb-halt-car-t-cell-trials-due-immune-events",
+      "source": "Fierce Biotech",
+      "summary_zh": "因出现免疫相关不良事件、累计三例死亡,诺华暂停了其自身免疫适应症的 CAR-T 试验,百时美施贵宝(BMS)也跟着暂停相关研究。CAR-T 从肿瘤扩到自免本是今年的大方向,这次安全性事件给热潮泼了冷水,后续监管和给药方案都会更谨慎。"
+    },
+    {
+      "domain": "ai4s",
+      "title_zh": "渗流理论新证:破解相变的数十年悬案",
+      "url": "https://www.quantamagazine.org/stunning-percolation-proof-solves-decades-old-puzzle-about-phase-transitions-20260831/",
+      "source": "Quanta Magazine",
+      "summary_zh": "数学家给出一个被 Quanta 称为「惊艳」的渗流(percolation)证明,解决了关于相变的一个数十年老问题。渗流研究的是「连通性如何在临界点突然出现」,和物理相变、网络鲁棒性乃至神经网络里的临界现象都挂得上钩。纯数学的漂亮结果,值得点开看看背后的故事。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "NASA 新「大天文台」启程,拓宽人类的宇宙视野",
+      "url": "https://arstechnica.com/space/2026/08/nasas-next-great-observatory-begins-mission-to-widen-our-view-of-the-universe/",
+      "source": "Ars Technica",
+      "summary_zh": "NASA 下一代「大天文台」级项目正式开始任务,目标是大幅拓宽我们对宇宙的观测视野。作为继哈勃、韦布之后旗舰级空间望远镜谱系的新成员,它的科学产出值得长期期待。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "把「语言反馈的免训练动作纠偏」迁到另一套 VLA 上验证泛化",
+      "based_on": [
+        { "title": "Training-Free Action Correction for VLA Model Failures via Language Feedback (CorrectVLA)", "url": "https://arxiv.org/abs/2608.29967" }
+      ],
+      "why_now": "CorrectVLA 刚给出「一句任务级语言纠正→加性动作幅度调整、不改权重」的免训练方案,但只在自己的设定里验证过;training-free 方法最值钱的扩展,就是换个 VLA 骨干、换个仿真环境看还灵不灵,现在几乎没人做。",
+      "feasibility": "纯推理,单卡(<40GB)即可跑开源 VLA(OpenVLA / π0 类)加 LIBERO / SIMPLER 仿真;2–4 周能出一张跨骨干、跨任务的泛化对照表。",
+      "route": [
+        "先跑通一个开源 VLA 在 LIBERO 上的官方推理与评测(1–2 天)",
+        "复现 CorrectVLA 的加性动作纠偏逻辑,套到该 VLA 上",
+        "收集它的系统性失败模式,人工给出任务级语言纠正,量化纠偏前后的成功率",
+        "换第二个 VLA 骨干、或换到 SIMPLER 环境,看纠偏是否仍有效、还是需要重新标定幅度"
+      ],
+      "risk": "免训练纠偏可能对骨干和动作空间的归一化很敏感,换环境后加性幅度要重新校准,泛化未必成立——但这个「不成立」本身就是可发表的结论。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个即插即用的 RAG KV-Cache 量化「忠实度」审计器",
+      "based_on": [
+        { "title": "Faithfulness Is Not Free: Auditing Offline KV-Cache Quantization in Retrieval-Augmented Generation", "url": "https://arxiv.org/abs/2608.30996" }
+      ],
+      "why_now": "这篇刚指出 RAG 预存 KV-cache 做 INT8/INT4 量化会悄悄损伤「忠实度」(答案对但不再有据可依),却没有现成工具让人一键在自己的管线上量这件事——这正好是个能攒 star 的小库。",
+      "feasibility": "单卡 7B(如 Qwen2.5-7B)即可,纯推理加一个幻觉/蕴含检测器打分;2–3 周可做出 CLI/库加一张「量化位宽 × 忠实度/准确率」曲线。",
+      "route": [
+        "先在单卡跑通 Qwen2.5-7B 的 RAG 推理,并接上 INT8/INT4 的 KV-cache 量化(1–2 天)",
+        "接一个开源的蕴含/幻觉检测器,自动判断每条回答是否被检索证据支撑",
+        "封装成库:输入任意 RAG 管线,输出各量化位宽下的准确率 vs 忠实度对比与告警阈值",
+        "在 RGB、HotpotQA 上给出基线报告,写清「什么场景下 INT4 会悄悄失真」"
+      ],
+      "risk": "忠实度判定依赖检测器本身的可靠性,不同数据集结论可能不一致;需要用人工抽检校准检测器,别让工具给出误导性的「安全」结论。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "用便宜的自监督点云编码器替掉 ULIP-2,把 3D-LLM 的门槛打下来",
+      "based_on": [
+        { "title": "On the Efficacy of Self-Supervised Point Cloud Encoders for Efficient 3D Large Language Models", "url": "https://arxiv.org/abs/2607.29136" }
+      ],
+      "why_now": "主流 3D-LLM 依赖 ULIP-2 这类要 8×A100 做图文点云对齐的多模态编码器,门槛极高;这篇刚系统验证 PCP-MAE / Point-MAE 这类单卡自监督编码器能不能顶替,但只在 MiniGPT-3D 一个 testbed、有限数据集上试过,换任务、换数据的泛化边界还没人摸。",
+      "feasibility": "单卡(<40GB)微调 MiniGPT-3D 量级即可,自监督编码器权重都开源;3–4 周能给出「编码器 × 下游任务」的对照矩阵。",
+      "route": [
+        "先跑通 MiniGPT-3D 加一个自监督点云编码器的官方推理/评测(2–3 天)",
+        "把 PCP-MAE、Point-MAE 等 5 种初始化都接上,固定其余设置做对照",
+        "在一个原论文没覆盖的 3D 问答/描述基准上评测,看便宜编码器在哪类任务掉链子",
+        "若某类几何/空间推理任务明显掉点,分析是编码器容量的问题还是对齐数据的问题"
+      ],
+      "risk": "便宜编码器可能在需要细粒度几何或颜色-文本对齐的任务上明显不如 ULIP-2,天花板受限;但「划清便宜方案的适用边界」本身对社区就有价值。"
+    }
+  ]
+}
