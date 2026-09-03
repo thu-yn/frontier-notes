@@ -1,0 +1,348 @@
+{
+  "date": "2026-09-04",
+  "editor_note": "今天 HF 榜被「让 agent 自己进化」刷屏——字节一口气挂了 HarnessDev、Aspire、S3Gym 三篇,主题都在逼问「模型能不能自己造、自己改进它的执行框架」;榜首 Repo-To-Skill 更直接,把散在仓库和论文里的实操 know-how 蒸成可复用的「技能」喂给做研究的 agent。这股风和 GitHub Trending 是对上的:今天半屏都是 skills/harness 框架,star 高得离谱、含金量参差,自己挑着看。新闻端两件大事——英伟达 129 亿美元买下 Hugging Face、OpenAI 甩出 GPT-6「Astra」还带了个让安全圈紧张的 recurrent depth;再加上 ChatGPT、Claude、Grok、Gemini 四家几乎同时宕机,算是给「全都堆在几朵云上」敲了一记。今天最值得点开的是 KAIST 那篇「让模型自己声明该看哪段上下文」(Declarative Attention),思路干净,还是 training-free,拿现成模型就能试。每日一理挑了 Brouwer 不动点定理,正好和满屏的多智能体、自博弈遥相呼应——它们能「谈拢」到一个均衡的底气,追到根上就是这条定理。",
+  "math_note": {
+    "name": "布劳威尔不动点定理",
+    "name_en": "Brouwer Fixed-Point Theorem",
+    "field": "拓扑学 / 分析",
+    "one_liner": "把地图丢在它画的那片地上,总有一点正压在自己头顶。",
+    "statement": "把一个连续函数 $f$ 从一个「圆滚滚、没有洞、边界闭合」的集合 $D$(闭区间、实心圆盘、凸多边形都算)映回它自己,那么一定存在某个点 $x^*$ 满足 $f(x^*)=x^*$——它被 $f$ 送回原地、纹丝不动。这里 $D$ 要紧致(有界且闭)且凸(或至少同胚于凸集)是关键:少了这两条结论就可能失效,比如把一个圆环整体转一圈,处处都在动、没有不动点。",
+    "origin": "1910 年前后,荷兰数学家 L.E.J. 布劳威尔在研究连续映射与拓扑不变量时给出并证明了任意维实心球上的这条定理(一维其实就是介值定理的老结论)。有意思的是,布劳威尔本人是直觉主义者,后来对这种「只证存在、却给不出具体点」的非构造性证明很有意见,等于跟自己的成名作过不去。它常被拿来打比方:一杯咖啡搅一搅,总有一个液体分子回到原位;把一张本地地图平摊在它所画的那片土地上,图上必有一点正压在它对应的真实位置上。",
+    "derivation": [
+      { "math": "g(x)=f(x)-x,\\quad x\\in[0,1]", "note": "先看最简单的一维情形。把「找不动点」翻译成「找零点」:$f(x)=x$ 等价于 $g(x)=0$,于是只要证 $g$ 有零点。" },
+      { "math": "g(0)=f(0)\\ge 0,\\qquad g(1)=f(1)-1\\le 0", "note": "因为 $f$ 的取值永远落在 $[0,1]$ 里,所以左端点处 $g$ 非负、右端点处 $g$ 非正——$g$ 在两头符号相反(或恰好等于零)。" },
+      { "math": "g\\ \\text{连续},\\ g(0)\\ge 0\\ge g(1)\\ \\Rightarrow\\ \\exists\\,c:\\ g(c)=0", "note": "连续函数从非负一路走到非正,中途必然穿过零(这就是介值定理),那个穿越点 $c$ 就是零点。" },
+      { "math": "f(c)=c", "note": "$g(c)=0$ 展开就是 $f(c)=c$,$c$ 正是不动点。一维证毕;推到高维时,把「介值」换成「连续映射没法把实心球连续地缩到它的边界上」(无收缩定理 / Sperner 引理),同样的「必有交点」直觉照旧成立。" }
+    ],
+    "applications": [
+      { "area": "博弈论 / 多智能体", "detail": "纳什均衡的存在性正是靠布劳威尔的推广(角谷不动点定理)证出来的——今天满屏的多智能体、自博弈系统之所以能「谈拢」到一个均衡,底层就是这条定理在兜底。" },
+      { "area": "经济学一般均衡", "detail": "Arrow–Debreu 证明市场供需能同时出清、存在一组均衡价格,最核心的一步就是构造一个连续映射然后取它的不动点。" },
+      { "area": "微分方程 / 数值迭代", "detail": "证明常微分方程解的存在(Schauder 把定理推到无穷维函数空间),以及定点迭代、值迭代这类算法「有稳态可收敛」,都要先靠不动点保证那个目标确实存在。" },
+      { "area": "计算与算法", "detail": "从证明博弈解存在到 PageRank 这类「反复迭代直到稳定」的算法,背后都是在一个封闭状态空间里找连续映射的不动点。" }
+    ],
+    "takeaway": "「连续地搅动一个封闭的世界,总有一处岿然不动」——这是一切**存在性**结论的原型:它不告诉你解在哪、长什么样,却能斩钉截铁地担保它一定在。工程上很多「一定能收敛到某个稳态」的底气,都是从这里借来的。",
+    "viz": {
+      "type": "custom",
+      "caption": "拖动三个蓝点,随手捏出一条连续、值域仍落在 [0,1] 里的函数 f;红点是它和对角线 y=x 的交点(不动点)。你会发现无论怎么拖,红点至少有一个、永远消不掉——这就是布劳威尔定理在一维的样子。",
+      "html": "<canvas id=\"brc\" width=\"560\" height=\"340\" style=\"max-width:100%;touch-action:none;cursor:grab\"></canvas>",
+      "script": "(function(){var c=el.querySelector('#brc');if(!c)return;var ctx=c.getContext('2d');var W=c.width,H=c.height;var padL=42,padR=18,padT=18,padB=32;var xs=[0,0.5,1];var ys=[0.14,0.9,0.32];function PX(x){return padL+x*(W-padL-padR);}function PY(y){return H-padB-y*(H-padT-padB);}function invY(py){return (H-padB-py)/(H-padT-padB);}function g(x){if(x<=0.5){return ys[0]+(ys[1]-ys[0])*(x/0.5);}return ys[1]+(ys[2]-ys[1])*((x-0.5)/0.5);}function fixed(){var pts=[];var px=0,prev=g(0)-0;for(var i=1;i<=400;i++){var x=i/400;var cur=g(x)-x;if(prev===0){pts.push(px);}else if(prev*cur<0){pts.push(px+(x-px)*(0-prev)/(cur-prev));}prev=cur;px=x;}return pts;}function draw(){ctx.clearRect(0,0,W,H);ctx.strokeStyle='#cbd5e1';ctx.lineWidth=1;ctx.strokeRect(PX(0),PY(1),PX(1)-PX(0),PY(0)-PY(1));ctx.setLineDash([5,4]);ctx.strokeStyle='#94a3b8';ctx.beginPath();ctx.moveTo(PX(0),PY(0));ctx.lineTo(PX(1),PY(1));ctx.stroke();ctx.setLineDash([]);ctx.strokeStyle='#2563eb';ctx.lineWidth=2.5;ctx.beginPath();for(var i=0;i<=200;i++){var x=i/200,Xx=PX(x),Yy=PY(g(x));if(i===0)ctx.moveTo(Xx,Yy);else ctx.lineTo(Xx,Yy);}ctx.stroke();var fp=fixed();for(var k=0;k<fp.length;k++){ctx.fillStyle='#ef4444';ctx.beginPath();ctx.arc(PX(fp[k]),PY(fp[k]),5.5,0,2*Math.PI);ctx.fill();}for(var j=0;j<3;j++){ctx.fillStyle='#1d4ed8';ctx.beginPath();ctx.arc(PX(xs[j]),PY(ys[j]),6,0,2*Math.PI);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(PX(xs[j]),PY(ys[j]),2.4,0,2*Math.PI);ctx.fill();}ctx.fillStyle='#64748b';ctx.font='12px system-ui';ctx.fillText('y = x',PX(0.8),PY(0.86));ctx.fillStyle='#2563eb';ctx.fillText('f(x)',PX(0.02),PY(g(0.02))-8);ctx.fillStyle='#ef4444';ctx.fillText('不动点 x '+fp.length,PX(0.04),PY(0.94));}var drag=-1;function pos(e){var r=c.getBoundingClientRect();var t=e.touches?e.touches[0]:e;return[(t.clientX-r.left)*(W/r.width),(t.clientY-r.top)*(H/r.height)];}function pick(mx,my){for(var j=0;j<3;j++){var dx=mx-PX(xs[j]),dy=my-PY(ys[j]);if(dx*dx+dy*dy<240)return j;}return -1;}c.addEventListener('mousedown',function(e){var p=pos(e);drag=pick(p[0],p[1]);});c.addEventListener('mousemove',function(e){if(drag<0)return;var p=pos(e);ys[drag]=Math.max(0,Math.min(1,invY(p[1])));draw();});window.addEventListener('mouseup',function(){drag=-1;});c.addEventListener('touchstart',function(e){var p=pos(e);drag=pick(p[0],p[1]);if(drag>=0)e.preventDefault();},{passive:false});c.addEventListener('touchmove',function(e){if(drag<0)return;var p=pos(e);ys[drag]=Math.max(0,Math.min(1,invY(p[1])));draw();e.preventDefault();},{passive:false});c.addEventListener('touchend',function(){drag=-1;});draw();})();"
+    }
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Repo-To-Skill: Distilling GitHub Repositories Into AI4AI Skills",
+      "title_zh": "Repo-To-Skill:把 GitHub 仓库蒸成给 AI 研究 agent 用的「技能」",
+      "url": "https://arxiv.org/abs/2609.02749",
+      "hf_url": "https://huggingface.co/papers/2609.02749",
+      "authors": "Jianlyu Chen、Yuyang Hu、Hongjin Qian 等",
+      "affiliation": "北京智源(BAAI)",
+      "upvotes": 446,
+      "one_liner": "「怎么把方法真跑通」这类暗知识,第一次被系统地打包成可复用件。",
+      "summary_zh": "现在的 ML 研究 agent 会规划、会跑实验,但「怎么把一个方法真正调通」这类操作性知识还散落在仓库和论文里、写给人看、太长塞不进上下文。这篇提出的 DisCo 把这些 know-how 蒸馏成紧凑、带验证的「技能」,让 agent 跨任务复用而不是每次从头摸索。方向很务实——把 AI4AI 的瓶颈从「模型多聪明」挪到「经验能不能沉淀下来复用」;至于端到端成功率真能提多少,还得看蒸出来的技能有多少能被别的 agent 直接吃下。",
+      "tags": ["Agent", "AI4AI", "知识蒸馏"]
+    },
+    {
+      "domain": "ai",
+      "title": "HarnessDev: Can LLMs Create and Evolve Their Own Agent Harness?",
+      "title_zh": "HarnessDev:LLM 能不能自己造、自己改进它的 agent 执行框架?",
+      "url": "https://arxiv.org/abs/2609.01437",
+      "hf_url": "https://huggingface.co/papers/2609.01437",
+      "authors": "Yuhao Wu、Jingyuan Zhang、Jiajun Shi 等",
+      "affiliation": "字节跳动 Seed",
+      "upvotes": 207,
+      "one_liner": "评测单位从「任务答得对不对」换成「你造出来的基础设施能不能跑」。",
+      "summary_zh": "agent 的能力越来越依赖模型之外的执行框架(harness)——同一套权重换个 harness,成绩能差一大截,但模型「自己开发 harness」的能力一直没人正经测。HarnessDev 把评测从任务输出挪到「可运行的基础设施」:Creation 阶段从一个最小种子起搭出完整一套,再进入迭代改进。字节今天还一并挂了 Aspire(从模糊目标自我进化)和 S3Gym(自测、自评、自改),三篇是一条线,都在逼问模型能不能自己决定「学什么、怎么变强」。",
+      "tags": ["Agent", "Benchmark", "自我进化"]
+    },
+    {
+      "domain": "ai",
+      "title": "SolarWM: Open Data and Scalable Training for Long-Horizon Video World Models",
+      "title_zh": "SolarWM:面向长时程视频世界模型的开放数据与可扩展训练",
+      "url": "https://arxiv.org/abs/2609.02886",
+      "hf_url": "https://huggingface.co/papers/2609.02886",
+      "authors": "Junchao Huang、Guian Fang、Shengju Qian 等",
+      "affiliation": "香港中文大学(深圳)",
+      "upvotes": 133,
+      "one_liner": "从数据清洗到长程推理全开源,想做世界模型的人能少踩一堆坑。",
+      "summary_zh": "视频世界模型训练的麻烦在于:各家数据集的时间尺度、相机几何、画质、字幕风格都不一样,骨干模型的表示也各不相同,随便一混监督信号就乱、结果没法复现。SolarWM 用一个可重构的多源数据引擎,把 10 个数据集、143 万段片段统一成帧对齐的「数据契约」,再用骨干原生的适配框架在 Wan2.2、LTX-2.5 等上训了 5B–33B 四个模型。它的价值主要在「开放+可复现」这套地基,而不是刷某个指标;做交互式世界模型的可以直接拿它当起点。",
+      "tags": ["世界模型", "视频生成", "开源数据"]
+    },
+    {
+      "domain": "ai",
+      "title": "Language Models Can Control Their Own Attention",
+      "title_zh": "让语言模型自己声明该看哪段上下文",
+      "url": "https://arxiv.org/abs/2609.02737",
+      "hf_url": "https://huggingface.co/papers/2609.02737",
+      "authors": "Namgyu Ho、Huzama Ahmad、Woosung Koh 等",
+      "affiliation": "KAIST AI",
+      "upvotes": 51,
+      "one_liner": "与其外挂一个打分器猜哪里重要,不如直接问模型:你现在要看哪儿?",
+      "summary_zh": "长上下文推理时模型其实只关注一小撮 token,却每步都要扫完整个 KV cache;已有的省法是拿轻量代理分数预选相关 token,但这套外部打分仍是每步 O(N)。这篇提出的 Declarative Attention 换了个思路——让模型在思维链里自己声明要看哪段,分成 <global>/<focus>/<local> 三种模式,推理引擎像解析工具调用一样读这些声明、跳过大部分 KV cache 读取。在 Gemma-4-31B、Qwen-3.6-27B 上零样本就有明显收益,而且不用训练、拿现成模型就能加,复现门槛很低——今天这批里我最想动手试的一篇。",
+      "tags": ["长上下文", "推理加速", "training-free"]
+    },
+    {
+      "domain": "ai",
+      "title": "EarlyEval: Cheaper Agent Evaluation via Early Outcome Prediction",
+      "title_zh": "EarlyEval:靠「提前预测结局」把 agent 评测做便宜",
+      "url": "https://arxiv.org/abs/2609.02783",
+      "hf_url": "https://huggingface.co/papers/2609.02783",
+      "authors": "Yuling Shi、Zhensu Sun、Junsen Dong 等",
+      "affiliation": "上海交通大学",
+      "upvotes": 110,
+      "one_liner": "agent 会不会成,往往中途就看得出来,何必每道题都跑到底。",
+      "summary_zh": "跑一遍前沿模型在 agentic benchmark 上的表现动辄几百上千美元,迭代开发时还得反复付这笔钱。以前的省钱办法是砍任务数量,但每道保留下来的任务照样跑到底;EarlyEval 换了条轴——它发现 agent 的最终结果常在执行到一半时就已从中间行为里露了底,于是提前预测结局、不跑完。这跟「砍题量」正交,可以叠加使用;对天天要跑评测的团队是实打实的省钱。",
+      "tags": ["Agent", "评测", "效率"]
+    },
+    {
+      "domain": "ai",
+      "title": "ZipTok3D: High-Fidelity 3D Tokenization with Compact Token Prefixes",
+      "title_zh": "ZipTok3D:用紧凑的 token 前缀做高保真 3D 分词",
+      "url": "https://arxiv.org/abs/2609.01740",
+      "hf_url": "https://huggingface.co/papers/2609.01740",
+      "authors": "Mingda Lin、Weijie Wang、Zeyu Zhang 等",
+      "affiliation": "浙江大学",
+      "upvotes": 20,
+      "one_liner": "把物体几何按「重要性」排进前几个 token,砍到极短也不塌。",
+      "summary_zh": "3D 生成要效率就得压 token,但现有 3D tokenizer 要么按空间分块、要么用固定的全局 token 集,压到极低预算时重建质量会断崖式下滑。ZipTok3D 把几何组织成「越靠前越关键」的全局 token 前缀:训练时用 nested dropout 随机截断潜在序列,逼着每个保留下来的前缀都得重建出完整物体;解码则反复套用一个参数共享的 Transformer 块逐步恢复细节,不需要额外的生成采样阶段。对做 3D 生成、想给下游省 token 预算的人有直接用处。",
+      "tags": ["3D生成", "Tokenizer", "点云"]
+    },
+    {
+      "domain": "embodied",
+      "title": "ZETA: A Controlled Study of Zero-Shot Cross-Embodiment VLA Transfer for Tabletop Manipulation",
+      "title_zh": "ZETA:桌面操作里 VLA「零样本跨本体迁移」的受控研究",
+      "url": "https://arxiv.org/abs/2609.02546",
+      "authors": "Mi Yan、Wenhao Zhang、Zhiqi Zhang 等",
+      "one_liner": "先把「零样本跨本体」这个被说滥的词,老老实实定义清楚再测。",
+      "summary_zh": "机器人硬件在不断更新,给每种新本体重新采数据又贵,所以大家都想要 VLA(视觉-语言-动作)模型能「零样本」迁到没见过的本体上——但这个问题一直缺统一定义和干净的对照,常把「本体变了」和「任务、场景、协议也变了」混在一起。ZETA 先把严格零样本(目标本体完全没在训练里出现过)和「预训练已见过的伪零样本」区分开,再在受控设定里只改本体、隔离其他变量来测。它的贡献主要在「把话说清楚」这一步——给后续跨本体研究立了个可比的标尺。",
+      "tags": ["VLA", "跨本体", "机器人操作"]
+    },
+    {
+      "domain": "chip",
+      "title": "Scaling Inference Prefill with High-Radix Photonic Interconnects",
+      "title_zh": "用高基数光子互连给推理的 prefill 阶段扩容",
+      "url": "https://arxiv.org/abs/2609.01821",
+      "authors": "Arulselvan Madhavan、Peter Carson、Taylor Groves 等",
+      "one_liner": "推理成了主力负载,MoE 的 scale-up 正把互连从铜线推向光。",
+      "summary_zh": "推理已是当下最主要的 AI 负载,越来越大的 MoE(混合专家)模型要 scale-up,业界正转向高带宽的光子互连。这篇量化了 3D 集成光子互连对推理 prefill(处理输入、填 KV cache 的阶段)的收益,在短(1K–8K)、中(128K)、长(1M)三种上下文的 MoE 上做权衡:高并发吞吐(聊天场景)和超长上下文(推理、agent 场景)对互连的要求并不一样。属于把「为什么要上光互连」从口号做成了可以算的账,给数据中心选型提供依据。",
+      "tags": ["光子互连", "MoE", "推理"]
+    },
+    {
+      "domain": "bio",
+      "title": "Learning Task-Specific Antibody Representations via Function-Aware Masking",
+      "title_zh": "用「功能感知的掩码」学任务专用的抗体表示",
+      "url": "https://arxiv.org/abs/2609.00518",
+      "authors": "Ayan Goel、Thomas A. Walton、Amirali Aghazadeh",
+      "one_liner": "掩哪儿不是随机,而是照着抗体的生物学功能先验来掩。",
+      "summary_zh": "抗体语言模型靠掩码语言建模(MLM,遮住部分序列让模型补全)学表示,但「怎么遮」这件事一直被当成无关紧要的随机操作。已知偏向遮住互补决定区(CDR,抗体上直接决定结合的高变区段)能提升结合相关的预测,这篇把它推广成一族「功能感知掩码」:让掩码位置对齐不同的功能先验,而不只盯着 CDR。思路很直接——把领域生物学知识塞进预训练的「破坏过程」里当归纳偏置;对做抗体设计、结合亲和力预测的人是个便宜的改法。",
+      "tags": ["蛋白质语言模型", "抗体设计", "MLM"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Fourier Neural Operators for Composition-Driven Crystal Structure Discovery",
+      "title_zh": "用傅里叶神经算子按化学配方「解」出晶体结构",
+      "url": "https://arxiv.org/abs/2609.00900",
+      "authors": "Zhijie Yu、Jingyu Li、Yang Huang 等",
+      "one_liner": "绕开体素卷积的近视眼,直接在全局傅里叶模态上生成晶体。",
+      "summary_zh": "找新晶体材料的空间大到没法穷举筛,现有体素方法受限于 3D 卷积的局部感受野,高维 VAE 又容易后验坍缩。这篇用傅里叶神经算子(FNO)搭了个「晶体场求解器」:输入指定的化学式和晶格参数,直接映射出周期性的数密度和电子密度场——在全局傅里叶模态上算,天然抓得住长程周期性。给 AI4Science 做材料生成提供了一条不靠体素卷积的新路子;值不值得跟,还得看它生成的结构放进 DFT 里站不站得住。",
+      "tags": ["神经算子", "材料发现", "晶体结构"]
+    },
+    {
+      "domain": "energy",
+      "title": "Low-Temperature Transport in Li-Ion Battery EC/EMC/FEC Electrolytes: Molecular Dynamics and Machine-Learning Modeling",
+      "title_zh": "用分子动力学加机器学习摸清锂电解液的低温输运",
+      "url": "https://arxiv.org/abs/2609.02824",
+      "authors": "İpek Yenda Çınar、Oguzhan Orhan、M. Oluş Özbek 等",
+      "one_liner": "天一冷锂离子就「走不动」,这篇把冷区里的机理算明白了。",
+      "summary_zh": "低温下电解液里锂离子的输运会严重受限,而溶剂配比和含氟添加剂在冷区到底怎么共同起作用,一直没算清。这篇把经典分子动力学和机器学习结合起来,研究含 EC/EMC(常用碳酸酯溶剂)和 0–10% FEC(含氟添加剂)的 1M LiPF6 电解液,从 298K 一路算到 233K(约零下 40 度),量化锂离子的自扩散和电导率。属于给低温电池的配方优化提供机理层面的依据,偏基础,但对做电解液的人有参考价值。",
+      "tags": ["锂电池", "电解液", "分子动力学"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "google-research/timesfm",
+      "url": "https://github.com/google-research/timesfm",
+      "language": "Python",
+      "stars": 30670,
+      "stars_today": "1,626",
+      "one_liner": "时间序列也有了「预训练基座」,开箱就能零样本预测。",
+      "summary_zh": "谷歌的时间序列基础模型,在大规模时序数据上预训练,目标是像语言模型那样零样本迁到新序列做预测,不用每个场景从头重训。做需求预测、监控、金融时序又不想自己训模型的可以拿它当基线。今天涨得很猛,时序基座这条线明显在升温。"
+    },
+    {
+      "domain": "ai",
+      "name": "debpalash/VoiceStudio",
+      "url": "https://github.com/debpalash/VoiceStudio",
+      "language": "Python",
+      "stars": 16129,
+      "stars_today": "1,738",
+      "one_liner": "全本地跑的 ElevenLabs 平替,声音克隆到视频配音一条龙。",
+      "summary_zh": "开源、完全本地运行的语音工作台,做声音克隆、语音设计和视频配音,定位是 ElevenLabs 的自托管替代品。数据不出本机这一点对隐私敏感、或想批量处理音频的人很关键。今天涨势凶,本地语音这块的需求一直旺。"
+    },
+    {
+      "domain": "ai",
+      "name": "magnitudedev/magnitude",
+      "url": "https://github.com/magnitudedev/magnitude",
+      "language": "TypeScript",
+      "stars": 1902,
+      "stars_today": "130",
+      "one_liner": "把最适配你硬件的本地模型跑起来,再插进你现有的 agent。",
+      "summary_zh": "开源推理服务器,自动挑选并运行最适配当前硬件的本地模型,直接接到你已经在用的 agent 里。适合想把 agent 的推理换成本地、既省 API 钱又要把数据留在本机的人。star 还不高,但方向实用,值得盯一盯。"
+    },
+    {
+      "domain": "ai",
+      "name": "anthropics/skills",
+      "url": "https://github.com/anthropics/skills",
+      "language": "Python",
+      "stars": 173598,
+      "stars_today": "277",
+      "one_liner": "官方的 Agent Skills 仓库——满屏 skills 里最该看的那个源头。",
+      "summary_zh": "Anthropic 官方放出的 Agent Skills 公共仓库,给 agent 挂载可复用的「技能」用。今天 GitHub trending 半屏都是各路 skills/harness 框架,鱼龙混杂;想搞清楚这套东西官方是怎么定义、怎么组织的,从这里看起最靠谱。"
+    },
+    {
+      "domain": "ai",
+      "name": "NousResearch/hermes-agent",
+      "url": "https://github.com/NousResearch/hermes-agent",
+      "language": "Python",
+      "stars": 240776,
+      "stars_today": "778",
+      "one_liner": "「会陪你一起成长」的 agent——概念挺满,含金量自己判断。",
+      "summary_zh": "Nous Research 的 agent 框架,主打随使用不断积累经验、成长。star 数很吓人,但宣传口吻偏满,具体好不好用得自己上手试。放这儿主要是让你知道这类「成长型 agent」是当下的一股风。"
+    },
+    {
+      "domain": "ai",
+      "name": "obra/superpowers",
+      "url": "https://github.com/obra/superpowers",
+      "language": "Shell",
+      "stars": 281293,
+      "stars_today": "470",
+      "one_liner": "又一套「agent 技能框架+开发方法论」,star 顶天,信者自取。",
+      "summary_zh": "把一套 agentic 技能框架和软件开发方法论打包在一起,28 万 star 冠绝今日榜单。这类「方法论合集」有没有用高度看人和工作流,别被 star 数唬住。列在这里,算是给「skills 框架满屏」这个现象一个注脚——今天的 trending 基本被它们承包了。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "英伟达 129 亿美元收购 Hugging Face",
+      "url": "https://www.theverge.com/tech/985474/nvidia-buying-hugging-face-deal",
+      "source": "The Verge",
+      "summary_zh": "英伟达确认以约 129.3 亿美元收购 Hugging Face,把这个托管着 300 多万个模型、被 1800 多万开发者使用的开源 AI 平台收入囊中,并称会保持平台开放。「AI 界的 GitHub」被最大的 AI 芯片厂拿下,开源生态和算力的绑定又深了一层。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "OpenAI 发布 GPT-6「Astra」,自称迈入 AGI 时代",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/989601/openai-gpt-6-astra-release",
+      "source": "The Verge",
+      "summary_zh": "OpenAI 推出下一代大模型 GPT-6 Astra,自称在网络安全、软件工程、科研、计算机操作等方向是「代际跃升」,也是首个被其内部定级达到「critical」门槛的模型。技术上它用了 recurrent depth(循环深度),让模型跳出常规的线性顺序推理,这一点让不少 AI 安全研究者感到紧张。HN 上热度也很高(835 分)。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "ChatGPT、Claude、Grok、Gemini 罕见地几乎同时宕机",
+      "url": "https://arstechnica.com/ai/2026/09/four-major-ai-models-suffer-rare-overlapping-downtime/",
+      "source": "Ars Technica",
+      "summary_zh": "四家主流大模型服务在几乎同一时间段集体中断,HN 上一堆人在问「怎么会一起挂」。原因还没定论,但这种重叠故障给「大量应用全押在少数几朵云、少数几家推理服务上」提了个醒——集中度太高,抖一下就是全网抖。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "谷歌发布 Gemini 3.8 Flash,六周内第三款 Flash 模型",
+      "url": "https://arstechnica.com/ai/2026/09/google-releases-gemini-3-8-flash-its-third-flash-model-in-six-weeks/",
+      "source": "Ars Technica",
+      "summary_zh": "谷歌上线 Gemini 3.8 Flash,距上一款没几周;官方称新模型比 3.7 Flash「更卖力」、会做更多推理,但成本可能也更高。Pro 系列的更新看似暂停,Flash 却在快速迭代——谷歌当下明显把精力压在「又快又便宜」这一档上。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Thinking Machines 传将由 Accel 领投 10 亿美元、估值 400 亿",
+      "url": "https://techcrunch.com/2026/09/03/accel-reportedly-in-talks-to-lead-1b-round-for-thinking-machines-at-40b-valuation/",
+      "source": "TechCrunch",
+      "summary_zh": "据报道,Accel 正洽谈领投 Thinking Machines 的 10 亿美元新一轮融资,估值达 400 亿美元。这家高关注度创业公司目前年化收入超 1 亿美元。估值与收入之间的巨大倍数,是当下顶级 AI 初创融资的典型画风。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "Qwen 3.8 27B 上线 Cerebras,推理跑到每秒 1500 token",
+      "url": "https://inference-docs.cerebras.ai/models/overview",
+      "source": "Hacker News",
+      "summary_zh": "Qwen 3.8 27B 在 Cerebras 的晶圆级引擎上跑出每秒约 1500 token 的推理速度,登上 HN。晶圆级芯片主打的就是超低延迟推理,这类「大模型+超快出词」的组合,正好对上 agent、推理链这些要反复出词的场景。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "美敦力 7 亿美元投资手术机器人伙伴 Cornerstone Robotics",
+      "url": "https://www.therobotreport.com/medtronic-invests-700m-in-surgical-partner-cornerstone-robotics/",
+      "source": "The Robot Report",
+      "summary_zh": "美敦力向 Cornerstone Robotics 投入 7 亿美元,双方要以其 Hugo 手术系统为核心、再加上 Sentire 扩展,搭一套多孔手术机器人产品线。手术机器人这块,巨头正用大额资本绑定有技术的伙伴,直接冲着达芬奇的地盘去。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "自动驾驶卡车公司 PlusAI 拟通过 SPAC 上市",
+      "url": "https://www.therobotreport.com/plusai-takes-autonomous-trucking-public-via-spac-deal/",
+      "source": "The Robot Report",
+      "summary_zh": "PlusAI 计划借 SPAC 交易上市,估值约 8 亿美元;其自动驾驶卡车软件据称已经在产生收入。自动驾驶卡车赛道在经历一轮洗牌后,「有实际营收」正成为能不能走到公开市场的分水岭。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "GSK 最高 13 亿美元拿下和黄医药一款早期肿瘤资产",
+      "url": "https://www.fiercebiotech.com/biotech/gsk-pens-13b-hutchmed-deal-early-stage-kras-egfr-cancer-asset",
+      "source": "Fierce Biotech",
+      "summary_zh": "GSK 先付 1.1 亿美元首付款,总价值最高约 12.95 亿美元,拿下和黄医药(Hutchmed)一款首创(first-in-class)的肿瘤候选药物,靶向 KRAS/EGFR。大药厂继续用「小首付+大里程碑」的结构,把管线押注押在早期但机制新颖的资产上。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "美国太空军换帅,Schiess 接任第三任太空作战部长",
+      "url": "https://spacenews.com/schiess-takes-command-of-space-force-as-the-service-prepares-for-expansion/",
+      "source": "SpaceNews",
+      "summary_zh": "Douglas Schiess 上将接替 Chance Saltzman,出任美国太空军第三任太空作战部长,正值该军种筹备扩张。军事航天的组织与预算走向,往往会顺带牵动商业航天的订单与政策环境,值得关注后续。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "把「免训练的自适应 top-k 检索」抽成一个即插即用的小库",
+      "based_on": [
+        { "title": "ViSAR: Training-Free Adaptive-k Retrieval for Visual Document Question Answering", "url": "https://arxiv.org/abs/2609.02486" }
+      ],
+      "why_now": "ViSAR 刚给出一个 training-free 的做法:直接在嵌入空间里按查询复杂度自动决定要取几页,而不是所有 query 都取固定 top-k。这类免训练方法最值钱的扩展,就是把它从 DocVQA 一个场景抽出来、做成一个能接任意 late-interaction 检索器(ColBERT/ColPali 类)的小库,现在几乎没有现成实现。",
+      "feasibility": "纯推理,单卡(甚至无 GPU、CPU 也能跑嵌入)即可;核心逻辑就是一个自适应阈值函数,2–3 周能出一个带 benchmark 的可用库。",
+      "route": [
+        "先按 ViSAR 论文复现自适应-k 的打分与截断逻辑,在一个公开 DocVQA 集上跑通、对齐它报的数",
+        "把逻辑封成一个与检索器无关的接口:输入 query 与文档的嵌入,输出该取哪几项",
+        "接 1–2 个主流 late-interaction 检索器(ColBERT、ColPali)做 adapter,给出固定-k 对照",
+        "写清 README,附一个「延迟-准确率」权衡曲线的最小复现脚本,冲 GitHub star"
+      ],
+      "risk": "自适应阈值对不同数据集可能要重调,若泛化性差,库的卖点就得从「开箱即用」退成「一套可调框架」。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "用便宜的自监督点云编码器替掉 3D-LLM 里的重型多模态编码器",
+      "based_on": [
+        { "title": "On the Efficacy of Self-Supervised Point Cloud Encoders for Efficient 3D Large Language Models", "url": "https://arxiv.org/abs/2607.29136" }
+      ],
+      "why_now": "现有 3D-LLM 大多依赖 ULIP-2 这类要 8×A100 级算力做图-文-点云对齐的多模态编码器,门槛很高。这篇已用 MiniGPT-3D 当测试台,证明 Point-MAE、PCP-MAE 这类低成本自监督编码器有戏;顺着往下把更多新出的自监督点云编码器、以及点云×LLM 的新任务补齐,是一块单卡就能推进、且改进目标明确的空白。",
+      "feasibility": "单卡(<40GB)即可:冻结 LLM、只训投影层与轻量编码器初始化那几种设置;2–4 周能出一张跨编码器、跨任务的对照表。",
+      "route": [
+        "先跑通 MiniGPT-3D 官方推理,复现论文里那 7 种编码器设置中的 1–2 个,对齐指标",
+        "换入 1–2 个更新的自监督点云编码器(或不同预训练数据/规模),在相同冻结设置下比",
+        "把评测从原任务扩到一个新的点云×语言任务(如 3D 视觉定位或场景问答),看结论稳不稳",
+        "整理成「什么编码器在什么任务上够用」的实践指南,附复现脚本"
+      ],
+      "risk": "自监督编码器缺了图-文对齐,在强依赖语义对齐的任务上可能明显掉点,得先想好在哪些任务上讲故事。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "验证「训练感知的 LoRA 初始化」换个基座模型还灵不灵",
+      "based_on": [
+        { "title": "TaRA: Training-Aware Low-Rank Adaptation Initialization", "url": "https://arxiv.org/abs/2609.02639" }
+      ],
+      "why_now": "LoRA 的效果对初始化很敏感,TaRA 刚提出一种「让低秩分支诱导出的梯度对齐全秩训练动态」的初始化方法。但这类初始化技巧最容易被质疑的就是「只在作者自己那套模型/任务上有效」——换个基座、换个任务做一遍严谨对照,本身就是低风险、可发表的扩展。",
+      "feasibility": "单卡(<24–40GB)跑 7B 级模型的 PEFT 微调即可;2–3 周能覆盖 2–3 个基座、几个下游任务的对照。",
+      "route": [
+        "先按 TaRA 复现其初始化,在论文用过的一个设置上对齐,确认自己实现无误",
+        "固定其余超参,只换初始化方案(随机 / PiSSA / TaRA),在一个新基座上比收敛与终值",
+        "扩到 2–3 个不同任务(指令跟随、数学、代码其一),看优势是否一致、在什么秩下最明显",
+        "把负结果也如实报出来——「哪里不灵」同样是有价值的结论"
+      ],
+      "risk": "若 TaRA 的优势只是更好调参带来的错觉,严谨对照下可能被抹平,要提前设计好控制变量。"
+    }
+  ]
+}
