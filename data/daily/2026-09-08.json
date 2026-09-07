@@ -1,0 +1,342 @@
+{
+  "date": "2026-09-08",
+  "editor_note": "今天最扎眼的一条主线是「让模型自己写模型/写代码/写内核」。Waterloo 的 Compile by Training 把一句自然语言规格「编译」成一个能存档、能版本管理、能像普通函数一样调用的小神经网络,Google 的 MaxKernel 让 agent 自己给 TPU 磨算子,连芯片侧的 FlexPosit 都在把量化精度做成可调的分数——软件、编译、硬件三层同时在被 LLM 重写。我个人最想点开的是 Compile by Training,那种「把远程大模型蒸馏成一个离线小工具」的思路,和读者里做独立工具的朋友最搭。另一条暗线是 GitHub Trending 已经被各种「agent harness / skills 目录」刷屏(ECC、ruflo、deer-flow、openai/skills……),概念同质化很严重,我只留了真有东西的几个。行业面上,AI 版权诉讼继续开新战场,而 Agility 递表 SPAC 露出 180 万美元营收对 1.4 亿运营亏损的账本,给「人形机器人量产」泼了盆冷水。每日一理今天讲拉格朗日乘子法,正好和这些「带约束找最优」的训练配方遥相呼应。",
+  "math_note": {
+    "name": "拉格朗日乘子法",
+    "name_en": "Lagrange Multipliers",
+    "field": "多元微积分 / 约束优化",
+    "one_liner": "想在栅栏里找最高点?等高线蹭上栅栏那一刻,就到顶了。",
+    "statement": "问题是:在约束曲线 $g(x,y)=0$ 上求目标 $f(x,y)$ 的极值。结论出奇地干净——在最优点处,目标的梯度和约束的梯度平行,即存在一个数 $\\lambda$(称作乘子)使得 $\\nabla f = \\lambda\\,\\nabla g$。这里 $\\nabla f$ 是 $f$ 上升最快的方向。直觉上,这意味着 $f$ 的等高线在最优点恰好与约束曲线相切:再沿约束允许的任何方向挪一步,$f$ 都不会继续变大了。",
+    "origin": "拉格朗日在 1788 年的《分析力学》里把它系统化。他当时想解的是带约束的力学问题——比如珠子只能在一条曲线上滑动,受力被约束「框住」。传统做法要引入几何直觉逐个消元,拉格朗日的野心是纯用代数、不画图地统一处理,于是发明了把约束乘上一个待定系数加进目标的技巧。后来这个「待定系数」在经济学里被重新解读成「影子价格」,在机器学习里成了对偶变量。",
+    "derivation": [
+      { "math": "\\frac{d}{dt}f\\big(x(t),y(t)\\big)=\\nabla f\\cdot\\dot r=0", "note": "把约束曲线参数化成 r(t)=(x(t),y(t)),沿着它走。到极值点时 f 不再增减,所以 f 沿曲线的方向导数为零。" },
+      { "math": "\\nabla g\\cdot\\dot r=0", "note": "g 在整条曲线上恒等于 0,对 t 求导就得到:约束梯度 ∇g 也垂直于曲线的切向量 r'。" },
+      { "math": "\\nabla f=\\lambda\\,\\nabla g", "note": "两个梯度都垂直于同一条切线方向。二维里垂直于同一方向的向量必然共线,比例系数记作 λ——这就是乘子。" },
+      { "math": "\\mathcal{L}(x,y,\\lambda)=f(x,y)-\\lambda\\,g(x,y)", "note": "把它打包成拉格朗日函数,对 x、y、λ 分别求偏导置零,恰好一次性复现「梯度平行」和「约束成立」两个条件,约束优化就变成了无约束求驻点。" },
+      { "math": "\\frac{d f^{*}}{d c}=\\lambda,\\qquad g(x,y)=c", "note": "把约束右端从 0 松动到 c,最优值 f* 的变化率正好是 λ。所以 λ 不是凑出来的辅助量,它量化了「约束值一分钱,值多少目标」。" }
+    ],
+    "applications": [
+      { "area": "机器学习 · SVM", "detail": "硬间隔支持向量机的对偶问题就是对间隔最大化写拉格朗日式推出来的,乘子非零的那些样本正好是支持向量。" },
+      { "area": "统计 · 最大熵", "detail": "在给定若干矩约束下求熵最大的分布,乘子直接给出指数族的形式——softmax、玻尔兹曼分布都是这么冒出来的。" },
+      { "area": "物理 · 约束力学", "detail": "刚体铰接、滑轨这类约束系统里,拉格朗日乘子就是维持约束的那个约束反力,不用先把力画出来。" },
+      { "area": "经济与运筹", "detail": "预算或产能约束下的最优配置,乘子就是资源的「影子价格」,告诉你多松一单位约束能多赚多少。" }
+    ],
+    "takeaway": "约束不是障碍,而是把「可行方向」削掉一维;最优点就是目标再也无法沿剩下方向增长的地方——此刻 $\\nabla f$ 被约束的法向 $\\nabla g$「锁住」。",
+    "viz": {
+      "type": "custom",
+      "caption": "拖下面的滑块,让点在约束圆 g=x²+y²−1=0 上绕圈:红箭头是目标 ∇f(恒指向 x+2y 增大的方向),绿箭头是圆的法向 ∇g。当两者共线、红色等高线和圆相切时,f 就到了最大值 √5。",
+      "html": "<div></div>",
+      "script": "var c=document.createElement('canvas');c.width=560;c.height=340;c.style.maxWidth='100%';el.appendChild(c);var ui=document.createElement('div');ui.style.margin='6px 0';ui.style.font='13px system-ui,sans-serif';el.appendChild(ui);var s=document.createElement('input');s.type='range';s.min=0;s.max=360;s.value=25;s.style.width='100%';el.appendChild(s);var g=c.getContext('2d');var cx=220,cy=170,R=120,fx=1,fy=2,nf=Math.sqrt(5);function S(x,y){return[cx+x*R,cy-y*R];}function arrow(x0,y0,x1,y1,col){g.strokeStyle=col;g.fillStyle=col;g.lineWidth=2.2;g.beginPath();g.moveTo(x0,y0);g.lineTo(x1,y1);g.stroke();var a=Math.atan2(y1-y0,x1-x0);g.beginPath();g.moveTo(x1,y1);g.lineTo(x1-9*Math.cos(a-0.4),y1-9*Math.sin(a-0.4));g.lineTo(x1-9*Math.cos(a+0.4),y1-9*Math.sin(a+0.4));g.closePath();g.fill();}function draw(){g.clearRect(0,0,560,340);g.strokeStyle='#e2e2e2';g.lineWidth=1;g.beginPath();g.moveTo(cx-170,cy);g.lineTo(cx+170,cy);g.moveTo(cx,cy-150);g.lineTo(cx,cy+150);g.stroke();g.strokeStyle='#4c78a8';g.lineWidth=2.4;g.beginPath();g.arc(cx,cy,R,0,2*Math.PI);g.stroke();var th=s.value*Math.PI/180,px=Math.cos(th),py=Math.sin(th),val=fx*px+fy*py,dx=fy/nf,dy=-fx/nf,p0=S(px-1.5*dx,py-1.5*dy),p1=S(px+1.5*dx,py+1.5*dy);g.strokeStyle='#e45756';g.setLineDash([6,4]);g.lineWidth=1.6;g.beginPath();g.moveTo(p0[0],p0[1]);g.lineTo(p1[0],p1[1]);g.stroke();g.setLineDash([]);var pp=S(px,py),gf=S(px+0.55*fx/nf,py+0.55*fy/nf),gn=S(px+0.55*px,py+0.55*py);arrow(pp[0],pp[1],gn[0],gn[1],'#54a24b');arrow(pp[0],pp[1],gf[0],gf[1],'#e45756');g.fillStyle='#333';g.beginPath();g.arc(pp[0],pp[1],5,0,2*Math.PI);g.fill();var aligned=Math.abs(px*fy-py*fx)/nf<0.06;ui.innerHTML='f = x + 2y = <b>'+val.toFixed(3)+'</b> &nbsp;(最大值 √5 ≈ 2.236)'+(aligned?' &nbsp;<span style=color:#e45756>← 相切,到顶了! ∇f ∥ ∇g</span>':'');}s.addEventListener('input',draw);draw();"
+    }
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Compile by Training: Turning Natural-Language Specifications into Local Neural Functions",
+      "title_zh": "训练即编译:把自然语言规格变成本地神经函数",
+      "url": "https://arxiv.org/abs/2609.04199",
+      "hf_url": "https://huggingface.co/papers/2609.04199",
+      "authors": "Yuntian Deng、Pengyu Nie、Stuart Shieber",
+      "affiliation": "滑铁卢大学",
+      "upvotes": 374,
+      "one_liner": "把一句 prompt「编译」成能离线跑、能进 git 的小函数。",
+      "summary_zh": "很多重复性的文本处理任务(改格式、抽字段)描述起来一句话,写规则却很烦,而每次调远程大模型又贵又慢还依赖厂商。作者的做法是:编译期让教师模型按规格造一批样本,训练一个小 adapter 挂在紧凑的解释器上,产物就是一个不再需要教师、可存档可组合的普通「函数」。在 FuzzyBench-Hard 上,之前的快速编译器一个精确匹配都做不出来,这个方法拿到 83.6% 语义正确率,代价是编译从几秒涨到约一分钟。思路很对独立开发者胃口:把大模型能力一次性「固化」下来。",
+      "tags": ["LLM", "蒸馏", "编译"]
+    },
+    {
+      "domain": "ai",
+      "title": "Iris: Climbing to the Search Frontier",
+      "title_zh": "Iris:爬向搜索的前沿",
+      "url": "https://arxiv.org/abs/2609.04304",
+      "hf_url": "https://huggingface.co/papers/2609.04304",
+      "authors": "Ziyuan Liu、Hengqi Liu、Zichuan Wang 等",
+      "affiliation": "AllSpark Research",
+      "upvotes": 50,
+      "one_liner": "训练题目直接从网页超链接结构「反向」造出来。",
+      "summary_zh": "两个搜索 agent(35B-A3B 和 397B-A17B)连同数据管线一起放出来。最有意思的是造题方式:从一个种子页和它的外链里蒸出实体图,沿超链接编多跳问题,再把每个非答案实体改写成描述式指代,让字符串匹配失效;只保留「闭卷答不出、给了证据才答得对」的题。之后走 SFT 加对实时搜索的 RL,奖励评判和摘要器都塞进训练集群里。数据构造的自动化程度是亮点,想做搜索 agent 的可以直接借这套配方。",
+      "tags": ["Agent", "检索", "RL"]
+    },
+    {
+      "domain": "ai",
+      "title": "DRACO: Fine-Grained Credit Assignment with Dynamic Rubrics for Long-Horizon Agent Training",
+      "title_zh": "DRACO:用动态评分表给长程 agent 做细粒度信用分配",
+      "url": "https://arxiv.org/abs/2609.04094",
+      "hf_url": "https://huggingface.co/papers/2609.04094",
+      "authors": "Shubham Gandhi、Saurabh Goyal、Kiran Kate、Yara Rizk",
+      "affiliation": "IBM Research",
+      "upvotes": 25,
+      "one_liner": "整条轨迹只给一个分,摊回到该负责的那几步上。",
+      "summary_zh": "长程 agent 大多没有程序化校验器,常用多条 rubric 打一个整轨迹分,可几十步只有一个标量,信号太糙。DRACO 在训练中动态生成 rubric 跟上策略的能力变化,每条轨迹打一次分,再用一个闭式(不引入可训练的归因模块)把这个判断按「哪几步对应哪条 rubric」重新分摊成逐步 advantage,喂进 GRPO。在 AppWorld 上比基座涨 15.9 分。对没有现成 reward 的 agent 任务,这种「把稀疏结果分摊回中间步」的思路值得试。",
+      "tags": ["Agent", "RL", "信用分配"]
+    },
+    {
+      "domain": "ai",
+      "title": "MaxKernel: Agentic Kernel Generation for TPUs",
+      "title_zh": "MaxKernel:让 agent 给 TPU 生成算子内核",
+      "url": "https://arxiv.org/abs/2609.04523",
+      "hf_url": "https://huggingface.co/papers/2609.04523",
+      "authors": "Shangkun Wang、Nina Cai、Charles Hoong 等",
+      "affiliation": "Google",
+      "upvotes": 9,
+      "one_liner": "把「懂硬件才写得出的高性能算子」交给 agent 循环去磨。",
+      "summary_zh": "手写加速器高性能算子门槛极高,得懂硬件底层。MaxKernel 是个多 agent 系统,配合编译器实时反馈提供三种模式:人在环里逐步协作、全自动按 metric/trace 优化循环、以及把自动 agent 扩成图搜索做全局探索。规划、实现、自调试、测试、profiling 各由专门子 agent 分工。在 JaxBench 上评测。和今天的 FlexPosit(可调精度硬件)、Compile by Training 放一起看,「让模型重写系统栈每一层」的趋势很明显。",
+      "tags": ["Agent", "编译器", "TPU"]
+    },
+    {
+      "domain": "ai",
+      "title": "Don't Drop Dropout: Optimizing Layer Sparsity for Efficient LLM Training and Inference",
+      "title_zh": "别丢掉 Dropout:为高效训练与推理优化层稀疏",
+      "url": "https://arxiv.org/abs/2609.05275",
+      "hf_url": "https://huggingface.co/papers/2609.05275",
+      "authors": "Mostafa Elhoushi、Alex Pretko、Nolan Dey 等",
+      "affiliation": "Cerebras",
+      "upvotes": 13,
+      "one_liner": "被大模型抛弃的 layer dropout,其实调好了还能省算力。",
+      "summary_zh": "层 dropout(随机深度)本来能加速训练、提精度、还让模型对零样本剪层更鲁棒,但随着规模变大,它在 LLM 预训练配方里几乎消失了——有人说它掉点,却没人系统量化过。这篇把最优的层分布、时间调度和优化器超参一并调好后发现:同样训练 FLOPs 下,层 dropout 反而 loss 更低,还顺带能剪层加速推理。算是给一个被冷落的老技巧做了正名,配方给得挺细,想复现不难。",
+      "tags": ["LLM", "训练效率", "稀疏"]
+    },
+    {
+      "domain": "ai",
+      "title": "Scal3R: Learning Efficient Multi-Relative Pose Query for Scalable Online 3D Reconstruction",
+      "title_zh": "Scal3R:多参考相对位姿查询,做可扩展的在线三维重建",
+      "url": "https://arxiv.org/abs/2609.04201",
+      "hf_url": "https://huggingface.co/papers/2609.04201",
+      "authors": "Chin-Yang Lin、Yang-Che Sun、Cheng Sun 等",
+      "affiliation": "阳明交大(NYCU)",
+      "upvotes": 46,
+      "one_liner": "崩的不是几何,是位姿头——那就别只锚定第一帧。",
+      "summary_zh": "在线三维重建在长视频上容易崩,原因是位姿都相对固定的第一帧回归,越到后面越是在训练分布外做外推,小漂移累积成几何塌陷。作者发现一个关键解耦:逐帧深度其实一直很稳,坏掉的只是全局位姿头。于是把在线重建改成「相对多个历史关键帧」的位姿查询,用约占 1% 参数的可学习 token 注入完全冻结的骨干,再加带回环的在线位姿图优化压制长程漂移。诊断到位、改动很轻,这种「找准坏的那一小块再补」的做法很干净。",
+      "tags": ["三维重建", "位姿估计", "SLAM"]
+    },
+    {
+      "domain": "embodied",
+      "title": "RoboTok: An Internet-Scale Data Engine for Human Demonstration Retrieval and Dexterous Manipulation Learning",
+      "title_zh": "RoboTok:面向灵巧操作学习的互联网级人类演示检索引擎",
+      "url": "https://arxiv.org/abs/2609.03199",
+      "hf_url": "https://huggingface.co/papers/2609.03199",
+      "authors": "Howard Qian、Yiting Chen、Yunfei Xie 等",
+      "affiliation": "莱斯大学 RobotPI Lab",
+      "upvotes": 116,
+      "one_liner": "给一段人手视频,去全网捞相似演示喂给机器人学。",
+      "summary_zh": "机器人学习越来越靠大量多样的演示,可采真机数据又贵又覆盖不到长尾。RoboTok 的思路是:给一段人类操作视频当查询,从海量网络视频里检索「操作相关」的人手演示来训练灵巧策略。关键是从三维手部轨迹学一个以操作者为中心参考系的隐空间运动表示,让不同视角、场景、遮挡下的动作能互相比较,又紧凑到能对互联网规模视频做检索和持续索引。把「数据从哪来」这件事做成了可检索的引擎,方向对——真机采集永远追不上网络视频的量。",
+      "tags": ["VLA", "灵巧操作", "数据引擎"]
+    },
+    {
+      "domain": "chip",
+      "title": "FlexPosit: Tunable Fractional Precision for LLM Inference Accelerators",
+      "title_zh": "FlexPosit:面向 LLM 推理加速器的可调分数精度",
+      "url": "https://arxiv.org/abs/2609.04724",
+      "authors": "Yimin Gao、Liangtao Dai、Jun Yin、Xinfei Guo、Mircea Stan",
+      "one_liner": "量化位宽不必是整数档,让精度在档位之间「无级变速」。",
+      "summary_zh": "量化决定了精度与硬件效率的取舍:细粒度(逐组)精度高但控制开销大,粗粒度(逐通道)开销小但低比特掉点;混合精度算法上给了丰富的取舍空间,可现有 LLM 加速器只支持离散精度档,档位之间的分数空间一直没人碰。FlexPosit 用软硬件协同把 posit 数制做成可调的分数精度,填上这段空白。对做端侧/自研推理芯片的团队,这是一个把「精度旋钮」做细的具体硬件路子。",
+      "tags": ["量化", "推理加速器", "posit"]
+    },
+    {
+      "domain": "bio",
+      "title": "SimpleDesign: A Joint Model for Protein Sequence and Structure Codesign",
+      "title_zh": "SimpleDesign:蛋白质序列与结构的联合共设计模型",
+      "url": "https://arxiv.org/abs/2609.03377",
+      "authors": "Jiarui Lu、Yuyang Wang、Yizhe Zhang、Jiatao Gu、Navdeep Jaitly",
+      "one_liner": "序列和结构一起生成,还免掉了那道预训练自编码器。",
+      "summary_zh": "蛋白质功能由氨基酸序列和三维结构共同决定,做生成模型得同时处理这两种模态。现有方法大多分两段:先训自编码器把数据变成隐表示,再在隐空间上训生成模型。作者假设这个多阶段不是必需的,提出一个端到端联合建模序列与结构的方案(即标题的 codesign)。免掉预训练 tokenizer 这一步,对复现和迭代都友好——对做蛋白设计的独立研究者,少一个要先训好的部件就是少一个坑。",
+      "tags": ["蛋白设计", "生成模型", "多模态"]
+    },
+    {
+      "domain": "quantum",
+      "title": "A photonic source with half-a-GHz single-photon flux",
+      "title_zh": "半 GHz 单光子通量的光子源",
+      "url": "https://arxiv.org/abs/2609.05387",
+      "authors": "P. Zahalka、S. Huijser、A. Pancaldi 等",
+      "one_liner": "单光子发得够快够亮,一个普通功率计就能测效率。",
+      "summary_zh": "光量子技术要高质量光子、还要高速率。这个确定性单光子源(每次触发大概率吐出一个光子)同时做到高激发率和高系统效率,光纤里单光子通量超过 500 MHz,功率过 100 pW——高到能用一台现成功率计直接测出光纤耦合效率。速率和亮度都到了工程可用的量级,对量子通信、光量子计算的光源供给是实打实的硬件进展,不是纸面指标。",
+      "tags": ["量子光学", "单光子源", "光子学"]
+    },
+    {
+      "domain": "energy",
+      "title": "Voltage-embedded equivariant machine learning potential for open system simulations",
+      "title_zh": "嵌入电压的等变机器学习势,用于开放系统模拟",
+      "url": "https://arxiv.org/abs/2609.04696",
+      "authors": "Yiming Guan、Rongzhi Gao、ChiYung Yam 等",
+      "one_liner": "把电压偏置写进势函数,才模拟得动「通着电」的电化学界面。",
+      "summary_zh": "电池、电解这些能源技术里,电化学界面在工作(非平衡、加着电压)状态下的行为最关键,可从头算太贵,现有机器学习势又大多是为闭合系统、均匀电场设计的,套不进开放的量子输运场景。作者用一个 E(3) 等变图神经网络把电压偏置嵌进去:把能量和力拆成零偏压项和依赖偏压的项,给电极原子和散射区原子不同的向量编码来刻画非平衡。方向很实用——让分子动力学模拟真正对得上「通电工作」的界面。",
+      "tags": ["机器学习势", "电化学", "等变网络"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "microsoft/markitdown",
+      "url": "https://github.com/microsoft/markitdown",
+      "language": "Python",
+      "stars": 180060,
+      "stars_today": "771",
+      "one_liner": "把各种办公文档一键喂成 Markdown,给 LLM 上下文管道用。",
+      "summary_zh": "微软出的小工具,把 Office 文档、PDF 等各类文件转成 Markdown。用途很直接:给 RAG / agent 做文档预处理,统一成模型好读的纯文本格式。18 万 star 说明这类「把杂乱输入规整成 LLM 友好格式」的胶水工具需求有多刚。"
+    },
+    {
+      "domain": "ai",
+      "name": "heygen-com/hyperframes",
+      "url": "https://github.com/heygen-com/hyperframes",
+      "language": "TypeScript",
+      "stars": 45698,
+      "stars_today": "734",
+      "one_liner": "写 HTML,渲染成视频,专门给 agent 用。",
+      "summary_zh": "HeyGen 开源的框架,核心一句话:用 HTML 描述画面,再渲染成视频,而且接口是为 agent 调用设计的。对想让 LLM 程序化产出视频内容(讲解、演示、短片)的人是个现成底座,把「排版即视频」这条路做得挺直白。"
+    },
+    {
+      "domain": "ai",
+      "name": "bytedance/deer-flow",
+      "url": "https://github.com/bytedance/deer-flow",
+      "language": "Python",
+      "stars": 81804,
+      "stars_today": "188",
+      "one_liner": "字节开源的长程 SuperAgent,能查、能写、能造。",
+      "summary_zh": "一个开源的长程 agent 框架,带沙箱、记忆、工具、skill、子 agent 和消息机制,目标是让它自己完成研究、写代码、做内容这类多步任务。Trending 上这类「全能 agent harness」一大把,deer-flow 胜在有字节背书、组件相对完整,想搭自己的 agent 流水线可以拿它当参考实现。"
+    },
+    {
+      "domain": "ai",
+      "name": "openai/skills",
+      "url": "https://github.com/openai/skills",
+      "language": "Python",
+      "stars": 25992,
+      "stars_today": "372",
+      "one_liner": "OpenAI 给 Codex 的官方 skills 目录。",
+      "summary_zh": "Codex 的 skills 目录,把可复用的「技能」组织成一套目录结构给编码 agent 调。和最近满屏的第三方 skills 仓一起看,能感觉到「给 agent 装可插拔技能」正在从各家自制走向标准化,关注 agent 生态的值得盯一眼官方口径。"
+    },
+    {
+      "domain": "ai",
+      "name": "mksglu/context-mode",
+      "url": "https://github.com/mksglu/context-mode",
+      "language": "TypeScript",
+      "stars": 20772,
+      "stars_today": "147",
+      "one_liner": "把工具输出沙箱化,给编码 agent 的上下文窗口瘦身。",
+      "summary_zh": "面向 AI 编码 agent 的上下文优化工具:把工具输出关进沙箱(号称压掉 98%)、持久化会话记忆、并在多个平台间强制路由。长上下文一直是 agent 成本和噪声的大头,这类「上下文管理层」正好卡在痛点上,做编码 agent 集成的可以试试它的路由和裁剪思路。"
+    },
+    {
+      "domain": "ai",
+      "name": "lightpanda-io/browser",
+      "url": "https://github.com/lightpanda-io/browser",
+      "language": "Zig",
+      "stars": 34803,
+      "stars_today": "116",
+      "one_liner": "为 AI 和自动化重写的无头浏览器,用 Zig 写的。",
+      "summary_zh": "一个专为 AI / 自动化设计的无头浏览器,用 Zig 从头写,主打轻量和速度。相比拿 Chromium 套壳,它把「给 agent 当浏览器」这件事往低内存、快启动的方向做。做网页抓取、浏览类 agent 又嫌 Puppeteer/Playwright 太重的,可以关注它的性能表现。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "AI 版权战线再扩大:Anthropic 和解分账起争议,西雅图时报等再诉 OpenAI",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/990932/seattle-times-newsday-lawsuit-openai-microsoft",
+      "source": "The Verge / TechCrunch",
+      "summary_zh": "Anthropic 那笔作者集体诉讼和解的分账刚开始吵——作者方指出版商和代理拿走的份额过多。与此同时《西雅图时报》和 Newsday 又把 OpenAI 与微软告上法庭,指其把两家新闻内容当训练数据。版权已经从「该不该赔」进入「怎么分、还有谁来告」的新阶段。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "32 亿美元 AI 数据中心背后:出事了到底谁负责",
+      "url": "https://arstechnica.com/features/2026/09/the-ai-data-center-boom-is-causing-new-accountability-problems/",
+      "source": "Ars Technica",
+      "summary_zh": "Ars 深挖一座 32 亿美元 AI 数据中心背后交错的公司股权结构,发现当一个项目由多家公司层层嵌套持有,一旦出问题(环境、用电、事故)责任归属变得极难界定。AI 算力狂飙带出的是一套新的问责难题,不只是技术账。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Agility Robotics 递表 SPAC:全年营收 180 万美元,亏 1.4 亿",
+      "url": "https://www.therobotreport.com/agility-robotics-reports-18m-revenue-ahead-of-humanoid-spac/",
+      "source": "The Robot Report",
+      "summary_zh": "人形机器人公司 Agility 的 S-4 文件披露:2025 年营收 180 万美元,运营亏损 1.4 亿美元,计划借壳上市继续扩大 Digit 的业务。数字给「人形量产在即」的热度泼了盆冷水——商业化离规模盈利还很远。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Kalanick 的 Atoms 可能杀入 Robotaxi",
+      "url": "https://techcrunch.com/2026/09/06/travis-kalanicks-atoms-might-be-getting-into-the-robotaxi-business/",
+      "source": "TechCrunch",
+      "summary_zh": "Uber 创始人 Travis Kalanick 的新公司 Atoms 或将进入自动驾驶出租车业务，他自己说这能让他完成「未竟之事」。Robotaxi 赛道又要多一个带流量的玩家，具体技术路线还没细节。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "欧洲首枚全商业运载火箭入轨:一家德国公司做到了",
+      "url": "https://arstechnica.com/space/2026/09/german-company-becomes-first-in-europe-to-launch-fully-commercial-orbital-rocket/",
+      "source": "Ars Technica",
+      "summary_zh": "一家德国商业航天公司完成欧洲首次完全商业化的入轨发射，被形容为「几年内做到了欧洲航天业过去几十年才做到的事」。欧洲商业运载力量长期落后美国，这是补上入轨这一环的标志性一步。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "诺华 Lp(a) 降脂药三期折戟,未能降低心血管风险",
+      "url": "https://www.fiercebiotech.com/biotech/novartis-lpa-drug-fails-lower-cardiovascular-risk-closely-watched-ph-3-trial",
+      "source": "Fierce Biotech",
+      "summary_zh": "诺华与 Ionis 合作、旨在降低 Lp(a)(一个公认心血管风险因子)的药物在一项备受关注的三期试验中失败,未能降低患者心梗、中风等重大心血管事件风险。这对「降 Lp(a) 就能降风险」这一假说是个不小的打击。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "美纳里尼 7.71 亿美元引进甘李 GLP-1 欧洲权益",
+      "url": "https://www.fiercebiotech.com/biotech/menarini-group-signs-771m-deal-take-gan-lee-glp-1-european-market",
+      "source": "Fierce Biotech",
+      "summary_zh": "意大利药企美纳里尼先付 6200 万欧元(约 7200 万美元)首付,与中国胰岛素厂商甘李药业合作,在欧洲注册和商业化其 GLP-1 药物,交易总额最高 7.71 亿美元。减重药热度延续,中国药企的管线也在被跨国公司买进海外市场。"
+    },
+    {
+      "domain": "quantum",
+      "title_zh": "科学家在量子尺度上观测到爱因斯坦引力效应",
+      "url": "https://www.ox.ac.uk/news/2026-08-28-scientists-observe-einsteins-gravity-in-the-quantum-world",
+      "source": "University of Oxford / Hacker News",
+      "summary_zh": "牛津团队报告在量子体系里观测到广义相对论预言的引力效应,把引力和量子这两套一向难以调和的框架放在同一实验里检验。基础物理层面的探针性进展,离应用还远,但对量子引力这个老问题是难得的实验锚点。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个「查询无关」KV 缓存驱逐库 + 长程推理评测 harness",
+      "based_on": [
+        { "title": "VestigeKV: The NoPE-MLA KV Cache Carries Its Own Eviction Signal", "url": "https://arxiv.org/abs/2609.03949" },
+        { "title": "BeaconKV: Key-Value Cache Compression Guided by Beacon Queries", "url": "https://arxiv.org/abs/2609.04971" }
+      ],
+      "why_now": "这两篇本周先后指出:长推理场景里,H2O/SnapKV 这种「靠最近 query 估计未来重要性」的驱逐策略会崩(VestigeKV 报到 needle 检索 0.00–0.33)。但目前每家各测各的,缺一个统一、可插拔的开源库把各种驱逐策略摆在同一根 harness 上比。",
+      "feasibility": "单卡 24–40GB 就够(7B 级推理 + 长 CoT),纯推理不训练,2–4 周能出一个能跑的库和 leaderboard。",
+      "route": [
+        "先跑通一个基线:在 HF 上加载一个 7B reasoning 模型,复现 H2O/SnapKV 的驱逐,在长 needle/长 CoT 上量出它的失效点",
+        "把驱逐策略抽象成统一接口(观测最近 query / query 无关信号 / 随机 三类),让新策略即插即用",
+        "接入 VestigeKV 的「读少量维度当 salience」和 BeaconKV 的 beacon query 思路作为两个内置策略",
+        "配一套标准评测:needle-in-haystack、长推理准确率、显存占用曲线,一键出对比表",
+        "打包成 pip 库 + README + 一张对比图,发上 GitHub"
+      ],
+      "risk": "不同模型架构(NoPE-MLA vs RoPE)驱逐信号差异大,接口若抽象过头会掩盖关键差异,得在 README 里讲清适用边界。"
+    },
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "给现成 VLA 套一个「失败即重规划」的轻量恢复层,在 LIBERO-RECOVER 上验证",
+      "based_on": [
+        { "title": "LIBERO-RECOVER: Beyond Task Success Towards Failure Recovery in Robotic Manipulation Models", "url": "https://arxiv.org/abs/2609.05178" }
+      ],
+      "why_now": "LIBERO 上 SOTA 已经刷到近 100% 成功率,看着像能落地了,但 LIBERO-RECOVER 刚指出:这些基准都从理想初态出发,不测抓空、碰撞、物体被碰动之后能不能恢复。恢复能力是个刚被立起来、几乎没人做的具体目标。",
+      "feasibility": "纯仿真、单卡即可(推理为主,微调可选)。几周内能拿一个已开源 VLA 跑通并出一版恢复策略的对比。",
+      "route": [
+        "第一步先跑通:在 LIBERO 上复现一个开源 VLA(如 OpenVLA / π0 类)的官方推理,拿到 baseline 成功率",
+        "接入 LIBERO-RECOVER 的扰动设置(抓空、碰撞、物体移位),量出 baseline 在扰动后的恢复率有多低",
+        "加一个 training-free 的失败检测器(用夹爪状态 / 物体位姿偏差触发),失败时回退并重规划一次",
+        "对比「有无恢复层」的恢复率与总成功率,做消融找出哪种失败最难救",
+        "可选:用少量恢复轨迹做轻量微调,看能否进一步提升"
+      ],
+      "risk": "失败检测靠仿真里的特权信息容易「作弊」,要说清哪些信号在真机上也拿得到,否则结论迁不出仿真。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "验证「便宜自监督点云编码器能替代昂贵多模态编码器」能否迁到别的 3D-LLM",
+      "based_on": [
+        { "title": "On the Efficacy of Self-Supervised Point Cloud Encoders for Efficient 3D LLMs", "url": "https://arxiv.org/abs/2607.29136" }
+      ],
+      "why_now": "这篇在 MiniGPT-3D 上系统证明:PCP-MAE / Point-MAE 这类低成本自监督编码器,能顶替需要 8×A100 做图文点云对齐的 ULIP-2。但结论只在一个 testbed 上验证过,training-free 的替换很便宜,「换个 3D-LLM 或换个下游任务看泛化」本身就是低风险的可发表扩展。",
+      "feasibility": "单卡(冻结编码器 + 轻量微调),编码器权重都公开。3–4 周能在第二个 3D-LLM 或第二类任务上复验。",
+      "route": [
+        "先复现原文一个配置:MiniGPT-3D + Point-MAE,对齐它报的点数",
+        "换一个下游任务(如 3D VQA / 视觉定位)或换一个 3D-LLM 骨干,把同一批编码器初始化重测一遍",
+        "对比多模态编码器 vs 自监督编码器在 frozen / unfrozen 两种微调下的差距",
+        "找出「便宜编码器扛不住」的具体场景(如需要细粒度语义对齐的任务),把边界画出来",
+        "整理成一张跨任务/跨模型的泛化性表格"
+      ],
+      "risk": "如果便宜编码器在新任务上和多模态编码器差距被拉大,结论会变成「有条件成立」,需要老实报负结果而不是只挑好看的场景。"
+    }
+  ]
+}
