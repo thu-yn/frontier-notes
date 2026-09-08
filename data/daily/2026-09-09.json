@@ -1,0 +1,369 @@
+{
+  "date": "2026-09-09",
+  "editor_note": "今天 AI 圈两条大瓜都跟数学有关：OpenAI 的数学家声称证明了纳维-斯托克斯方程在某些情形下会「爆破」，触到千禧年七大难题之一，但功劳归属和证明严谨性都在吵。这条正好呼应今天的每日一理——复分析的留数定理，同样是「把无穷的行为压进几个奇点」的思路。榜单这边有意思的是「自我改进」这条主线：FlowBalance、多个 on-policy 蒸馏工作、还有把多智能体反思写成博弈的 Bilevel Coordinated Reflection，大家都在琢磨怎么让模型靠自己的经验稳定地变强而不是自欺。要我说今天最值得点开的是离散扩散给 LLM 做「无损加速」那篇——思路干净，能落地。非 AI 领域今天偏冷，量子和能源大多是常规凝聚态物理，只挑了真正有产业味道的几篇。GitHub Trending 已经彻底被「给 coding agent 用的 skill/工具」占领了,某种程度上这也是一种信号。",
+  "math_note": {
+    "name": "留数定理",
+    "name_en": "Cauchy's Residue Theorem",
+    "field": "复分析 / 复变函数",
+    "one_liner": "绕一圈的积分，只跟你圈住了哪几个「洞」、每个洞多深有关。",
+    "statement": "在复平面上取一条逆时针的闭合曲线 $C$，如果函数 $f(z)$ 在 $C$ 内部除了有限个孤立奇点(它「炸掉」的孤立点，比如分母为零处)之外都解析(处处可导、足够光滑)，那么沿 $C$ 的积分 $\\oint_C f(z)\\,dz = 2\\pi i\\sum_k \\mathrm{Res}(f,z_k)$。这里 $\\mathrm{Res}(f,z_k)$ 叫「留数」，是 $f$ 在奇点 $z_k$ 附近洛朗展开里 $1/(z-z_k)$ 那一项的系数 $a_{-1}$。一句话:整条闭合路径的积分，只由它圈住的那几个奇点的局部信息决定。",
+    "origin": "1820 年代，柯西(Augustin-Louis Cauchy)在系统建立复变函数的积分理论时提出。他先证了「解析函数沿闭合曲线积分为零」(柯西积分定理)，再往前一步问:如果曲线里藏了几个奇点会怎样?答案就是这些奇点每个贡献一个留数。这套工具后来成了工程师计算各种实积分和反变换的看家本领——绕一个复平面的圈，把实轴上难算的积分「变魔术」变出来。",
+    "derivation": [
+      { "math": "\\oint_C f\\,dz=\\sum_k \\oint_{C_k} f\\,dz", "note": "先用柯西定理把大圈变形:因为奇点之间的区域里 f 是解析的，可以把大围道收缩成绕每个奇点的一圈小圆 C_k 之和，中间连接段来回抵消。" },
+      { "math": "f(z)=\\sum_{n=-\\infty}^{\\infty} a_n\\,(z-z_k)^n", "note": "在每个奇点 z_k 附近，把 f 展成洛朗级数(允许出现负幂次的泰勒级数)，这样奇点的「奇」全藏在负幂项里。" },
+      { "math": "\\oint_{C_k}(z-z_k)^n\\,dz = 2\\pi i\\,\\delta_{n,-1}", "note": "关键一步:绕小圆逐项积分，除了 n=-1 那一项等于 2πi，其余所有幂次转一圈都回到原点、积分为零。" },
+      { "math": "\\oint_{C_k} f\\,dz = 2\\pi i\\,a_{-1}=2\\pi i\\,\\mathrm{Res}(f,z_k)", "note": "所以单个奇点的贡献只剩洛朗系数 a_{-1}，给它起名叫「留数」——整个无穷级数积分完只留下这一个数。" },
+      { "math": "\\oint_C f\\,dz = 2\\pi i\\sum_k \\mathrm{Res}(f,z_k)", "note": "把所有被圈住的奇点加起来，就得到留数定理。圈外的奇点、解析部分统统不出力。" }
+    ],
+    "applications": [
+      { "area": "信号与控制", "detail": "做拉普拉斯 / 傅里叶反变换:从系统的传递函数(有理分式)靠留数逐个极点还原出时域的冲激响应，是控制理论的日常操作。" },
+      { "area": "实积分计算", "detail": "很多形如 $\\int_{-\\infty}^{\\infty}$ 的实积分本身很难算，补一条大半圆围道后用留数几步就出结果，物理里的振荡积分尤其常用。" },
+      { "area": "理论物理", "detail": "量子场论、统计力学里传播子的能量积分、玻色 / 费米求和，都靠把被积函数的极点留数加起来完成。" },
+      { "area": "组合与算法", "detail": "生成函数的系数提取本质是求 $a_{-1}$，用留数(围道积分)能给出计数问题的渐近估计。" }
+    ],
+    "takeaway": "留数定理体现了复分析里一个反直觉又极美的事实:一个解析函数的全局行为(整条闭合路径的积分)被它少数几个奇点的局部信息($a_{-1}$)完全锁定。抓住奇点，就抓住了全部——这跟今天纳维-斯托克斯那条新闻里「解的整体命运由局部奇点(爆破点)决定」是同一种思维。",
+    "viz": {
+      "type": "custom",
+      "caption": "拖动滑块改变蓝色围道的半径:某个极点一旦被圈进来，它的留数就被算进积分;圈住的极点集合一变，整条闭合积分的值就跳一下——直观看出「积分只由圈住的奇点决定」。",
+      "html": "<canvas id=\"rzc\" width=\"600\" height=\"320\" style=\"max-width:100%\"></canvas><div style=\"margin-top:8px;font-size:14px\"><input id=\"rzr\" type=\"range\" min=\"20\" max=\"300\" value=\"120\" style=\"width:70%;vertical-align:middle\"> <span id=\"rzl\"></span></div>",
+      "script": "(function(){var wrap=el;var cv=wrap.querySelector('#rzc');var ctx=cv.getContext('2d');var rg=wrap.querySelector('#rzr');var lab=wrap.querySelector('#rzl');var cx=300,cy=160,s=80;var poles=[{x:0.8,y:0,res:1.0},{x:-1.6,y:0,res:-0.5}];function draw(){var R=(+rg.value)/100;ctx.clearRect(0,0,600,320);ctx.strokeStyle='#d1d5db';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(600,cy);ctx.moveTo(cx,0);ctx.lineTo(cx,320);ctx.stroke();ctx.fillStyle='rgba(37,99,235,0.06)';ctx.beginPath();ctx.arc(cx,cy,R*s,0,2*Math.PI);ctx.fill();ctx.strokeStyle='#2563eb';ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,R*s,0,2*Math.PI);ctx.stroke();var sum=0,cnt=0,i,p,px,py,inside;for(i=0;i<poles.length;i++){p=poles[i];px=cx+p.x*s;py=cy-p.y*s;inside=Math.sqrt(p.x*p.x+p.y*p.y)<R;if(inside){sum+=p.res;cnt++;}ctx.strokeStyle=inside?'#16a34a':'#9ca3af';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(px-6,py-6);ctx.lineTo(px+6,py+6);ctx.moveTo(px+6,py-6);ctx.lineTo(px-6,py+6);ctx.stroke();ctx.fillStyle=inside?'#16a34a':'#9ca3af';ctx.font='12px sans-serif';ctx.fillText('Res='+p.res,px+9,py-8);}lab.textContent='半径 R='+R.toFixed(2)+'  圈住 '+cnt+' 个极点   ∯f dz = 2πi × '+sum.toFixed(2)+'（逆时针）';}rg.addEventListener('input',draw);draw();})();"
+    }
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Bilevel Coordinated Reflection: A Game-Theoretic Approach to Multi-Agent LLM Systems",
+      "title_zh": "双层协调反思:用博弈论看多智能体 LLM 系统",
+      "url": "https://arxiv.org/abs/2609.02750",
+      "hf_url": "https://huggingface.co/papers/2609.02750",
+      "authors": "Yihang Chen、Yuxiang Chen、Meng Fang、Jun Wang 等",
+      "upvotes": 129,
+      "one_liner": "多智能体的「反思变强」第一次有了收敛速率的理论账。",
+      "summary_zh": "把 orchestrator 拆任务、workers 干活再靠文字反思改进的多智能体系统，建成一个双层协调博弈:在耦合不太强时，workers 的局部更新近似一个势博弈，均衡的松弛程度由任务分解质量决定。它还把「反思」看成在语义记忆状态上的随机游走，给出了自由反思的有限时间上界并证明最坏情况紧。有意思的地方是它给经验上很有效但说不清原理的多智能体反思补了一套统一解释，也点明外部验证器的作用。理论口味重，能不能指导实际系统设计还得看后续。",
+      "tags": ["LLM", "Multi-Agent", "Theory"]
+    },
+    {
+      "domain": "ai",
+      "title": "Dr. Claw: An AI Scientist Workspace for Vibe Research",
+      "title_zh": "Dr. Claw:给「凭感觉做研究」的 AI 科学家工作台",
+      "url": "https://arxiv.org/abs/2609.00365",
+      "hf_url": "https://huggingface.co/papers/2609.00365",
+      "authors": "Dingjie Song、Hanrong Zhang、Yixin Liu 等",
+      "upvotes": 124,
+      "one_liner": "不是又一个自主 agent，而是把人的决策和 AI 执行串成一条可回溯的链。",
+      "summary_zh": "命令行 coding agent(Claude Code、Gemini CLI 之类)已经能读写文件、撑住长会话，但端到端做研究还是散落在聊天、IDE、终端、写作工具之间，关键决策也很少被留档。Dr. Claw 是个开源工作台，把现有的 coding-agent 执行器包进一个可控、可审计的 human-in-the-loop 流程里,用持久状态对象、可复用技能库和多执行器协调，把规划、执行、写作拼成一个可追溯、可恢复的闭环。它刻意不做全自主，思路更务实——对天天用 coding agent 干活的人来说值得看看。",
+      "tags": ["Agent", "Coding", "Open Source"]
+    },
+    {
+      "domain": "embodied",
+      "title": "RoboTok: An Internet-Scale Data Engine for Human Demonstration Retrieval and Dexterous Manipulation Learning",
+      "title_zh": "RoboTok:从全网视频里检索人类演示、学灵巧操作的数据引擎",
+      "url": "https://arxiv.org/abs/2609.03199",
+      "hf_url": "https://huggingface.co/papers/2609.03199",
+      "authors": "Howard Qian、Yiting Chen、Bowen Wen 等",
+      "affiliation": "莱斯大学 RobotPI Lab",
+      "upvotes": 116,
+      "one_liner": "缺机器人数据?那就去全网人类操作视频里检索。",
+      "summary_zh": "机器人策略越来越依赖大量多样的演示数据，但真机采集又贵又覆盖不到长尾。RoboTok 的做法是:给一段人类操作视频当查询，从海量网络视频里检索出操作相关的人类演示，用来训练灵巧手策略。核心是从三维手部轨迹里学一个「以操作者为中心」的隐空间运动表示，让不同视角、场景、遮挡下的操作行为可以互相比较检索。用现成视频当机器人数据源的思路很对，关键看检索出来的演示迁移到真机策略上能有多大帮助。",
+      "tags": ["Robotics", "Manipulation", "Data Engine"]
+    },
+    {
+      "domain": "ai",
+      "title": "Unlocking Lossless Speedups in LLMs via Discrete Diffusion",
+      "title_zh": "用离散扩散给 LLM 做无损加速",
+      "url": "https://arxiv.org/abs/2609.04010",
+      "hf_url": "https://huggingface.co/papers/2609.04010",
+      "authors": "Subham Sekhar Sahoo、Lingjie Chen、Alexander Moreno 等",
+      "affiliation": "Institute of Foundation Models",
+      "upvotes": 81,
+      "one_liner": "自回归的分布不变，只是换了个并行出多 token 的采样器。",
+      "summary_zh": "自回归 LLM 强就强在 next-token 预测，但也被逼着一个字一个字慢慢吐。这篇提出 diffusion-augmented LLM:模型定义的还是自回归的分布，但用扩散去一次并行采出多个 token。参数拆成两套——标准 NTP 训练的 AR 权重，和一个轻量的扩散权重(靠一个开销很小的蒸馏阶段学会同时生成多 token)。关键卖点是「无损」:采样分布和原自回归模型一致，只是更快。思路干净、加装成本低，是我今天最想动手复现的一篇。",
+      "tags": ["LLM", "Diffusion", "Inference"]
+    },
+    {
+      "domain": "ai",
+      "title": "FlowBalance: Verifier-Grounded Self-Improvement from On-Policy Reasoning Experience",
+      "title_zh": "FlowBalance:靠验证器兜底的推理自我改进",
+      "url": "https://arxiv.org/abs/2609.03241",
+      "hf_url": "https://huggingface.co/papers/2609.03241",
+      "authors": "Zixun Huang、Kishan Panaganti、Haitao Mi 等",
+      "affiliation": "腾讯混元",
+      "upvotes": 64,
+      "one_liner": "让模型从自己的经验学习，又不至于把自信当正确。",
+      "summary_zh": "推理模型能从自己 on-policy 的经验里改进，但这个内循环很脆:终端验证器给的监督可靠却稀疏，而同模型的密集自我指导又容易强化虚假自信、把学习挤到单一解法上。FlowBalance 学一个在完整回答上的归一化分布:用同策略的一个冻结「训练时视角」借特权上下文产出 token 级 log 概率增益，聚合成轨迹级自我指导分，再用验证器导出的组优势去校准它。本质是在「相信自己」和「相信验证器」之间找平衡，是 self-improvement 这条线里比较扎实的一篇。",
+      "tags": ["LLM", "RL", "Reasoning"]
+    },
+    {
+      "domain": "ai",
+      "title": "Motion-Omni: End-to-End Joint Speech and Full-Body Motion for Spoken Dialogue",
+      "title_zh": "Motion-Omni:端到端同时生成语音和全身动作的对话模型",
+      "url": "https://arxiv.org/abs/2609.04250",
+      "hf_url": "https://huggingface.co/papers/2609.04250",
+      "authors": "Chengqian Ma、Wei Tao、Yiwen Guo 等",
+      "affiliation": "北京大学",
+      "upvotes": 38,
+      "one_liner": "会说话的 avatar，说的和动的第一次在一个模型里同时长出来。",
+      "summary_zh": "一个能对话的虚拟人应该边想边说边动，但现在语音对话模型只出语音、共说话动作模型只从给定音频出动作，两家分立。标准补救是级联——先生成语音再拿去跑动作模型，多一次推理还没法联合优化。Motion-Omni 做成端到端:一个口语对话模型原生同时输出显式面部表情和手、上身、下身动作。把「说什么」和「怎么动」放进一个模型联合建模，方向是对的，就看生成的动作自然度和语音质量能不能都撑住。",
+      "tags": ["Multimodal", "Speech", "Motion"]
+    },
+    {
+      "domain": "ai",
+      "title": "The Attention Triangle in Audio-Video Models",
+      "title_zh": "音视频模型里的「注意力三角」",
+      "url": "https://arxiv.org/abs/2609.03586",
+      "hf_url": "https://huggingface.co/papers/2609.03586",
+      "authors": "Sagi Polaczek、Noa Kraicer、Daniel Cohen-Or 等",
+      "affiliation": "特拉维夫大学",
+      "upvotes": 29,
+      "one_liner": "跨模态注意力协调三方，同一机制也在悄悄「串味」。",
+      "summary_zh": "音视频扩散模型靠跨模态注意力协调文本、声音、画面，但同一机制会带来隐蔽而系统的语义泄漏。这篇把连接文本-音频-视频三路的三条交叉注意力边叫作「注意力三角」，分析语义信息在生成时怎么在模态间流动。发现音频-视频这条边是双向的:音频能影响画面生成、画面也能反过来影响音频，这条边由模型参数里编码的偏置塑造，是泄漏的主要来源。是那种把黑箱机制掰开看的机理研究，对做可控多模态生成的人有参考价值。",
+      "tags": ["Multimodal", "Diffusion", "Interpretability"]
+    },
+    {
+      "domain": "chip",
+      "title": "MaxKernel: Agentic Kernel Generation for TPUs",
+      "title_zh": "MaxKernel:给 TPU 自动写高性能 kernel 的智能体系统",
+      "url": "https://arxiv.org/abs/2609.04523",
+      "hf_url": "https://huggingface.co/papers/2609.04523",
+      "authors": "Shangkun Wang、Nina Cai、Andi Gavrilescu 等",
+      "affiliation": "Google",
+      "upvotes": 12,
+      "one_liner": "把写加速器 kernel 这门玄学，交给拿编译器反馈打磨的 agent。",
+      "summary_zh": "给加速器手写高性能 kernel 需要很深的硬件功底。MaxKernel 用 LLM 加实时编译器反馈搭了个多智能体系统，为 TPU kernel 开发实现三种范式:人机协作(HITL)一步步设计、全自动(Auto)按指标/trace 驱动的优化循环、以及把 Auto 扩展成全局搜索的图式自主搜索。kernel(算子的底层高性能实现)是 AI 算力落地的关键瓶颈之一，让 agent 借编译器反馈自动逼近手写水平这条路，产业价值很实在——尤其对非 CUDA 生态的硬件。",
+      "tags": ["TPU", "Compiler", "Agent"]
+    },
+    {
+      "domain": "bio",
+      "title": "SimpleDesign: A Joint Model for Protein Sequence and Structure Codesign",
+      "title_zh": "SimpleDesign:蛋白质序列与结构联合设计的一体化模型",
+      "url": "https://arxiv.org/abs/2609.03377",
+      "authors": "SimpleDesign 作者(arXiv 2609.03377)",
+      "upvotes": 0,
+      "one_liner": "序列和结构本是一体，别再分两阶段各训各的。",
+      "summary_zh": "蛋白质的功能由氨基酸序列和三维结构的复杂互动决定，做生成模型就得同时抓住这两个模态。现有方法常走多阶段:先训 autoencoder 把数据 token 化成隐表示，再训生成模型,流程割裂。SimpleDesign 提出一个联合模型直接对序列和结构 codesign，把两个模态放在一起生成。对药物发现和蛋白质工程来说，序列-结构一致性是核心，这类一体化建模是值得跟的方向;具体设计质量还需要湿实验或标准 benchmark 验证。",
+      "tags": ["Protein Design", "Generative", "Drug Discovery"]
+    },
+    {
+      "domain": "quantum",
+      "title": "A photonic source with half-a-GHz single-photon flux",
+      "title_zh": "每秒 5 亿个:半 GHz 通量的单光子源",
+      "url": "https://arxiv.org/abs/2609.05387",
+      "authors": "arXiv 2609.05387",
+      "upvotes": 0,
+      "one_liner": "单光子源的「亮度」冲到 500 MHz，还能用普通功率计测效率。",
+      "summary_zh": "光量子技术要高质量光源、还要高速率。这篇报了个确定性单光子源，同时做到高激发速率和高系统效率，光纤里的单光子通量超过 500 MHz(每秒约 5 亿个光子)，光功率过 100 pW——高到能直接用现成功率计测出光纤耦合效率。单光子源的通量和效率是光量子计算、量子通信的硬指标之一，这种把亮度推高、还顺手简化了效率标定的工程进展，对搭真实系统的人很实用。",
+      "tags": ["Photonics", "Single-Photon", "Hardware"]
+    },
+    {
+      "domain": "energy",
+      "title": "What Photocurrent Versus Effective Voltage Tells Us About Charge Generation in Organic Solar Cells",
+      "title_zh": "有机太阳能电池:那条「光电流-有效电压」曲线其实没测你以为的东西",
+      "url": "https://arxiv.org/abs/2609.05170",
+      "authors": "arXiv 2609.05170",
+      "upvotes": 0,
+      "one_liner": "常用的激子解离率提取法，可能一直在给出偏低的假象。",
+      "summary_zh": "有机太阳能电池领域惯常把光电流对「有效电压」作图，用来提取激子解离概率、进而推自由电荷生成效率。这篇用漂移-扩散模型指出:即便自由电荷生成完全与电场无关、损失只来自双分子复合，这套方法算出的表观解离概率也会明显低于 1——也就是说它既没测解离概率、也没测生成效率。是一记对领域标准分析方法的打脸式修正，做钙钛矿/有机光伏表征的人该看看，免得继续误读数据。",
+      "tags": ["Organic Solar", "Photovoltaics", "Characterization"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "microsoft/markitdown",
+      "url": "https://github.com/microsoft/markitdown",
+      "language": "Python",
+      "stars": 181598,
+      "stars_today": "2,045",
+      "one_liner": "把 Office / PDF 等一切文档拍平成 Markdown，喂给 LLM 前的标准预处理。",
+      "summary_zh": "一个把 Word、PPT、Excel、PDF、图片等各种文件转成 Markdown 的 Python 工具。做 RAG 或给 LLM 灌上下文时，统一转成干净的 Markdown 是很实在的预处理步骤,微软官方维护、覆盖格式广，是这类需求里最省心的默认选择。"
+    },
+    {
+      "domain": "ai",
+      "name": "browser-use/browser-use",
+      "url": "https://github.com/browser-use/browser-use",
+      "language": "Python",
+      "stars": 113413,
+      "stars_today": "320",
+      "one_liner": "让 AI agent 像人一样点网页、填表单、跑流程。",
+      "summary_zh": "给 AI agent 用的浏览器自动化库，把网页操作(点击、输入、导航)封装成 agent 能调用的动作，用来自动完成线上任务。做网页 agent、自动化爬取或 RAG 抓数据的人绕不开这类工具，社区活跃、集成方便。"
+    },
+    {
+      "domain": "ai",
+      "name": "mksglu/context-mode",
+      "url": "https://github.com/mksglu/context-mode",
+      "language": "TypeScript",
+      "stars": 21352,
+      "stars_today": "652",
+      "one_liner": "把工具输出沙箱化压缩 98%，专治 coding agent 的上下文窗口爆炸。",
+      "summary_zh": "面向 AI coding agent 的上下文窗口优化工具:把工具调用的巨量输出沙箱化(号称压缩 98%)、持久化会话记忆、并在多个平台间强制路由。长会话里工具输出撑爆上下文是真实痛点，这类「省 token」中间层值得关注,不过实际压缩率和适配范围要自己试。"
+    },
+    {
+      "domain": "ai",
+      "name": "cathrynlavery/diagram-design",
+      "url": "https://github.com/cathrynlavery/diagram-design",
+      "language": "HTML",
+      "stars": 34590,
+      "stars_today": "1,020",
+      "one_liner": "38 种编辑级图表模板，自包含 HTML+SVG，拒绝 Mermaid 那股塑料味。",
+      "summary_zh": "给 Claude Code、Codex 等 coding agent 用的 38 种编辑风格图表类型，纯自包含 HTML + SVG，不依赖 Mermaid。让 agent 生成的图表更接近人手做的排版质感。需要 agent 产出讲得清、看得顺的示意图时可以拿来当模板库。"
+    },
+    {
+      "domain": "ai",
+      "name": "heygen-com/hyperframes",
+      "url": "https://github.com/heygen-com/hyperframes",
+      "language": "TypeScript",
+      "stars": 47670,
+      "stars_today": "2,628",
+      "one_liner": "写 HTML，渲出视频——给 agent 用的程序化视频生成。",
+      "summary_zh": "HeyGen 开源的框架:用写 HTML 的方式描述画面，渲染成视频，专为 agent 设计。把「视频合成」变成 agent 能直接生成和迭代的代码产物,做自动化短视频、演示动画的人可以试。今天涨 star 很猛。"
+    },
+    {
+      "domain": "ai",
+      "name": "jo-inc/camofox-browser",
+      "url": "https://github.com/jo-inc/camofox-browser",
+      "language": "JavaScript",
+      "stars": 10419,
+      "stars_today": "872",
+      "one_liner": "给 agent 的隐身浏览器，Puppeteer/Playwright 的直接替换件。",
+      "summary_zh": "面向 AI agent 的隐身无头浏览器，声称能绕过 Cloudflare、机器人检测等反爬机制，可直接替换 Puppeteer/Playwright。反检测和反爬是长期的猫鼠游戏，这类工具处在灰色地带——用在有授权的数据采集和测试上没问题，用途需自己把握。"
+    },
+    {
+      "domain": "ai",
+      "name": "ayghri/i-have-adhd",
+      "url": "https://github.com/ayghri/i-have-adhd",
+      "language": "Python",
+      "stars": 29993,
+      "stars_today": "422",
+      "one_liner": "一个 skill，专治 coding agent 把答案埋在一堆废话里。",
+      "summary_zh": "一个给 coding agent 用的 skill，目标是让输出别把关键答案埋在长篇解释里、更「ADHD 友好」地直给结论。名字很皮，但戳中了很多人对 agent 啰嗦输出的怨念。今天 Trending 上一堆 skill 项目里比较有梗的一个。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "OpenAI 数学家称证明纳维-斯托克斯方程会「爆破」，触及千禧年难题",
+      "url": "https://www.quantamagazine.org/ai-has-solved-one-of-maths-1-million-millennium-prize-problems-20260908/",
+      "source": "Quanta Magazine",
+      "summary_zh": "OpenAI 的数学家给出结果，证明描述流体运动的纳维-斯托克斯方程在某些情形下的解会「爆破」(blow up，即有限时间内变得无穷大)，直指价值百万美元的千禧年七大难题之一——该难题原本问的是三维解是否总能光滑存在。但这条重磅结果不无争议:一位纽约大学数学家公开指责 OpenAI 在这道「立职业口碑」的问题上手段不干净，功劳归属和证明的完整性都在被质疑。真正的判定还得等数学界同行评议。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Anthropic 两头着火:用户 Claude token 被盗，又因套餐宣传吃集体诉讼",
+      "url": "https://techcrunch.com/2026/09/08/hackers-are-stealing-claude-tokens-from-subscribers/",
+      "source": "TechCrunch",
+      "summary_zh": "一边是安全事件:有 Claude 用户发现自己没干活账号却在消耗 token，Anthropic 已就黑客盗用 token 向用户发出警告。另一边是法律麻烦:一批重度用户扩大了对 Anthropic 的集体诉讼，称公司在顶配订阅套餐上误导他们、实际拿到的额度远不如宣传。Anthropic 一向说重度用户是核心、宁可为他们砍掉别的热门应用，如今这批核心用户反倒把它告上法庭。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Cognition 估值冲到 480 亿美元，投资人押注 AI 编程不是赢家通吃",
+      "url": "https://techcrunch.com/2026/09/08/cognition-hits-48b-valuation-signaling-investors-believe-ai-coding-is-far-from-a-winner-take-all-market/",
+      "source": "TechCrunch",
+      "summary_zh": "AI 编程公司 Cognition(Devin 母公司)最新估值达 480 亿美元，其估值倍数比 Cursor 卖身 SpaceX 前还高。这个价钱背后是投资人的判断:AI coding 这个市场远没到赢家通吃，多家玩家还都有位置。结合今天 Dr. Claw 这类 coding-agent 工作台的论文，coding agent 赛道的热度和分散度都在同步走高。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Mistral 融资 30 亿欧元，「主权 AI」成了大生意",
+      "url": "https://techcrunch.com/2026/09/08/mistral-raises-e3b-as-sovereign-ai-becomes-big-business/",
+      "source": "TechCrunch",
+      "summary_zh": "法国 AI 实验室 Mistral 完成 D 轮融资 30 亿欧元，估值 210 亿欧元，由三星、Scaleup Europe 和 PSG Equity 领投。这轮钱的主题是「主权 AI」——欧洲想要不受制于美国大厂的本土大模型能力，正在变成一门实打实的生意。三星领投也透出产业资本对区域化 AI 供给的兴趣。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Meta 发布个人 AI 助理 Muse，索要邮件日历支付健康全权限",
+      "url": "https://techcrunch.com/2026/09/08/meta-debuts-its-muse-ai-agent-will-consumers-trust-it/",
+      "source": "TechCrunch",
+      "summary_zh": "Meta 推出个人 AI agent「Muse」，想要访问用户的邮件、日历、支付、健康服务等大量私人数据，是它迄今最大的消费级 AI 押注。核心悬念不在能力而在信任——在数据丑闻缠身的背景下，用户还愿不愿意把这么多敏感权限交给 Meta，是这款产品的最大考验。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "Google DeepMind 发布 AlphaGenome Atlas:每一个 DNA 单碱基改动的预测地图",
+      "url": "https://deepmind.google/blog/alphagenome-atlas-a-predictive-map-of-every-possible-dna-letter-change-in-the-human-genome/",
+      "source": "DeepMind",
+      "summary_zh": "Google DeepMind 发布 AlphaGenome Atlas，号称包含人类基因组中「每一个可能的 DNA 单碱基改动」的预测地图。目标是帮助解读基因组功能、加速对疾病机制的理解，最终为新疗法铺路。把变异效应预测做到全基因组、单碱基粒度是个大工程,真正价值要看它对未知致病变异的预测能不能在实验和临床里站住。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "越来越多证据显示自动驾驶车更安全，Rivian 也下场冲全自动",
+      "url": "https://spectrum.ieee.org/are-self-driving-cars-safe",
+      "source": "IEEE Spectrum",
+      "summary_zh": "IEEE Spectrum 两篇报道:一是不断积累的研究表明自动驾驶车的碰撞率明显低于人类驾驶，尽管因样本还不够多、难做完全对等的比较，公众和部分专家仍有疑虑;二是 Rivian 也加入全自动竞赛，其 R1S 已能在帕洛阿尔托街道上自动驾驶。安全性数据的天平正在往 AV 这边偏，但「够不够多的车来证明」仍是绕不开的坎。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Agility Robotics SPAC 上市前披露:2025 年营收 180 万美元，亏损 1.4 亿",
+      "url": "https://www.therobotreport.com/agility-robotics-reports-18m-revenue-ahead-of-humanoid-spac/",
+      "source": "The Robot Report",
+      "summary_zh": "人形机器人公司 Agility Robotics 的 S-4 文件显示:2025 年营收仅 180 万美元，经营亏损 1.4 亿美元，并计划借 SPAC 上市扩大其 Digit 人形机器人业务。数字给人形机器人的商业化现状泼了盆冷水——营收和烧钱差着两个数量级，规模化的路还很长。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "给航天器挡碎片的秘诀可能是「蛋壳」",
+      "url": "https://arstechnica.com/science/2026/09/how-eggshells-can-protect-spacecraft-from-space-debris/",
+      "source": "Ars Technica",
+      "summary_zh": "研究发现,3D 打印的铝制「蛋壳」阵列内部填充水后，抗撞击表现比传统结构更好，有望用于下一代航天器的空间碎片防护。随着近地轨道碎片越来越密，轻量又抗撞的防护结构是实打实的工程需求,这种仿生+增材制造的思路挺新鲜。"
+    },
+    {
+      "domain": "ai4s",
+      "title_zh": "Google AI 天气模型升级:直接吃更多原始卫星数据，预报更准",
+      "url": "https://arstechnica.com/science/2026/09/googles-ai-weather-model-now-uses-more-raw-satellite-data/",
+      "source": "Ars Technica",
+      "summary_zh": "Google 的 AI 天气模型更新后引入更多原始卫星数据作为输入，预报精度随之提升——和传统数值天气模型一样，喂给它更全的观测就更准。AI 天气预报从「学再分析数据」走向「直接消化原始观测」，是这条线成熟的一个信号。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "embodied",
+      "type": "repo",
+      "title": "做一个 VLM 奖励模型的「同义改写稳健性」体检工具",
+      "based_on": [
+        { "title": "ROBORMBENCH: Paraphrase Fragility in Vision Language Reward Models", "url": "https://arxiv.org/abs/2609.05401" }
+      ],
+      "why_now": "这篇刚指出 VLM 当奖励函数时严重缺乏「同义改写不变性」——同一条轨迹换个说法就能从失败翻成成功，但目前还没有一个开箱即用、能套在任意开源 VLM 上的自动化检测工具。趁概念刚提出、还没人做成库，先占坑攒 star。",
+      "feasibility": "纯推理，单张 24GB 卡就能跑 Qwen2.5-VL / InternVL 等开源 VLM;做成 pip 装的小库 + 几个标准报告，2-3 周有雏形。",
+      "route": [
+        "先跑通一个开源 VLM(如 Qwen2.5-VL-7B)对一段机器人轨迹打进度分/奖励的最小推理脚本",
+        "用现成的改写模型或模板，给每条指令生成 N 个语义等价的同义改写",
+        "对同一轨迹的原指令和改写指令批量打分，统计方差、排序翻转率、成功/失败翻转率等指标",
+        "封装成 pip 库:输入任意 VLM + 轨迹数据集，输出一份「改写稳健性体检报告」",
+        "加一个可选的缓解 baseline(推理时对多个改写取平均分)，量化能压下多少波动"
+      ],
+      "risk": "价值取决于能不能对接主流开源 VLM 的打分接口——不同模型的奖励/进度输出格式不统一，适配层要做得足够通用才有人用。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "验证「截断梯度」这个即插即用技巧在稀疏视角 3DGS 上还灵不灵",
+      "based_on": [
+        { "title": "TruncGradGS: Improved 3D Gaussian Splatting via Truncated Gradient Updates", "url": "https://arxiv.org/abs/2609.03534" }
+      ],
+      "why_now": "TruncGradGS 刚提出用截断梯度更新缓解 3DGS 的「梯度消失」(远离高斯基元的像素梯度太小)，方法基本是 training-free 的即插即用改动、几行就能加。这种技巧最值钱的扩展就是「换个场景/换个 3DGS 变体验证泛化性」,而稀疏视角、大场景这些梯度更容易消失的设定它还没测。",
+      "feasibility": "单张 24GB 卡即可,官方 3DGS 训练一个场景数十分钟到几小时;每组对比几天出结果，整体 2-3 周。",
+      "route": [
+        "先在 Mip-NeRF360 一个场景上跑通官方 3DGS 基线，记录 PSNR/SSIM",
+        "按论文把截断梯度更新加进优化循环(改动很小)，复现它报告的增益",
+        "切到稀疏视角设定(每场景只用 3-9 张图)和大尺度航拍场景,这两类梯度消失更严重",
+        "对比有无截断梯度的重建质量与收敛速度，看增益是放大还是消失",
+        "若有效，进一步试着与其它 3DGS 变体(如带 anti-aliasing 的版本)叠加"
+      ],
+      "risk": "截断阈值可能对场景敏感，需要按数据集重新调参;若在稀疏视角下增益不明显，结论本身(负结果)也有价值但发表难度上升。"
+    },
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "在仿真里给开源 VLA 补一个轻量「失败重试」模块",
+      "based_on": [
+        { "title": "LIBERO-RECOVER: Beyond Task Success Towards Failure Recovery in Robotic Manipulation Models", "url": "https://arxiv.org/abs/2609.05178" }
+      ],
+      "why_now": "SOTA 方法在 LIBERO 上成功率已近 100%，看着能部署了,但 LIBERO-RECOVER 刚指出:从理想初始态出发的成功掩盖了真实世界的脆弱——从失败/扰动态恢复的能力几乎没人评。这个 gap 具体可衡量，且完全在仿真里就能做，不需要真机。",
+      "feasibility": "LIBERO 仿真 + 开源 VLA(OpenVLA / 小型 pi0 类模型)，单张 24-40GB 卡推理即可;评测为主、只做轻量适配，3-4 周可完成。",
+      "route": [
+        "跑通一个开源 VLA 在 LIBERO 标准任务上的推理与评测",
+        "按 LIBERO-RECOVER 的思路构造扰动/失败初始态(物体移位、抓取滑脱等)，量化 baseline 的恢复成功率",
+        "加一个轻量的失败检测信号(如动作停滞、夹爪状态异常)触发重试/回退策略，不改主策略权重",
+        "对比加了重试模块前后的恢复成功率与任务完成率",
+        "分析哪类失败最难恢复，给出简单的失败分类"
+      ],
+      "risk": "开源 VLA 在扰动态下的动作可能直接发散，轻量重试未必兜得住;失败检测信号的设计是成败关键，做不好容易误触发。"
+    }
+  ]
+}
