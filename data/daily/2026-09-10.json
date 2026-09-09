@@ -1,0 +1,374 @@
+{
+  "date": "2026-09-10",
+  "editor_note": "今天最扎眼的是 OpenAI 宣称解出了一个千禧年数学难题(围绕 Navier-Stokes)——真假、以及'AI 到底做了多少'的争论,比结果本身更值得追,这是对'AI 能不能做真数学'的一次标志性压力测试。模型圈这边继续在'省钱'上使劲:腾讯混元一口气开源了语音基座 AuK 和全双工交互 Agent Gander;Kalman Delta 把卡尔曼滤波接进线性注意力、CoVeR 用覆盖度给多视角 token 剪枝,都在给长上下文/多视角推理抠成本——恰好和芯片侧那条'token 成本成了新的 EDA 预算战场'对上,推理贵已经是产业级硬约束了。具身这边宇树股价较上市首日腰斩,提醒人形的资本热情正回到看落地。要我挑一篇先点开,是智元的 GE-Act 2.0:它罕见地把'世界-动作模型怎么从头预训练'讲清楚了。每日一理配了泰勒定理——牛顿法、梯度下降、连今天那几篇 PINN,骨子里都是'在局部把难函数掰成多项式'。",
+  "math_note": {
+    "name": "泰勒定理",
+    "name_en": "Taylor's Theorem",
+    "field": "微积分 / 数学分析",
+    "one_liner": "想算一个难缠的函数?在你关心的那点把它掰成多项式就好——别走太远。",
+    "statement": "光滑函数在一点附近可以用多项式逼近。泰勒公式说 $f(x)\\approx\\sum_{k=0}^{n}\\frac{f^{(k)}(a)}{k!}(x-a)^k$,其中 $f^{(k)}(a)$ 是 $f$ 在展开中心 $a$ 处的 $k$ 阶导数、$k!$ 是阶乘。真值与多项式的差(余项)可写成 $R_n(x)=\\frac{f^{(n+1)}(\\xi)}{(n+1)!}(x-a)^{n+1}$,这里 $\\xi$ 是 $a$ 与 $x$ 之间某一点——阶数 $n$ 越高、$x$ 离 $a$ 越近,余项就越小。",
+    "origin": "把函数写成幂级数的想法在 17 世纪的格雷戈里、牛顿手里就有雏形。1715 年,英国数学家布鲁克·泰勒(Brook Taylor)在《增量法》里正式给出这套展开公式,想解决的正是'用能算的多项式替代难算的函数'这一实际难题。一个世纪后,拉格朗日、柯西又补上了严格的余项形式,让'近似到底差多少'第一次能被量化。",
+    "derivation": [
+      { "math": "f(x)=f(a)+\\int_a^x f'(t)\\,dt", "note": "从微积分基本定理出发:函数在 x 的值,等于它在起点 a 的值,加上导数一路积分过去的累积。" },
+      { "math": "\\int_a^x f'(t)\\,dt=f'(a)(x-a)+\\int_a^x f''(t)(x-t)\\,dt", "note": "对这个积分做一次分部积分,把 f' 拆成'它在 a 的定值'加上一个带 f'' 的新积分——第一项就是一次项。" },
+      { "math": "f(x)=f(a)+f'(a)(x-a)+\\frac{f''(a)}{2!}(x-a)^2+\\cdots", "note": "反复分部积分,每做一次就多榨出一项 $f^{(k)}(a)/k!\\,(x-a)^k$,多项式一项项长出来。" },
+      { "math": "R_n(x)=\\frac{1}{n!}\\int_a^x f^{(n+1)}(t)(x-t)^n\\,dt", "note": "剩下没被榨干的尾巴,就是积分型余项,它精确度量了多项式没抓住的那部分。" },
+      { "math": "R_n(x)=\\frac{f^{(n+1)}(\\xi)}{(n+1)!}(x-a)^{n+1}", "note": "用积分中值定理把余项写成拉格朗日形式:只要 (n+1) 阶导数有界,x 趋近 a 时,误差就以 (x-a)^{n+1} 的速度快速衰减。" }
+    ],
+    "applications": [
+      { "area": "数值计算", "detail": "计算机算 sin、exp、log,底层就是截断的泰勒级数(配合区间归约把 x 拉到收敛快的小区间)。" },
+      { "area": "优化算法", "detail": "牛顿法用二阶泰勒展开近似目标函数再跳到极小点,梯度下降的收敛分析也建立在局部泰勒近似上。" },
+      { "area": "物理与工程", "detail": "小角度近似 $\\sin\\theta\\approx\\theta$、单摆线性化、把非线性系统在工作点线性化,都是取一阶泰勒。" },
+      { "area": "机器学习", "detail": "神经正切核(NTK)、损失景观的二阶(Hessian)分析,都靠在参数点做泰勒展开来刻画训练动力学。" }
+    ],
+    "takeaway": "复杂函数在局部都'长得像多项式'——只要你别贪心走太远。这就是'线性化 / 局部近似'这一整套工程直觉的数学根:牛顿法、梯度下降、小角度近似 $\\sin\\theta\\approx\\theta$,本质都是在某点截断泰勒展开。",
+    "viz": {
+      "type": "custom",
+      "caption": "拖动粉色的展开中心 a、拉动上方滑块调阶数 N:灰线是真函数 sin x,蓝线是它的 N 阶泰勒多项式。看它怎样在 a 附近先贴合、阶数越高贴合的范围越宽,但离 a 太远总会甩飞。",
+      "html": "<div style='width:100%;max-width:560px;margin:0 auto'><div class='jxgbox' style='width:100%;aspect-ratio:7/6'></div></div>",
+      "script": "(function(){var host=el.querySelector('.jxgbox');if(!host||!window.JXG){return;}if(!host.id){host.id='taylor-jxg-board';}var b=JXG.JSXGraph.initBoard(host.id,{boundingbox:[-7,3,7,-3],axis:true,showNavigation:false,showCopyright:false});var sN=b.create('slider',[[-6,2.5],[-1,2.5],[1,4,14]],{name:'N',snapWidth:1,fillColor:'#2563eb',strokeColor:'#2563eb'});var ax=b.defaultAxes.x;var A=b.create('glider',[1.2,0,ax],{name:'a',size:4,color:'#db2777',label:{fontSize:16}});function taylor(x){var N=Math.round(sN.Value());var a=A.X();var s=0,fact=1;for(var k=0;k<=N;k++){if(k>0){fact*=k;}s+=Math.sin(a+k*Math.PI/2)/fact*Math.pow(x-a,k);}return s;}b.create('functiongraph',[function(x){return Math.sin(x);},-7,7],{strokeColor:'#94a3b8',strokeWidth:2});b.create('functiongraph',[taylor,-7,7],{strokeColor:'#2563eb',strokeWidth:3});b.create('point',[function(){return A.X();},function(){return Math.sin(A.X());}],{name:'',size:2,color:'#db2777',fixed:true});b.create('text',[-6.6,-2.4,function(){return '阶数 N = '+Math.round(sN.Value())+'  ,  展开中心 a = '+A.X().toFixed(2);}],{fontSize:15,fixed:true,color:'#0f172a'});return function(){try{JXG.JSXGraph.freeBoard(b);}catch(e){}};})()"
+    }
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "AuK Technical Report: An Open-Source Foundational Model for Speech Generation and Editing",
+      "title_zh": "AuK:开源的语音生成与编辑基座模型",
+      "url": "https://arxiv.org/abs/2609.08936",
+      "hf_url": "https://huggingface.co/papers/2609.08936",
+      "authors": "Ziyang Ma、Zhikang Niu 等",
+      "affiliation": "腾讯混元",
+      "upvotes": 165,
+      "one_liner": "把生成、编辑、增强、分离全塞进一个语音大模型,还开源。",
+      "summary_zh": "腾讯混元开源的语音基座,用'自然语言指令 + 参考音频'一个接口统一了语音生成、内容编辑、增强分离、副语言(情绪语气)和声学编辑五类活。训练堆了约 30 亿条指令-音频样本、195 万小时有效监督,架构上多模态 LLM 管语义条件、一个在语音/通用音频/音乐上联训的 VAE 管声学、再接双流 rectified-flow Transformer 出波形。开源这点是关键——之前这类全能语音模型基本都锁在闭源产品里。",
+      "tags": ["语音", "多模态", "开源"]
+    },
+    {
+      "domain": "ai",
+      "title": "Omni Interaction Agent Technical Report",
+      "title_zh": "Gander:全双工的全模态交互 Agent",
+      "url": "https://arxiv.org/abs/2609.08977",
+      "hf_url": "https://huggingface.co/papers/2609.08977",
+      "authors": "Shengpeng Ji、Junlong Tong 等",
+      "affiliation": "腾讯混元",
+      "upvotes": 109,
+      "one_liner": "能被随时打断、也会主动追问的实时多模态 Agent。",
+      "summary_zh": "同样来自混元,Gander 想做一个端到端、全双工的实时交互模型:持续吃视频、语音、文本流,你可以随时打断它,它也能主动给中间反馈或反问你,不再是'你说一句它答一句'的回合制。架构上用了'小脑-大脑'分工来同时兼顾实时反应和复杂推理。方向对——真正好用的语音助手就得是这种连续交互,不过技术报告里的实测体验,还得看开源落地后怎样。",
+      "tags": ["Agent", "全双工", "多模态"]
+    },
+    {
+      "domain": "ai",
+      "title": "Eliciting Weak-to-Strong Generalization with On-Policy Reverse Distillation",
+      "title_zh": "用在线反向蒸馏激发'弱教强'泛化",
+      "url": "https://arxiv.org/abs/2609.08798",
+      "hf_url": "https://huggingface.co/papers/2609.08798",
+      "authors": "Youngrok Park、Sangmin Bae 等",
+      "affiliation": "KAIST",
+      "upvotes": 78,
+      "one_liner": "别把弱老师当天花板,只学它'指对的方向'。",
+      "summary_zh": "弱到强泛化问的是:更强的学生能不能从更弱的老师那学到东西、还反超它?常规蒸馏把弱老师当拟合目标,等于把老师的能力上限强加给学生。OPRD 换了个思路:在学生自己的 rollout 上,看老师相对其参考策略'往哪偏',只放大学生策略梯度里跟这个方向一致的分量,而不是照搬老师的输出。对'一代代模型迭代''多领域整合'这种不想每次都从头做前沿后训练的场景,挺省钱也挺实用。",
+      "tags": ["蒸馏", "RL", "后训练"]
+    },
+    {
+      "domain": "ai",
+      "title": "Marigold V2: Revisiting Diffusion Transformers for Monocular Depth Estimation",
+      "title_zh": "Marigold V2:重做扩散 Transformer 的单目深度估计",
+      "url": "https://arxiv.org/abs/2609.08084",
+      "hf_url": "https://huggingface.co/papers/2609.08084",
+      "authors": "Igor Pavlovic、Anton Obukhov 等",
+      "affiliation": "华为",
+      "upvotes": 44,
+      "one_liner": "把图像生成大模型改造成一步出图的深度估计器。",
+      "summary_zh": "单目深度估计(从一张普通照片猜每个像素的远近)是老问题,难在病态、对分布外输入不稳、细节糊。Marigold V2 延续'把现成的图像生成/编辑 DiT 改造成深度估计器'的路线,重点是从多步 flow-matching 模型里蒸出单步推理(必要处配合量化),既快又保住锐利细节和泛化。对做三维重建、机器人、计算摄影的人,是能直接接的工具。",
+      "tags": ["深度估计", "扩散模型", "3D"]
+    },
+    {
+      "domain": "ai",
+      "title": "Kalman Delta Networks: Uncertainty-aware Associative Memory",
+      "title_zh": "卡尔曼 Delta 网络:带不确定性的联想记忆",
+      "url": "https://arxiv.org/abs/2609.07816",
+      "hf_url": "https://huggingface.co/papers/2609.07816",
+      "authors": "Ngoc Bui、Tinglin Huang、Rex Ying",
+      "affiliation": "耶鲁大学",
+      "upvotes": 25,
+      "one_liner": "给线性注意力的'写入'加一个卡尔曼滤波式的信心度。",
+      "summary_zh": "线性注意力靠固定大小的循环记忆做长上下文,每来一个 token 都得当场决定'写什么、以多大力度覆盖旧记忆'——delta 规则从当前 token 学这个力度,却不跟踪对记忆估计的信心。作者把循环联想记忆重写成线性-高斯状态空间模型,于是卡尔曼滤波恰好就是最优写入规则:证据攒得越多,单次写入越会自适应。思路漂亮,把经典滤波和现代线性注意力接上了,值得看它在大模型规模上的表现。",
+      "tags": ["线性注意力", "状态空间", "长上下文"]
+    },
+    {
+      "domain": "ai",
+      "title": "CoVeR: Coverage-Based Token Pruning for Multi-View 3D Reasoning in VLMs",
+      "title_zh": "CoVeR:面向多视角三维推理的覆盖度 token 剪枝",
+      "url": "https://arxiv.org/abs/2609.08345",
+      "hf_url": "https://huggingface.co/papers/2609.08345",
+      "authors": "Nhat-Tan Bui、Varshini Elangovan 等",
+      "affiliation": "卡内基梅隆大学",
+      "upvotes": 20,
+      "one_liner": "剪 token 别只看重要性,要保证'整个场景都被覆盖到'。",
+      "summary_zh": "把三维场景表示成多视角图片,能让 2D VLM 复用预训练先验来做三维推理,绕开三维标注稀缺——代价是成千上万个冗余视觉 token,视角越多越贵。现有剪枝要么按注意力打分(结果扎堆在几个显眼区域、大片场景没 token 代表),要么体素化(管不住精确的 token 预算)。CoVeR 从'空间覆盖度'入手做剪枝,在固定预算下尽量让整个场景都有代表。training-free 的思路,做多视角 3D VLM 的可以直接拿来试。",
+      "tags": ["VLM", "3D", "token剪枝"]
+    },
+    {
+      "domain": "embodied",
+      "title": "GE-Act 2.0: Pretraining and Scaling a World-Action Model for Robotic Manipulation",
+      "title_zh": "GE-Act 2.0:从零预训练并扩展的机器人操作世界-动作模型",
+      "url": "https://arxiv.org/abs/2609.05588",
+      "hf_url": "https://huggingface.co/papers/2609.05588",
+      "authors": "AgiBot Research Team",
+      "affiliation": "智元机器人(AgiBot)",
+      "upvotes": 46,
+      "one_liner": "不蹭视频生成大模型,世界-动作模型全部从操作数据从头练。",
+      "summary_zh": "世界-动作模型(WAM)靠预测未来画面来指导机器人动作,好处是能同时吃'无动作标注的视频'和'带动作的交互数据'。以往大多直接继承预训练视频生成器,WAM 自己的预训练和扩展没人认真做。GE-Act 2.0 把生成和动作组件全部在操作数据上从头初始化,由控制导向自编码器(激进压缩下仍保住动作/指令相关信息)、单步视觉规划器和逆动力学模型三块组成。是国内具身路线上少见把'从头训 WAM'讲清楚的工作。",
+      "tags": ["具身", "世界模型", "VLA"]
+    },
+    {
+      "domain": "embodied",
+      "title": "DeCAL: Towards Physically-Grounded Dexterous Vision-Language-Action Models via Contact-Aware Latent Co-Imagination",
+      "title_zh": "DeCAL:接触感知的灵巧 VLA 操作",
+      "url": "https://arxiv.org/abs/2609.09119v1",
+      "authors": "Yankai Fu、Ning Chen 等",
+      "one_liner": "给灵巧手 VLA 补上触觉和显式的接触动力学。",
+      "summary_zh": "灵巧操作是接触密集、精细的活,现有 VLA 模型受视觉遮挡和复杂接触动力学所限。就算加了触觉,多数还是把多模态一股脑融合,缺自适应的触觉整合和对物理动力学的显式建模。DeCAL 走'接触感知的隐空间协同想象'路线,把触觉更有针对性地用起来并显式建模接触。方向切中要害——灵巧手光靠看确实不够,但真机泛化仍是这类工作要长期验证的坎。",
+      "tags": ["具身", "灵巧操作", "触觉"]
+    },
+    {
+      "domain": "chip",
+      "title": "A 28nm 27,648-Spin Multichip Digital Ising Accelerator with Pegasus Connectivity",
+      "title_zh": "28nm、27648 自旋的多芯片数字伊辛加速器",
+      "url": "https://arxiv.org/abs/2609.07907v1",
+      "authors": "Tong Wu、Atharva Raut 等",
+      "one_liner": "3.3 微秒解出两万多节点的 MaxCut,专用芯片硬刚组合优化。",
+      "summary_zh": "一颗 28nm 数字伊辛(Ising)加速器,四芯片拼出 27648 个'自旋'(可类比一个个可翻转的开关),用时分复用的自旋更新阵列 + 本地 SRAM,做到每秒 415 亿次更新、每次更新 1.2 皮焦。它用 degree-15 的 Pegasus 连接拓扑和 10bit 系数,比过去 degree-8、5bit 的方案连得更密、算得更准;实测四芯片在 3.3 微秒内解出 27069 节点的 MaxCut。这类专用硬件是量子退火机之外,做组合优化和概率逻辑的现实路线。",
+      "tags": ["伊辛机", "组合优化", "加速器"]
+    },
+    {
+      "domain": "quantum",
+      "title": "First fault-tolerant quantum memory demonstration for a generalized superfast encoding",
+      "title_zh": "广义超快编码首次实现容错量子存储",
+      "url": "https://arxiv.org/abs/2609.08957v1",
+      "authors": "James Brown、Kenny Heitritter",
+      "one_liner": "让'费米子到量子比特'的映射第一次真的容错,而不只是检错。",
+      "summary_zh": "广义超快编码(GSE)是一种把费米子问题映射到量子比特的方案,本身带纠错/检错性质,常用于模拟分子和材料。但此前所有演示都停在'只能检错'、在电路级噪声下没做出容错。作者构造了一种偶数码距 d、稳定子权重恒定的 GSE:每个模式分到一个 d 比特的环形块,稳定子生成元权重恒为 4 或 6。这是把 GSE 从'检错'推到'容错'的第一步,对未来做容错量子化学模拟有意义。",
+      "tags": ["量子纠错", "费米子映射", "容错"]
+    },
+    {
+      "domain": "bio",
+      "title": "SimpleDesign: A Joint Model for Protein Sequence and Structure Codesign",
+      "title_zh": "SimpleDesign:蛋白质序列与结构的联合共设计",
+      "url": "https://arxiv.org/abs/2609.03377v1",
+      "authors": "Jiarui Lu、Jiatao Gu 等",
+      "affiliation": "Apple",
+      "one_liner": "一步到位联合生成序列和结构,不再先训 autoencoder 再训生成器。",
+      "summary_zh": "蛋白质功能由氨基酸序列和三维结构共同决定,理想的生成模型得同时懂这两者。现有方法多是多阶段:先训一个把数据编码成隐表示的 autoencoder,再训生成器。SimpleDesign 想把序列和结构放进一个联合模型里共设计,简化这条流水线。对做蛋白质工程和药物发现的人,更简单的联合建模意味着更好复现、更好调;能否在真实设计任务上稳过多阶段方案,是要盯的点。",
+      "tags": ["蛋白质设计", "生成模型", "共设计"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Latent-MoE: Domain-Aware Mixture-of-Experts for PDEs with Multi-Regime Physics",
+      "title_zh": "Latent-MoE:面向多区域物理的领域感知专家混合 PDE 求解",
+      "url": "https://arxiv.org/abs/2609.07814v1",
+      "authors": "Hanwen Wang、Paris Perdikaris",
+      "affiliation": "宾夕法尼亚大学",
+      "one_liner": "PINN 在'分区物理'上翻车,根子在坐标网络的核偏置。",
+      "summary_zh": "物理信息神经网络(PINN)在'不同区域物理规律不同'的偏微分方程上表现差。作者把原因追到坐标网络的一个结构性毛病:它的神经正切核(NTK)是平移不变的,导致坐标数值大的训练点会不成比例地影响别处的预测,训练时产生长程耦合和梯度打架。解法是用带中心化、紧支撑的专家混合(MoE)架构,把不同区域的物理解耦开。把 NTK 分析和 MoE 结构对上,是这篇比较扎实的地方。",
+      "tags": ["PINN", "PDE", "MoE"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "obra/superpowers",
+      "url": "https://github.com/obra/superpowers",
+      "language": "Shell",
+      "stars": 283967,
+      "stars_today": "690",
+      "one_liner": "给编码 Agent 装一整套'技能 + 方法论'的框架。",
+      "summary_zh": "一个 agentic 技能框架 + 软件开发方法论,想把'让 AI 写代码'从零散提示变成一套可复用的工作流和技能库。星数已经很夸张,适合想给自己的编码 Agent 搭一套规范流程的人翻一翻、取其思路。"
+    },
+    {
+      "domain": "ai",
+      "name": "pascalorg/editor",
+      "url": "https://github.com/pascalorg/editor",
+      "language": "TypeScript",
+      "stars": 22851,
+      "stars_today": "171",
+      "one_liner": "开源 3D 建筑编辑器,带本地 CLI 和 MCP 工具,人和 Agent 都能用。",
+      "summary_zh": "一个开源的三维建筑编辑器,配了本地 CLI、MCP 工具和一套给人也给 AI Agent 用的实用工作流。做建筑/空间设计,或者想让 Agent 直接操作 3D 场景的,这是个能上手的开源底座。"
+    },
+    {
+      "domain": "ai",
+      "name": "earthtojake/text-to-cad",
+      "url": "https://github.com/earthtojake/text-to-cad",
+      "language": "Python",
+      "stars": 14997,
+      "stars_today": "97",
+      "one_liner": "一库 CAD/CAE/CAM 的 Agent 技能,把'文字→模型'接进工程流程。",
+      "summary_zh": "一套面向 CAD/CAE/CAM 的 Agent 技能库,目标是把自然语言驱动的建模、仿真、加工接进真实工程流程。做机械/工业设计又想试 AI 辅助的人可以关注,能省掉不少重复的建模脚本活。"
+    },
+    {
+      "domain": "ai",
+      "name": "TauricResearch/TradingAgents",
+      "url": "https://github.com/TauricResearch/TradingAgents",
+      "language": "Python",
+      "stars": 103869,
+      "stars_today": "367",
+      "one_liner": "多 Agent 的 LLM 金融交易框架,把分析师/交易员拆成多个角色。",
+      "summary_zh": "一个多智能体的 LLM 金融交易框架,把研究、分析、交易等角色拆成协作的多个 Agent。热度很高,适合研究多 Agent 协作和金融决策的人拿来做实验;真拿去实盘之前,请务必先把风险想清楚。"
+    },
+    {
+      "domain": "ai",
+      "name": "vastsa/PI-Desktop",
+      "url": "https://github.com/vastsa/PI-Desktop",
+      "language": "TypeScript",
+      "stars": 1614,
+      "stars_today": "393",
+      "one_liner": "本地优先的 AI 编码 Agent 桌面端:Electron + Rust 内核 + 可装插件。",
+      "summary_zh": "一个本地优先(local-first)的 AI 编码 Agent 桌面应用,Electron 界面 + Rust 写的宿主内核 + Agent 运行时,支持用户自己装插件。想要一个不完全依赖云、能在本地跑编码 Agent 的可以试。"
+    },
+    {
+      "domain": "ai",
+      "name": "ayghri/i-have-adhd",
+      "url": "https://github.com/ayghri/i-have-adhd",
+      "language": "Python",
+      "stars": 34272,
+      "stars_today": "4,624",
+      "one_liner": "一个'让 Agent 别把答案埋起来'的技能,输出对 ADHD 友好。",
+      "summary_zh": "一个很接地气的小技能:让你的编码 Agent 别绕一大圈才说重点,直接把答案摆前面,输出对注意力不集中的人更友好。名字有梗,单日涨了四千多星,看得出大家苦'AI 废话'久矣。"
+    },
+    {
+      "domain": "ai",
+      "name": "cathrynlavery/diagram-design",
+      "url": "https://github.com/cathrynlavery/diagram-design",
+      "language": "HTML",
+      "stars": 36468,
+      "stars_today": "2,286",
+      "one_liner": "38 种编辑级图表类型,自包含 HTML+SVG,不用 Mermaid。",
+      "summary_zh": "给 Claude Code、Codex 这类工具用的 38 种'编辑级'图表模板,纯自包含的 HTML + SVG,不加阴影、不用 Mermaid。想让 Agent 产出好看又干净的图示、又不想引一堆依赖的,可以直接抄它的模板。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "苹果秋季发布会:首款折叠 iPhone Duo 与'常听'的 AI 手表",
+      "url": "https://techcrunch.com/2026/09/09/everything-apple-announced-at-its-fall-iphone-event-from-the-foldable-iphone-duo-to-an-always-listening-apple-watch/",
+      "source": "TechCrunch",
+      "summary_zh": "苹果秋季发布会一口气推了首款折叠手机 iPhone Duo、会'常听'环境的 Apple Watch AI 功能、能算'健康年龄'的健康 App,还上了一个用凭证证明'照片不是 AI 生成'的相机模式。折叠和 AI 是主线,而'始终在听'与'证明照片真伪'两件事,恰好把可用性和隐私/真实性的矛盾摆到了台面上。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Anthropic 研究员辞职,警告自我改进 AI'在拿我们的命赌博'",
+      "url": "https://techcrunch.com/2026/09/09/gambling-with-our-lives-anthropic-researcher-quits-warns-against-self-improving-ai/",
+      "source": "TechCrunch",
+      "summary_zh": "Anthropic 研究员 Jacob Coxon 因担忧 AI 灭绝风险辞职,公开呼吁各实验室之间达成'放慢节奏'的协议,矛头指向能自我改进的 AI。多家媒体跟进。措辞很重,也再次暴露前沿实验室内部对'加速还是刹车'的深刻分歧。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "OpenAI 宣称解出千禧难题,学界为之一震又争议四起",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/992953/openai-math-millennium-prize-navier-stokes",
+      "source": "The Verge",
+      "summary_zh": "OpenAI 发文称解决了悬置约 90 年的一个千禧年数学难题(围绕 Navier-Stokes 方程),NYT 与 Wired 先行报道。这既像实打实的成果,也在学界掀起争议——结果如何验证、AI 在证明里到底做了多少、署名与同行评议怎么走,都成了新问题。对'AI 能不能做真数学',这是次标志性的压力测试。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "报告指六家中国 AI 公司激进抄袭美国前沿模型",
+      "url": "https://arstechnica.com/tech-policy/2026/09/six-chinese-ai-firms-accused-of-aggressively-copying-us-frontier-models/",
+      "source": "Ars Technica",
+      "summary_zh": "一份报告点名六家中国 AI 公司激进复制美国前沿模型,美方还建议 AI 厂商识别中国用户后'悄悄'切换到能力更弱的模型。政治色彩浓,但也把'模型蒸馏/复制的边界在哪、该怎么防'这个技术加政策的老问题又推到了前台。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "谷歌基因组 AI:给每一个单碱基突变都打分",
+      "url": "https://arstechnica.com/science/2026/09/googles-ai-genome-system-evaluates-every-possible-one-base-change/",
+      "source": "Ars Technica",
+      "summary_zh": "谷歌的基因组 AI 系统把人类基因组里每一种可能的单碱基改变都评了一遍——绝大多数改动没影响,但少数关键突变能被标出来。对遗传病筛查和变异致病性判读是实打实的工具,尽管临床落地仍需谨慎解读。"
+    },
+    {
+      "domain": "ai4s",
+      "title_zh": "谷歌 AI 天气模型更新:吃更多原始卫星数据,预报更准",
+      "url": "https://arstechnica.com/science/2026/09/googles-ai-weather-model-now-uses-more-raw-satellite-data/",
+      "source": "Ars Technica",
+      "summary_zh": "谷歌更新了它的 AI 天气预报模型,像传统数值模式一样,靠喂进更多原始卫星观测把预报精度又提了一截。AI 天气模型和传统数值模式的差距在持续缩小,输入端的'数据同化'依然是关键胜负手。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "宇树科技股价较上市首日跌 53%",
+      "url": "https://www.therobotreport.com/unitree-shares-down-53-from-ipo-debut/",
+      "source": "The Robot Report",
+      "summary_zh": "上月刚在上交所上市的宇树科技,股价已较首日高点腰斩,市场对其一度约 660 亿美元的估值明显退烧。人形机器人的资本热情正从'故事定价'回落到'看订单和落地',这对整个赛道是次现实检验。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "Token 成本正成为 EDA 预算里的新战场",
+      "url": "https://semiengineering.com/token-costs-are-becoming-the-new-eda-budget-battle/",
+      "source": "SemiEngineering",
+      "summary_zh": "随着 AI 深入芯片设计流程,每 token 的推理成本正把 EDA 设计预算撑大,芯片厂开始像算工具授权费一样算'token 账'。这和今天 AI 侧一堆 KV 缓存压缩、投机解码的省钱工作正好对上——推理成本已经是产业级的硬约束。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "Besxar 想用 SpaceX 火箭在太空造芯片前驱体",
+      "url": "https://techcrunch.com/2026/09/09/besxar-is-strapping-advanced-chip-fabs-onto-spacexs-falcon-9-rockets/",
+      "source": "TechCrunch",
+      "summary_zh": "前 OpenAI 员工创办的 Besxar,打算利用太空真空环境制造先进半导体的关键前驱材料,靠搭 SpaceX 猎鹰 9 号一趟趟往返。想法很大胆——把'太空制造'和'先进芯片'两个高门槛叠在一起,可行性和成本都还是大问号,但方向很有想象力。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "Luma 完成 15 年期、4.1 亿美元生命科学基金",
+      "url": "https://www.fiercebiotech.com/biotech/luma-closes-410m-fund-life-sciences-biotechs-over-15-years",
+      "source": "Fierce Biotech",
+      "summary_zh": "Luma Group 宣布其首支生命科学风投基金最终募集 4.1 亿美元,期限长达 15 年。在生物医药整体融资偏紧的当下,这种长周期的耐心资本是个正面信号,也反映出资方对长研发周期项目的重新押注。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "把 Marigold V2 的单步 DiT 配方迁到表面法线估计",
+      "based_on": [
+        { "title": "Marigold V2: Revisiting Diffusion Transformers for Monocular Depth Estimation", "url": "https://arxiv.org/abs/2609.08084" }
+      ],
+      "why_now": "Marigold V2 刚把'预训练图像生成 DiT → 单步深度估计器'的配方跑通,单步推理省显存;但同样病态的密集预测里,表面法线、反照率还没人用这套单步配方系统地做。",
+      "feasibility": "单张 24–40GB 卡即可:冻结骨干,只在小规模带法线标注的数据(如 Hypersim/ScanNet)上做 LoRA 或轻量微调,约 2–4 周。",
+      "route": [
+        "跑通 Marigold V2 官方单步深度推理,先在一张图上复现其结果",
+        "把输出头和训练目标从深度换成表面法线(用 cos 损失),在 Hypersim 上小规模微调",
+        "和 DSINE 等法线专用模型在 NYUv2/ScanNet 上比精度与锐利度",
+        "消融:单步 vs 多步、量化 vs 全精度,对法线高频细节的影响"
+      ],
+      "risk": "法线对高频边缘更敏感,单步蒸馏可能丢细节,需要在损失设计或采样步数上折中。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个多视角 VLM 的'覆盖度 token 剪枝'即插即用库",
+      "based_on": [
+        { "title": "CoVeR: Coverage-Based Token Pruning for Multi-View 3D Reasoning in VLMs", "url": "https://arxiv.org/abs/2609.08345" }
+      ],
+      "why_now": "CoVeR 指出多视角场景里剪枝该按'空间覆盖度'而非重要性打分,且思路是 training-free 的;但目前缺一个能一两行接到 Qwen-VL / InternVL 等开源 VLM 上的通用实现。",
+      "feasibility": "纯推理、无需训练,单卡甚至 CPU 就能开发:把覆盖度剪枝写成 forward hook,几周能出可用版本,目标攒 GitHub star。",
+      "route": [
+        "复现 CoVeR 的覆盖度剪枝逻辑,在一个多视角样例上验证 token 数与精度的权衡",
+        "封装成对 HuggingFace VLM 的 forward hook,暴露一个'token 预算'参数",
+        "在 2–3 个开源多视角/视频 VLM 上跑通,给出精度-延迟曲线",
+        "写清 README 和一键 demo,发 PyPI"
+      ],
+      "risk": "不同 VLM 的视觉 token 组织方式不同,通用接口要处理各家 patch 布局和 tokenizer 的差异。"
+    },
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "在 LIBERO 仿真上复现并检验 FOCI 的物体中心操作策略",
+      "based_on": [
+        { "title": "FOCI Policy: Focus on Object-Centric Interactions for Relational Manipulation Policies", "url": "https://arxiv.org/abs/2609.08743" }
+      ],
+      "why_now": "FOCI 观察到很多刚体关系操作由'短暂交互阶段里物体间相对运动被强约束'主导,提出聚焦物体中心交互的表示;这类想法适合在纯仿真里低成本验证泛化,不需要真机。",
+      "feasibility": "单卡即可,全程仿真(LIBERO / ManiSkill):复现基线加换任务集验证,约 3–4 周。",
+      "route": [
+        "在 LIBERO 上跑通一个物体中心策略基线(用现成的 object-centric baseline)",
+        "实现 FOCI 的'交互阶段相对运动约束'表示,替换基线的表示模块",
+        "在 LIBERO-Object / LIBERO-Spatial 上比成功率与样本效率",
+        "做跨任务泛化测试:在训练集之外的关系操作任务上看掉多少"
+      ],
+      "risk": "论文细节可能不全,交互阶段的检测/切分是复现难点,需要一些启发式来补齐。"
+    }
+  ]
+}
