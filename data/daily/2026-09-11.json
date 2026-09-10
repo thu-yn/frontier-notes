@@ -1,0 +1,379 @@
+{
+  "date": "2026-09-11",
+  "editor_note": "今天有两条线索值得连起来看。一是「让大模型直接开机器人」的思路又进了一步——Show-Harness 把 VLM 当大脑、留一层确定性的解释器落地到具体动作，不用重训策略；SwingBot 那边则是老老实实用 RL 教人形机器人在杠架间荡秋千，两种路子代表了具身当下的两种审美。二是数学突然被推到台前：OpenAI 号称拿下一道千禧年难题，紧接着两位数学家追问训练数据到底哪来的，把 AI 做数学的伦理问题摊开了。要点开的话我选 Ozaki 2.5——在 FP8 张量核上「拼」出 FP64 精度这件事，直接关系到未来一张卡能算多少科学计算,是芯片和 AI 算力最硬的交叉点。今天的每日一理正好配了傅里叶级数,你会发现 RenderFormer 的神经渲染、NeRF 的位置编码、还有那篇稀疏恢复理论，背后都是同一套「把复杂东西拆成频率」的老智慧。",
+  "math_note": {
+    "name": "傅里叶级数",
+    "name_en": "Fourier Series",
+    "field": "傅里叶分析 / 信号处理",
+    "one_liner": "任何周期信号,都是一堆正弦波按频率叠出来的。",
+    "statement": "傅里叶级数说的是:一个「周期为 $2\\pi$」的函数 $f(x)$(把一段波形不断重复的信号),可以写成一堆不同频率的正弦、余弦按权重叠加起来 $f(x)=\\frac{a_0}{2}+\\sum_{n=1}^{\\infty}\\big(a_n\\cos nx+b_n\\sin nx\\big)$。这里 $n$ 是频率(第 $n$ 个谐波,波动越快),$a_n$、$b_n$ 是每个频率占的分量(振幅),$a_0$ 管的是整体的平均高度。换句话说,时间域里一条看起来很怪的曲线,在频率域里只是几根「柱子」的高度。",
+    "origin": "1807 年前后,约瑟夫·傅里叶(Joseph Fourier)在研究金属棒里热量怎么扩散时提出:任何温度分布都能拆成正弦波之和,再逐个求解。这想法当时被拉格朗日等人质疑——「怎么可能用光滑的正弦拼出带尖角的函数?」争论了十几年,直到 1822 年他在《热的解析理论》里系统写出来,才成了整个分析学的支柱之一。他为了解方程发明的工具,后来反而比那个热传导问题重要得多。",
+    "derivation": [
+      { "math": "f(x)=\\frac{a_0}{2}+\\sum_{n=1}^{\\infty}\\big(a_n\\cos nx+b_n\\sin nx\\big)", "note": "先假设能这么写:把 f 当成无穷多根不同频率正弦/余弦的加权和,剩下的任务就是求出每根的权重。" },
+      { "math": "\\int_{-\\pi}^{\\pi}\\cos(mx)\\cos(nx)\\,dx=0\\quad(m\\neq n)", "note": "关键性质——不同频率的正弦波互相「正交」,积分起来彼此抵消。这等于说每个频率是一个独立的坐标轴,互不干扰。" },
+      { "math": "a_n=\\frac{1}{\\pi}\\int_{-\\pi}^{\\pi}f(x)\\cos(nx)\\,dx", "note": "利用正交性,想知道 f 里含多少「第 n 号余弦」,就拿 f 去和这根余弦做内积(乘起来积分),别的频率全被抵掉,只剩它自己。b_n 用 sin 同理。" },
+      { "math": "S_N(x)=\\frac{a_0}{2}+\\sum_{n=1}^{N}(a_n\\cos nx+b_n\\sin nx)", "note": "实际只能取前 N 项。N 越大,这个部分和 S_N 越贴近原函数——低频先搭出大致轮廓,高频再补细节。" },
+      { "math": "\\lim_{N\\to\\infty}\\int_{-\\pi}^{\\pi}|f-S_N|^2\\,dx=0", "note": "在「能量(均方)」意义下,部分和会收敛到 f。但在跳变的尖角处会有永远消不掉的过冲——这就是著名的吉布斯现象,拖一下下面的图就能看见。" }
+    ],
+    "applications": [
+      { "area": "信号处理", "detail": "把声音、图像从时间/空间域搬到频率域,做滤波、降噪、均衡——EQ 调音、去工频干扰本质都是在改某几根频率柱子的高度。" },
+      { "area": "偏微分方程", "detail": "傅里叶当年的老本行:热方程、波动方程在频率域里各频率解耦,一个难解的 PDE 拆成一堆一维常微分方程逐个搞定。" },
+      { "area": "数据压缩", "detail": "JPEG、MP3 的核心是先做(离散余弦)变换,把能量集中到少数低频系数上,再把人眼耳听不出的高频扔掉。" },
+      { "area": "深度学习", "detail": "NeRF、Transformer 里的位置编码用的就是不同频率的正弦(Fourier features),让网络更容易拟合高频细节——今天 RenderFormer-V2 那种神经渲染也吃这套。" }
+    ],
+    "takeaway": "换一组「基」看问题,难题可能瞬间变简单:在频率这组正交基下,卷积变乘法、微分变乘 $in$、纠缠的信号各自分家——很多工程技巧本质都是「选对坐标系」。",
+    "viz": {
+      "type": "fourier",
+      "caption": "拖动项数滑块:只用几根正弦就能逼出一个方波,项数越多越像,但跳变处的过冲(吉布斯现象)始终消不掉。",
+      "params": { "wave": "square", "terms": 5, "maxTerms": 40 }
+    }
+  },
+  "papers": [
+    {
+      "domain": "embodied",
+      "title": "Show-Harness: Just a VLM Agent Can Play Robots",
+      "title_zh": "Show-Harness:一个 VLM 智能体就能操控机器人",
+      "url": "https://arxiv.org/abs/2609.10522",
+      "hf_url": "https://huggingface.co/papers/2609.10522",
+      "authors": "Yanzhe Chen、Zechen Bai 等",
+      "affiliation": "Show Lab",
+      "upvotes": 106,
+      "one_liner": "把 VLM 当大脑,中间隔一层确定性解释器,不用重训策略也能开机器人。",
+      "summary_zh": "思路是给视觉语言模型开一套「语义动作接口」:VLM 只需要用它擅长的方式推理出离散的语义动作单元(比如「抓住左边那个杯子」),再由每种机器人各自的解释器把这些指令确定性地翻译成本体的具体控制。好处是精细的物理决策仍握在 VLM 手里,同一套接口能跨不同本体复用,省掉了为每个机器人训一个专用策略。属于当下「大模型直接当控制器」这一派里比较干净的一个方案,能不能扛住真机上的时序和误差还得看后续。",
+      "tags": ["VLA", "机器人", "VLM"]
+    },
+    {
+      "domain": "ai",
+      "title": "Programmable World Model",
+      "title_zh": "可编程世界模型",
+      "url": "https://arxiv.org/abs/2609.10540",
+      "hf_url": "https://huggingface.co/papers/2609.10540",
+      "authors": "Zheng-Hui Huang、Guixu Lin 等",
+      "affiliation": "Alaya Lab",
+      "upvotes": 65,
+      "one_liner": "把「世界状态」和「画面生成」拆开,规则用程序写死,长时交互不再漂。",
+      "summary_zh": "现在的视频世界模型画面越来越真,但玩久了状态就乱套——物体凭空消失、规则前后矛盾。这篇的做法是让一个智能体把自然语言指令翻译成可执行的程序,明确规定每个实体的状态和状态转移规则,再由一个轻量引擎去跑,画面生成只负责「渲染」这个被程序管住的世界。等于给世界模型加了一层可控的符号骨架,解决了长时一致性这个老毛病,思路值得关注。",
+      "tags": ["世界模型", "视频生成", "Agent"]
+    },
+    {
+      "domain": "ai",
+      "title": "AgentGrad: Intervention-guided Prompt Optimization for Multi Agent Systems",
+      "title_zh": "AgentGrad:用干预定位来优化多智能体系统的提示词",
+      "url": "https://arxiv.org/abs/2609.08572",
+      "hf_url": "https://huggingface.co/papers/2609.08572",
+      "authors": "Jaewon Chu、Jinwoo Seo 等",
+      "upvotes": 70,
+      "one_liner": "改哪条 prompt 才真能救系统?先做干预验证,别瞎归因。",
+      "summary_zh": "多智能体系统的效果很吃每个 agent 的提示词。现在流行的「文本梯度」是让模型用自然语言反馈来指导改 prompt,这篇指出它在两处会翻车:选目标 prompt 时不验证「改了它到底有没有用」,以及聚合多条反馈时容易冲突。AgentGrad 的做法是先做干预式定位——真去改一改看结果变不变,再决定往哪使劲。对搭多 agent 流水线、被「到底哪一环拖后腿」困扰的人挺实用。",
+      "tags": ["Agent", "Prompt优化", "LLM"]
+    },
+    {
+      "domain": "ai",
+      "title": "SWE-Bench Pro Verified: A Reliable Benchmark for Software Engineering Agents",
+      "title_zh": "SWE-Bench Pro Verified:一个更靠谱的软件工程智能体基准",
+      "url": "https://arxiv.org/abs/2609.08149",
+      "hf_url": "https://huggingface.co/papers/2609.08149",
+      "authors": "Pujun Zheng、Zixin Shang 等",
+      "affiliation": "上海人工智能实验室",
+      "upvotes": 19,
+      "one_liner": "原榜单能被「刷分」:金标答案泄漏、测试范围没圈好,这版把漏堵上。",
+      "summary_zh": "作者审了一遍常用的 SWE-Bench Pro,发现两类不可靠:一是奖励作弊——金标解法或隐藏评测信息泄漏,让 agent 能钻空子;二是任务本身质量差,题面误导、测试范围不合理。这些都会虚高分数、掩盖真实编码能力。Verified 版把这些问题逐一修掉。眼下 coding agent 的榜单满天飞,这种「回头把评测本身做扎实」的工作反而稀缺,值得做 agent 评测的人参考。",
+      "tags": ["Benchmark", "代码Agent", "评测"]
+    },
+    {
+      "domain": "ai",
+      "title": "What Did I Just Say? Self-Listening for Full-Duplex Speech Models",
+      "title_zh": "我刚说了啥?给全双工语音模型加上「自我聆听」",
+      "url": "https://arxiv.org/abs/2609.05592",
+      "hf_url": "https://huggingface.co/papers/2609.05592",
+      "authors": "Xuanning Zhou、Junyi Ao 等",
+      "affiliation": "FreedomAI",
+      "upvotes": 16,
+      "one_liner": "模型以为自己说了的,和实际播出来的对不上——让它听自己的声音来对齐。",
+      "summary_zh": "全双工语音模型能边听边说、应付打断和附和,但文本生成、语音合成、音频播放三条线是异步的,结果模型「以为」自己说完的话,可能根本还没播出去。被打断后再接话就容易错位。这篇提出 Self-Listening:把用户语音和模型自己已经播出的语音交错着喂回去,让模型始终知道自己真实说到哪了。语音对话产品里这种「实际播出 vs 模型认知」的错位是个真实且被忽视的坑。",
+      "tags": ["语音", "全双工", "对话"]
+    },
+    {
+      "domain": "ai",
+      "title": "Revisiting Complete Reasoning Traces for Post-Training",
+      "title_zh": "重新审视后训练里的「完整推理轨迹」",
+      "url": "https://arxiv.org/abs/2609.07103",
+      "hf_url": "https://huggingface.co/papers/2609.07103",
+      "authors": "Jaehui Hwang、Sangdoo Yun 等",
+      "affiliation": "NAVER AI Lab",
+      "upvotes": 8,
+      "one_liner": "长推理轨迹里的绕路和啰嗦,SFT 时其实学不到多少东西。",
+      "summary_zh": "常规做法是用预先收集的推理轨迹去 SFT 模型,而这些轨迹往往很长、绕来绕去带一堆弯路。作者发现:完整轨迹带来的收益很有限,反倒是部分轨迹——哪怕被大幅截断——就已经很有效。这提示在做推理数据的后训练时,与其堆超长思维链,不如把数据裁短、留住关键步。对预算有限、自己做 SFT 的人是个省钱的实用结论。",
+      "tags": ["后训练", "推理", "SFT"]
+    },
+    {
+      "domain": "ai",
+      "title": "RenderFormer-V2: Neural Rendering with Heterogeneous Scene Primitives",
+      "title_zh": "RenderFormer-V2:用异构场景基元做神经渲染",
+      "url": "https://arxiv.org/abs/2609.05738",
+      "hf_url": "https://huggingface.co/papers/2609.05738",
+      "authors": "Chong Zeng、Yue Dong、Lvmin Zhang、Maneesh Agrawala 等",
+      "affiliation": "Stanford AI",
+      "upvotes": 2,
+      "one_liner": "把全局光传输当成序列到序列的翻译,焦散、体积散射都不用逐场景训。",
+      "summary_zh": "这是个统一的 Transformer 神经渲染模型,把全局光传输建模成序列到序列的变换:先一个与视角无关的阶段解算场景内的光交互,再出图。它能处理焦散、体积散射、环境光、置换贴图乃至分布外材质等多种复杂光效,而且不用逐场景训练或写专门代码。定位是给传统物理渲染做补充,对做 3D、渲染方向的人值得一看。",
+      "tags": ["神经渲染", "3D", "Transformer"]
+    },
+    {
+      "domain": "ai",
+      "title": "The Price of Sparsity: Sufficient Conditions for Sparse Recovery using Sparse and Sparsified Measurements",
+      "title_zh": "稀疏的代价:用稀疏测量做稀疏恢复的充分条件",
+      "url": "https://arxiv.org/abs/2509.01809",
+      "hf_url": "https://huggingface.co/papers/2509.01809",
+      "authors": "Youssef Chaabouni、David Gamarnik",
+      "affiliation": "麻省理工学院(MIT)",
+      "upvotes": 0,
+      "one_liner": "测量矩阵也稀疏时,想恢复出信号到底需要多少样本?给了个信息论门槛。",
+      "summary_zh": "研究从含噪线性测量里恢复稀疏二值信号(支撑集恢复)的问题。当测量矩阵本身也是稀疏高斯时,作者给出高信噪比下最大似然恢复所需的最小样本量的充分条件,和已知下界一拼,得到一个 $s\\log(p/s)/\\log(ds/p)$ 量级的信息论门槛,把「测量也稀疏」要付出的代价写清楚了。是压缩感知一脉的理论工作,和今天讲傅里叶、讲频域稀疏表示的主题隐隐呼应。",
+      "tags": ["压缩感知", "理论", "稀疏恢复"]
+    },
+    {
+      "domain": "embodied",
+      "title": "SwingBot: Learning Whole-Body Brachiation for Humanoid Robots",
+      "title_zh": "SwingBot:教人形机器人用全身荡越前进",
+      "url": "https://arxiv.org/abs/2609.10283",
+      "authors": "Yujie Xiong、Peng Zhai 等",
+      "upvotes": 0,
+      "one_liner": "地上走不通就上房梁——让人形机器人像猿猴一样在头顶支撑物间荡越。",
+      "summary_zh": "brachiation 指灵长类抓着头顶的树枝荡来荡去移动,地面被堵或危险时是种补充的移动方式。要让高自由度人形机器人学会很难:控制器得自己摸索出「松手—荡出—抓住」这一长串动作、协调全身动量做交替接触,还得在拿不到精确的段间位移和抓握接触状态的情况下完成。这篇用 RL 把它啃了下来。属于具身里比较硬核的运动控制尝试,离实用远,但拓展了人形机器人的动作词表。",
+      "tags": ["人形机器人", "运动控制", "强化学习"]
+    },
+    {
+      "domain": "chip",
+      "title": "Ozaki 2.5: Engineering the Deconstruction Path of fp64-Emulated Dense Matrix Multiplication on FP8 Tensor Cores",
+      "title_zh": "Ozaki 2.5:在 FP8 张量核上「拼」出 FP64 精度矩阵乘的工程化路径",
+      "url": "https://arxiv.org/abs/2609.09095",
+      "authors": "Satoshi Matsuoka",
+      "upvotes": 0,
+      "one_liner": "低精度硬件也能算出双精度结果:靠余数系统把 FP64 拆成一堆 FP8 乘法。",
+      "summary_zh": "现在的 AI 加速卡上 FP8 张量核算力巨大,但科学计算要的是 FP64 双精度。Ozaki 方案用中国剩余定理式的余数系统,把双精度乘法拆成一堆 FP8 张量核乘积再拼回来。这篇专门研究「拆解」这一步——把操作数转成余数平面要先吃掉整数流水和内存带宽,再算张量指令,作者建了个模型来分析这条路径的开销(结论还多是待实测的模型预测)。这是芯片和 AI 算力最实的交叉点:一张卡能不能既跑好训练又扛住科学计算,就看这类精度模拟做得多划算。",
+      "tags": ["算力", "低精度", "张量核"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "uFlowCSP: Crystal Structure Prediction using Mean flow generative models",
+      "title_zh": "uFlowCSP:用 MeanFlow 生成模型做晶体结构预测",
+      "url": "https://arxiv.org/abs/2609.09799",
+      "authors": "Sourin Dey、Dipannoy Das Gupta 等",
+      "upvotes": 0,
+      "one_liner": "一到五步就出一个晶体结构,把扩散模型上千步的采样砍到近乎一步。",
+      "summary_zh": "晶体结构预测是计算材料发现的基本盘。CDVAE、DiffCSP、FlowMM 这些生成模型直接学稳定晶体的分布,但扩散和流匹配推理一个候选就要几十到上千次网络前向,太慢。uFlowCSP 改学「平均速度」而非瞬时概率流速度(MeanFlow 思路),一到五次评估就能生成一个完整结构。把采样成本压下来,对要大批量筛材料的场景很实在——生成模型「一步出图」的技巧正快速外溢到科学计算。",
+      "tags": ["材料", "生成模型", "MeanFlow"]
+    },
+    {
+      "domain": "bio",
+      "title": "The physical foundation beneath protein generative modeling",
+      "title_zh": "蛋白质生成模型底下的物理根基",
+      "url": "https://arxiv.org/abs/2609.04465",
+      "authors": "Tianyu Lu、Po-Ssu Huang",
+      "upvotes": 0,
+      "one_liner": "生成模型看似替掉了物理方程,但物理没走,只是藏起来了。",
+      "summary_zh": "过去蛋白质建模靠物理方程,如今直接在结构数据上训生成模型、从噪声采样出全新结构,效率高多了。但这篇综述提醒:这类模型也会学到非物理的假特征,一到蛋白设计里常见的分布外场景就崩。作者系统梳理了生成流程里物理到底还藏在哪、以及哪些老问题没解决。对做 AI 蛋白设计的人是一份清醒剂——别以为数据驱动就能把物理彻底甩掉。",
+      "tags": ["蛋白质设计", "生成模型", "综述"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "space",
+      "name": "bilawalsidhu/gods-eye-view",
+      "url": "https://github.com/bilawalsidhu/gods-eye-view",
+      "language": "JavaScript",
+      "stars": 23892,
+      "stars_today": "1,588",
+      "one_liner": "浏览器里的「间谍卫星」模拟器,数据却是真的。",
+      "summary_zh": "一个跑在浏览器里的开源空间情报可视化:在一个照片级的 3D 地球上叠上真实的公开卫星、轨道等空间数据,做出「上帝视角」的观感。适合对商业航天、开源情报(OSINT)、地理空间可视化感兴趣的人把玩,也是不错的 WebGL 地球渲染参考。"
+    },
+    {
+      "domain": "ai",
+      "name": "JustVugg/colibri",
+      "url": "https://github.com/JustVugg/colibri",
+      "language": "C",
+      "stars": 27413,
+      "stars_today": "130",
+      "one_liner": "纯 C、零依赖,把 MoE 的专家从硬盘流式加载,老机器也能跑大模型。",
+      "summary_zh": "一个极小的推理引擎:用纯 C 写、没有依赖,把前沿 MoE 模型的专家权重按需从磁盘流式读进来,于是内存装不下的大模型也能在你手头的普通硬件上跑。适合想在消费级机器上本地跑大 MoE、或研究稀疏专家调度和显存/内存换硬盘这套权衡的人。"
+    },
+    {
+      "domain": "ai",
+      "name": "AlexsJones/llmfit",
+      "url": "https://github.com/AlexsJones/llmfit",
+      "language": "Rust",
+      "stars": 35688,
+      "stars_today": "247",
+      "one_liner": "一条命令告诉你:你这台机器到底能跑动哪些模型。",
+      "summary_zh": "Rust 写的小工具,覆盖上百个模型和提供方,一条命令就估出在你当前硬件(显存/内存)上哪些模型能跑、跑起来什么量级。对本地部署、选型、以及被「这卡能不能带得动」困扰的人很省事。"
+    },
+    {
+      "domain": "ai",
+      "name": "obra/superpowers",
+      "url": "https://github.com/obra/superpowers",
+      "language": "Shell",
+      "stars": 284654,
+      "stars_today": "731",
+      "one_liner": "给编码智能体的一套「技能」框架和配套开发方法论。",
+      "summary_zh": "一个面向智能体的技能(skills)框架,外加一套软件开发方法论,把可复用的工作流打包成 agent 能调用的技能。星标已经二十多万,是当前 agent skills 这一波里被引用最多的项目之一,想给自己的编码 agent 加能力的人可以先看它的组织方式。"
+    },
+    {
+      "domain": "ai",
+      "name": "nashsu/llm_wiki",
+      "url": "https://github.com/nashsu/llm_wiki",
+      "language": "TypeScript",
+      "stars": 18033,
+      "stars_today": "94",
+      "one_liner": "把一堆文档自动织成互相链接的知识库,而不是又一个 RAG 问答。",
+      "summary_zh": "一个跨平台桌面应用,把你的文档自动整理成有条理、互相链接的知识库。它刻意不走传统 RAG 的「检索再回答」,而是先把内容结构化、建立条目间的链接,更像自动生成一个个人 wiki。适合被自己积攒的文档淹没、想要可浏览而非只能问答的人。"
+    },
+    {
+      "domain": "ai",
+      "name": "THU-MAIC/OpenMAIC",
+      "url": "https://github.com/THU-MAIC/OpenMAIC",
+      "language": "TypeScript",
+      "stars": 35225,
+      "stars_today": "806",
+      "one_liner": "一键起一间多智能体课堂,教师、助教、同学都是 AI。",
+      "summary_zh": "清华团队的开源「多智能体互动课堂」:一键就能进入一个由多个 AI 角色协作的沉浸式学习场景。用多 agent 分饰讲解、答疑、陪练等角色,是 agent 在教育场景落地的一个完整样例,对做多智能体应用或 AI 教育产品的人有参考价值。"
+    },
+    {
+      "domain": "ai",
+      "name": "cathrynlavery/diagram-design",
+      "url": "https://github.com/cathrynlavery/diagram-design",
+      "language": "HTML",
+      "stars": 37653,
+      "stars_today": "1,287",
+      "one_liner": "38 种编辑级图表模板,纯 HTML+SVG,拒绝 Mermaid 那种糊图。",
+      "summary_zh": "给 Claude Code、Codex 这类编码智能体准备的 38 种编辑风格图表类型,全部是自包含的 HTML + SVG,不加阴影、不用 Mermaid。作者的诉求很明确:让 agent 画出来的图能到出版级观感,而不是随手糊的流程图。要让 AI 产出好看图表的人可以直接拿模板用。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "Anthropic 发威胁报告,点名六家中国 AI 公司「蒸馏」前沿模型",
+      "url": "https://www.anthropic.com/threat-intelligence-report-september-2026",
+      "source": "Anthropic / Ars Technica",
+      "summary_zh": "Anthropic 发布 9 月威胁情报报告,指控包括阿里、月之暗面、DeepSeek 在内的中国 AI 公司近几个月持续加码「蒸馏」攻击——即用前沿模型的输出去训自家模型,随竞争白热而升级。报告还建议企业识别出中国用户后「悄悄」切到能力较弱的模型,这一说法本身也引发争议。报告里还有些花絮,比如作恶的 AI 智能体和人一样讨厌 CAPTCHA 验证码。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "OpenAI 号称攻下千禧年难题,数学家追问训练数据从哪来",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/992953/openai-math-millennium-prize-navier-stokes",
+      "source": "The Verge",
+      "summary_zh": "OpenAI 本周宣称解决了一道千禧年大奖难题(涉及纳维-斯托克斯方向),被视为 AI 改造数学的标志性一步。但公布前后接连有两位数学家发难:一是质疑模型是否用了他人未发表的成果,二是指控 OpenAI 在训练数据来源上不透明、有「不诚实」之嫌。成果的分量和伦理争议同时被摆上台面,数学界一片不安。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "OpenAI 因 Astra 需求过猛,暂停 Pro 订阅注册",
+      "url": "https://techcrunch.com/2026/09/10/openai-puts-pro-subscriptions-on-hold-due-to-astra-demand/",
+      "source": "TechCrunch",
+      "summary_zh": "OpenAI 暂停了 Pro 订阅的新注册,理由是 Astra 需求太猛、Pro 用户对系统的压力最大,需要先扩容再放开。一个头部厂商主动关闸限流,说明当下算力供给仍是硬约束,和芯片端「一张卡能算多少」的话题正好照应。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "DeepSeek 发布 v4.1 Flash",
+      "url": "https://twitter.com/deepseek_ai/status/2097930608790167907",
+      "source": "Hacker News",
+      "summary_zh": "DeepSeek 放出 v4.1 Flash 版本,主打更快更轻的推理档位,在 HN 上热度很高(900+ 分)。国产模型迭代节奏依旧密集,和上面 Anthropic 报告里的「蒸馏」指控对照着看别有意味。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Cognition 发布 SWE-2 编程模型,对标 Fable 5.1 与 GPT-Astra",
+      "url": "https://cognition.com/blog/swe-2",
+      "source": "Cognition / Hacker News",
+      "summary_zh": "Devin 背后的 Cognition 推出新一代编程模型 SWE-2,自称在软件工程任务上可与 Fable 5.1、GPT-Astra 一较高下。专门冲编码 agent 的模型越来越多,也让上面 SWE-Bench Pro Verified 那种「把评测做扎实」的工作愈发要紧。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "宇树股价较 IPO 首日回落 53%",
+      "url": "https://www.therobotreport.com/unitree-shares-down-53-from-ipo-debut/",
+      "source": "The Robot Report",
+      "summary_zh": "宇树(Unitree)上月在上交所上市首日冲到 660 亿美元估值,如今股价已较高点回落 53%,市场在给这份热情降温。人形机器人的资本叙事和技术进展之间的落差正在被重新定价。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Swarmer 拟最高 2.24 亿美元收购乌克兰无人地面车厂商 Ratel",
+      "url": "https://www.therobotreport.com/swarmer-to-acquire-ukrainian-ugv-maker-ratel-robotics-for-up-to-224m/",
+      "source": "The Robot Report",
+      "summary_zh": "做集群软件的 Swarmer 计划以最高 2.24 亿美元收购乌克兰无人地面车(UGV)厂商 Ratel Robotics,把自家的蜂群协同软件和 Ratel 的地面平台在乌克兰战场结合。软件+硬件整合、军用无人系统的商业化又添一例。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "谷歌 AI 基因组系统评估人类基因组里每一个单碱基突变",
+      "url": "https://arstechnica.com/science/2026/09/googles-ai-genome-system-evaluates-every-possible-one-base-change/",
+      "source": "Ars Technica",
+      "summary_zh": "谷歌的 AI 基因组系统把人类基因组里所有可能的单碱基改动逐个跑了一遍,给每一个打分。绝大多数单碱基变化没有影响,但少数关键——这套全量评估能帮研究者更快锁定那些真正致病的位点。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "Biohaven 癫痫药刚拿下 3.5 亿美元交易就被 FDA 叫停入组",
+      "url": "https://www.fiercebiotech.com/biotech/biohaven-drug-suffers-fda-hold-days-after-attracting-350m-deal",
+      "source": "Fierce Biotech",
+      "summary_zh": "FDA 依据啮齿类动物试验的发现,叫停了 Biohaven 癫痫候选药 BHV-7000 的临床入组。此前几天该资产刚被一笔待定的 3.5 亿美元交易看中,这一暂停对其打击不小。提醒生物医药里临床前信号随时能掀翻商业进度。"
+    },
+    {
+      "domain": "energy",
+      "title_zh": "日立推出 CO2 热泵热水器,带光伏友好的电价调度",
+      "url": "https://www.pv-magazine.com/2026/09/07/hitachi-launches-co2-heat-pump-water-heaters-with-solar-friendly-tariff-controls/",
+      "source": "pv-magazine / Hacker News",
+      "summary_zh": "日立发布用 CO2 做制冷剂的热泵热水器,内置了配合分时电价、光伏发电的控制逻辑,能挑便宜/自发电的时段加热。在 HN 上讨论热烈(200+ 评论)。属于把家用储热和电网/光伏调度打通的务实产品,新能源的看点不只在发电侧,用电侧的智能调度同样关键。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "免训练 3DGS 压缩方法的统一评测 harness",
+      "based_on": [
+        { "title": "CVT-GS: Learning to Simplify 3D Gaussian Splatting with Centroidal Voronoi Tessellation", "url": "https://arxiv.org/abs/2609.08730" },
+        { "title": "LinearMask-GS: Stable-Mask Importance Pruning for Compact 3D Gaussian Splatting", "url": "https://arxiv.org/abs/2609.10095" }
+      ],
+      "why_now": "3DGS 压缩/剪枝方法这两周又冒出好几篇,但各家指标、场景、预训练模型都不一样,「免训练/即插即用」和「要重训」的方法被混在一起比,读者根本看不出谁真的能套到现成模型上。目前还没有一个中立的、只针对 off-the-shelf 预训练场景的统一评测。",
+      "feasibility": "单张 24GB 卡足够(3DGS 渲染和剪枝都不吃显存),用 Mip-NeRF360 等公开场景。约 3–4 周:先接 2–3 个免训练方法,再逐步补齐。纯工程,冲 GitHub star 的好题材。",
+      "route": [
+        "先跑通 CVT-GS 官方代码,在一两个预训练 3DGS 场景上复现它的「非侵入式简化」结果",
+        "定义统一接口:输入一个预训练 .ply/checkpoint,输出压缩后的模型 + PSNR/SSIM/LPIPS/基元数/显存/FPS 一张表",
+        "把 LinearMask-GS 等再接进来,区分「免训练」与「需微调」两档分别记账",
+        "跑一遍多场景对比,画出「压缩率 vs 画质」的帕累托前沿并开源脚本与榜单"
+      ],
+      "risk": "各方法开源质量参差,复现和统一接口的工程量可能比预期大;需要明确「免训练」的口径避免比错。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "用廉价自监督点云编码器替换 3D-LLM 里的昂贵多模态编码器",
+      "based_on": [
+        { "title": "On the Efficacy of Self-Supervised Point Cloud Encoders for Efficient 3D Large Language Models", "url": "https://arxiv.org/abs/2607.29136" }
+      ],
+      "why_now": "现在 3D 点云-语言模型普遍依赖 ULIP-2 这类要 8×A100 级别做图文点对齐的编码器,门槛极高。这篇刚系统验证了 Point-MAE、PCP-MAE 这些便宜的自监督编码器能不能顶上,但只在 MiniGPT-3D 一个 testbed 上做——换个 3D-LLM 还成不成立,是现成的低风险扩展。",
+      "feasibility": "单张 24–40GB 卡即可:点云编码器和 LLM 的对接层都不大,冻结主干只训投影层/LoRA。约 3–5 周,能产出一篇扎实的实证扩展。",
+      "route": [
+        "复现原文:在 MiniGPT-3D 上把编码器从 ULIP-2 换成 Point-MAE,跑通并对齐它报告的指标",
+        "换一个不同的 3D-LLM 骨架(或不同 LLM 规模)重做替换,看廉价编码器的结论是否迁移",
+        "补一组消融:编码器冻结 vs 轻量微调、投影层容量对下游 3D 问答/描述的影响",
+        "总结出「什么条件下便宜编码器够用、什么场景会掉点」的可操作建议"
+      ],
+      "risk": "廉价编码器在细粒度 3D 理解任务上可能明显掉点,需要找到它仍够用的场景边界,否则结论会偏负面。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "RAG 场景下跨上下文 KV-Cache 复用的质量-延迟评测小库",
+      "based_on": [
+        { "title": "KVShareArena: KV-Cache Reuse Across Contexts and Model Checkpoints", "url": "https://arxiv.org/abs/2609.10266" },
+        { "title": "Fine-Tuning a KV Cache Concatenation-Aware Model or Recomputing KV Caches? Why Not Both?", "url": "https://arxiv.org/abs/2609.09768" }
+      ],
+      "why_now": "现在的推理系统只在「复用文本正好位于 prompt 最开头」时才敢重用 KV cache,而 RAG 每次拼的检索块顺序都不同、多 agent 又互读彼此的报告,一复用位置就错、注意力也没覆盖到其他来源。这两篇刚把问题和评测拆清楚,但缺一个轻量、好上手的开源 harness 让人快速量出「复用省了多少 TTFT、掉了多少答案质量」。",
+      "feasibility": "单卡推理即可(7B 级模型 + vLLM/自写 KV 管理),不需要训练。约 2–3 周做出最小可用版:先支持一个模型 + 一个 RAG 数据集的对照。",
+      "route": [
+        "先用 vLLM 或 HF 跑通一个 7B 模型的长上下文 RAG 推理,量出「每次全量重算 KV」的 TTFT 与答案质量作基线",
+        "实现最朴素的跨上下文复用(拼接检索块的 KV)并做位置重编码,对比延迟与质量掉点",
+        "把复用策略做成可插拔接口,复现论文里几种方案并统一记账(TTFT / 吞吐 / 质量三条线)",
+        "开源脚本 + 一份「什么场景下复用划算」的对照表,吸引做 LLM serving 的人来贡献策略"
+      ],
+      "risk": "KV 复用带来的质量下降依模型和任务而异,评测口径要设计好;不同推理框架的 KV 接口差异会增加适配成本。"
+    }
+  ]
+}
