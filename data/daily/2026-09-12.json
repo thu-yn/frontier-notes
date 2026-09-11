@@ -1,0 +1,373 @@
+{
+  "date": "2026-09-12",
+  "editor_note": "今天最扎眼的是「AI 做数学」这条线在两头同时烧——英伟达甩出一份全开放、纯自然语言(不用形式化证明器)就摸到 IMO 金牌线的配方,25 位顶尖数学家却联名逼 OpenAI 交代有没有偷用他们的成果;更巧的是 Quanta 报了四色定理的新证明,连今天的每日一理都顺手挑了中心极限定理。技术、伦理、经典数学挤在同一天。另一条隐线是「算力和电力开始算总账」:一篇论文把 AI 数据中心当电网负荷来分析,一条新闻是法院推翻了为保算力硬给燃煤电厂延寿的命令。要我先点一篇,选 HF 榜首那篇用世界模型给自动科研提速——它戳的是所有 agent RL 的共同痛点:真机/真沙箱跑实验太贵。",
+  "math_note": {
+    "name": "中心极限定理",
+    "name_en": "Central Limit Theorem",
+    "field": "概率论 / 数理统计",
+    "one_liner": "无数杂乱叠在一起,最后都长成同一条钟形曲线。",
+    "statement": "有一大堆相互独立、同分布的随机变量 $X_1,X_2,\\dots,X_n$(比如每次掷骰子的点数、每次测量的误差),各自均值为 $\\mu$、方差为有限的 $\\sigma^2$。把它们加起来记作 $S_n=X_1+\\cdots+X_n$。定理说:只要 $n$ 足够大,不管这些 $X_i$ 原本长什么样,标准化后的和 $\\frac{S_n-n\\mu}{\\sigma\\sqrt{n}}$ 的分布都会趋近标准正态 $N(0,1)$——那条经典的钟形曲线。换句话说,平均值 $\\bar X_n=S_n/n$ 会像 $N\\!\\left(\\mu,\\ \\sigma^2/n\\right)$ 那样围着真值 $\\mu$ 抖,抖动幅度按 $1/\\sqrt{n}$ 缩小。",
+    "origin": "最早是棣莫弗(Abraham de Moivre)在 1733 年为算赌博里抛硬币的概率,发现二项分布在次数很多时能用钟形曲线逼近;拉普拉斯把它推广开来。真正把「任意分布、只要独立同分布且方差有限」讲清楚的一般形式,由李雅普诺夫(1901)给出严格条件,后经林德伯格、莱维等人打磨成今天的样子。一个为赌桌算概率起的头,最后成了整个统计学的地基。",
+    "derivation": [
+      { "math": "Z_n=\\dfrac{S_n-n\\mu}{\\sigma\\sqrt{n}}", "note": "先把和标准化:减掉均值 $n\\mu$、除以标准差 $\\sigma\\sqrt n$,让 $Z_n$ 的均值为 0、方差为 1——只有先固定住位置和尺度,才谈得上收敛到一个确定的极限。" },
+      { "math": "\\varphi_{Z_n}(t)=\\Big[\\varphi_{X-\\mu}\\!\\big(\\tfrac{t}{\\sigma\\sqrt n}\\big)\\Big]^{n}", "note": "用特征函数(随机变量的傅里叶变换)当工具:独立变量相加,特征函数相乘,所以 $n$ 个同分布的乘在一起就是 $n$ 次方。" },
+      { "math": "\\varphi_{X-\\mu}(s)=1-\\tfrac12\\sigma^2 s^2+o(s^2)", "note": "把单个居中变量的特征函数在 0 附近泰勒展开;一阶项因为均值为 0 而消失,二阶项系数正好是方差 $\\sigma^2$。" },
+      { "math": "\\varphi_{Z_n}(t)=\\Big(1-\\tfrac{t^2}{2n}+o(\\tfrac1n)\\Big)^{n}", "note": "把 $s=t/(\\sigma\\sqrt n)$ 代进去,$\\sigma^2$ 被约掉,每个因子都变成 $1-\\tfrac{t^2}{2n}$ 再加高阶小量。" },
+      { "math": "\\Big(1-\\tfrac{t^2}{2n}\\Big)^{n}\\xrightarrow[n\\to\\infty]{}e^{-t^2/2}", "note": "这就是经典极限 $(1+x/n)^n\\to e^x$ 的样子,$n$ 越大越接近 $e^{-t^2/2}$。" },
+      { "math": "e^{-t^2/2}=\\varphi_{N(0,1)}(t)", "note": "而 $e^{-t^2/2}$ 恰好是标准正态的特征函数;由莱维连续性定理,特征函数收敛就意味着分布收敛,证毕。" }
+    ],
+    "applications": [
+      { "area": "统计推断", "detail": "置信区间和假设检验默认样本均值近似正态,才有那套 $\\pm 1.96\\,\\sigma/\\sqrt n$ 的公式。" },
+      { "area": "蒙特卡洛与仿真", "detail": "解释了随机采样估计的误差按 $1/\\sqrt n$ 下降,也是给结果画误差棒(error bar)时算大小的依据。" },
+      { "area": "测量与信号处理", "detail": "大量独立小扰动叠加成噪声,这正是「把噪声当高斯」这个常用假设的底气所在。" },
+      { "area": "机器学习", "detail": "mini-batch 梯度是样本梯度的平均,其抖动近似高斯;参数随机初始化的方差设定也源自同一直觉。" }
+    ],
+    "takeaway": "只要独立、方差有限,海量微观随机叠加后细节被抹平,极限只由均值和方差两个数决定——这既是「高斯无处不在」的原因,也是「多采样 $n$ 倍、精度却只提升 $\\sqrt n$ 倍」这条铁律的来源。",
+    "viz": {
+      "type": "custom",
+      "caption": "拖滑块加大每次平均的样本数 n:n=1 时直方图是平的(均匀分布),n 一大,不管原分布多丑,平均值的分布都收拢成红色那条钟形曲线。",
+      "html": "<div style=\"font-family:system-ui,-apple-system,sans-serif;color:inherit\"><canvas id=\"cltcv\" width=\"620\" height=\"300\" style=\"max-width:100%;height:auto\"></canvas><div style=\"margin-top:10px;font-size:14px\">每次取 <b>n = <span id=\"cltn\">1</span></b> 个 [0,1] 均匀随机数求平均,重复两万次画直方图 <input id=\"cltr\" type=\"range\" min=\"1\" max=\"40\" value=\"1\" style=\"width:220px;vertical-align:middle\"></div></div>",
+      "script": "(function(){var cv=el.querySelector('#cltcv'),rg=el.querySelector('#cltr'),lab=el.querySelector('#cltn');if(!cv)return;var ctx=cv.getContext('2d');var W=cv.width,H=cv.height,padL=40,padR=15,padT=15,padB=28;var pw=W-padL-padR,ph=H-padT-padB;var N=20000,bins=60;function draw(n){lab.textContent=n;var counts=new Array(bins).fill(0);for(var i=0;i<N;i++){var s=0;for(var j=0;j<n;j++)s+=Math.random();var m=s/n;var b=Math.floor(m*bins);if(b<0)b=0;if(b>=bins)b=bins-1;counts[b]++;}var mx=0;for(var k=0;k<bins;k++)if(counts[k]>mx)mx=counts[k];var variance=(1/12)/n,sd=Math.sqrt(variance);var exp=new Array(bins),emx=mx;for(var k=0;k<bins;k++){var x=(k+0.5)/bins;var pdf=Math.exp(-(x-0.5)*(x-0.5)/(2*variance))/(sd*Math.sqrt(2*Math.PI));exp[k]=N*pdf/bins;if(exp[k]>emx)emx=exp[k];}var scale=(emx>mx?emx:mx)*1.05;ctx.clearRect(0,0,W,H);ctx.strokeStyle='rgba(128,128,128,0.5)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(padL,padT);ctx.lineTo(padL,padT+ph);ctx.lineTo(padL+pw,padT+ph);ctx.stroke();var bw=pw/bins;ctx.fillStyle='rgba(80,140,220,0.55)';for(var k=0;k<bins;k++){var hh=ph*counts[k]/scale;ctx.fillRect(padL+k*bw,padT+ph-hh,bw-0.5,hh);}ctx.strokeStyle='rgba(230,90,70,0.95)';ctx.lineWidth=2;ctx.beginPath();for(var k=0;k<bins;k++){var cx=padL+(k+0.5)*bw;var cy=padT+ph-ph*exp[k]/scale;if(k===0)ctx.moveTo(cx,cy);else ctx.lineTo(cx,cy);}ctx.stroke();ctx.fillStyle='rgba(128,128,128,0.9)';ctx.font='11px sans-serif';ctx.textAlign='center';ctx.fillText('0',padL,padT+ph+16);ctx.fillText('0.5',padL+pw/2,padT+ph+16);ctx.fillText('1',padL+pw,padT+ph+16);}draw(1);rg.addEventListener('input',function(){draw(parseInt(rg.value,10));});})();"
+    }
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Scaling Automatic Research Agents via World Models",
+      "title_zh": "用世界模型扩展自动科研智能体",
+      "url": "https://arxiv.org/abs/2608.12564",
+      "hf_url": "https://huggingface.co/papers/2608.12564",
+      "authors": "Xiyuan Yang 等",
+      "affiliation": "UIUC(伊利诺伊大学厄巴纳-香槟分校)",
+      "upvotes": 436,
+      "one_liner": "自动科研卡在「跑实验太慢」,那就让世界模型替它先跑一遍。",
+      "summary_zh": "AutoResearch 智能体现在能自己写代码、跑实验、从结果里学,但用 RL 训练时有个别扭的瓶颈:生成部分靠 batch 共享算力很省,执行部分每条轨迹独占一个沙箱、占真实机器时间,两边的扩展方式完全不对齐,执行成了大头。他们用一个世界模型去预测执行结果、替掉一部分真实运行,把 RL 训练规模撑上去。思路对——真机/真沙箱太贵一直是自动科研 RL 的死穴,能拿模型顶掉一部分就值。",
+      "tags": ["Agent", "RL", "世界模型"]
+    },
+    {
+      "domain": "ai",
+      "title": "NCP-ArchPreview: Moving towards Latent Space Language Models through Next Concept Prediction",
+      "title_zh": "NCP:让语言模型在潜空间里「预测下一个概念」",
+      "url": "https://arxiv.org/abs/2609.10715",
+      "hf_url": "https://huggingface.co/papers/2609.10715",
+      "authors": "NCP Team",
+      "upvotes": 166,
+      "one_liner": "不止预测下一个词,还预测下一个「意思」。",
+      "summary_zh": "常规 LLM 是逐 token 预测下一个词,这篇在此之上加了个「下一个概念预测」(NCP):从隐状态里用乘积量化搭出一套离散「概念」词表,让模型去预测跨多个 token 的概念,再把预测出的概念喂回 token 层引导生成。等于给自回归加了一个更粗粒度、也更难的目标。方向挺有意思——「潜空间语言模型」这两年被反复提但落地少,这是个具体的技术报告,值得看它到底比纯 NTP 强在哪。",
+      "tags": ["LLM", "预训练", "潜空间"]
+    },
+    {
+      "domain": "ai",
+      "title": "SenseNova-U1.5: Towards Native Unified Visual Intelligence",
+      "title_zh": "SenseNova-U1.5:原生统一的视觉理解与生成",
+      "url": "https://arxiv.org/abs/2609.11929",
+      "hf_url": "https://huggingface.co/papers/2609.11929",
+      "authors": "Haiwen Diao 等",
+      "affiliation": "商汤科技",
+      "upvotes": 130,
+      "one_liner": "一个 8B 模型,看图和画图都不用外挂。",
+      "summary_zh": "商汤的 8B 统一多模态模型,一套架构既看懂图也能生成/编辑图,而且不用编码器也不用 VAE(encoder-free、VAE-free),靠空间一致的 patch 重建撑起视觉接口,原生分辨率做到 4K。后训练针对美学、双语文字渲染、信息图、图像编辑各训专家,再用多专家 on-policy 蒸馏合到一起。理解与生成「一个模型全包」是当下热门路线,8B 能做到 4K 原生分辨率是亮点。",
+      "tags": ["多模态", "统一模型", "图像生成"]
+    },
+    {
+      "domain": "ai",
+      "title": "T1: Terminal Agent Reinforcement Learning for Long-Horizon Tasks",
+      "title_zh": "T1:面向长程终端任务的智能体强化学习",
+      "url": "https://arxiv.org/abs/2609.11042",
+      "hf_url": "https://huggingface.co/papers/2609.11042",
+      "authors": "Junyao Yang 等",
+      "affiliation": "腾讯混元",
+      "upvotes": 46,
+      "one_liner": "让模型连开 300 轮命令行,还能训得稳。",
+      "summary_zh": "腾讯混元的 122B MoE 模型,专门训练「在云沙箱里操作真实 shell」、单个任务能连续调用工具 300+ 轮,奖励直接来自任务自带 verifier 的通过数量。给了完整配方:激进的 warm-start 稳住 actor-critic、用密集过程奖励按通过的 verifier 数打分、再用 TITO 在实际采样的 token 上训练并修偏移。长程 agent(写代码、科研)最难的就是训练稳定和长轨迹的信用分配,这份配方值得抄。",
+      "tags": ["Agent", "RL", "长程任务"]
+    },
+    {
+      "domain": "ai",
+      "title": "SWE-Bench Pro Verified: A Reliable Benchmark for Software Engineering Agents",
+      "title_zh": "SWE-Bench Pro Verified:把软件工程基准的漏洞堵上",
+      "url": "https://arxiv.org/abs/2609.08149",
+      "hf_url": "https://huggingface.co/papers/2609.08149",
+      "authors": "Pujun Zheng 等",
+      "affiliation": "上海人工智能实验室",
+      "upvotes": 21,
+      "one_liner": "刷分之前,先问问这个榜靠不靠谱。",
+      "summary_zh": "SWE-Bench Pro 已是评测代码智能体的常用基准,但作者发现它有两类硬伤:一是奖励可被 hack(标准答案或隐藏评测信息泄漏),二是任务质量问题(题干误导、测试范围不合理),都会虚高分数、掩盖真实能力。这个 Verified 版加了反作弊防护堵住泄漏通道,并清洗任务。基准可信度这事很实在——现在满屏刷榜,有人认真做「这个榜到底测没测准」是好事。",
+      "tags": ["Benchmark", "代码智能体"]
+    },
+    {
+      "domain": "ai",
+      "title": "An Open Recipe for IMO Gold: Training Nemotron for Olympiad Mathematics",
+      "title_zh": "拿 IMO 金牌的开放配方:训 Nemotron 做奥数",
+      "url": "https://arxiv.org/abs/2609.10712",
+      "hf_url": "https://huggingface.co/papers/2609.10712",
+      "authors": "Ivan Moshkov 等",
+      "affiliation": "NVIDIA",
+      "upvotes": 5,
+      "one_liner": "不用形式化证明器,纯自然语言也能摸到 IMO 金牌线。",
+      "summary_zh": "英伟达研究后训练和测试时推理设计怎么影响「用自然语言写数学证明」。从 Nemotron 3 Ultra 出发,用 SFT+RL 训出两个专家 checkpoint,再搭一条全自然语言的测试时算力流水线——不用形式化证明器、不用外部工具、不联网,靠三个 checkpoint 迭代地生成-验证-精修候选证明。全开放、纯自然语言就能摸到 IMO 金牌水平,和 OpenAI 那套闭源路线正好对照。今天正赶上数学家和 OpenAI 吵架,读起来别有意味。",
+      "tags": ["数学推理", "RL", "测试时算力"]
+    },
+    {
+      "domain": "quantum",
+      "title": "A Chip-scale Space-time Multiplexed Gaussian Boson Sampling Processor Beyond 10,000 Photons",
+      "title_zh": "芯片级时空复用的高斯玻色采样,光子数破万",
+      "url": "https://arxiv.org/abs/2609.11922",
+      "authors": "Yu-Xuan Fu 等",
+      "one_liner": "把量子优越性实验从光学平台搬进一块芯片。",
+      "summary_zh": "高斯玻色采样(GBS,一种用光子干涉演示量子计算优越性的方案)一直受限于光路对准难、相位不稳、可编程性差。这篇做出首个芯片级、时空复用的 GBS 系统,单片集成,在低损耗、高精度、高速调制上同时达标,把参与采样的光子数推过一万。把台面上一大堆分立光学器件塞进一块晶圆级芯片,是 GBS 从「实验室演示」走向「能工程化部署」的关键一步。",
+      "tags": ["量子计算", "光量子", "玻色采样"]
+    },
+    {
+      "domain": "bio",
+      "title": "Biology-in-the-loop: Amortized Adaptive Hit Discovery in CRISPR Screens",
+      "title_zh": "生物在环:CRISPR 筛选里的自适应命中发现",
+      "url": "https://arxiv.org/abs/2609.11877",
+      "authors": "Carl Edwards 等",
+      "one_liner": "实验预算有限,先测哪个基因?给它建了个上千筛选的擂台。",
+      "summary_zh": "很多生物发现要在有限预算下一轮轮做实验、逐步挑候选,CRISPR 筛选就是典型——不可能把所有扰动都测一遍,只能分几轮优先测最有希望的。作者建了 AssayBench-Loop,一个大规模基准:1389 个 CRISPR 筛选、覆盖五类表型,专门评测「自适应命中发现」算法,还借它的规模去学更好的候选优先级策略。这类「主动学习×湿实验」的基准长期又小又杂,凑出上千个真实筛选本身就有用。",
+      "tags": ["CRISPR", "主动学习", "Benchmark"]
+    },
+    {
+      "domain": "chip",
+      "title": "From Grid to Chip: Power Architecture, Stability, and Flexibility of AI Data Centers",
+      "title_zh": "从电网到芯片:AI 数据中心的供电架构与稳定性",
+      "url": "https://arxiv.org/abs/2609.11649",
+      "authors": "Yubo Song 等",
+      "one_liner": "卡住 AI 的可能不是芯片,是插座后面那张电网。",
+      "summary_zh": "AI 算力猛涨把数据中心变成又大又动态的电负荷,部署越来越受「能不能拿到电、电网接入容量够不够」卡脖子,还要求供电架构和算力负载在电网快速扰动时仍能稳定运行。这篇把 AI 数据中心当作「与电网互动的计算系统」,梳理了并网瓶颈、演进中的接入政策与电网规范,以及由此催生的技术趋势。一篇偏综述的视角文,把芯片圈平时不太碰的「电力系统」这头讲清楚了,正好呼应今天那条法院推翻延寿燃煤电厂的新闻。",
+      "tags": ["数据中心", "电网", "算力供电"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Rapid Learning of Dexterous In-Hand Pen Writing through Real-Time Jacobian Estimation",
+      "title_zh": "靠实时雅可比估计,机械手快速学会「手内转笔写字」",
+      "url": "https://arxiv.org/abs/2609.11775",
+      "authors": "Kai Stewart 等",
+      "one_liner": "不堆数据不靠仿真,实时算雅可比就让机械手学会转笔写字。",
+      "summary_zh": "用拟人手做手内操作(把抓着的物体在手里灵活挪动)一直是机器人灵巧性的难关:接触极其复杂又高度动态,建模和采数据都难,仿真器还复刻不出足够真实的接触。这篇不走大规模 RL/模仿,而是在真实物理系统上实时估计「手+物体」整体的任务雅可比(描述关节怎么动会带动物体怎么动的矩阵),据此控制,让手快速学会转笔、写字这类动作。少数据、上真机、还能做写字这种精细活,是很干净的一条路子。",
+      "tags": ["灵巧操作", "机械手", "控制"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Stress-Testing Dynamical and Generative Downscaling Using Subseasonal Extreme Precipitation Forecasts",
+      "title_zh": "压力测试:动力学降尺度 vs 生成式降尺度,谁更会算极端降水",
+      "url": "https://arxiv.org/abs/2609.11696",
+      "authors": "Mauricio Lima 等",
+      "one_liner": "AI 降尺度遇上三周后的极端暴雨,还扛得住物理模型吗?",
+      "summary_zh": "次季节(未来几周)预报分辨率太粗,抓不住极端降水,降尺度(把粗网格结果细化)能补,但传统动力学模型(WRF)和深度生成模型到底谁在极端事件上更靠谱,一直没说清。作者拿两场物理机制不同的极端降水事件、预报提前期长达三周,让 WRF 和一个扩散生成模型公平对打。结论会告诉你生成式降尺度在「极端+长预报期」这种最难场景里能不能顶得住 WRF——这正是气象圈对 AI 方法最大的疑虑所在。",
+      "tags": ["气候", "降尺度", "扩散模型"]
+    },
+    {
+      "domain": "energy",
+      "title": "Effect of Stress and Surface Roughness on Electrodeposition in All-Solid-State Batteries: A Computational Investigation",
+      "title_zh": "应力与表面粗糙度如何影响全固态电池里的锂沉积",
+      "url": "https://arxiv.org/abs/2609.11571",
+      "authors": "Kaniza Islam 等",
+      "one_liner": "锂枝晶从界面的哪道小划痕钻进去?给它算了本账。",
+      "summary_zh": "全固态电池(ASSB)能量密度高、更安全,但固-固界面不稳定、不兼容是拦路虎:即便用了很硬的陶瓷电解质,锂还是会沿晶界「钻」进去,往往从界面上一点小瑕疵开始。作者建了个二维连续介质模型,把电-化学-力学耦合起来,研究在不同堆叠压力和电流密度下、表面被粗糙化的硫银锗矿电解质里界面电流怎么分布。把「机械应力+表面形貌」和「锂枝晶从哪冒头」定量挂钩,对做固态电池界面工程的人是实打实的参考。",
+      "tags": ["固态电池", "锂枝晶", "界面"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "github/spec-kit",
+      "url": "https://github.com/github/spec-kit",
+      "language": "Python",
+      "stars": 135730,
+      "stars_today": "985",
+      "one_liner": "让「先写清规格再让 AI 写代码」变成一套可上手的流程。",
+      "summary_zh": "GitHub 官方的「规格驱动开发」工具包,把需求、规格、任务拆解固化成模板和流程,再交给编码智能体去实现,而不是一句话让它瞎猜。适合已经在用 Claude Code/Copilot 这类 agent、却苦于「生成一大堆但不对味」的团队。"
+    },
+    {
+      "domain": "ai",
+      "name": "obra/superpowers",
+      "url": "https://github.com/obra/superpowers",
+      "language": "Shell",
+      "stars": 285327,
+      "stars_today": "731",
+      "one_liner": "给编码智能体装一套「技能框架」和开发方法论。",
+      "summary_zh": "一个 agentic skills 框架 + 软件开发方法论,把可复用的技能和工作流打包给智能体用。star 数已经很夸张,是当下「给 agent 加技能」这波里最出圈的开源项目之一,想给自己的 agent 攒能力库的可以先扒它的组织方式。"
+    },
+    {
+      "domain": "ai",
+      "name": "ayghri/i-have-adhd",
+      "url": "https://github.com/ayghri/i-have-adhd",
+      "language": "Python",
+      "stars": 41469,
+      "stars_today": "3,440",
+      "one_liner": "治一治编码智能体「把答案埋在一大段废话里」的毛病。",
+      "summary_zh": "一个 skill,专门让编码智能体输出更直给、更「ADHD 友好」——别绕、别埋结论,把答案顶到最前面。名字很皮,痛点是真的:agent 话痨让人抓狂。适合天天和 AI 结对写代码、被冗长输出折磨的人。"
+    },
+    {
+      "domain": "space",
+      "name": "bilawalsidhu/gods-eye-view",
+      "url": "https://github.com/bilawalsidhu/gods-eye-view",
+      "language": "JavaScript",
+      "stars": 26838,
+      "stars_today": "3,642",
+      "one_liner": "浏览器里的「间谍卫星」模拟器,但数据是真的。",
+      "summary_zh": "一个在浏览器里跑的卫星侦察模拟器,底下接的是真实的开源空间情报,能在写实的地球上看实时的公开遥感数据。既是很好的 OSINT/遥感科普玩具,也展示了浏览器端做地理空间可视化能到什么程度。"
+    },
+    {
+      "domain": "ai",
+      "name": "pascalorg/editor",
+      "url": "https://github.com/pascalorg/editor",
+      "language": "TypeScript",
+      "stars": 23539,
+      "stars_today": "83",
+      "one_liner": "带本地 CLI 和 MCP 工具的开源 3D 建筑编辑器。",
+      "summary_zh": "开源的 3D 建筑编辑器,配了本地 CLI 和 MCP 工具,人和 AI 智能体都能上手改场景。对想把 3D/CAD 工作流接进 agent 的人是个现成样板——MCP 让模型能直接操作编辑器里的对象。"
+    },
+    {
+      "domain": "ai",
+      "name": "alphaXiv/OpenResearch",
+      "url": "https://github.com/alphaXiv/OpenResearch",
+      "language": "Rust",
+      "stars": 1231,
+      "stars_today": "156",
+      "one_liner": "用任意模型并行跑一群「研究智能体」。",
+      "summary_zh": "alphaXiv 出的开源研究智能体框架,能用任意模型并行地跑多个 agent 去搜集、检索、综合资料。Rust 写的,想自建「研究助理」或对比不同模型做深度检索的可以直接拿来改。"
+    },
+    {
+      "domain": "ai4s",
+      "name": "jihe520/MathModelAgent",
+      "url": "https://github.com/jihe520/MathModelAgent",
+      "language": "Python",
+      "stars": 4836,
+      "stars_today": "132",
+      "one_liner": "专为数学建模比赛做的 Agent,自动写出能提交的论文。",
+      "summary_zh": "面向数学建模(竞赛那种)的智能体,从题目到建模、求解、成文一条龙,目标是自动产出一份可直接提交的完整论文。做数模竞赛或想看 agent 怎么串起「分析→计算→写作」全流程的可以关注。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "Anthropic 点名阿里、月之暗面、DeepSeek 的「蒸馏」行动",
+      "url": "https://techcrunch.com/2026/09/10/anthropic-details-distillation-campaigns-from-alibaba-moonshot-ai-and-deepseek/",
+      "source": "TechCrunch",
+      "summary_zh": "Anthropic 周四发报告,指控多家中国 AI 公司持续对其模型发起「蒸馏」式套取——用大量查询榨出前沿模型的能力去训自家模型,且随着竞争白热化近几个月明显升级,报告点了阿里、月之暗面、DeepSeek 的名。蒸馏是否越界一直是行业灰色地带,头部厂商公开点名还是头一回。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "黄仁勋解释英伟达明年为何还能增长 70%",
+      "url": "https://techcrunch.com/2026/09/10/jensen-huang-explains-why-nvidia-will-grow-an-astounding-70-next-year/",
+      "source": "TechCrunch",
+      "summary_zh": "黄仁勋称英伟达「每个赛道都插了一脚」,预计明年营收仍增长约 70%,并坚称近期一系列合作不是「左手倒右手」的循环交易。在市场反复质疑 AI 算力投资是否过热、是否存在循环融资的当口,这番表态是给增长故事再背书。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Kimi 母公司月之暗面目标年营收 20 亿美元",
+      "url": "https://techcrunch.com/2026/09/11/kimi-maker-moonshot-ai-targets-2-billion-in-annual-revenue/",
+      "source": "TechCrunch",
+      "summary_zh": "月之暗面把年化营收目标定在 20 亿美元。尽管 K3 模型近月用量略有下滑,OpenRouter 数据显示其模型在该平台上每天仍生成高达约 3000 亿 token。国产大模型开始拿实打实的收入和调用量说话,不再只是刷榜。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "OpenAI 与数学家的争执持续升级",
+      "url": "https://techcrunch.com/2026/09/11/openais-feud-with-mathematicians-is-only-escalating/",
+      "source": "TechCrunch",
+      "summary_zh": "25 位顶尖数学家联署公开信,主张 AI 实验室正在威胁他们的智力劳动,并要求 OpenAI 证明没有擅自使用他们的成果,争议核心是训练数据来源与署名/许可。正好和今天英伟达那篇「全开放拿 IMO 金牌」的论文对照着看——AI 做数学这件事,技术和伦理都在同时烧开。"
+    },
+    {
+      "domain": "ai4s",
+      "title_zh": "四色定理迎来一个罕见的新证明",
+      "url": "https://www.quantamagazine.org/the-four-color-theorem-gets-a-rare-new-proof-20260910/",
+      "source": "Quanta Magazine",
+      "summary_zh": "四色定理(任何地图只用四种颜色就能让相邻区域不同色)在 1970 年代那次借助计算机的证明当年颇具争议。数学家重新审视这个老问题,给出一个罕见的新证明,并对图的本质有了重要新洞见。经典难题被重新证明,往往比首次证明更能让人看清结构。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "环球音乐联手 ElevenLabs 推 AI 音乐平台",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/993465/universal-music-elevenlabs-ai",
+      "source": "The Verge",
+      "summary_zh": "环球音乐集团宣布,将通过与 ElevenLabs 的多年授权协议推出一个 AI 音乐平台,让用户在其已授权曲库基础上做混音、混搭和改编。大唱片公司从「起诉 AI」转向「自己下场授权做 AI 产品」,是版权方姿态的一次明显转弯。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Swarmer 将以最高 2.24 亿美元收购乌克兰无人地面车企业 Ratel",
+      "url": "https://www.therobotreport.com/swarmer-to-acquire-ukrainian-ugv-maker-ratel-robotics-for-up-to-224m/",
+      "source": "The Robot Report",
+      "summary_zh": "做集群软件的 Swarmer 计划以最高 2.24 亿美元收购乌克兰无人地面车(UGV)制造商 Ratel Robotics,并把自家集群调度软件用到 Ratel 的地面机器人上、在乌克兰落地。软件+硬件的整合,反映无人系统在实战环境里的快速商业化。"
+    },
+    {
+      "domain": "energy",
+      "title_zh": "法院推翻特朗普政府强制延寿燃煤电厂的命令",
+      "url": "https://arstechnica.com/science/2026/09/court-rejects-governments-energy-emergency-that-kept-coal-plant-open/",
+      "source": "Ars Technica",
+      "summary_zh": "美国能源部此前以「能源紧急状态」为由强制多家燃煤电厂延期退役,法院裁定当时根本不存在这种紧急状态,推翻了相关命令。在 AI 数据中心疯抢电力、「要不要留住旧化石电厂」成了真问题的背景下,这个判决划了条法律边界。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "LatConnect 60 借两项协议扩大 SWIRSAT 在印度的市场",
+      "url": "https://spacenews.com/latconnect-60-expands-india-market-presence-for-swirsat-with-nsil-agreement-and-geosyze-partnership/",
+      "source": "SpaceNews",
+      "summary_zh": "澳大利亚对地观测卫星公司 LatConnect 60 在班加罗尔航天展上宣布两项协议——与 NSIL 的合作和与 GeoSyze 的伙伴关系,为其 SWIRSAT(短波红外卫星)项目扩大在印度的市场存在。印度商业航天生态正吸引越来越多海外遥感公司进场卡位。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "AI 云服务商 Nscale 引入前 OpenAI 高管进董事会,备战 IPO",
+      "url": "https://techcrunch.com/2026/09/11/nscale-adds-former-openai-exec-fidji-simo-to-its-board-ahead-of-potential-ipo/",
+      "source": "TechCrunch",
+      "summary_zh": "AI 算力云公司 Nscale 在筹备潜在 IPO 前,把前 OpenAI 二号人物、曾带 Instacart 完成 2023 年上市的 Fidji Simo 招进董事会。AI 基础设施公司排队上市,资本正从模型层往下押到算力供给层。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "把 IMLE-VLA 的单步动作生成迁到另一个 VLA 底座,验证泛化",
+      "based_on": [
+        { "title": "IMLE-VLA: Fast Single-Step Action Generation for Vision-Language-Action Policies", "url": "https://arxiv.org/abs/2609.10915" }
+      ],
+      "why_now": "单步动作头刚提出、只在有限底座上验证过,「迁到别的 VLA 上还成不成立」是最自然也最便宜的可发表扩展,不用碰真机。",
+      "feasibility": "单张 24–40GB GPU 就能在 LIBERO 仿真里训动作头并评测,真机非必要,约 3–4 周。",
+      "route": [
+        "先跑通 IMLE-VLA 官方在 LIBERO 上的推理,复现其成功率",
+        "换一个开源 VLA 底座(如 π0.5 / OpenVLA-OFT)接上同样的单步 IMLE 动作头",
+        "对比单步 vs 多步(如 10 个 Euler 步)在成功率与推理延迟上的差异",
+        "按任务类型拆解:看接触密集/精细操作上单步掉多少",
+        "消融采样步数,画出成功率-延迟的帕累托曲线"
+      ],
+      "risk": "单步生成可能在接触密集任务上明显掉成功率,得靠蒸馏或少量多步补回来。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个「免训练 3DGS 后处理压缩」的统一工具库",
+      "based_on": [
+        { "title": "CVT-GS: Learning to Simplify 3D Gaussian Splatting with Centroidal Voronoi Tessellation", "url": "https://arxiv.org/abs/2609.08730" },
+        { "title": "LinearMask-GS: Stable-Mask Importance Pruning for Compact 3D Gaussian Splatting", "url": "https://arxiv.org/abs/2609.10095" }
+      ],
+      "why_now": "这周一口气冒出好几篇 3DGS 压缩/剪枝,但各做各的、缺一个能直接套在现成预训练模型上的即插即用工具;CVT-GS 本身就是免训练后处理,天生适合封装成库攒 star。",
+      "feasibility": "单卡按场景处理,在 Mip-NeRF360 / Tanks&Temples 上评测即可,MVP 库约 2–3 周。",
+      "route": [
+        "先复现 CVT-GS 的免训练后处理压缩,跑通一个标准场景",
+        "定义统一接口:输入现成 .ply/3DGS 权重,输出压缩后模型 + PSNR/大小/FPS 报告",
+        "接入第二种方法(如 LinearMask-GS 的重要性排序)做对比",
+        "写一个 benchmark 脚本,一键在多场景上出压缩率-质量表",
+        "补好 README 和示例,发 PyPI / GitHub"
+      ],
+      "risk": "不同方法对「预训练模型格式」的假设不一,统一接口的适配工作量容易被低估。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "检验 LILA 免校准剪枝规则能否迁到别的模型家族",
+      "based_on": [
+        { "title": "LILA: Calibration-Free Structured Pruning of Large Language Models via Latent Spectral Geometry", "url": "https://arxiv.org/abs/2609.11163" }
+      ],
+      "why_now": "LILA 给了个闭式的谱剪枝打分,不需要校准数据、梯度或额外网络——复现极便宜,「换个模型家族还成不成立」是低风险的泛化性验证。",
+      "feasibility": "只需前向计算奇异值分布做打分,单卡推理即可,约 1–2 周。",
+      "route": [
+        "复现 LILA 在原论文模型上的免校准剪枝打分与结果",
+        "把同样的 KS-距离谱规则套到另一架构(如 Qwen3 / Llama 的 GQA,或一个小 MoE)",
+        "在剪枝后不微调的前提下测困惑度和下游任务掉多少",
+        "和需要校准的基线(如 Wanda / PruneNet)在同压缩率下对比",
+        "分析谱规则在 GQA/MoE 上失效的边界,给出适用条件"
+      ],
+      "risk": "谱规则可能对 GQA/MoE 这类结构不适用,负结果的比例得先预估。"
+    }
+  ]
+}
