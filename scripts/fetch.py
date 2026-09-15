@@ -9,6 +9,7 @@ import json
 import os
 import re
 import sys
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -19,6 +20,12 @@ ROOT = Path(__file__).resolve().parent.parent
 CST = timezone(timedelta(hours=8))
 
 UA = {"User-Agent": "frontier-notes-bot (personal daily digest; contact: repo issues)"}
+
+# arXiv API 官方要求相邻请求间隔 >=3 秒。一次 fetch 要跑 6(领域)+ 9(研究点)+ 6(理论)
+# = 21 次查询,不节流必被 429 限流(实测)。这里串行限速 + 429/5xx 指数退避重试。
+ARXIV_MIN_INTERVAL = 3.2  # 秒,留一点余量
+ARXIV_RETRIES = 3
+_arxiv_last_call = 0.0
 
 NEWS_FEEDS = [
     ("TechCrunch AI", "https://techcrunch.com/category/artificial-intelligence/feed/"),
@@ -75,6 +82,31 @@ RESEARCH_QUERIES = {
     "tool_signal": (
         '(cat:cs.CV OR cat:cs.CL OR cat:cs.LG) AND abs:benchmark AND abs:"open-source"'
     ),  # ~4.4 篇/天,捕捉"新基准/新开源但生态空缺"的轻量工具型机会
+}
+
+# 「思想碰撞」用的理论侧 arXiv 查询:只挑那些有机会和点云处理(几何表示、复杂度、
+# 存储、优化)挂上钩的数学/物理分支,每天取最新提交。这些论文大多是纯理论,不指望
+# 篇篇能用——它们只是当天的「灵感触发器」,挂不上就让 Claude 自选理论,不许硬凑。
+THEORY_QUERIES = {
+    # 微分几何 / 度量几何:曲率、测地距离、嵌入——点云本质就是采样自流形的度量空间
+    "geometry": "cat:math.DG OR cat:math.MG",
+    # 代数拓扑 / TDA:持续同调这类"只看形状不看坐标"的不变量,对噪声和密度变化天然鲁棒
+    "topology_data": (
+        'cat:math.AT OR abs:"persistent homology" OR abs:"topological data analysis"'
+    ),
+    # 最优化:最优传输、凸优化、一阶方法——配准、下采样、形状匹配的数学底座
+    "optimization": (
+        'cat:math.OC AND (abs:"optimal transport" OR abs:convex OR abs:"first-order")'
+    ),
+    # 数值分析:误差、稳定性、快速算法——直接对应复杂度与精度的取舍
+    "numerics": "cat:math.NA",
+    # 信息论:压缩感知、率失真、量化、sketch——直接对应"点云怎么存得更小"
+    "info_compress": (
+        'cat:cs.IT AND (abs:"compressed sensing" OR abs:"rate-distortion" OR '
+        'abs:quantization OR abs:sketching)'
+    ),
+    # 统计物理:相变、重整化、无序系统——多尺度聚合与临界现象的思想来源
+    "stat_physics": "cat:cond-mat.stat-mech OR cat:cond-mat.dis-nn",
 }
 
 # HN 头版粗筛关键词(覆盖全部领域),精筛交给 Claude
@@ -162,20 +194,43 @@ def fetch_github_trending(top_n: int = 20) -> list[dict]:
     return repos
 
 
+def _arxiv_get(query: str, max_results: int) -> requests.Response:
+    """发一次 arXiv 请求,前面垫够 ARXIV_MIN_INTERVAL,429/5xx/网络抖动按指数退避重试。"""
+    global _arxiv_last_call
+    last_exc: Exception | None = None
+    for attempt in range(ARXIV_RETRIES):
+        wait = ARXIV_MIN_INTERVAL - (time.monotonic() - _arxiv_last_call)
+        if wait > 0:
+            time.sleep(wait)
+        _arxiv_last_call = time.monotonic()
+        try:
+            r = requests.get(
+                "https://export.arxiv.org/api/query",
+                params={
+                    "search_query": query,
+                    "sortBy": "submittedDate",
+                    "sortOrder": "descending",
+                    "max_results": max_results,
+                },
+                headers=UA,
+                timeout=45,
+            )
+            if r.status_code == 429 or r.status_code >= 500:
+                raise requests.HTTPError(f"{r.status_code} from arXiv", response=r)
+            r.raise_for_status()
+            return r
+        except requests.RequestException as exc:
+            last_exc = exc
+            if attempt < ARXIV_RETRIES - 1:
+                backoff = ARXIV_MIN_INTERVAL * (2 ** attempt)
+                print(f"[fetch] arXiv 第 {attempt + 1} 次失败({exc}),{backoff:.0f}s 后重试", file=sys.stderr)
+                time.sleep(backoff)
+    raise last_exc  # type: ignore[misc]
+
+
 def _arxiv_search(query: str, max_results: int) -> list[dict]:
     """跑一次 arXiv 查询,按提交时间倒序返回精简后的论文列表。"""
-    r = requests.get(
-        "https://export.arxiv.org/api/query",
-        params={
-            "search_query": query,
-            "sortBy": "submittedDate",
-            "sortOrder": "descending",
-            "max_results": max_results,
-        },
-        headers=UA,
-        timeout=45,
-    )
-    r.raise_for_status()
+    r = _arxiv_get(query, max_results)
     feed = feedparser.parse(r.text)
     papers = []
     for e in feed.entries:
@@ -209,6 +264,35 @@ def fetch_research(per_query: int = 15) -> dict[str, list[dict]]:
     for name, query in RESEARCH_QUERIES.items():
         papers = []
         for p in _arxiv_search(query, per_query):
+            pid = p.get("arxiv_id") or p.get("url")
+            if pid in seen:
+                continue
+            seen.add(pid)
+            papers.append(p)
+        out[name] = papers
+    return out
+
+
+def fetch_theory(per_query: int = 12) -> dict[str, list[dict]]:
+    """「思想碰撞」候选:按 THEORY_QUERIES 抓数学/物理最新提交,按分支分组。
+
+    与 fetch_research 同样按 arxiv_id 组内去重(分支之间有意保留重叠,如 math.OC 与
+    压缩感知),先出现的分支保留该论文。量少是正常的,这组数据只当灵感触发器用。
+
+    单条分支失败只跳过它、不拖垮整组:这组是「思想碰撞」的灵感来源,少一个分支
+    顶多少几个备选,全空也只是让 Claude 改成自选理论,不该因此让当期抓取报错。
+    """
+    out: dict[str, list[dict]] = {}
+    seen: set[str] = set()
+    for name, query in THEORY_QUERIES.items():
+        papers = []
+        try:
+            results = _arxiv_search(query, per_query)
+        except Exception as exc:
+            print(f"[fetch] 理论分支 {name} 抓取失败,跳过:{exc}", file=sys.stderr)
+            out[name] = []
+            continue
+        for p in results:
             pid = p.get("arxiv_id") or p.get("url")
             if pid in seen:
                 continue
@@ -284,6 +368,7 @@ def main() -> None:
         ("papers", fetch_hf_papers),
         ("domain_papers", fetch_arxiv_domains),
         ("research_papers", fetch_research),
+        ("theory_papers", fetch_theory),
         ("repos", fetch_github_trending),
         ("news", fetch_news),
     ]:
@@ -302,9 +387,11 @@ def main() -> None:
     out.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     n_domain = sum(len(v) for v in sections["domain_papers"].values()) if sections["domain_papers"] else 0
     n_research = sum(len(v) for v in sections["research_papers"].values()) if sections["research_papers"] else 0
+    n_theory = sum(len(v) for v in sections["theory_papers"].values()) if sections["theory_papers"] else 0
     print(
         f"[fetch] {date}: {len(sections['papers'])} hf papers, {n_domain} domain papers, "
-        f"{n_research} research papers, {len(sections['repos'])} repos, {len(sections['news'])} news -> {out}"
+        f"{n_research} research papers, {n_theory} theory papers, "
+        f"{len(sections['repos'])} repos, {len(sections['news'])} news -> {out}"
     )
     if errors:
         print(f"[fetch] 部分源失败: {errors}", file=sys.stderr)
