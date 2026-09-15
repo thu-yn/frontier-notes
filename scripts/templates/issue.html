@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "macros.html" import like_button %}
+{% from "macros.html" import like_button, crossover_block, katex_assets %}
 {% block title %}前沿手记 · 第 {{ issue.issue_no }} 期 · {{ issue.date }}{% endblock %}
 {% block stamp %}第 {{ issue.issue_no }} 期 · {{ issue.date_cn }}{% if not is_latest %} · 往期{% endif %}{% endblock %}
 {% block nav_active %}issue{% endblock %}
@@ -22,6 +22,7 @@
   <span class="dashboard__tick dashboard__tick--tl" aria-hidden="true">+</span>
   <span class="dashboard__tick dashboard__tick--br" aria-hidden="true">+</span>
   {% if issue.research_ideas %}<span class="dashboard__stat">研究点 {{ "%02d" % (issue.research_ideas | length) }}</span>{% endif %}
+  {% if issue.crossover and issue.crossover.angles %}<span class="dashboard__stat">碰撞 {{ "%02d" % (issue.crossover.angles | length) }}</span>{% endif %}
   {% if issue.papers %}<span class="dashboard__stat">论文 {{ "%02d" % (issue.papers | length) }}</span>{% endif %}
   {% if issue.repos %}<span class="dashboard__stat">开源 {{ "%02d" % (issue.repos | length) }}</span>{% endif %}
   {% if issue.news %}<span class="dashboard__stat">资讯 {{ "%02d" % (issue.news | length) }}</span>{% endif %}
@@ -130,6 +131,10 @@
 </section>
 {% endif %}
 
+{% if issue.crossover %}
+{{ crossover_block(issue.crossover, "crossover") }}
+{% endif %}
+
 {% if present | length > 1 %}
 <div class="filter-bar" role="group" aria-label="按领域筛选">
   <button type="button" data-domain="all" aria-pressed="true">全部</button>
@@ -217,28 +222,10 @@
 
 {# 「每日一理」相关资源都自托管、按需加载,别拖慢无定理/无图的页面 #}
 {% block foot %}
-{% if issue.math_note %}
-{# 公式渲染:KaTeX(有定理就加载),把正文里的 $…$ / $$…$$ 排版成数学公式 #}
-<link rel="stylesheet" href="{{ root }}viz/vendor/katex/katex.min.css">
-<script src="{{ root }}viz/vendor/katex/katex.min.js" defer></script>
-<script src="{{ root }}viz/vendor/katex/auto-render.min.js" defer></script>
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    var el = document.getElementById("theorem");
-    if (el && window.renderMathInElement) {
-      renderMathInElement(el, {
-        delimiters: [
-          { left: "$$", right: "$$", display: true },
-          { left: "$", right: "$", display: false },
-          { left: "\\(", right: "\\)", display: false },
-          { left: "\\[", right: "\\]", display: true },
-        ],
-        throwOnError: false,
-      });
-    }
-  });
-</script>
-{% if issue.math_note.viz %}
+{% if issue.math_note or issue.crossover %}
+{# 公式渲染:有定理或碰撞就加载 KaTeX,把正文里的 $…$ / $$…$$ 排版成数学公式 #}
+{{ katex_assets(root) }}
+{% if issue.math_note and issue.math_note.viz %}
 {# 交互可视化:JSXGraph + viz 框架(仅当本期定理带 viz 时) #}
 <link rel="stylesheet" href="{{ root }}viz/vendor/jsxgraph.css">
 <script src="{{ root }}viz/vendor/jsxgraphcore.js" defer></script>

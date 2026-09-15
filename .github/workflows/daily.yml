@@ -62,9 +62,28 @@ jobs:
           import json, sys
           f = sys.argv[1]
           d = json.load(open(f, encoding="utf-8"))          # 非法 JSON 会在此抛错
-          missing = [k for k in ("date", "editor_note", "math_note") if k not in d]
+          missing = [k for k in ("date", "editor_note", "math_note", "crossover") if k not in d]
           if missing:
               sys.exit(f"::error::{f} 缺少必需字段: {missing}")
+
+          # 思想碰撞同样只做「软校验」:字段缺了页面会跳过对应小节,不该拖垮整期发布。
+          # 只盯两件事:思路条数(规范要 3-4 条)、有没有真的覆盖上复杂度/存储/算法优化。
+          cx = d.get("crossover") or {}
+          for k in ("theory", "pc_problem", "bridge", "angles"):
+              if not cx.get(k):
+                  print(f"::warning::crossover 缺 {k}")
+          angles = cx.get("angles") or []
+          if not 3 <= len(angles) <= 4:
+              print(f"::warning::crossover.angles 有 {len(angles)} 条,规范要求 3-4 条")
+          CORE_DIMS = ("复杂度", "存储", "算法优化")
+          dims = [str(a.get("dim", "")) for a in angles]
+          hit = sum(1 for core in CORE_DIMS if any(core in dim for dim in dims))
+          if hit < 2:
+              print(f"::warning::crossover.angles 维度 {dims} 只覆盖了 {hit} 个核心维度"
+                    f"(复杂度/存储/算法优化,规范要求至少 2 个)")
+          for i, a in enumerate(angles, 1):
+              if not (a.get("idea") and a.get("gain") and a.get("cost")):
+                  print(f"::warning::crossover.angles[{i}] 缺 idea/gain/cost")
 
           # 可视化 viz 只做「软校验」:形状不对只告警不失败——页面本就会优雅回落,
           # 一块图的问题不该拖垮整期发布。

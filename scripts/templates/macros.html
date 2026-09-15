@@ -14,3 +14,100 @@
   <span class="heart" aria-hidden="true">♥</span>
 </button>
 {% endmacro %}
+
+{# 思想碰撞区块:每期页与归档页共用。anchor 给锚点 id(归档页按日期区分)。 #}
+{% macro crossover_block(c, anchor) %}
+<section class="crossover"{% if anchor %} id="{{ anchor }}"{% endif %} aria-label="思想碰撞">
+  <div class="crossover__head">
+    <span class="crossover__kicker">思想碰撞 · CROSSOVER</span>
+    <h2 class="crossover__pair">
+      <span class="crossover__side">{{ c.theory }}{% if c.theory_en %}<i>{{ c.theory_en }}</i>{% endif %}</span>
+      {# × 用 --pc 的 ::before 画,保证换行时它跟着「点云处理」走,不会孤悬在上一行行尾 #}
+      <span class="crossover__side crossover__side--pc">点云处理</span>
+    </h2>
+    {% if c.field %}<span class="crossover__field">{{ c.field }}</span>{% endif %}
+    {% if c.era %}<span class="crossover__era">{{ c.era }}</span>{% endif %}
+  </div>
+  {% if c.one_liner %}<p class="crossover__oneliner"><mark>{{ c.one_liner }}</mark></p>{% endif %}
+  {% if c.pc_problem %}
+  <div class="crossover__block">
+    <h3>点云侧卡在哪</h3>
+    <p>{{ c.pc_problem }}</p>
+  </div>
+  {% endif %}
+  {% if c.theory_core %}
+  <div class="crossover__block">
+    <h3>理论说了什么</h3>
+    <p>{{ c.theory_core }}</p>
+  </div>
+  {% endif %}
+  {% if c.bridge %}
+  <div class="crossover__block crossover__block--bridge">
+    <h3>为什么能对上</h3>
+    <p>{{ c.bridge }}</p>
+  </div>
+  {% endif %}
+  {% if c.angles %}
+  <div class="crossover__block">
+    <h3>可行思路 · {{ "%02d" % (c.angles | length) }}</h3>
+    <ol class="crossover__angles">
+      {% for a in c.angles %}
+      <li class="angle">
+        <span class="angle__dim">{{ a.dim }}</span>
+        {% if a.idea %}<p class="angle__idea">{{ a.idea }}</p>{% endif %}
+        {% if a.gain %}<p class="angle__line"><b>收益</b>{{ a.gain }}</p>{% endif %}
+        {% if a.cost %}<p class="angle__line angle__line--cost"><b>代价</b>{{ a.cost }}</p>{% endif %}
+      </li>
+      {% endfor %}
+    </ol>
+  </div>
+  {% endif %}
+  {% if c.experiment %}
+  <div class="crossover__block">
+    <h3>最小验证</h3>
+    <ol class="crossover__steps">
+      {% for step in c.experiment %}<li>{{ step }}</li>{% endfor %}
+    </ol>
+  </div>
+  {% endif %}
+  {% if c.prior_art %}
+  <div class="crossover__block">
+    <h3>已经有人做到哪了</h3>
+    <ul class="crossover__prior">
+      {% for w in c.prior_art %}
+      <li>{% if w.url %}<a href="{{ w.url }}">{{ w.title }}</a>{% else %}<b>{{ w.title }}</b>{% endif %}{% if w.note %} —— {{ w.note }}{% endif %}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+  {% if c.reality_check %}
+  <p class="crossover__reality"><span class="risk-tag">最可能栽在哪</span>{{ c.reality_check }}</p>
+  {% endif %}
+  {% if c.trigger and c.trigger.title %}
+  <p class="crossover__trigger">由这篇触发:{% if c.trigger.url %}<a href="{{ c.trigger.url }}">{{ c.trigger.title }}</a>{% else %}{{ c.trigger.title }}{% endif %}</p>
+  {% endif %}
+</section>
+{% endmacro %}
+
+{# KaTeX 资源 + 渲染:按 class 找区块,一页有几块就渲染几块(归档页会有很多块)。 #}
+{% macro katex_assets(root) %}
+<link rel="stylesheet" href="{{ root }}viz/vendor/katex/katex.min.css">
+<script src="{{ root }}viz/vendor/katex/katex.min.js" defer></script>
+<script src="{{ root }}viz/vendor/katex/auto-render.min.js" defer></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    if (!window.renderMathInElement) return;
+    document.querySelectorAll(".theorem, .crossover").forEach(function (el) {
+      renderMathInElement(el, {
+        delimiters: [
+          { left: "$$", right: "$$", display: true },
+          { left: "$", right: "$", display: false },
+          { left: "\\(", right: "\\)", display: false },
+          { left: "\\[", right: "\\]", display: true },
+        ],
+        throwOnError: false,
+      });
+    });
+  });
+</script>
+{% endmacro %}

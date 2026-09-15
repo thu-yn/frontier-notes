@@ -4,6 +4,11 @@
 
 每期还附 2–3 条「今日可做的研究点」——从定向抓取的 arXiv 新论文里提炼单人可完成(1–2 卡量级)的研究切入点,历史点子汇总在「研究方向」页;每张卡片可点 ♥ 收藏,收藏直接写回仓库 `data/likes.json`,在「喜欢」页跨设备查看。
 
+每期另有两个动脑筋的固定栏目:
+
+- **每日一理**——讲透一个经典数学定理(说的是什么、由来、怎么推出来、能用在哪),公式由 KaTeX 排版,多数还配一块能拖着玩的交互图。
+- **思想碰撞**——拿一个数学或物理理论去撞点云处理的一个具体痛点,给出 3–4 条带量级估计的可行思路(复杂度、存储、算法优化等维度),附最小验证路径、已有工作核查,以及一句「最可能栽在哪」。理论侧的灵感来自每天定向抓的数学/物理 arXiv 新提交。历史碰撞汇总在「思想碰撞」页。
+
 ## 工作原理
 
 ```
@@ -49,5 +54,6 @@ open site/index.html
 - **选题标准 / 文风**:改 `prompts/summarize.md`
 - **资讯来源**:改 `scripts/fetch.py` 里的 `NEWS_FEEDS` 和 `HN_KEYWORDS`
 - **研究点方向**:改 `scripts/fetch.py` 里的 `RESEARCH_QUERIES`(查询串依据见 `docs/research-radar-2026-07.md`)
-- **页面设计**:改 `scripts/templates/`(base.html 里是全部样式)
+- **思想碰撞的理论口味**:改 `scripts/fetch.py` 里的 `THEORY_QUERIES`(数学/物理 arXiv 分支);碰撞怎么写、点云侧靶子有哪些,改 `prompts/summarize.md` 的「思想碰撞」一节
+- **页面设计**:改 `scripts/templates/`(base.html 里是全部样式)。每期页与「思想碰撞」归档页共用 `macros.html` 里的 `crossover_block` 宏,改版式只需改那一处
 - **发布时间**:改 `.github/workflows/daily.yml` 里的 cron(注意是 UTC)

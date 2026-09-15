@@ -83,7 +83,7 @@ transparent 底。链接：正文链接墨色 + hover 钴蓝下划线（underlin
 ## 各页固定要素
 
 - Nav（Cobalt 签名条）：通栏贴边，底部 1px --color-rule-2，wordmark「前沿手记」
-  Space Grotesk/系统黑体 600 居左，右侧 4 个文字链接（本期 · 研究方向 · 喜欢 · 归档），
+  Space Grotesk/系统黑体 600 居左，右侧 5 个文字链接（本期 · 研究方向 · 思想碰撞 · 喜欢 · 归档），
   当前页链接钴蓝。移动端允许换行为两行。无 ⌘K（静态站不引入命令面板）。
 - 期号 stamp：mono 小字（第 N 期 · 日期 · 星期），置于内容列顶部。
 - 编者按：石墨深带卡（--color-graphite 底，10px 圆角），mono 钴蓝小标
@@ -101,10 +101,16 @@ transparent 底。链接：正文链接墨色 + hover 钴蓝下划线（underlin
 
 ## What pages MAY differ on
 
-- 每期页有编者按石墨带与 filter-bar；归档页是纯链接列表；研究/喜欢页按日期分组
-  （日期组头 = mono 小标 + hairline）。
+- 每期页有编者按石墨带与 filter-bar；归档页是纯链接列表；研究/喜欢/思想碰撞页按日期
+  分组（日期组头 = mono 小标 + hairline）。思想碰撞归档页无领域 filter-bar（该栏目
+  不标 domain），日期组头右侧给一条回到整期的链接。
 - 研究点条目允许更结构化的行内标签（为什么现在/可行性/路线/风险），
   风险行用 muted 墨 + 前置「风险」mono 标签，不再用红色斜体。
+- 每日一理与思想碰撞共享同一套区块语法（1px --color-rule-2 边框 + --color-paper-2 底
+  + --radius-card + 左缘 3px 钴蓝竖标），靠竖标形态区分：定理是整条，碰撞断成两截
+  （linear-gradient 中段透明），呼应「两边撞上」。碰撞的思路条目用 hairline 分隔 +
+  mono 维度 chip（带 decimal-leading-zero 序号），收益/代价行用 mono 小标签前缀，
+  不做卡中卡、不引入第二信号色。
 
 ## 禁止事项（本项目 slop 清单）
 

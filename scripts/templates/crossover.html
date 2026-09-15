@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% from "macros.html" import crossover_block, katex_assets %}
+{% block title %}前沿手记 · 思想碰撞{% endblock %}
+{% block stamp %}思想碰撞 · 数学物理理论 × 点云处理{% endblock %}
+{% block nav_active %}crossover{% endblock %}
+
+{% block masthead %}
+<header class="masthead">
+  <div class="masthead__brand">
+    <a class="seal" href="{{ root }}index.html" aria-label="前沿手记"><span>前</span><span>沿</span><span>手</span><span>记</span></a>
+    <h1 class="masthead__title">思想碰撞</h1>
+  </div>
+  <p class="masthead__dash"><span class="masthead__dot" aria-hidden="true"></span>CROSSOVER · {{ cross_issues | length }} 次碰撞 · {{ cross_issues | map(attribute='crossover') | map(attribute='angles') | map('default', [], true) | map('length') | sum }} 条思路</p>
+</header>
+{% endblock %}
+
+{% block content %}
+<aside class="editor-note">
+  <span class="label">说明</span>
+  <p>每期拿一个数学或物理理论去撞点云处理的一个具体痛点,给出几条带量级估计的可行思路,再自己泼一盆冷水。都是脑洞,但每条都落到了「改哪一层、省多少、亏什么」。按日期倒序排列。</p>
+</aside>
+
+{% if cross_issues %}
+{% for issue in cross_issues %}
+<section class="column">
+  <div class="column-head">
+    <h2>{{ issue.date }}</h2>
+    <span class="count">第 {{ issue.issue_no }} 期 · <a href="{{ root }}issues/{{ issue.date }}.html#crossover">看整期</a></span>
+  </div>
+  {{ crossover_block(issue.crossover, "crossover-" ~ issue.date) }}
+</section>
+{% endfor %}
+{% else %}
+<section class="column">
+  <p class="likes-empty">还没有思想碰撞。等有新一期带 crossover 就会出现在这里。</p>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block foot %}
+{% if cross_issues %}
+{# 碰撞正文里有行内公式,这页可能同时有很多块,按 class 逐块渲染 #}
+{{ katex_assets(root) }}
+{% endif %}
+{% endblock %}

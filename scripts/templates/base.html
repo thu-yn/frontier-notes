@@ -255,6 +255,7 @@ button:disabled { opacity: 0.55; cursor: not-allowed; }
   padding-top: var(--space-3xs);
 }
 @media (max-width: 30rem) {
+  .crossover__side i { display: block; margin-left: 0; }
   .editor-note { display: block; }
   .editor-note .label {
     writing-mode: horizontal-tb;
@@ -683,6 +684,213 @@ mark {
   line-height: 1.6;
 }
 
+/* ---- 思想碰撞(理论 × 点云) ---- */
+.crossover {
+  position: relative;
+  margin: var(--space-2xl) 0;
+  padding: var(--space-lg) var(--space-md);
+  border: 1px solid var(--color-rule-2);
+  border-radius: var(--radius-card);
+  background: var(--color-paper-2);
+}
+/* 左缘竖标断成两截,呼应「两边撞上」——与每日一理的整条竖标区分开 */
+.crossover::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: var(--space-lg);
+  bottom: var(--space-lg);
+  width: 3px;
+  border-radius: 3px;
+  background: linear-gradient(
+    var(--color-accent) 0 42%,
+    transparent 42% 58%,
+    var(--color-accent) 58% 100%
+  );
+}
+.crossover__head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-3xs) var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+.crossover__kicker {
+  flex-basis: 100%;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+.crossover__pair {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-3xs) var(--space-2xs);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-xl);
+  line-height: 1.25;
+  letter-spacing: 0;
+  margin: var(--space-3xs) 0 0;
+  color: var(--color-ink);
+}
+.crossover__side i {
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-weight: 400;
+  font-size: 0.9rem;
+  color: var(--color-muted);
+  margin-left: 0.5em;
+}
+.crossover__side--pc { color: var(--color-accent); }
+.crossover__side--pc::before {
+  content: "×";
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 0.9em;
+  color: var(--color-muted);
+  margin-right: 0.35em;
+}
+.crossover__field {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-muted);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  padding: 0 0.4em;
+  white-space: nowrap;
+}
+.crossover__era {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-muted);
+}
+.crossover__oneliner {
+  font-size: 1.05rem;
+  color: var(--color-ink-2);
+  margin: 0 0 var(--space-md);
+}
+.crossover__block { margin: var(--space-md) 0; }
+.crossover__block h3 {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+  color: var(--color-muted);
+  margin: 0 0 var(--space-2xs);
+}
+.crossover__block p {
+  margin: 0;
+  max-width: 42rem;
+  color: var(--color-ink-2);
+}
+/* 「为什么能对上」是本栏核心,正文提到 ink 墨、左侧留一道 hairline */
+.crossover__block--bridge p {
+  padding-left: var(--space-sm);
+  border-left: 1px solid var(--color-rule-2);
+  color: var(--color-ink);
+}
+.crossover .katex { font-size: 1.05em; }
+
+/* 思路方案:每条一个维度,hairline 分隔,不做卡中卡 */
+.crossover__angles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: angle;
+  max-width: 42rem;
+}
+.crossover__angles .angle {
+  counter-increment: angle;
+  padding: var(--space-sm) 0;
+  border-top: 1px solid var(--color-rule);
+}
+.crossover__angles .angle:first-child { border-top: 0; padding-top: var(--space-2xs); }
+.angle__dim {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-accent);
+  border: 1px solid var(--color-rule-2);
+  border-radius: var(--radius-control);
+  padding: 0 0.45em;
+  margin-bottom: var(--space-2xs);
+}
+.angle__dim::before {
+  content: counter(angle, decimal-leading-zero) " ";
+  color: var(--color-muted);
+}
+.angle__idea {
+  margin: 0;
+  color: var(--color-ink-2);
+}
+.angle__line {
+  margin: var(--space-3xs) 0 0;
+  font-size: 0.95rem;
+  color: var(--color-ink-2);
+}
+.angle__line b {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  margin-right: 0.6em;
+}
+.angle__line--cost { color: var(--color-muted); }
+
+.crossover__steps {
+  margin: 0;
+  padding-left: 1.4rem;
+  max-width: 42rem;
+  color: var(--color-ink-2);
+}
+.crossover__steps li { margin: 0.18rem 0; }
+.crossover__prior {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: 42rem;
+}
+.crossover__prior li {
+  position: relative;
+  margin: var(--space-2xs) 0;
+  padding-left: var(--space-sm);
+  font-size: 0.95rem;
+  color: var(--color-ink-2);
+}
+.crossover__prior li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.65em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-accent);
+}
+.crossover__reality {
+  margin: var(--space-md) 0 0;
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--color-rule);
+  max-width: 42rem;
+  font-size: 0.98rem;
+  color: var(--color-ink-2);
+}
+.crossover .risk-tag {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-muted);
+  margin-right: 0.6em;
+}
+.crossover__trigger {
+  margin: var(--space-2xs) 0 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
 /* ---- 可视化组件目录页 ---- */
 .gallery-intro {
   max-width: 46rem;
@@ -904,6 +1112,7 @@ footer p { margin: var(--space-3xs) 0; overflow-wrap: anywhere; }
     <div class="site-nav__links">
       <a href="{{ root }}index.html"{% if _nav == 'issue' %} class="is-current" aria-current="page"{% endif %}>本期</a>
       <a href="{{ root }}research.html"{% if _nav == 'research' %} class="is-current" aria-current="page"{% endif %}>研究方向</a>
+      <a href="{{ root }}crossover.html"{% if _nav == 'crossover' %} class="is-current" aria-current="page"{% endif %}>思想碰撞</a>
       <a href="{{ root }}likes.html"{% if _nav == 'likes' %} class="is-current" aria-current="page"{% endif %}>喜欢</a>
       <a href="{{ root }}archive.html"{% if _nav == 'archive' %} class="is-current" aria-current="page"{% endif %}>归档</a>
     </div>

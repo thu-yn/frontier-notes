@@ -28,6 +28,68 @@
       "script": "(function(){var c=el.querySelector('#jz');if(!c)return;var ctx=c.getContext('2d');var W=c.width,H=c.height,pad=36;var xmin=-3,xmax=3,ymin=-0.5,ymax=9.5;function f(x){return x*x;}function X(x){return pad+(x-xmin)/(xmax-xmin)*(W-2*pad);}function Y(y){return H-pad-(y-ymin)/(ymax-ymin)*(H-2*pad);}var ax=-2.1,bx=1.9;var lam=0.5;var slider=el.querySelector('#jzl'),lab=el.querySelector('#jzv');function draw(){ctx.clearRect(0,0,W,H);ctx.strokeStyle='#d0d4da';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad,Y(0));ctx.lineTo(W-pad,Y(0));ctx.moveTo(X(0),pad);ctx.lineTo(X(0),H-pad);ctx.stroke();ctx.strokeStyle='#5b6472';ctx.lineWidth=2;ctx.beginPath();for(var i=0;i<=200;i++){var x=xmin+(xmax-xmin)*i/200;var px=X(x),py=Y(f(x));if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();var fa=f(ax),fb=f(bx);ctx.strokeStyle='#2f74ff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(X(ax),Y(fa));ctx.lineTo(X(bx),Y(fb));ctx.stroke();var mx=lam*ax+(1-lam)*bx;var chordY=lam*fa+(1-lam)*fb;var curveY=f(mx);ctx.strokeStyle='#9aa2ad';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(X(mx),Y(chordY));ctx.lineTo(X(mx),Y(curveY));ctx.stroke();ctx.setLineDash([]);function dot(x,y,col){ctx.fillStyle=col;ctx.beginPath();ctx.arc(X(x),Y(y),6,0,7);ctx.fill();}dot(ax,fa,'#2f74ff');dot(bx,fb,'#2f74ff');dot(mx,chordY,'#2f74ff');dot(mx,curveY,'#e5484d');ctx.fillStyle='#333';ctx.font='12px system-ui';ctx.fillText('E[f(X)] (弦, 蓝)',X(mx)+8,Y(chordY)-2);ctx.fillText('f(E[X]) (曲线, 红)',X(mx)+8,Y(curveY)+14);if(lab)lab.textContent='λ='+lam.toFixed(2)+'  间隙='+(chordY-curveY).toFixed(2);}var drag=null;function pos(e){var r=c.getBoundingClientRect();var t=e.touches?e.touches[0]:e;return{x:xmin+(t.clientX-r.left)/(r.width)* (xmax-xmin)};}function nearest(x){return Math.abs(x-ax)<Math.abs(x-bx)?'a':'b';}c.addEventListener('mousedown',function(e){drag=nearest(pos(e).x);});c.addEventListener('mousemove',function(e){if(!drag)return;var x=Math.max(xmin,Math.min(xmax,pos(e).x));if(drag==='a')ax=x;else bx=x;draw();});window.addEventListener('mouseup',function(){drag=null;});c.addEventListener('touchstart',function(e){drag=nearest(pos(e).x);e.preventDefault();},{passive:false});c.addEventListener('touchmove',function(e){if(!drag)return;var x=Math.max(xmin,Math.min(xmax,pos(e).x));if(drag==='a')ax=x;else bx=x;draw();e.preventDefault();},{passive:false});window.addEventListener('touchend',function(){drag=null;});if(slider)slider.addEventListener('input',function(){lam=parseFloat(slider.value);draw();});draw();})();"
     }
   },
+  "crossover": {
+    "theory": "格量化与球填充",
+    "theory_en": "Lattice Quantization & Sphere Packing",
+    "field": "离散几何 / 信息论",
+    "era": "1963 Zador 算出量化的理论极限,1982 Conway–Sloane 让 E8、Leech 格真的能快速解码,2020 年代才被搬进神经压缩",
+    "one_liner": "标量量化等于拿方块填空间,而空间本来该用更圆的东西填。",
+    "pc_problem": "点云存储的大头卡在量化这一步,而且卡的方式很笨。KITTI 一帧 64 线激光约 12 万点、原始 1.9 MB,10 Hz 跑一小时就是 69 GB;8iVFB 这类稠密人体点云,单帧近百万点,属性(颜色)码率在 G-PCC 里能占到总码率一半以上。不管是传统 G-PCC 的属性变换,还是这两年的学习式点云压缩,最后落到比特的那一步几乎清一色是逐维标量量化——每个通道独立取整。代价是确定的:高分辨率下标量量化比理论最优量化器差 $1.53$ dB,折合每维白扔掉约 $0.25$ bit。",
+    "theory_core": "量化就是把连续空间切成一个个小格子,每格用一个代表点。Zador 证明高分辨率下失真只取决于格子形状的「归一化二阶矩」$G$——格子越接近球,$G$ 越小。标量量化的格子是立方体,$G(\\mathbb{Z})=1/12\\approx 0.0833$;理论下界是球,$G\\to 1/(2\\pi e)\\approx 0.0586$。两者之比取对数正好是 $10\\log_{10}(\\pi e/6)=1.53$ dB,这就是所谓 granular gain 的天花板。够不着球,就退而求其次找格:$D_4$ 拿 $0.37$ dB,$E_8$ 拿 $0.65$ dB,24 维的 Leech 格 $\\Lambda_{24}$ 拿 $1.03$ dB。关键是 Conway 和 Sloane 给出了这些格的 $O(d)$ 最近格点算法——不用存码本,几十行代码就能解码。",
+    "bridge": "映射很直接:量化器要填的那个「空间」,对应点云压缩里 bottleneck 张量的取值空间;格子的形状,对应量化器把哪些邻近取值归成同一个码字;$G$ 越小意味着同样的码率下重建误差越小,也就是同样的画质下码率越低。而格理论真正的杀手锏在另一头——通用向量量化要在 $d$ 维、每维 $R$ 比特下搜码本,码本有 $2^{dR}$ 项($d=8,R=4$ 就是 $2^{32}$ 项,存都存不下),格量化则零码本:格是代数结构,最近格点靠闭式算法算出来。这正好对上点云压缩最怕的两件事——解码端内存和实时性。",
+    "angles": [
+      {
+        "dim": "存储",
+        "idea": "把学习式点云属性压缩(SparsePCGC / Deep-PCAC 这类)bottleneck 上的逐通道标量量化,换成 $E_8$ 格量化:把 128 维隐向量按 8 维一组切开,每组用 $E_8$ 的最近格点代替四舍五入,熵模型改成对格点索引建模。隐空间维度天然高、训练后分布接近各向同性,正是 shaping gain 拿得最满的地方。",
+        "gain": "单看量化这一环省 $0.65$ dB,折合每维约 $0.11$ bit;端到端 BD-rate 改善估计在个位数百分比(图像神经压缩上换格量化报过这个量级,点云上没人测过)。另外码本从 $2^{32}$ 项变成零,解码端省下的是整个码本的内存。",
+        "cost": "熵模型必须跟着改。格量化之后隐变量不再逐通道独立,还用逐通道分解的先验就等于把省下的 shaping gain 又从熵编码那头亏回去,大概率白干一场。"
+      },
+      {
+        "dim": "复杂度",
+        "idea": "用 Conway–Sloane 的快速解码替掉码本搜索。$E_8$ 的最近格点算法是「分别往 $D_8$ 和 $D_8+\\tfrac12$ 两个陪集取整,比一下谁近」,纯算术、无分支、无查表,天然能 SIMD 向量化,也好写成 CUDA kernel。",
+        "gain": "单次量化从通用 VQ 的 $O(2^{dR})$ 码本搜索(或 $O(K)$ 的近似搜索)降到 $O(d)$,$d=8$ 时就是几十条指令。相比标量量化只多个常数倍,相比可学习 VQ 是数量级的差距。",
+        "cost": "格是固定的,不像可学习码本能贴合数据的真实分布。数据分布明显各向异性(比如某几个通道方差特别大)时,先得做 companding 或逐通道缩放把它「揉圆」,这步没做好,理论增益一点拿不到。"
+      },
+      {
+        "dim": "算法优化",
+        "idea": "训练端解决格量化不可导的问题。两条路可以直接抄:一是加性均匀噪声的可微松弛,把噪声从超立方体换成格的 Voronoi 胞体内均匀采样;二是直接用 STE,前向走真格量化、反向当恒等映射。先用 STE 跑通,再上噪声松弛看收益。",
+        "gain": "训练稳定性和最终 RD 曲线都靠这步。噪声松弛在图像压缩上通常比 STE 好半个到一个百分点的 BD-rate,代价是要能从 Voronoi 胞体里采样。",
+        "cost": "$E_8$ 的 Voronoi 胞体采样没有简单闭式,得用拒绝采样,训练每步多一点开销。急着出结果就先只上 STE。"
+      },
+      {
+        "dim": "评测",
+        "idea": "把 shaping gain 单独摘出来测,别让它混在训练波动里:固定训练好的模型和熵模型,只把推理时的量化器在「标量 / $D_4$ / $E_8$ / $\\Lambda_{16}$」之间换,画同一条 RD 曲线上的位移。",
+        "gain": "能直接回答「改善到底来自格,还是来自多训了几轮」这个问题,一张图就能说清,也是这类工作最容易被审稿人问到的地方。",
+        "cost": "严格说这是欠公平的对照(模型是按标量量化训出来的),最终还是要给出重训后的完整结果,这只是中间体检。"
+      }
+    ],
+    "experiment": [
+      "纯 CPU 半天:照 Conway–Sloane 写 50 行 $E_8$ 最近格点解码,在合成高斯向量上实测量化信噪比,确认真的比逐维取整好 $0.65$ dB——这一步不过就别往下走了。",
+      "两三天、单卡:跑通一个开源学习式点云属性压缩 baseline 在 8iVFB 上的 RD 曲线,记下 BD-rate 和每帧编解码耗时当基线。",
+      "一周:推理端直接替换量化器(模型不重训),按上面「评测」那条画位移图,先看有没有正向信号。",
+      "一到两周:重训,熵模型改成对格点索引建模,扫 $D_4$ / $E_8$ / $\\Lambda_{16}$ 和不同的通道分组方式。",
+      "收尾:把编解码耗时、解码端内存占用一并报出来——这套方法真正的卖点可能不在码率,而在零码本。"
+    ],
+    "prior_art": [
+      {
+        "title": "LVQAC:格量化 + 空间自适应 companding 的学习式图像压缩(CVPR 2023)",
+        "note": "在图像神经压缩上做过同一件事,报了个位数百分比的 BD-rate 改善。点云上还没见到对应工作,几何和属性两条线都空着。"
+      },
+      {
+        "title": "NVTC:非线性向量变换编码(CVPR 2023)",
+        "note": "走的是可学习 VQ 那条路,效果好但码本开销大、解码端吃内存——正是格量化想绕开的那部分,适合当对照组。"
+      },
+      {
+        "title": "SparsePCGC / Deep-PCAC 等学习式点云压缩",
+        "note": "bottleneck 仍是逐通道标量量化。它们的开源实现是最省事的改造起点,别自己从头搭。"
+      },
+      {
+        "title": "Conway & Sloane,《Sphere Packings, Lattices and Groups》第 20 章",
+        "note": "快速解码算法的原始出处,$D_n$、$E_8$、Leech 的伪代码都在里面,照抄即可。"
+      }
+    ],
+    "reality_check": "天花板只有 $1.53$ dB,折合每维 $0.25$ bit——别指望翻倍级别的收益。而且点云压缩的码率大头往往在几何八叉树那边,只动属性隐空间的量化器,端到端 BD-rate 会被稀释一大截。真要做,先算清楚目标数据集上属性码率占比;占不到三成就换靶子。"
+  },
   "papers": [
     {
       "domain": "ai",

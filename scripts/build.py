@@ -155,6 +155,7 @@ def main() -> None:
     archive_tpl = env.get_template("archive.html")
     likes_tpl = env.get_template("likes.html")
     research_tpl = env.get_template("research.html")
+    crossover_tpl = env.get_template("crossover.html")
     gallery_tpl = env.get_template("gallery.html")
 
     if SITE.exists():
@@ -204,6 +205,12 @@ def main() -> None:
             idea_issues=idea_issues, idea_domains=idea_domains, root=""
         ),
         encoding="utf-8",
+    )
+
+    # 思想碰撞归档页:汇总所有期的 crossover,按日期倒序
+    cross_issues = [i for i in reversed(issues) if i.get("crossover")]
+    (SITE / "crossover.html").write_text(
+        crossover_tpl.render(cross_issues=cross_issues, root=""), encoding="utf-8"
     )
 
     # 可视化组件目录(开发/参考页,不挂主导航)
