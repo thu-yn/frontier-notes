@@ -1,31 +1,32 @@
 {
   "date": "2026-09-15",
-  "editor_note": "今天 arXiv 的接口又给我们甩了 429,按领域和研究点定向抓的两块全空了,所以整份摘录清一色是 AI(HF 榜)。好在榜单本身够有料:最扎眼的是「评测/数据到底有没有用」这条暗线——DataFlex-RL 花大力气比了八种 RLVR 数据挑选策略,结论是没一个能稳稳打过最朴素的均匀采样;Benchmark Radar 干脆把满世界的 benchmark 做成一个能搜的活数据库。想点开一篇的话,我先推 DataFlex-RL,那个「花哨方法打不过 baseline」的负结果比任何 SOTA 都值钱。行业面则在吵另一件事:黄仁勋当着特朗普面说「不会让 AI 减速」,微软、奥巴马、一堆高管各执一词,热闹得像春晚。repos 里也有个共同主题——把大模型塞进自己机器:colibri 用纯 C 从磁盘流式加载 MoE 专家,本地语音克隆的 VoiceStudio 也在涨。每日一理换到延森不等式,正好和这些模型里的 ELBO、EM 那套「凸一下就有下界」的把戏对得上。",
+  "editor_note": "arXiv 又双叒把接口甩了 429——按领域和研究点定向抓的三块全空,连数学物理那摞 theory_papers 也一条没进来,所以今天的摘录还是清一色 HF 榜(AI 为主)。榜单本身有个扎眼的主题:半张榜都在喊「自我进化 / 智能体超智能」,Google 的 Dream-RSI、一堆名字花里胡哨的 foundation model 挤在一起,我筛的时候手比平时狠——名头越大越先划掉。真要点开一篇,我推 DataFlex-RL:它老老实实比了八种 RLVR 数据挑选法,结论是没一个能稳稳打过最朴素的均匀采样,这种敢发负结果的论文比又一个「超智能」值钱。行业面则被另一件事刷屏:Dario Amodei 一篇《We Must Pace the Frontier》点着了「该不该给 AI 踩刹车」的大讨论,Altman、哈萨比斯、马斯克松散附议,黄仁勋当着特朗普面唱反调,微软甩出 37 页「以人为本」行为准则,已经有人在问这到底是安全公约还是卡特尔。repos 那边气质一致:colibri 用纯 C 从磁盘流式加载 MoE 专家,VoiceStudio、VoxCPM、StepAudio 一堆本地语音生成扎堆猛涨,「把大模型塞进自己机器」仍是主旋律。每日一理换到佩龙–弗罗贝尼乌斯定理,正好和这些排序、马尔可夫、PageRank 的老把戏对得上;思想碰撞继续拿格量化撞点云压缩。",
   "math_note": {
-    "name": "延森不等式",
-    "name_en": "Jensen's Inequality",
-    "field": "凸分析 / 概率论",
-    "one_liner": "凸函数面前,先平均再作用永远不吃亏。",
-    "statement": "对一个凸函数 $f$(图像像个碗、开口朝上)和一个随机变量 $X$,有 $f(\\mathbb{E}[X])\\le \\mathbb{E}[f(X)]$——先取平均再喂进函数,不会超过先喂进函数再取平均。这里 $\\mathbb{E}[\\cdot]$ 是期望(加权平均)。如果 $f$ 是凹的(碗口朝下,如 $\\log$),不等号反过来:$f(\\mathbb{E}[X])\\ge \\mathbb{E}[f(X)]$。等号只在 $f$ 在 $X$ 取值范围上退化成直线、或 $X$ 几乎是常数时成立。",
-    "origin": "约翰·延森(Johan Jensen)是位丹麦电话工程师出身的业余数学家,1906 年在一篇讲凸函数的论文里把这条不等式系统地写了出来。凸函数「弦在弧上方」的直觉更早就有(赫尔德、哈达玛都碰过),延森的贡献是把它推广到任意有限权重乃至积分形式,并指出它是一大批经典不等式(算术-几何平均、赫尔德、柯西-施瓦茨)背后的同一个骨架。",
+    "name": "佩龙–弗罗贝尼乌斯定理",
+    "name_en": "Perron–Frobenius Theorem",
+    "field": "线性代数 / 矩阵论",
+    "one_liner": "处处正耦合的系统,长期只认一条正的主方向。",
+    "statement": "给一个方阵 $A$,若它的元素全为正(或非负且「不可约」,即对应的有向图连通),则它必有一个实特征值 $\\lambda_{\\mathrm{PF}}>0$,严格大于其余所有特征值的模,正好等于谱半径 $\\rho(A)$;而且这个主特征值对应的特征向量 $v$ 可取成分量全为正,并在相差一个正常数倍的意义下唯一。一句话:「处处正耦合」的系统里,总有一个最大的正增长率 $\\lambda_{\\mathrm{PF}}$ 和一条全正的主方向 $v$。",
+    "origin": "1907 年,德国数学家奥斯卡·佩龙(Oskar Perron)在研究连分数时注意到:元素全为正的方阵,总有一个最大的、正的实特征值,还配一条全正的特征向量。五年后格奥尔格·弗罗贝尼乌斯(Georg Frobenius)把条件放宽到「非负且不可约」,让结论能覆盖更多现实里稀疏但连通的系统。这条定理当年只是纯矩阵论里的一个好奇心,几十年后却成了马尔可夫链、种群模型乃至 Google 网页排名的共同地基。",
     "derivation": [
-      { "math": "f(\\lambda x+(1-\\lambda)y)\\le \\lambda f(x)+(1-\\lambda)f(y),\\quad 0\\le\\lambda\\le1", "note": "凸的定义:任取两点,连成一条弦,弦一定压在函数曲线的上方。这是整条不等式唯一的出发点。" },
-      { "math": "f(x)\\ge f(\\mu)+g\\,(x-\\mu),\\quad \\mu=\\mathbb{E}[X]", "note": "凸函数在任意一点都能垫一条「支撑线」,整条曲线都在这条切线之上。挑在均值 $\\mu$ 处画这条线,斜率记为 $g$(可导时就是 $f'(\\mu)$)。" },
-      { "math": "\\mathbb{E}[f(X)]\\ge f(\\mu)+g\\,\\big(\\mathbb{E}[X]-\\mu\\big)", "note": "对上一步两边同时取期望。期望是线性的,右边照样拆开。" },
-      { "math": "\\mathbb{E}[X]-\\mu=0\\ \\Rightarrow\\ \\mathbb{E}[f(X)]\\ge f(\\mu)=f(\\mathbb{E}[X])", "note": "因为 $\\mu$ 本来就是均值,那个偏差项的期望恰好为零,尾巴一掉,延森不等式就露出来了。" }
+      { "math": "x_0=\\sum_i c_i v_i", "note": "把任意初始向量按特征向量展开(先假定可对角化),$v_1$ 是主特征向量,只要起点不刻意躲开它就有 $c_1\\neq 0$。" },
+      { "math": "A^k x_0=\\sum_i c_i\\,\\lambda_i^{\\,k}\\,v_i", "note": "反复作用 $A$ 共 $k$ 次,每个分量按自己的特征值 $\\lambda_i$ 被放大 $k$ 次幂。" },
+      { "math": "A^k x_0=\\lambda_1^{\\,k}\\Big(c_1 v_1+\\sum_{i\\ge 2} c_i\\big(\\lambda_i/\\lambda_1\\big)^{k} v_i\\Big)", "note": "把最大的 $\\lambda_1^{\\,k}$ 提到括号外,里面每个比值 $\\lambda_i/\\lambda_1$ 的模都严格小于 1。" },
+      { "math": "\\big(\\lambda_i/\\lambda_1\\big)^{k}\\longrightarrow 0\\quad(k\\to\\infty)", "note": "正是 PF 定理保证的「主特征值严格更大」让这些尾项指数衰减,越迭代越可忽略。" },
+      { "math": "A^k x_0\\big/\\lambda_1^{\\,k}\\longrightarrow c_1 v_1", "note": "尾巴掉光,只剩主方向。归一化后不管从哪个起点出发都收敛到同一条全正向量——这就是幂迭代和 PageRank 收敛的原理;正性则保证 $\\lambda_1$ 为实、$v_1$ 全正。" }
     ],
     "applications": [
-      { "area": "机器学习(变分推断/EM)", "detail": "$\\log$ 是凹的,用延森把 $\\log$ 的期望往里推,就得到对数似然的下界(ELBO),VAE、扩散模型、EM 算法都靠这一步把「算不动的边际似然」换成「能优化的下界」。" },
-      { "area": "概率与统计", "detail": "取 $f(x)=x^2$ 立刻得到 $\\mathbb{E}[X]^2\\le\\mathbb{E}[X^2]$,也就是方差非负;算术-几何平均不等式则是对 $\\log$ 用一次延森的特例。" },
-      { "area": "信息论", "detail": "KL 散度恒非负(吉布斯不等式)本质上就是对 $-\\log$ 用延森,这条是编码定理和互信息各种界的地基。" },
-      { "area": "金融/经济学", "detail": "效用函数凹对应「风险厌恶」:$\\mathbb{E}[u(X)]\\le u(\\mathbb{E}[X])$ 说明拿确定的均值收益比拿同均值的赌局更让人满意,这就是保险和风险溢价存在的数学理由。" }
+      { "area": "搜索引擎(PageRank)", "detail": "把网页链接建成一个随机(列和为 1)矩阵,PF 定理保证它有唯一的正稳态分布,那就是网页重要度排名;幂迭代几十步即可算出。" },
+      { "area": "马尔可夫链", "detail": "不可约非周期马氏链的转移矩阵满足 PF 条件,唯一的正特征向量就是平稳分布,任意初始分布都会收敛到它——这也是 MCMC 采样能成立的前提。" },
+      { "area": "种群动力学", "detail": "Leslie 矩阵描述按年龄分组的繁殖,PF 主特征值 $\\lambda_{\\mathrm{PF}}$ 就是长期人口增长率,主特征向量给出稳定的年龄结构。" },
+      { "area": "经济学(投入产出)", "detail": "Leontief 投入产出模型里,PF 定理保证存在唯一一组全正的均衡价格与产出,模型才有经济意义。" }
     ],
-    "takeaway": "曲线弯的方向,决定了「平均」和「作用」谁先谁后更划算——凸就吃亏在波动上、凹就受益于波动,一条不等式把风险、下界、散度全串在了一起。",
+    "takeaway": "只要耦合处处为正,长期行为就被唯一的主特征值 $\\lambda_{\\mathrm{PF}}$ 和它那条全正主方向牢牢主宰——反复迭代抹平一切初始差异,只留下这一条方向。幂迭代、PageRank、马尔可夫收敛,骨子里是同一件事。",
     "viz": {
       "type": "custom",
-      "caption": "拖动曲线上的两个点、或拉动下面的滑块改变混合比例:红点(先平均再作用,在曲线上)始终不高于蓝点(先作用再平均,在弦上),两者的落差就是延森不等式的间隙。",
-      "html": "<div style=\"font-family:system-ui,sans-serif\"><canvas id=\"jz\" width=\"600\" height=\"340\" style=\"max-width:100%;touch-action:none;cursor:pointer\"></canvas><div style=\"margin-top:8px;font-size:13px\">混合比例 λ <input id=\"jzl\" type=\"range\" min=\"0\" max=\"1\" step=\"0.01\" value=\"0.5\" style=\"vertical-align:middle;width:200px\"> <span id=\"jzv\"></span></div></div>",
-      "script": "(function(){var c=el.querySelector('#jz');if(!c)return;var ctx=c.getContext('2d');var W=c.width,H=c.height,pad=36;var xmin=-3,xmax=3,ymin=-0.5,ymax=9.5;function f(x){return x*x;}function X(x){return pad+(x-xmin)/(xmax-xmin)*(W-2*pad);}function Y(y){return H-pad-(y-ymin)/(ymax-ymin)*(H-2*pad);}var ax=-2.1,bx=1.9;var lam=0.5;var slider=el.querySelector('#jzl'),lab=el.querySelector('#jzv');function draw(){ctx.clearRect(0,0,W,H);ctx.strokeStyle='#d0d4da';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad,Y(0));ctx.lineTo(W-pad,Y(0));ctx.moveTo(X(0),pad);ctx.lineTo(X(0),H-pad);ctx.stroke();ctx.strokeStyle='#5b6472';ctx.lineWidth=2;ctx.beginPath();for(var i=0;i<=200;i++){var x=xmin+(xmax-xmin)*i/200;var px=X(x),py=Y(f(x));if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();var fa=f(ax),fb=f(bx);ctx.strokeStyle='#2f74ff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(X(ax),Y(fa));ctx.lineTo(X(bx),Y(fb));ctx.stroke();var mx=lam*ax+(1-lam)*bx;var chordY=lam*fa+(1-lam)*fb;var curveY=f(mx);ctx.strokeStyle='#9aa2ad';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(X(mx),Y(chordY));ctx.lineTo(X(mx),Y(curveY));ctx.stroke();ctx.setLineDash([]);function dot(x,y,col){ctx.fillStyle=col;ctx.beginPath();ctx.arc(X(x),Y(y),6,0,7);ctx.fill();}dot(ax,fa,'#2f74ff');dot(bx,fb,'#2f74ff');dot(mx,chordY,'#2f74ff');dot(mx,curveY,'#e5484d');ctx.fillStyle='#333';ctx.font='12px system-ui';ctx.fillText('E[f(X)] (弦, 蓝)',X(mx)+8,Y(chordY)-2);ctx.fillText('f(E[X]) (曲线, 红)',X(mx)+8,Y(curveY)+14);if(lab)lab.textContent='λ='+lam.toFixed(2)+'  间隙='+(chordY-curveY).toFixed(2);}var drag=null;function pos(e){var r=c.getBoundingClientRect();var t=e.touches?e.touches[0]:e;return{x:xmin+(t.clientX-r.left)/(r.width)* (xmax-xmin)};}function nearest(x){return Math.abs(x-ax)<Math.abs(x-bx)?'a':'b';}c.addEventListener('mousedown',function(e){drag=nearest(pos(e).x);});c.addEventListener('mousemove',function(e){if(!drag)return;var x=Math.max(xmin,Math.min(xmax,pos(e).x));if(drag==='a')ax=x;else bx=x;draw();});window.addEventListener('mouseup',function(){drag=null;});c.addEventListener('touchstart',function(e){drag=nearest(pos(e).x);e.preventDefault();},{passive:false});c.addEventListener('touchmove',function(e){if(!drag)return;var x=Math.max(xmin,Math.min(xmax,pos(e).x));if(drag==='a')ax=x;else bx=x;draw();e.preventDefault();},{passive:false});window.addEventListener('touchend',function(){drag=null;});if(slider)slider.addEventListener('input',function(){lam=parseFloat(slider.value);draw();});draw();})();"
+      "caption": "拖动滑块选一个初始方向,反复点「迭代一步」:不管从哪儿出发,归一化后的向量都会一步步滑向红色那条主特征向量方向(λ=3),这就是佩龙–弗罗贝尼乌斯定理说的「主方向主宰长期行为」,也是幂迭代 / PageRank 的原理。",
+      "html": "<div style='font-family:system-ui,sans-serif'><canvas id='pf' width='600' height='340' style='max-width:100%;touch-action:none'></canvas><div style='margin-top:8px;font-size:13px'>初始方向 <input id='pfa' type='range' min='0' max='6.28' step='0.01' value='0.5' style='vertical-align:middle;width:180px'> <button id='pfs' style='margin-left:8px'>迭代一步</button> <button id='pfr' style='margin-left:4px'>重置</button> <span id='pfv' style='margin-left:6px;color:#555'></span></div></div>",
+      "script": "(function(){var root=el.querySelector('#pf');if(!root)return;var ctx=root.getContext('2d');var W=root.width,H=root.height;var cx=W/2,cy=H/2;var R=130;var A=[[2,1],[1,2]];var seq=[];function nrm(v){var n=Math.hypot(v[0],v[1])||1;return [v[0]/n,v[1]/n];}function ap(v){return nrm([A[0][0]*v[0]+A[0][1]*v[1],A[1][0]*v[0]+A[1][1]*v[1]]);}var slider=el.querySelector('#pfa'),lab=el.querySelector('#pfv');function px(v){return [cx+v[0]*R,cy-v[1]*R];}function ln(dir,col,dash){var d=nrm(dir);ctx.strokeStyle=col;ctx.setLineDash(dash||[]);ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(cx-d[0]*R*1.3,cy+d[1]*R*1.3);ctx.lineTo(cx+d[0]*R*1.3,cy-d[1]*R*1.3);ctx.stroke();ctx.setLineDash([]);}function draw(){ctx.clearRect(0,0,W,H);ctx.strokeStyle='#e2e5ea';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(20,cy);ctx.lineTo(W-20,cy);ctx.moveTo(cx,20);ctx.lineTo(cx,H-20);ctx.stroke();ctx.strokeStyle='#cfd4db';ctx.beginPath();ctx.arc(cx,cy,R,0,7);ctx.stroke();ln([1,-1],'#9aa2ad',[5,5]);ln([1,1],'#e5484d',[6,4]);for(var i=0;i<seq.length;i++){var t=seq.length>1?i/(seq.length-1):1;var col='rgb('+Math.round(47+180*t)+','+Math.round(116-60*t)+','+Math.round(255-200*t)+')';var p=px(seq[i]);if(i>0){var q=px(seq[i-1]);ctx.strokeStyle='rgba(120,130,145,0.5)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(q[0],q[1]);ctx.lineTo(p[0],p[1]);ctx.stroke();}ctx.fillStyle=col;ctx.beginPath();ctx.arc(p[0],p[1],i===seq.length-1?6:4,0,7);ctx.fill();}if(seq.length){var c=px(seq[seq.length-1]);ctx.strokeStyle='#2f74ff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(c[0],c[1]);ctx.stroke();}ctx.fillStyle='#e5484d';ctx.font='12px system-ui';var e=px(nrm([1,1]));ctx.fillText('主特征向量 λ=3',e[0]+6,e[1]-6);if(lab)lab.textContent='已迭代 '+(seq.length-1)+' 步 — 归一化向量正滑向红色主方向';}function reset(){var a=parseFloat(slider.value);seq=[[Math.cos(a),Math.sin(a)]];draw();}function step(){if(seq.length){seq.push(ap(seq[seq.length-1]));if(seq.length>40)seq.shift();}draw();}el.querySelector('#pfs').addEventListener('click',step);el.querySelector('#pfr').addEventListener('click',reset);slider.addEventListener('input',reset);reset();})();"
     }
   },
   "crossover": {
@@ -93,16 +94,16 @@
   "papers": [
     {
       "domain": "ai",
-      "title": "DataFlex-RL: An Evaluation Platform for RLVR Data Policies",
-      "title_zh": "DataFlex-RL:可验证奖励强化学习的数据策略评测平台",
-      "url": "https://arxiv.org/abs/2609.06107",
-      "hf_url": "https://huggingface.co/papers/2609.06107",
-      "authors": "Hao Liang、Mingrui Chen 等",
-      "affiliation": "北京大学",
-      "upvotes": 96,
-      "one_liner": "八种花哨的数据挑选法,没一个能稳稳打过「均匀采样」。",
-      "summary_zh": "RLVR 训练里,选哪些 rollout、怎么加权、各领域配多少,这些「数据策略」一直被认为很关键。作者搭了个统一平台,在同一套 GRPO 配方、Qwen2.5-7B、12 个数学/逻辑/科学 benchmark 上,用 12 个匹配随机种子跑了 13 组配置。结论很反直觉:均匀 GRPO 比未训练基线涨了 7.76 个点,但八种 rollout 挑选或重加权方法里,没有一个的 95% 置信区间能把「相对均匀采样的增益」和零分开。换句话说,很多论文声称的数据策略收益可能是噪声——这种诚实的负结果比又一个 SOTA 值钱。",
-      "tags": ["RLVR", "GRPO", "评测"]
+      "title": "Dream-RSI: Recursive Self-Improvement through Evolving Worlds",
+      "title_zh": "Dream-RSI:在不断演化的世界里做递归自我改进",
+      "url": "https://arxiv.org/abs/2609.14858",
+      "hf_url": "https://huggingface.co/papers/2609.14858",
+      "authors": "Tong Zheng、Xidong Wu 等",
+      "affiliation": "Google",
+      "upvotes": 152,
+      "one_liner": "让 agent 自己进化「探索策略」,而不是把探索写死。",
+      "summary_zh": "递归自我改进的瓶颈其实在探索:搜索空间一大,固定策略就跟不上;而在线优化探索策略又得在延迟、昂贵的长程反馈里摸索,代价高。Dream-RSI 的思路是让 agent 在一批「不断演化的世界(任务环境)」里训练并调整自己的探索策略,把「怎么探索」本身当成可优化的对象。来自 Google,概念开得很大,真正值得看的是它怎么把探索策略的元优化落成能跑的框架——这类工作最容易停在 PPT 阶段。",
+      "tags": ["Agent", "自我改进", "探索"]
     },
     {
       "domain": "ai",
@@ -112,113 +113,125 @@
       "hf_url": "https://huggingface.co/papers/2609.11115",
       "authors": "Koutian Wu、Junjie Zhou 等",
       "affiliation": "卡内基梅隆大学",
-      "upvotes": 75,
+      "upvotes": 151,
       "one_liner": "把满世界的 benchmark 做成一个能搜、还带出处的活数据库。",
-      "summary_zh": "做模型评测的人常有个痛点:想找一个相关 benchmark、定位它的数据集和代码、搞清报告分数背后的设定,得翻半天。Benchmark Radar 每天自动发现新的评测论文、仓库、数据集和发布,汇成一个可搜索的目录,涵盖 LLM、Agent/工具调用、代码、推理、安全等方向,还记录它在各家模型卡和技术报告里被引用、分数随时间的变化。保留出处和引用这点是加分项——评测领域最缺的就是可追溯。当工具用挺实在。",
+      "summary_zh": "做评测的人常有个痛点:想找相关 benchmark、定位它的数据集和代码、搞清报告分数背后的设定,得翻半天。Benchmark Radar 每天自动发现新的评测论文、仓库、数据集和发布,汇成一个可搜索的目录,覆盖 LLM、Agent/工具调用、代码、推理、安全等方向,还记录它在各家模型卡和技术报告里的引用、以及分数随时间的变化。保留出处这点最实在——评测领域最缺的就是可追溯。当工具用。",
       "tags": ["评测", "检索", "基础设施"]
     },
     {
+      "domain": "ai",
+      "title": "DataFlex-RL: An Evaluation Platform for RLVR Data Policies",
+      "title_zh": "DataFlex-RL:可验证奖励强化学习的数据策略评测平台",
+      "url": "https://arxiv.org/abs/2609.06107",
+      "hf_url": "https://huggingface.co/papers/2609.06107",
+      "authors": "Hao Liang、Mingrui Chen 等",
+      "affiliation": "北京大学",
+      "upvotes": 108,
+      "one_liner": "八种花哨的数据挑选法,没一个能稳稳打过「均匀采样」。",
+      "summary_zh": "RLVR 训练里,选哪些 rollout、怎么加权、各领域配多少,这些「数据策略」一直被当成关键。作者搭了个统一平台,在同一套 GRPO 配方、Qwen2.5-7B、12 个数学/逻辑/科学 benchmark 上,用 12 个匹配随机种子跑了 13 组配置。结论反直觉:均匀 GRPO 比未训练基线涨了 7.76 个点,但八种 rollout 挑选或重加权方法里,没有一个的 95% 置信区间能把「相对均匀采样的增益」和零分开。很多论文声称的数据策略收益,可能只是噪声——这种诚实的负结果比又一个 SOTA 值钱。",
+      "tags": ["RLVR", "GRPO", "评测"]
+    },
+    {
+      "domain": "ai",
+      "title": "Vidu S2: Real-Time Interactive, Editable, and Spatial Video Generation",
+      "title_zh": "Vidu S2:实时可交互、可编辑、带空间感的视频生成",
+      "url": "https://arxiv.org/abs/2609.11638",
+      "hf_url": "https://huggingface.co/papers/2609.11638",
+      "authors": "Jintao Zhang、Kai Jiang 等",
+      "affiliation": "清华大学",
+      "upvotes": 106,
+      "one_liner": "720p 数字人能实时生成,还能边播边换衣服、换风格。",
+      "summary_zh": "Vidu S2 分两块:S2-Avatar 是实时交互数字人,支持 720p 实时生成、参考图随时更新、更强的指令跟随(比如让它跳舞);S2-Editing 能对视频流做实时编辑,风格渲染、换装、换角色都行。团队还试了把两者做成实时的空间(立体)视频。亮点是「实时」——大多数视频生成还在离线慢渲,能把交互延迟压下来才谈得上做数字人产品。",
+      "tags": ["视频生成", "数字人", "实时"]
+    },
+    {
+      "domain": "ai",
+      "title": "StepAudio 3 Gen Technical Report",
+      "title_zh": "StepAudio 3 Gen:统一框架下的通用音频生成",
+      "url": "https://arxiv.org/abs/2609.12945",
+      "hf_url": "https://huggingface.co/papers/2609.12945",
+      "authors": "Bin Lin、Bo Zhao 等",
+      "upvotes": 31,
+      "one_liner": "不走扩散,直接在 RVQ 离散 token 上自回归生成一切声音。",
+      "summary_zh": "一个通用音频生成模型,零样本 TTS、音色设计、人声、音效、音乐、氛围语音都能做,还能把多种音频混在一起生成。和近来主流的扩散 Transformer 连续生成不同,它是个在残差向量量化(RVQ)token 上直接建模的离散自回归生成器,自带的 tokenizer 把各类音频统一压到 12.5 Hz。用一套自回归架构吃下所有音频类型,这个统一性是它最有意思的地方,也方便和文本 LLM 那套栈对齐。",
+      "tags": ["音频生成", "TTS", "RVQ"]
+    },
+    {
+      "domain": "ai",
+      "title": "LLaDA-UI: Bringing Block-wise Diffusion to Vision-Language GUI Agents",
+      "title_zh": "LLaDA-UI:把块状扩散带进视觉-语言 GUI 智能体",
+      "url": "https://arxiv.org/abs/2609.13287",
+      "hf_url": "https://huggingface.co/papers/2609.13287",
+      "authors": "Zhangxuan Gu、Haoxing Chen 等",
+      "affiliation": "inclusionAI",
+      "upvotes": 8,
+      "one_liner": "用扩散式并行解码做 GUI agent,赌的是延迟。",
+      "summary_zh": "扩散语言模型(dLLM)靠块并行、任意顺序生成拿到高解码效率,对延迟敏感的场景很有吸引力。GUI agent 正是天然试验场——它要反复感知屏幕状态、实时吐出带空间定位的结构化动作。问题是 dLLM 能不能在扩成多模态 GUI agent 的同时,保住并行解码的优势。LLaDA-UI 就是来回答这个的。方向新鲜:大多数 GUI agent 还在用自回归,拿扩散来换吞吐是条少有人走的路,值得盯。",
+      "tags": ["GUI Agent", "扩散LLM", "多模态"]
+    },
+    {
+      "domain": "ai",
+      "title": "Kaininja: Extending Native 3D Generators to the Part Level",
+      "title_zh": "Kaininja:把「一张图生一个整体」的 3D 生成器扩到部件级",
+      "url": "https://arxiv.org/abs/2609.15659",
+      "hf_url": "https://huggingface.co/papers/2609.15659",
+      "authors": "Ruihan Yu、Lian Fu 等",
+      "affiliation": "Alaya Lab",
+      "upvotes": 12,
+      "one_liner": "别再生成一坨焊死的网格,让它天生带可拆的部件。",
+      "summary_zh": "原生 3D 生成器(TRELLIS.2 那类)能从一张图生出高保真、带材质的网格,但输出是一整个焊死的物体;而下游的编辑、绑骨、仿真都要在「部件级」资产上做。直接拿分割网络去切生成好的网格,又慢又受分割精度拖累。Kaininja 想要一个简单办法,把现有的原生 3D 生成器直接扩成部件级输出,而不是事后再切。对做 3D 资产、点云和仿真的人挺实用——部件化是这条链路里长期的堵点。",
+      "tags": ["3D生成", "部件级", "网格"]
+    },
+    {
+      "domain": "ai",
+      "title": "Pick Your Poison: Learning to Select Poison Sets for Stronger LLM Backdoor Attacks",
+      "title_zh": "Pick Your Poison:学会挑投毒样本,把 LLM 后门攻击做得更强",
+      "url": "https://arxiv.org/abs/2609.15029",
+      "hf_url": "https://huggingface.co/papers/2609.15029",
+      "authors": "Aashiq Muhamed、Mona T. Diab 等",
+      "affiliation": "Anthropic",
+      "upvotes": 2,
+      "one_liner": "投毒条数不变,只换挑哪些样本,成功率能从 3% 飙到 80%。",
+      "summary_zh": "后门投毒是往干净微调数据里掺入带触发器的样本,让模型见到触发器就产生指定行为。以往评测通常固定投毒条数、从候选池里随机采样。作者指出这会严重低估最坏情况:在三个 LLaMA-3-8B 后门设定里,固定模型、干净数据和投毒条数,仅仅因为「选了哪些投毒样本」,攻击成功率就在 3% 到 80% 之间横跳。他们进而学一个挑投毒集的策略把攻击做强。提醒很实在:评估后门风险不能只看「掺了多少」,还得看「掺的是哪些」。",
+      "tags": ["安全", "后门攻击", "数据投毒"]
+    },
+    {
       "domain": "embodied",
-      "title": "Breaking the Vision-Action Shortcut: Latent Interface Training for Generalizable Robotics Foundation Models",
-      "title_zh": "打破视觉-动作捷径:面向可泛化机器人基座模型的潜在接口训练",
-      "url": "https://arxiv.org/abs/2609.12641",
-      "hf_url": "https://huggingface.co/papers/2609.12641",
-      "authors": "Jianman Lin、Shailesh 等",
-      "affiliation": "新加坡国立大学",
-      "upvotes": 63,
-      "one_liner": "别让机器人靠背景色蒙对动作,一换场景就露馅。",
-      "summary_zh": "机器人基座模型在训练分布内表现好,但视觉一变(换光照、换背景)就掉链子。原因是模型学会了抄「视觉-动作捷径」:抓住那些恰好和示范动作相关、其实和任务无关的画面线索。作者提出潜在接口训练(LIT),分两阶段先建立一个只保留任务相关空间信息的中间表示,再从它生成动作,框架无关、可套在现有 VLA 上。思路对——泛化的敌人往往不是模型不够大,而是它偷懒抄了错的相关性。",
-      "tags": ["VLA", "机器人", "泛化"]
+      "title": "Attention-DP3: Spatially Object-aware 3D Diffusion Policy via Geometry-aligned Attentional Conditioning",
+      "title_zh": "Attention-DP3:用几何对齐注意力做「看得懂物体」的 3D 扩散策略",
+      "url": "https://arxiv.org/abs/2609.13318",
+      "hf_url": "https://huggingface.co/papers/2609.13318",
+      "authors": "Changbo Yan、Zhongbo Zhang 等",
+      "affiliation": "大连理工大学",
+      "upvotes": 1,
+      "one_liner": "给 3D 扩散策略加一层物体注意力,专治杂乱遮挡下抓错东西。",
+      "summary_zh": "3D 点云观测在杂乱场景里天生有歧义:目标物可能被部分遮挡,或和长得像的干扰物挤在一起,标准的 3D 扩散策略(DP3)一复杂就定位不准。Attention-DP3 的做法是通过注意力把「物体级」几何线索注入进去,而 DP3 的扩散主干原样不动——是个即插即用味道的模块。对做点云操作策略的人,这种「不换骨架、只加条件」的改法复现成本低、也好迁移,值得在自己的仿真里试一把。",
+      "tags": ["点云", "扩散策略", "机器人操作"]
     },
     {
-      "domain": "ai",
-      "title": "EvoSafeHarness: Evolving Model- and Domain-Specific Harnesses for Securing Agents",
-      "title_zh": "EvoSafeHarness:为智能体演化出模型与领域专属的安全护栏",
-      "url": "https://arxiv.org/abs/2609.05903",
-      "hf_url": "https://huggingface.co/papers/2609.05903",
-      "authors": "Nanxi Li、Yingzi Ma 等",
-      "affiliation": "约翰霍普金斯大学",
-      "upvotes": 59,
-      "one_liner": "一套护栏走天下不行,得按模型和场景各自演化。",
-      "summary_zh": "LLM 智能体开始把语言变成真实世界的动作,既要防间接提示注入,也要防直接的有害请求。系统级安全护栏是模型自带防御之外的一层强制执行,但现有护栏大多由专家一次设计好、跨模型跨领域通用——问题是保护是「因地制宜」的:同样的严格度对一个模型刚好、对另一个就过度拦截。作者用演化搜索为每个模型、每个领域自动生成专属护栏,在拦截有害行为和保留可用性之间找平衡点。Agent 安全从「静态规则」转向「自适应」是对的方向。",
-      "tags": ["Agent", "安全", "提示注入"]
+      "domain": "embodied",
+      "title": "ReactHuman: A Physics-Grounded Benchmark for Human-Like Reactive Decision-Making in Embodied Multimodal LLMs",
+      "title_zh": "ReactHuman:给具身多模态大模型出一份「物理即时反应」考卷",
+      "url": "https://arxiv.org/abs/2609.10895",
+      "hf_url": "https://huggingface.co/papers/2609.10895",
+      "authors": "Yizhan Li、Jianxin You 等",
+      "upvotes": 33,
+      "one_liner": "会讲物理不算数,得能瞬间接住滑掉的盘子、躲开掉下的刀。",
+      "summary_zh": "现有具身评测要么用视频问答被动测「直觉物理」,要么盯着导航、整理这类长程任务,没人量过模型能不能把物理理解变成即时的、安全攸关的动作。ReactHuman 号称第一个物理接地的基准,专测这种「反应式决策」:突发危险发生时,模型能不能立刻做出人一样的躲避/接住动作。把家用机器人当决策核心来用,这类瞬时安全反应是硬门槛,基准做得对路。",
+      "tags": ["具身智能", "benchmark", "物理推理"]
     },
     {
-      "domain": "ai",
-      "title": "SAS: Simple Attention Sparsification via End-to-End Optimization of Context Ranking",
-      "title_zh": "SAS:通过端到端优化上下文排序的简单注意力稀疏化",
-      "url": "https://arxiv.org/abs/2609.13141",
-      "hf_url": "https://huggingface.co/papers/2609.13141",
-      "authors": "Zhiwei Li、Lei Zhu 等",
-      "affiliation": "腾讯混元",
-      "upvotes": 50,
-      "one_liner": "别再照抄稠密注意力的权重,直接按「对预测的影响」来选 token。",
-      "summary_zh": "训练后注意力稀疏化想把 Transformer 那个二次方的注意力开销降下来,做法是给每个 query 只挑一小撮上下文单元。现有可训练方法通常用轻量打分器加硬 Top-K,梯度被截断,只好去蒸馏原模型逐层的稠密注意力分布。问题是「按稠密权重排序」和「在固定预算下对预测的实际影响」并不一致。SAS 让上下文排序端到端地对齐语言建模损失来学,绕开了这个错位。属于把 KV 预算花在刀刃上的思路,工程上值得一试。",
-      "tags": ["注意力", "稀疏化", "长上下文"]
-    },
-    {
-      "domain": "ai",
-      "title": "X-AuT: Progressive Audio-Encoder Compression for Speech LLMs with Cross-Scale Distillation",
-      "title_zh": "X-AuT:面向语音大模型的渐进式音频编码器压缩与跨尺度蒸馏",
-      "url": "https://arxiv.org/abs/2609.11412",
-      "hf_url": "https://huggingface.co/papers/2609.11412",
-      "authors": "Haojun Zhang、Yi Zou 等",
-      "affiliation": "小鹏 AI",
-      "upvotes": 43,
-      "one_liner": "砍音频编码器层数不能硬删,得一边剪一边把表示对回去。",
-      "summary_zh": "降低音频编码器深度能省语音大模型的推理成本,但整块删层会扰动喂给解码器的 embedding,导致漏字和提前结束。X-AuT 先用短行为探针挑该保留哪些层组合,再靠表示对齐、跨尺度蒸馏、有计划的学生策略监督和 LoRA 微调把剪过的模型「修回来」,语言模型主干全程冻结,只让注意力 LoRA 和输出嵌入自适应。训练数据取自转写一致性流水线里最高一致的那一档。是把大模型压进端侧设备的实用活。",
-      "tags": ["语音LLM", "模型压缩", "蒸馏"]
-    },
-    {
-      "domain": "ai",
-      "title": "Negative Self-Distillation: Learning to Reason by Avoiding Flaws",
-      "title_zh": "负向自蒸馏:靠「避开错误」来学会推理",
-      "url": "https://arxiv.org/abs/2609.11699",
-      "hf_url": "https://huggingface.co/papers/2609.11699",
-      "authors": "Rongcan Pei、Zhepei Wei 等",
-      "upvotes": 32,
-      "one_liner": "逼模型模仿「装作很自信」的解题过程,反而把它的推理教坏了。",
-      "summary_zh": "在线自蒸馏(OPSD)让模型拿着标准答案当「特权信息」自己教自己,近来被发现会在复杂推理上明显掉分:因为它逼学生去模仿一条借助答案、人为自信的推理轨迹,反而压制了模型表达不确定、自我探索和纠错的行为——而这些恰恰是解难题需要的。作者提出负向自蒸馏(NSD),换个方向,让模型学「不要犯哪些错」而非「照抄自信答案」。这个「模仿假自信会害人」的观察本身就挺有意思。",
-      "tags": ["推理", "自蒸馏", "LLM"]
-    },
-    {
-      "domain": "ai",
-      "title": "TempCloze: Can Video-LLMs Identify the Missing Middle?",
-      "title_zh": "TempCloze:视频大模型能补出「缺失的中段」吗?",
-      "url": "https://arxiv.org/abs/2609.01515",
-      "hf_url": "https://huggingface.co/papers/2609.01515",
-      "authors": "Wenqi Pei、Henry Hengyuan Zhao 等",
-      "affiliation": "香港大学",
-      "upvotes": 30,
-      "one_liner": "把选项文字的漏洞堵上,逼视频模型真的靠「看」来推时序。",
-      "summary_zh": "现有视频时序推理 benchmark 大多经语言中介,模型能靠选项措辞、答案相关性或语言先验抄捷径。TempCloze 改成完形填空式:给你视频的开头和结尾片段,让模型从四个候选里选出真正的中段。它精筛了 1521 段视频、以长镜头和第一视角为主,并沿语义(该发生什么)、对齐(该何时发生)、进展(该如何演进)三个维度构造同源干扰项,把语言捷径尽量堵死。评测协议干净,适合当视觉时序推理的试金石。",
-      "tags": ["视频LLM", "时序推理", "benchmark"]
-    },
-    {
-      "domain": "ai",
-      "title": "Studying Image Tokenizers as Visual Languages in Unified Multimodal Models",
-      "title_zh": "把图像分词器当作统一多模态模型里的「视觉语言」来研究",
-      "url": "https://arxiv.org/abs/2609.09143",
-      "hf_url": "https://huggingface.co/papers/2609.09143",
-      "authors": "Siting Li、Zhengyang Wang 等",
-      "affiliation": "Amazon Frontier AI & Robotics",
-      "upvotes": 28,
-      "one_liner": "图像 token 和文字一起建模时到底好不好学,拿验证损失量出来。",
-      "summary_zh": "图像分词器定义了统一多模态模型的「视觉语言」,但过去大多只用孤立指标、或只测生成/只测理解,没看清视觉 token 和文字联合建模时的真实表现。作者搭了个纯自回归的可控实验台,在多模态持续预训练中同时跟踪文本、图像、文生图、图生文四类任务的验证损失,研究它们怎么随规模变化、和下游性能怎么关联,进而衡量「图文联合可学性」和分词器设计的好坏。属于把多模态里一个含糊已久的部件说清楚的基础工作。",
-      "tags": ["多模态", "分词器", "预训练"]
-    },
-    {
-      "domain": "ai",
-      "title": "Building Multilingual Bridges: Data Mixing as the Pillar of Generalization for In-Language Reasoning",
-      "title_zh": "搭建多语桥梁:数据配比是母语内推理泛化的支柱",
-      "url": "https://arxiv.org/abs/2609.10445",
-      "hf_url": "https://huggingface.co/papers/2609.10445",
-      "authors": "Mehrnaz Mofakhami、Ananya Sahu 等",
-      "affiliation": "Cohere Labs",
-      "upvotes": 27,
-      "one_liner": "让模型用你提问的语言推理,关键不在算法而在数据怎么配。",
-      "summary_zh": "推理模型进步很大,但能力高度以英语为中心——不管你用什么语言提问,它基本都在心里用英语推。这对非英语用户不友好,还容易丢掉原问题的意图和用母语更好表达的知识。作者主攻「母语内推理」:让模型始终用用户提问的语言完成推理链,并从数据角度切入,系统研究怎么优化训练数据的语言配比来撑起这种泛化。结论落在「配方」而非新算法上,对做多语落地的团队直接有用。",
-      "tags": ["多语言", "推理", "数据配比"]
+      "domain": "embodied",
+      "title": "Agent as Policy for Robotic Manipulation",
+      "title_zh": "Agent as Policy:让通用智能体直接当机器人的控制策略",
+      "url": "https://arxiv.org/abs/2609.12541",
+      "hf_url": "https://huggingface.co/papers/2609.12541",
+      "authors": "Mengzhao Jia、Yang Lin 等",
+      "affiliation": "圣母大学",
+      "upvotes": 4,
+      "one_liner": "不做任何任务专属训练,让 agent 边看边写程序边纠错地开机器人。",
+      "summary_zh": "作者展示了一个通用 agent 能全程直接驱动实体机器人,不需要任何任务或环境专属训练。给定任务和机器人接口,agent 自己解读视觉证据、写可执行程序、下发运动指令,并根据物理结果实时修正动作——把大模型的推理和编程能力直接接到机械臂上。思路干净:与其为每个任务训一个策略,不如让会写代码的 agent 当那个策略。局限也明显,实时性和对底层控制接口的依赖是它能走多远的关键。",
+      "tags": ["VLA", "机器人", "training-free"]
     }
   ],
   "repos": [
@@ -227,60 +240,60 @@
       "name": "JustVugg/colibri",
       "url": "https://github.com/JustVugg/colibri",
       "language": "C",
-      "stars": 31931,
-      "stars_today": "2,233",
+      "stars": 32565,
+      "stars_today": "2,173",
       "one_liner": "纯 C、零依赖,专家从磁盘流式加载——小引擎跑大 MoE。",
-      "summary_zh": "一个极小的推理引擎,主打在你手头现有的硬件上跑前沿 MoE 模型:纯 C 写成、没有外部依赖,把 MoE 的各个专家按需从磁盘流式读进来,而不是一次性塞满显存/内存。适合显存有限还想本地折腾大模型、或者想搞明白 MoE 推理内部机制的人。今天一天涨了两千多 star,是这波「把大模型塞进自己机器」热潮里最出圈的一个。"
-    },
-    {
-      "domain": "ai",
-      "name": "alibaba/open-code-review",
-      "url": "https://github.com/alibaba/open-code-review",
-      "language": "Go",
-      "stars": 25521,
-      "stars_today": "1,796",
-      "one_liner": "确定性流水线 + LLM Agent 的混合架构,给出精确到行的评审意见。",
-      "summary_zh": "阿里开源的代码评审工具,号称在其内部规模上经过实战检验。架构是混合式的:确定性流水线负责稳定、可控的检查,LLM Agent 负责需要理解上下文的判断,产出精确到行级的评论。想在 CI 里挂一个既快又不全靠模型瞎猜的自动 review,可以拿它当起点。"
-    },
-    {
-      "domain": "ai",
-      "name": "multimodal-art-projection/YuE",
-      "url": "https://github.com/multimodal-art-projection/YuE",
-      "language": "Python",
-      "stars": 8287,
-      "stars_today": "578",
-      "one_liner": "带符号化编排的开源音乐生成,还能零样本翻唱和 agent 式编辑。",
-      "summary_zh": "YuE2 是一套前沿音乐生成模型,亮点在于用符号化的规划来组织生成(而非纯波形黑箱),支持零样本翻唱、以及 agent 式的音乐编辑流程。对做音乐生成、想要可控性和可编辑性而不是一键出歌的研究者和创作者比较对味,也是少见的开源音乐基座。"
+      "summary_zh": "一个极小的推理引擎,主打在你手头现有的硬件上跑前沿 MoE 模型:纯 C 写成、没有外部依赖,把 MoE 的各个专家按需从磁盘流式读进来,而不是一次性塞满内存/显存。适合显存有限还想本地折腾大模型、或想搞清楚 MoE 推理机制的人。今天又涨了两千多 star,是这波「把大模型塞进自己机器」热潮里最出圈的一个。"
     },
     {
       "domain": "ai",
       "name": "debpalash/VoiceStudio",
       "url": "https://github.com/debpalash/VoiceStudio",
       "language": "Python",
-      "stars": 29027,
-      "stars_today": "2,774",
+      "stars": 29791,
+      "stars_today": "2,776",
       "one_liner": "全本地的 ElevenLabs 平替:克隆、配音、转写一条龙。",
-      "summary_zh": "开源、完全本地运行的语音工作台,把声音克隆、音色设计、视频配音、听写、转写、有声书制作都装进一个工具里,定位是 ElevenLabs 的自托管替代品。在意数据隐私、不想把语音发到云端、或者想自己接进流水线的人可以看看。今天涨得很猛,和 colibri 一起体现了「把模型跑在自己机器上」的诉求。"
+      "summary_zh": "开源、完全本地运行的语音工作台,把声音克隆、音色设计、视频配音、听写、转写、有声书制作都装进一个工具,定位是 ElevenLabs 的自托管替代品。在意数据隐私、不想把语音发上云、或想接进自己流水线的人可以看看。今天涨得很猛,和 colibri 一起体现「模型跑在自己机器上」的诉求。"
     },
     {
       "domain": "ai",
-      "name": "Panniantong/Agent-Reach",
-      "url": "https://github.com/Panniantong/Agent-Reach",
+      "name": "OpenBMB/VoxCPM",
+      "url": "https://github.com/OpenBMB/VoxCPM",
       "language": "Python",
-      "stars": 81168,
-      "stars_today": "640",
-      "one_liner": "给 agent 装上一双眼睛:一个 CLI 读遍全网,不用付 API 费。",
-      "summary_zh": "让 AI agent 能读取和搜索 Twitter、Reddit、YouTube、GitHub、B 站、小红书等平台内容,统一成一个 CLI、宣称零 API 费用。适合做需要实时抓取社交/内容平台信息的 agent 或研究,省去逐个对接各家付费接口的麻烦。使用时注意各平台的抓取条款和合规边界。"
+      "stars": 37482,
+      "stars_today": "216",
+      "one_liner": "免 tokenizer 的多语种 TTS,音色设计和拟真克隆都能玩。",
+      "summary_zh": "OpenBMB 的 VoxCPM2,一个不依赖显式 tokenizer 的文本转语音模型,主打多语种语音生成、创意音色设计和逼真的声音克隆。免 tokenizer 这条路线在语音上还算少见,想要可控音色又不想被固定词表卡住的人值得试。和 VoiceStudio、StepAudio 一起,今天的语音生成扎堆热闹。"
+    },
+    {
+      "domain": "ai",
+      "name": "multimodal-art-projection/YuE",
+      "url": "https://github.com/multimodal-art-projection/YuE",
+      "language": "Python",
+      "stars": 8633,
+      "stars_today": "559",
+      "one_liner": "带符号化编排的开源音乐生成,还能零样本翻唱和 agent 式编辑。",
+      "summary_zh": "YuE2 是一套开源音乐生成模型,亮点是用符号化的规划来组织生成(而非纯波形黑箱),支持零样本翻唱和 agent 式的音乐编辑流程。对想要可控性和可编辑性、而不是一键出歌的研究者与创作者比较对味,也是少见的开源音乐基座。"
+    },
+    {
+      "domain": "ai",
+      "name": "alibaba/open-code-review",
+      "url": "https://github.com/alibaba/open-code-review",
+      "language": "Go",
+      "stars": 26461,
+      "stars_today": "1,571",
+      "one_liner": "确定性流水线 + LLM Agent 的混合架构,给出精确到行的评审意见。",
+      "summary_zh": "阿里开源的代码评审工具,号称在其内部规模上实战检验过。架构是混合式的:确定性流水线负责稳定可控的检查,LLM Agent 负责需要理解上下文的判断,产出精确到行级的评论。想在 CI 里挂一个既快又不全靠模型瞎猜的自动 review,可以拿它当起点。"
     },
     {
       "domain": "ai",
       "name": "TauricResearch/TradingAgents",
       "url": "https://github.com/TauricResearch/TradingAgents",
       "language": "Python",
-      "stars": 106048,
-      "stars_today": "756",
-      "one_liner": "多智能体分工模拟一家交易团队的金融决策框架。",
-      "summary_zh": "一个多 agent 的 LLM 金融交易框架,用多个分工的智能体(分析、研究、交易等角色)协作来模拟交易决策流程。对研究多智能体协作、把 LLM 用在金融/量化场景的人是个成熟参考。当然是研究和实验用途,真拿去实盘请自行掂量风险。"
+      "stars": 106354,
+      "stars_today": "745",
+      "one_liner": "多智能体分工模拟一支交易团队的金融决策框架。",
+      "summary_zh": "一个多 agent 的 LLM 金融交易框架,用多个分工的智能体(分析、研究、交易等角色)协作来模拟交易决策流程。对研究多智能体协作、把 LLM 用在金融/量化场景的人是个成熟参考。研究实验用途,真拿去实盘请自行掂量风险。"
     },
     {
       "domain": "embodied",
@@ -288,81 +301,81 @@
       "url": "https://github.com/ruvnet/RuView",
       "language": "Rust",
       "stars": 93801,
-      "stars_today": "370",
+      "stars_today": "383",
       "one_liner": "用普通 WiFi 信号做空间感知和生命体征监测,一个像素都不拍。",
-      "summary_zh": "把商用 WiFi 信号转成实时的空间智能、生命体征监测和存在检测,全程不用摄像头。思路是从无线信道状态的扰动里反推人的位置和呼吸心跳,适合关心非视觉感知、隐私友好的室内监测的人。Rust 写成、性能导向,属于「无摄像头感知」这个小众但有意思的方向。"
+      "summary_zh": "把商用 WiFi 信号转成实时的空间智能、生命体征监测和存在检测,全程不用摄像头。思路是从无线信道状态的扰动里反推人的位置和呼吸心跳,适合关心非视觉、隐私友好的室内感知的人。Rust 写成、性能导向,属于「无摄像头感知」这个小众但有意思的方向。"
     }
   ],
   "news": [
     {
       "domain": "ai",
-      "title_zh": "该不该给 AI 踩刹车?黄仁勋、微软、奥巴马各执一词",
-      "url": "https://techcrunch.com/2026/09/14/nvidia-ceo-jensen-huang-tells-trump-were-not-going-to-let-an-ai-slowdown-happen/",
-      "source": "TechCrunch / The Verge / Ars Technica",
-      "summary_zh": "「AI 要不要减速」这周吵成一片。英伟达 CEO 黄仁勋在一场峰会上当着特朗普面把电话开了免提,表态「不会让 AI 放缓发生」,还说机器人不会接管世界;特朗普和众议长约翰逊则认为业界的担忧被夸大了。另一边,一批 AI 高管在经历数年「鲁莽的高速」后开始呼吁踩刹车,奥巴马也敦促民主党拿出「清晰的 AI 安全方案」。同一件事,产业、政界和安全派站在完全不同的立场上。"
+      "title_zh": "「该不该给 AI 踩刹车」吵翻天:Amodei 发檄文,黄仁勋当众唱反调",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/995141/ai-executives-politicians-safety-regulation-anthropic-dario-amodei",
+      "source": "The Verge / TechCrunch / Ars Technica",
+      "summary_zh": "这周 AI 圈被「要不要放慢前沿」刷屏。起因是 Anthropic CEO Dario Amodei 发了篇《We Must Pace the Frontier》,主张给 AI 发展踩刹车;Altman、哈萨比斯、马斯克周末松散地表示附议。反对的一边同样热闹:英伟达 CEO 黄仁勋在 All-In 峰会上当众把特朗普来电开了免提,表态「不会让 AI 放缓发生」,还说机器人不会接管世界;特朗普和众议长约翰逊则觉得业界反应过度。也有人泼冷水——这场「安全公约」到底是真为安全,还是几家巨头联手放缓竞争的卡特尔?"
     },
     {
       "domain": "ai",
-      "title_zh": "OpenAI 传以 3 亿美元收购手机相机厂商 Glass Imaging",
-      "url": "https://techcrunch.com/2026/09/14/openai-buys-smartphone-camera-maker-glass-imaging-for-300-million-report-says/",
-      "source": "TechCrunch",
-      "summary_zh": "据报道,OpenAI 以约 3 亿美元收购了智能手机相机技术公司 Glass Imaging。Glass Imaging 以计算摄影/成像技术见长,这笔收购被普遍解读为 OpenAI 在硬件与影像输入侧继续布局的一步——结合它此前在消费硬件上的动作,方向指向自有设备的感知能力。"
-    },
-    {
-      "domain": "ai",
-      "title_zh": "微软发布 AI「行为准则」:不许模型黑系统、不许骗人",
+      "title_zh": "微软甩出 37 页「以人为本」AI 行为准则:不许模型黑系统、骗人",
       "url": "https://www.theverge.com/news/994566/microsoft-humanist-ai-code-of-conduct",
       "source": "The Verge / TechCrunch",
-      "summary_zh": "微软公布了一份面向 AI 模型的「行为准则」,明确要求模型不得入侵系统、不得欺骗人类,主打「以人为本、人比 AI 更重要」的定位。这份文件出台正值业界对 AI 安全的担忧升温,可看作大厂在自我约束框架上的公开表态。"
+      "summary_zh": "正值 AI 安全担忧升温,微软发布了一份 37 页的「以人为本 AI 行为准则」,核心原则是 AI 应辅助而非取代人类、「人比 AI 更重要」,并列出具体安全约束——比如模型不得入侵系统、不得欺骗人类。这份文件紧跟 Amodei 呼吁放缓的时点出台,可看作大厂在自我约束框架上的公开表态。"
     },
     {
       "domain": "ai",
-      "title_zh": "苹果发布 iOS 27 / macOS 27:Siri 换上新 AI,Liquid Glass 打磨",
+      "title_zh": "OpenAI 传以 3 亿美元收购手机相机公司 Glass Imaging",
+      "url": "https://techcrunch.com/2026/09/14/openai-buys-smartphone-camera-maker-glass-imaging-for-300-million-report-says/",
+      "source": "TechCrunch",
+      "summary_zh": "据报道,OpenAI 以约 3 亿美元收购了智能手机相机技术公司 Glass Imaging——这家公司由两名前苹果工程师创立,他们此前领导过苹果人像模式的研发。结合 OpenAI 近来在消费硬件上的动作,这笔收购普遍被解读为它在影像/感知输入侧继续为自有设备布局。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "苹果推送 iOS 27 / macOS 27:Siri 换上新 AI,Liquid Glass 打磨",
       "url": "https://arstechnica.com/apple/2026/09/apple-releases-ios-27-macos-golden-gate-27-with-siri-ai-and-liquid-glass-refinements/",
       "source": "Ars Technica / TechCrunch",
-      "summary_zh": "苹果正式推送 iOS 27 和 macOS Golden Gate 27,重点是重做后的 AI 版 Siri 以及对 Liquid Glass 界面的细节打磨。有测评者表示更新后「终于又开始用 Siri 了」,是苹果这一轮 Apple Intelligence 落地里比较实际的一步。"
+      "summary_zh": "苹果正式推送 iOS 27 和 macOS Golden Gate 27,重点是重做后的 AI 版 Siri 和对 Liquid Glass 界面的细节打磨。有测评者说更新后「终于又开始用 Siri 了」,是苹果这一轮 Apple Intelligence 落地里比较实在的一步。顺带一提,这也是最后一个支持 Rosetta 跑 Intel 应用的 macOS 版本。"
     },
     {
       "domain": "embodied",
       "title_zh": "创始人的成本执念,把宇树推上廉价人形机器人的领先位",
       "url": "https://arstechnica.com/ai/2026/09/founders-cost-cutting-obsession-drove-unitree-lead-in-cheap-humanoid-robots/",
       "source": "Ars Technica",
-      "summary_zh": "报道复盘了宇树(Unitree)如何靠创始人对成本的极致压缩,在低价人形机器人这条赛道上跑到前面。核心逻辑是把硬件成本压到别人做不到的水平,从而在还没被证明规模化需求的市场里抢占先机。人形机器人当下的竞争焦点,正从「能不能动」转向「能不能便宜地量产」。"
+      "summary_zh": "报道复盘了宇树(Unitree)如何靠创始人王兴兴对成本的极致压缩,在低价人形机器人这条赛道跑到前面——把硬件成本压到别人做不到的水平,在需求尚未被证明的市场里抢先占位。文章也提了个问号:这种事必躬亲的微管理风格,能不能撑得起规模化。人形机器人的竞争焦点,正从「能不能动」转向「能不能便宜地量产」。"
     },
     {
       "domain": "embodied",
-      "title_zh": "优傲(Universal Robots)在 IMTS 发布第七代机器人平台",
-      "url": "https://www.therobotreport.com/universal-robots-launches-its-seventh-generation-robot-platform-at-imts/",
-      "source": "The Robot Report",
-      "summary_zh": "协作机器人厂商优傲在 IMTS 展会上推出其第七代机器人平台。作为工业协作臂的老牌玩家,新平台的迭代看点在负载、易用性和与自动化产线的集成能力上,是工业自动化侧稳步推进的一个信号。"
-    },
-    {
-      "domain": "chip",
-      "title_zh": "先进封装改写规则:芯片健康与性能管理迎来新玩法",
-      "url": "https://semiengineering.com/advanced-packaging-changes-the-rules-for-semiconductor-health-and-performance-management/",
-      "source": "SemiEngineering",
-      "summary_zh": "SemiEngineering 分析,随着 chiplet、2.5D/3D 等先进封装普及,芯片的「健康与性能管理」不再是单颗裸片的事——多颗芯粒堆叠、异质集成让热、老化、良率监测都变得更复杂,需要在封装层面重新设计传感与管理机制。这直接关系到高端 AI 算力芯片的可靠性,和数据中心的算力供给一脉相承。"
+      "title_zh": "OpenArm:一个开源的 7 自由度人形机械臂",
+      "url": "https://github.com/enactic/OpenArm",
+      "source": "Hacker News",
+      "summary_zh": "一个开源的 7 自由度(7DOF)人形机械臂项目在 HN 上被讨论,硬件与设计开放。对想自己搭机械臂做操作、模仿学习或 VLA 实验、又不想被商用平台价格劝退的研究者是个可用的起点。开源硬件在人形/操作这块一直稀缺,这类项目实打实地降低了入门门槛。"
     },
     {
       "domain": "bio",
-      "title_zh": "礼来砍掉一款早期减肥药:未达「高标准」",
-      "url": "https://www.fiercebiotech.com/biotech/lilly-cans-early-experimental-obesity-drug-after-high-bar-not-met",
+      "title_zh": "Definium 的 LSD 疗法三次三期全中,焦虑症适应症将报 FDA",
+      "url": "https://www.fiercebiotech.com/biotech/definium-lsd-drug-goes-3-3-another-pivotal-anxiety-trial-win",
       "source": "Fierce Biotech",
-      "summary_zh": "礼来(Lilly)终止了一款处于早期阶段的实验性减肥药,理由是没能达到公司为减肥管线设定的「高门槛」。在 GLP-1 类药物竞争白热化的当下,头部厂商对早期候选药的取舍更果断——达不到差异化标准的直接下马,把资源留给更有胜算的项目。"
+      "summary_zh": "Definium Therapeutics 的 LSD 制剂拿下第三个三期临床成功,这次仍显著缓解焦虑症状,公司计划明年向 FDA 提交申请。这是迷幻药类疗法从边缘走向监管审批的关键一步——连续三个阳性三期,是这类争议疗法难得的扎实数据。"
     },
     {
       "domain": "energy",
-      "title_zh": "新型太阳能电池能在水下发电",
+      "title_zh": "新型太阳能电池能在水下发电,难点不在钙钛矿而在耐久",
       "url": "https://arstechnica.com/science/2026/09/a-new-solar-cell-could-generate-electricity-underwater/",
       "source": "Ars Technica Science",
-      "summary_zh": "研究者展示了一种能在水下工作的新型太阳能电池。水会强烈吸收和散射阳光,常规光伏在水下几乎失效,这项工作针对水下能透过的特定波段做了优化,潜在用途是给水下传感器、无人潜航器等长期供电,省去频繁换电池的麻烦。"
+      "summary_zh": "研究者展示了一种能在水下工作的太阳能电池。水会强烈吸收和散射阳光,常规光伏在水下几乎失效;这项工作用钙钛矿针对水下能透过的波段做优化,真正的难点是让钙钛矿在水环境里保持稳定、别很快衰减。潜在用途是给水下传感器、无人潜航器长期供电,省去频繁换电池。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "美军首次公开承认已在轨道部署武器",
+      "url": "https://arstechnica.com/space/2026/09/for-the-first-time-the-us-military-confirms-it-has-deployed-weapons-in-orbit/",
+      "source": "Ars Technica Science",
+      "summary_zh": "美国军方首次确认已在轨道上部署「太空控制武器」,称其「有能力保卫联合部队」。此前各国对天基武器多讳莫如深,这次公开承认是个明显的姿态转变,把「太空军事化」从传闻推到了台面上,商业航天和在轨服务的合规与安全讨论都会被它牵动。"
     },
     {
       "domain": "space",
       "title_zh": "商业航天的「十亿美元俱乐部」正在扩容",
       "url": "https://spacenews.com/spaces-growing-billion-dollar-club-spacenews-intelligence/",
       "source": "SpaceNews",
-      "summary_zh": "SpaceNews 的行业分析指出,年营收或估值迈过十亿美元门槛的航天公司数量在持续增加,「十亿美元俱乐部」正在扩容。这反映商业航天从少数巨头独大,走向更多细分玩家(发射、卫星制造、在轨服务等)规模化落地的阶段。"
+      "summary_zh": "SpaceNews 梳理了估值或营收迈过十亿美元门槛的私营航天公司名单,并指出这个「十亿美元俱乐部」还在持续扩容。这反映商业航天从少数巨头独大,走向发射、卫星制造、在轨服务等更多细分玩家规模化落地的阶段。"
     }
   ],
   "research_ideas": [
@@ -373,53 +386,52 @@
       "based_on": [
         { "title": "JustVugg/colibri:纯 C 流式加载 MoE 专家的推理引擎", "url": "https://github.com/JustVugg/colibri" }
       ],
-      "why_now": "colibri 这类「专家从磁盘按需流式加载」的引擎这两天爆火,但哪些专家常被激活、值得常驻内存、哪些可以留在磁盘,目前全靠拍脑袋,缺一个现成的量化工具。",
-      "feasibility": "单张 24GB 卡即可,拿一个开源 MoE(如 OLMoE-1B-7B 或 Qwen3-MoE 小档)跑推理,统计各专家在真实数据集上的激活频次与共现,基本是推理 + 记账,一两周能出可用版本。",
+      "why_now": "colibri 这类「专家从磁盘按需流式加载」的引擎这两天又爆涨,但哪些专家常被激活、值得常驻内存、哪些能留在磁盘,现在全靠拍脑袋,缺一个现成的量化工具。",
+      "feasibility": "单张 24GB 卡即可,拿一个开源 MoE(如 OLMoE-1B-7B 或 Qwen3-MoE 小档)跑推理,统计各专家在真实数据集上的激活频次与共现,本质是推理 + 记账,一两周能出可用版本。",
       "route": [
         "先跑通一个开源 MoE 的官方推理,在路由层挂 hook 记录每层每个专家被选中的次数(第一步一两天内可完成)",
-        "在几个代表性数据集(代码、数学、通用对话)上跑,导出「专家激活频次 + token 类型」的画像和热力图",
-        "根据频次给出「常驻 vs 流式」的缓存分层建议,做成命令行工具输出配置",
+        "在几个代表性数据集(代码、数学、通用对话)上跑,导出「专家激活频次 + token 类型」的画像与热力图",
+        "按频次给出「常驻 vs 流式」的缓存分层建议,做成命令行工具输出配置",
         "接一个简单模拟器,估算不同缓存策略下的磁盘 IO 与延迟,验证画像给的分层确实省时间",
         "写清 README 和示例,支持一键换模型,冲 GitHub star"
       ],
       "risk": "不同 MoE 的路由分布差异大,画像可能不通用;需要在 README 里说明结论依赖具体模型和数据。"
     },
     {
-      "domain": "ai",
+      "domain": "embodied",
       "type": "paper",
-      "title": "在 TempCloze 上验证:一个廉价干预能否补上视频模型的时序短板",
+      "title": "把 Attention-DP3 的物体注意力模块搬到别的 3D 策略和仿真,测即插即用泛化性",
       "based_on": [
-        { "title": "TempCloze: Can Video-LLMs Identify the Missing Middle?", "url": "https://arxiv.org/abs/2609.01515" }
+        { "title": "Attention-DP3: Spatially Object-aware 3D Diffusion Policy", "url": "https://arxiv.org/abs/2609.13318" }
       ],
-      "why_now": "TempCloze 刚发布、堵死了语言捷径,专测视觉时序推理,目前还没有方法在上面做改进——是个「改进目标具体可衡量」的新鲜靶子。",
-      "feasibility": "单张 40GB 卡,拿开源 Video-LLM(如 Qwen2.5-VL-7B)先跑基线,再试轻量干预:推理时的帧顺序/采样增强,或对「补中段」任务做一层 LoRA 微调。数据集才 1521 条,几周内能跑完一轮对照。",
+      "why_now": "Attention-DP3 刚出,声称在杂乱遮挡场景改善 DP3,而它是个「不改扩散主干、只加物体注意力条件」的插件式设计——「换个策略骨架、换个仿真基准还灵不灵」本身就是低风险、可发表的泛化性验证。",
+      "feasibility": "单张 24–40GB 卡,DP3 类方法都在仿真里评测、真机非必要;拿 Adroit / MetaWorld / RoboMimic 里几个任务,两三周能给出一张跨任务的成功率对比表。",
       "route": [
-        "跑通 TempCloze 官方评测,拿一个开源 Video-LLM 复现出基线分数(先确认 harness 能跑,一两天内)",
-        "按语义/对齐/进展三个维度拆分错误,看模型到底栽在哪一类",
-        "试一个 training-free 干预(如显式提示时序、或首尾帧对齐的采样策略),测增益",
-        "若不够,再对「缺失中段」任务上一层 LoRA,对比 training-free 与微调的性价比",
-        "把结论按三维度报告,重点说清哪种干预对哪类时序错误有效"
+        "先跑通 DP3 官方在某个仿真基准上的 baseline,复现出报告成功率(第一步一两天)",
+        "照 Attention-DP3 复现它的物体级注意力条件模块,在原设定上对齐增益",
+        "把这个模块迁到另一组任务/另一种遮挡与杂乱程度下,测成功率涨跌",
+        "消融物体线索的来源:用真值 mask vs 用现成检测器,看依赖有多重",
+        "报告在哪种杂乱度下真有效、哪种下退化,给出可复用的结论"
       ],
-      "risk": "廉价干预可能收益有限、甚至打不过纯 prompt 调整;要老实报告负结果,别硬凑提升。"
+      "risk": "物体级线索可能依赖较好的分割/检测,换到没有干净 mask 的场景就失效;要准备好检测器质量下降时的兜底与老实的负结果。"
     },
     {
       "domain": "ai",
       "type": "paper",
-      "title": "把 HyQuant 的混合精度注意力迁到别的模型族,测它的免训练泛化性",
+      "title": "复现「挑投毒样本」的 3%→80% 成功率方差,试一个训练前的廉价筛查防御",
       "based_on": [
-        { "title": "HyQuant: Hybrid-Precision Quantization for LLM Attention", "url": "https://arxiv.org/abs/2608.27875" },
-        { "title": "SAS: Simple Attention Sparsification via End-to-End Optimization", "url": "https://arxiv.org/abs/2609.13141" }
+        { "title": "Pick Your Poison: Learning to Select Poison Sets for Stronger LLM Backdoor Attacks", "url": "https://arxiv.org/abs/2609.15029" }
       ],
-      "why_now": "HyQuant 提出「大部分注意力状态低比特、只把竖线 token 和局部窗口保留高精度」,是个 plug-and-play 味道很浓的设计,但论文主要在自家设定验证——「换个模型族还灵不灵」本身就是低风险、可发表的泛化性扩展。",
-      "feasibility": "单张 24–40GB 卡,推理为主、几乎不训练。挑一个原作者没覆盖的开源模型族(如 Llama-3-8B 或 Mistral),复用其混合精度切分规则跑评测即可,两三周内能给出一张跨模型的精度-比特权衡表。",
+      "why_now": "论文刚指出「固定投毒条数下,只换选哪些样本,后门攻击成功率能从 3% 飙到 80%」,但防御侧还空着;复现便宜、防御目标具体可衡量,是个现成的低风险切口。",
+      "feasibility": "单张 40GB 卡,LoRA 微调 LLaMA-3-8B(或全参微调更小模型),以微调 + 推理为主、几乎不需要大规模训练,几周能跑一轮完整对照。",
       "route": [
-        "先跑通 HyQuant 官方在其原模型上的量化推理,复现出报告精度(第一步一两天)",
-        "把「保留竖线 token + 局部窗口高精度」的规则原样搬到另一个模型族,不重训",
-        "在长上下文与推理基准上测精度掉多少、显存省多少,画精度-比特曲线",
-        "分析哪些模型的注意力更依赖那批高精度 token,总结迁移成功/失败的条件",
-        "顺手和 SAS 式稀疏化做个正交组合的小消融,看能不能叠加省更多"
+        "复现论文三个后门设定之一,先确认随机选投毒样本时的攻击成功率基线(第一步一两天,先把 harness 跑通)",
+        "实现它的投毒集挑选策略,验证最坏情况成功率确实能被推高",
+        "试一个训练前的廉价筛查(如按梯度/损失异常打分、对触发器候选做聚类),把可疑样本挑出来",
+        "看这道筛查能把最坏情况成功率压低多少,记录漏检率和对干净样本的误伤",
+        "针对自适应攻击者(改触发器绕过筛查)再测一轮,老实报告防御边界"
       ],
-      "risk": "不同模型的注意力异常值结构可能不同,原规则可能不迁移;需要备好在新模型上重新定位关键 token 的兜底方案。"
+      "risk": "廉价筛查大概率只对已知/静态触发器有效,攻击者稍微换个触发器就能绕过;要明说防御范围,别夸成通用方案。"
     }
   ]
 }
