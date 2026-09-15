@@ -1,0 +1,404 @@
+{
+  "date": "2026-09-16",
+  "editor_note": "抓取管道今天回血了——领域论文、研究点、连数学物理那摞 theory_papers 全都进来了,不用再靠 HF 榜一条腿走路。HF 榜这几天的主题词还是「递归自我进化」,Dream-RSI、RSIAgent、Atria Dawn 一水儿的「智能体超智能」,我照旧手狠,名头越响越先划掉。真要点开一篇,我推那篇复现 Orthrus 的:它把「无损投机解码」这个卖点摁在数值精度下重测,BF16 下只有 45% 的输出真跟自回归逐字符对上——敢发这种打脸负结果的,比又一个「超智能」实在。别的领域也有硬货:量子那篇把 QAOA 拆到「其实退化成经典 QUBO 求解器」,芯片那篇实打实对比了 A7 CFET 和 A10 NSFET 的寄生 RC,都是不吹的活。行业面被「AI 该不该踩刹车」刷屏,OpenAI、Anthropic、Google 已经私下谈了好几周,白宫嫌反应过度;另一头数据中心的电和气正在把这场讨论从伦理拽回物理——2035 年美国数据中心的天然气消耗可能超过德日两国之和。repos 那条街基本被 agent 工具承包了(代码审查、研究 agent、agent 版本控制),colibri 用纯 C 从磁盘流式跑 MoE 仍在猛涨。每日一理换巴拿赫不动点定理,正好和今天两篇点云配准、以及 RL 里的 Bellman 迭代对得上;思想碰撞这次拿图信号处理去撞点云去噪和下采样。",
+  "math_note": {
+    "name": "巴拿赫不动点定理",
+    "name_en": "Banach Fixed-Point Theorem",
+    "field": "泛函分析 / 度量空间",
+    "one_liner": "只要每步都把误差按固定比例缩小,你必然收敛到唯一答案,且收敛速度动手前就能算出来。",
+    "statement": "在一个完备度量空间里(空间里的柯西序列都有极限,不会「收敛到洞里」),如果映射 $T$ 是压缩的——存在常数 $0\\le k<1$ 使得任意两点满足 $d(Tx,Ty)\\le k\\,d(x,y)$,即 $T$ 把任何两点之间的距离至少按比例 $k$ 拉近——那么 $T$ 有且只有一个不动点 $x^\\*$($Tx^\\*=x^\\*$,被 $T$ 作用后原地不动)。而且从任意起点 $x_0$ 出发反复迭代 $x_{n+1}=Tx_n$,一定收敛到这个 $x^\\*$,误差还有个先验界 $d(x_n,x^\\*)\\le \\frac{k^{\\,n}}{1-k}\\,d(x_1,x_0)$。",
+    "origin": "斯特凡·巴拿赫 1922 年在博士论文里给出,是泛函分析的奠基结果之一。当时数学家们已经知道各种「解存在」的定理(如皮卡对微分方程的逐次逼近),但证明大多针对具体问题、一事一议。巴拿赫的贡献是把「反复迭代会收敛到唯一解」这件事抽象成度量空间上的一条通用定理:不管你解的是积分方程、微分方程还是别的,只要能把问题写成「找一个压缩映射的不动点」,收敛性和唯一性就自动到手。",
+    "derivation": [
+      { "math": "x_{n+1}=Tx_n", "note": "从任意起点 x0 出发,不停地把 T 套上去,得到一串点。整个证明就是要说明这串点会稳稳停在某处。" },
+      { "math": "d(x_{n+1},x_n)=d(Tx_n,Tx_{n-1})\\le k\\,d(x_n,x_{n-1})", "note": "相邻两步的间距,因为 T 是压缩的,每走一步就至少缩小到原来的 k 倍。" },
+      { "math": "d(x_{n+1},x_n)\\le k^{\\,n}\\,d(x_1,x_0)", "note": "把上一步一层层往回代,相邻间距按几何级数衰减——步子越走越小,而且是指数级地小。" },
+      { "math": "d(x_m,x_n)\\le \\sum_{i=n}^{m-1}k^{\\,i}d(x_1,x_0)\\le \\frac{k^{\\,n}}{1-k}\\,d(x_1,x_0)", "note": "用三角不等式把远处两点的距离拆成一串相邻间距之和,几何级数求和放缩,得到 n 越大越小的界——这说明序列是柯西列。" },
+      { "math": "x_n\\to x^\\*,\\qquad Tx^\\*=\\lim Tx_n=\\lim x_{n+1}=x^\\*", "note": "空间完备,柯西列必有极限 x*;再用 T 连续(压缩映射天然连续),对 x_{n+1}=Tx_n 两边取极限,就得到 x* 是不动点。" },
+      { "math": "d(x^\\*,y^\\*)=d(Tx^\\*,Ty^\\*)\\le k\\,d(x^\\*,y^\\*)\\ \\Rightarrow\\ d(x^\\*,y^\\*)=0", "note": "唯一性:假设有两个不动点,它们的距离被自己按 k<1 缩小还等于自己,只能是 0,所以其实是同一个点。" }
+    ],
+    "applications": [
+      { "area": "微分方程", "detail": "皮卡–林德洛夫存在唯一性定理:把 ODE 初值问题写成一个积分算子,证明它在小区间上是压缩映射,不动点就是解——这是「解存在且唯一」最干净的证法。" },
+      { "area": "强化学习 / 动态规划", "detail": "Bellman 最优算子在最大范数下是压缩映射(压缩系数是折扣因子 γ),值迭代就是反复套这个算子,所以必然收敛到唯一最优值函数。" },
+      { "area": "点云 / 三维配准", "detail": "ICP 这类交替「找对应—求变换」的迭代,在良好初始化下局部表现得像压缩映射,不动点就是对齐后的位姿;它也解释了为什么初值差、或对称结构会让迭代收敛到错误的不动点。" },
+      { "area": "数值计算", "detail": "解方程 x=g(x) 的简单迭代法能不能用,判据就是 g 在解附近的导数绝对值小于 1(局部压缩);牛顿法收敛快也是因为它把问题构造成了压缩性极强的迭代。" }
+    ],
+    "takeaway": "「收敛」不是玄学:只要能把问题写成一个把距离按固定比例 $k<1$ 缩小的迭代,答案的存在、唯一和收敛速度就一起白送——现代大量迭代算法的底层安全感都来自这一条。",
+    "viz": {
+      "type": "cobweb",
+      "caption": "拖动起点,看蛛网图一圈圈收进同一个交点:这里迭代的是 $x\\mapsto\\sqrt{x+2}$(压缩映射),不管从哪出发都收敛到唯一不动点 $x^\\*=2$,楼梯越走越密正是 $k<1$ 在起作用。",
+      "params": { "fn": "sqrt(x+2)", "x0": 0.2, "xmin": 0, "xmax": 4, "iterations": 12 }
+    }
+  },
+  "crossover": {
+    "theory": "图信号处理 / 谱图滤波",
+    "theory_en": "Graph Signal Processing / Spectral Graph Filtering",
+    "field": "信号处理 / 谱图论",
+    "era": "2013 前后 Shuman、Ortega 等把经典信号处理搬上任意图;2011 Hammond 用 Chebyshev 多项式让谱滤波不必先做特征分解,才真正能算",
+    "one_liner": "把点云连成图,噪声是高频、边角也是高频——一个低通滤波,去噪和挑关键点一起办了。",
+    "theory_core": "经典傅里叶把信号拆成不同频率的正弦波;图信号处理把这套搬到任意图上。给点之间连边,拉普拉斯矩阵 $L=D-W$($D$ 是度矩阵、$W$ 是邻接权重)的特征向量就是「图傅里叶基」,对应特征值 $\\lambda$ 就是「频率」——小 $\\lambda$ 对应在图上平缓变化的模式,大 $\\lambda$ 对应高频抖动。一个定义在顶点上的信号 $x$(每个点的坐标或颜色)投影到这组基上得到图频谱 $\\hat x=U^\\top x$,滤波就是给不同频率乘不同增益 $h(\\lambda)$,低通(压高频)就等于去噪、平滑。关键突破在算法:直接特征分解要 $O(n^3)$,Hammond 用 Chebyshev 多项式把滤波器 $h(L)$ 近似成 $L$ 的 $K$ 阶多项式,只需 $K$ 次稀疏矩阵-向量乘,复杂度降到 $O(K|E|)$,一个特征向量都不用求。",
+    "pc_problem": "点云去噪现在主流是逐点邻域操作:双边滤波、法向估计后投影、或者训一个网络去噪。双边滤波每个点要在 $k$ 近邻里加权平均,一帧百万点、$k=32$ 就是三千多万次核计算,还得先建 KNN 图;更烦的是空间带宽、法向带宽这些超参要手调,窗口一大边缘就糊、一小噪声压不住。学习式方法又得要成对的干净/带噪数据,换个传感器就退化。下采样这头,FPS 是 $O(n^2)$,大规模点云上是硬瓶颈,随机降采样则会丢结构。这些问题现在是各修各的,缺一个统一的「频率」视角。",
+    "bridge": "映射很直接——把点云当成图上的信号。顶点 = 每个点;边 = KNN 或半径邻接,边权 $w_{ij}=\\exp(-\\lVert p_i-p_j\\rVert^2/\\sigma^2)$;定义在顶点上的信号 = 三个坐标通道(或颜色、法向)。「点云光滑」这件事在图上正好翻译成「信号能量集中在低频」——真实表面分段光滑,几何主体是中低频,而传感器噪声是典型的高频扰动。于是去噪 = 对坐标信号做图低通滤波;重要性采样 = 看每个点在高频段的能量(高频能量大 = 处在边角/细节处 = 该保留)。谱域给了「点云的频率」一个能算的定义,去噪和挑点从此是同一把尺子的两端。",
+    "angles": [
+      {
+        "dim": "算法优化",
+        "idea": "用 Chebyshev 多项式图低通替掉双边滤波做去噪。建好 KNN 图后,把去噪写成 $\\hat x=\\sum_{k=0}^{K}c_k T_k(\\tilde L)\\,x$,$T_k$ 是 Chebyshev 多项式、$\\tilde L$ 是缩放到 $[-1,1]$ 的拉普拉斯,系数 $c_k$ 由目标低通响应(如热核 $e^{-\\tau\\lambda}$)一次性拟合出来。全程只有稀疏矩阵乘,不再手调空间/法向带宽,只留一个截止频率 $\\tau$。",
+        "gain": "单次滤波 $O(K|E|)=O(Knk)$,$K=8$、$k=16$ 时约每点百来次乘加,和一轮双边滤波同量级,但省掉了核函数里的指数运算和法向估计;更值钱的是超参从三四个降到一个,调参成本大跌(定性估计)。",
+        "cost": "图一旦建错(离群点连错边),低通会把离群点的坐标「抹」到邻居上;$\\sigma$ 和邻接方式仍要定,且低通对尖角有结构性收缩——和网格拉普拉斯平滑一样,保边和去噪是对立的。"
+      },
+      {
+        "dim": "复杂度",
+        "idea": "用图高频能量做一遍性重要性采样,替 FPS。对坐标信号算高通残差 $\\lVert(I-h_{lp}(L))x\\rVert$ 的逐点分量,残差大的点(边、角、细节)优先保留,再配一个空间去重防止扎堆。",
+        "gain": "从 FPS 的 $O(n^2)$(或近似的 $O(n\\log n)$)降到一次 Chebyshev 高通 $O(K|E|)$ 加一次排序;而且保留的是几何显著点,不是纯几何均匀点,下游检测/分割理应更受益。",
+        "cost": "得先建图(建 KNN 本身 $O(n\\log n)$);若下游任务只吃均匀密度,这种「偏心」采样反而不利;高频也会被噪声污染,得先轻度去噪再算显著性,否则挑出来的全是噪点。"
+      },
+      {
+        "dim": "存储",
+        "idea": "谱域低通天然给了压缩接口——低通后信号能量集中在前若干「图频率」,可以在粗图上只存低频系数、高频按需重建(相当于图上的小波/多分辨率)。对颜色、反射率这类光滑属性最合适。",
+        "gain": "对光滑属性,码率有望省两三成量级(图小波在网格属性压缩上报过这个数,点云上要实测);几何坐标本身压缩收益有限,别指望。",
+        "cost": "需要一个稳定的多分辨率图结构(图下采样 + 提升算子),这步不平凡;薄结构、自遮挡导致拓扑剧烈变化的点云上,多分辨率图容易崩。"
+      },
+      {
+        "dim": "鲁棒性",
+        "idea": "换更抗密度变化的图构造:用相互 KNN(mutual-KNN)或按局部密度自适应的 $\\sigma_i$,让低通增益随局部密度归一化,抵抗离群点和跨传感器的密度差。",
+        "gain": "跨传感器(16 线 ↔ 128 线)时,固定 $k$ 的普通 KNN 图会因密度不同而让「频率」漂移,自适应图能把跨密度的谱响应对齐,估计能明显降低跨密度退化(定性,需测)。",
+        "cost": "自适应 $\\sigma_i$ 要多跑一遍局部密度估计;mutual-KNN 会让图变稀甚至断连,断连子图之间没法互相平滑,反而丢信息。"
+      }
+    ],
+    "experiment": [
+      "纯 CPU 半天:在 ModelNet40 取几个模型加高斯噪声,用 scipy/PyG 建 KNN 图,写 20 行 Chebyshev 低通($K=8$、热核响应)去噪,和 Open3D 的统计离群点/双边滤波比 Chamfer 距离和耗时——比不过就别往下走。",
+      "两三天、单卡:在一个标准点云去噪 benchmark(如 PU-Net/PCN 噪声测试集或带噪 ModelNet)上跑通一个开源学习式去噪 baseline,记 CD/P2M 和每帧耗时当基线。",
+      "一周:把 Chebyshev 低通接到该 pipeline 的前/后处理,扫截止频率 $\\tau$ 和邻接方式($k$、$\\sigma$、mutual-KNN),看能不能无需训练就逼近学习式方法。",
+      "一到两周:实现高频显著性采样,和 FPS/随机采样在同一下游分类/分割任务上比「精度 vs 点数」曲线。",
+      "收尾:跨传感器测(在稀疏点上建图去噪、拿稠密扫描当 GT),看自适应图的跨密度增益,连耗时和内存一起报。"
+    ],
+    "prior_art": [
+      {
+        "title": "Wavelets on Graphs via Spectral Graph Theory(Hammond, Vandergheynst, Gribonval, 2011)",
+        "url": "https://arxiv.org/abs/0912.3848",
+        "note": "Chebyshev 多项式快速图滤波的原始出处,谱图小波的定义也在这;实现滤波器直接照它的递推抄即可,是整条路线的地基。"
+      },
+      {
+        "title": "Fast Resampling of Three-Dimensional Point Clouds via Graphs(Chen 等, IEEE TSP 2018)",
+        "url": "https://arxiv.org/abs/1702.06397",
+        "note": "就是用图频谱做点云重采样/显著性采样,和这里的采样角度直接撞车;可以拿它的高通采样结果当对照,别重复造轮子。"
+      },
+      {
+        "title": "点云去噪的图拉普拉斯正则(Graph Laplacian Regularization,Zeng/Cheung/Ortega 一系工作)",
+        "note": "早把点云去噪写成图拉普拉斯正则的最小化问题,理论上和低通滤波等价;不过多为优化式求解、每步要解稀疏系统,显式 Chebyshev 滤波是更省的近似入口。确切标题/链接记不准就没敢贴。"
+      }
+    ],
+    "reality_check": "图一建错,全盘皆输——KNN 图对离群点和密度剧变极敏感,而这恰恰是真实激光点云的常态;真落地,八成力气会花在「怎么建出一个稳的图」上,而不是滤波器本身。而低通去噪对尖锐边缘的收缩是结构性的,想保边就得上各向异性的图权重,省下的超参又长回来了。"
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Vidu S2: Real-Time Interactive, Editable, and Spatial Video Generation",
+      "title_zh": "Vidu S2:实时可交互、可编辑的空间视频生成",
+      "url": "https://arxiv.org/abs/2609.11638",
+      "hf_url": "https://huggingface.co/papers/2609.11638",
+      "authors": "Jintao Zhang、Kai Jiang 等",
+      "affiliation": "清华大学",
+      "upvotes": 497,
+      "one_liner": "把视频生成做到实时:数字人边说边动、视频流边播边改。",
+      "summary_zh": "Vidu S2 分两块:S2-Avatar 是实时交互数字人,支持 720p 实时生成、参考图随时替换、还能听指令跳舞;S2-Editing 是实时视频流编辑,风格、换装、换角色都能在线改。比上一代 S1 明显强在「实时」和「可控」这两点,还试了把两者都推向空间(3D)视频。判断:能实时是产品级的门槛,数字人直播、实时换装这类场景是真刚需;但 demo 之外的长时序一致性和手部细节还得看开源后的实测。",
+      "tags": ["视频生成", "数字人", "实时"]
+    },
+    {
+      "domain": "ai",
+      "title": "ZGCM-1: A Fully Open and Extremely Efficient Foundation Model for Math and Agentic Search",
+      "title_zh": "ZGCM-1:一个完全开放、极致高效的数学与智能体搜索基座",
+      "url": "https://arxiv.org/abs/2609.13356",
+      "hf_url": "https://huggingface.co/papers/2609.13356",
+      "authors": "Jiyan He、Guang Liang 等",
+      "affiliation": "ZGCAGI",
+      "upvotes": 291,
+      "one_liner": "7B 小模型不硬背网页,靠「边想边查工具」补容量,还把训练配方全开源。",
+      "summary_zh": "从零训练的 7B 稠密模型,核心主张是:小模型记不住整个互联网,但可以用「深度内部思考 + 主动调用外部工具」来突破参数容量的天花板。为撑起 256K 上下文,他们端到端开了一整套高效训练配方——滑窗与全注意力交错、FP8 的 Muon 优化器、渐进式课程。价值不在刷了多高的分,而在「完全开放」:架构、系统、数据、算法全给,想复现小模型的工具使用范式,这是个干净的起点。",
+      "tags": ["开源模型", "数学推理", "工具使用"]
+    },
+    {
+      "domain": "ai",
+      "title": "Grouped Value Attention: Efficient KV Caching via On-Demand Key Reconstruction",
+      "title_zh": "分组值注意力:靠按需重建 Key 来省 KV 缓存",
+      "url": "https://arxiv.org/abs/2609.13285",
+      "hf_url": "https://huggingface.co/papers/2609.13285",
+      "authors": "Vishesh Tripathi、Abhay Kumar 等",
+      "upvotes": 58,
+      "one_liner": "KV 缓存只存 Value,Key 用一个线性映射当场重建,还能吸进 Query 里省掉。",
+      "summary_zh": "KV 缓存是 Transformer 解码的主要瓶颈,GQA 靠共享 KV 头省了一半,但每步仍要同时存 Key 和 Value。GVA 的做法是只存分组后的 Value,内容 Key 用一个学到的线性映射按需重建;推理时这个映射还能被吸收进 Query,于是解码路径上根本不用把内容 Key 物化出来,再留一个共享的解耦 RoPE 通道保住位置信息。思路挺巧——把「存 Key」换成「算 Key」,拿一点计算换显存和带宽。能不能站住,得看重建误差在长上下文里累不累积。",
+      "tags": ["KV Cache", "推理效率", "注意力"]
+    },
+    {
+      "domain": "ai",
+      "title": "How Lossless Is Lossless Speculative Decoding? The Role of Numerical Precision in Orthrus",
+      "title_zh": "「无损」投机解码真无损吗?数值精度在 Orthrus 里的角色",
+      "url": "https://arxiv.org/abs/2609.15504",
+      "hf_url": "https://huggingface.co/papers/2609.15504",
+      "authors": "Ilya Koziev、Leonid Sinev、Ivan Oseledets",
+      "upvotes": 23,
+      "one_liner": "复现 Orthrus 后发现:BF16 下只有 45% 的输出真跟自回归逐字对齐,「无损」得打引号。",
+      "summary_zh": "Orthrus 是个自回归-扩散混合架构,靠模型内部「共识机制」并行出多 token,卖点是「无损投机解码」——输出应和纯自回归逐字符一致。作者独立复现后,在不同数值精度下重测这个主张:BF16 推理下,官方权重只有 45%、他们自训的只有 43% 的情况能精确对齐轨迹。结论很实在——所谓「无损」高度依赖数值精度,换个 dtype 就不成立。这种敢发打脸负结果、把大厂卖点摁在显微镜下的论文,比又一个 SOTA 更值得点开。",
+      "tags": ["投机解码", "复现", "数值精度"]
+    },
+    {
+      "domain": "embodied",
+      "title": "PhysBrain 1.5: From Vision-Language Models to Physical Foundation Models",
+      "title_zh": "PhysBrain 1.5:从视觉语言模型走向物理基座模型",
+      "url": "https://arxiv.org/abs/2609.14973",
+      "hf_url": "https://huggingface.co/papers/2609.14973",
+      "authors": "DeepCybo Team、Yu Bin 等",
+      "affiliation": "DeepCybo",
+      "upvotes": 169,
+      "one_liner": "把「看懂环境、生成动作、预测未来」塞进一个模型,监督信号全来自人类操作视频。",
+      "summary_zh": "从一个通用视觉语言模型出发,把语言回答、末端执行器运动、稠密视觉目标都编码成离散序列,用自回归下一 token 预测统一优化,让一个模型同时会理解物理环境、生成动作、预测未来状态。最有意思的是预训练的具身监督全部来自人类交互视频,而不是真机采集——这是绕开机器人数据稀缺的一条常见但仍难走的路。判断:「统一序列建模」是当下具身基座的主流叙事,真正的考验是这套表示迁到真机后,动作精度会掉多少。",
+      "tags": ["具身智能", "世界模型", "VLA"]
+    },
+    {
+      "domain": "embodied",
+      "title": "JEPLO: Joint-Embedding Predictive Learning for LiDAR-Based Legged Locomotion",
+      "title_zh": "JEPLO:面向激光足式行走的联合嵌入预测学习",
+      "url": "https://arxiv.org/abs/2609.15770",
+      "authors": "Qihao Yuan、Yixuan Qiu 等",
+      "upvotes": 0,
+      "one_liner": "给足式机器人用激光而不是 RGB-D,还不建图——直接在隐空间预测脚下地形。",
+      "summary_zh": "足式机器人的感知行走多用 RGB-D,激光反而少人碰,而且现有激光方案通常还得先显式建图。JEPLO 是个单阶段、免建图的框架,用一个本体-外部感知联合的 JEPA 世界模型,从机载观测里直接学到「以自身为中心的地形」预测表示,再驱动行走。把 JEPA 那套「在隐空间预测、不重建像素」的思路搬到激光足式行走上,思路顺。是否比 RGB-D 方案更稳、在夜间/烟尘等激光占优的场景是否真拉开差距,要看更多真机对比。",
+      "tags": ["足式机器人", "激光雷达", "JEPA"]
+    },
+    {
+      "domain": "chip",
+      "title": "System-Technology Co-Evaluation of A7 CFET and A10 NSFET Technologies from Cell Parasitics to Chip Reliability",
+      "title_zh": "A7 CFET 与 A10 NSFET 的系统-工艺协同评估:从单元寄生到芯片可靠性",
+      "url": "https://arxiv.org/abs/2609.15326",
+      "authors": "Mahdi Benkhelifa、Leon Mayr 等",
+      "upvotes": 0,
+      "one_liner": "CFET 把 N/P 管叠起来省了面积,但寄生 RC 的账,得从单元一路算到可靠性。",
+      "summary_zh": "CFET(互补场效应管)把 n 型和 p 型环栅器件垂直堆叠,进一步缩小标准单元面积,是纳米片之后的下一步缩放。但作者点出:光看器件指标不够,CFET 的版图会带来更大的单元级寄生电阻电容(RC),性能收益能不能兑现要连着算。他们搭了一套带热和老化效应的物理级系统-工艺协同评估流程,把 A7 CFET 和 A10 NSFET 两个节点从单元寄生一路评到芯片可靠性。这种把工艺红利放进真实寄生和可靠性里核账的工作,比单点器件突破更贴近产业决策。",
+      "tags": ["CFET", "先进制程", "器件建模"]
+    },
+    {
+      "domain": "bio",
+      "title": "Synthesizing State-of-the-Art Structure Predictions from Soup of Co-folding Models",
+      "title_zh": "从一锅共折叠模型里熬出最强结构预测",
+      "url": "https://arxiv.org/abs/2609.15552",
+      "authors": "Hyosoon Jang、Taewon Kim、Sungsoo Ahn",
+      "upvotes": 0,
+      "one_liner": "没有哪个共折叠模型全能,那就学几个线性映射把它们的表示互相搬过来用。",
+      "summary_zh": "共折叠模型(预测蛋白与配体等复合物结构)进步很快,但没有一个能在所有复合物上都最好。作者问:这些独立训练的模型是不是编码了互补信息、能跨模型迁移?他们提出 SoupFold,学几个简单映射把不同共折叠模型的表示空间对齐,推理时把别的模型的表示搬进来融合,不重训就提升预测质量。是那种「便宜、可复现、拿现成模型就能做」的组合式增益,单卡就能玩;局限是天花板受限于池子里最强的那几个模型。",
+      "tags": ["蛋白结构预测", "模型融合", "共折叠"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Disentangling QAOA: From Weakly Entangled Circuits to a Classical QUBO Solver",
+      "title_zh": "拆解 QAOA:从弱纠缠电路到一个经典 QUBO 求解器",
+      "url": "https://arxiv.org/abs/2609.15738",
+      "authors": "Boris I. Bantysh、Andrey Yu. Chernyavskiy 等",
+      "upvotes": 0,
+      "one_liner": "在这个参数区间里,QAOA 纠缠弱到可以直接当经典 QUBO 求解器用。",
+      "summary_zh": "纠缠在量子优化里到底起多大作用一直有争论。作者盯住 QAOA 的一个特定区间——固定参数、深度递增(在小规模上训一次两参数调度,再放大到大规模),用矩阵积态(MPS)近似模拟到 50 比特、100 层,量化电路里的纠缠。发现这个区间纠缠弱到一定程度,整套流程其实可以退化成一个经典 QUBO 求解器。是那种给量子优化「泼冷水」的诚实工作:先说清楚什么时候量子并没有带来本质优势,反而帮大家把可比的经典基线划清楚。",
+      "tags": ["QAOA", "量子优化", "经典模拟"]
+    },
+    {
+      "domain": "energy",
+      "title": "Microstructure-Resolved Impedance Modeling of Solid-State Batteries",
+      "title_zh": "把固态电池的阻抗谱和微观结构对上号",
+      "url": "https://arxiv.org/abs/2609.15783",
+      "authors": "Kaniza Islam、Noriko Katsube、Yanzhou Ji",
+      "upvotes": 0,
+      "one_liner": "阻抗谱能无损探电池内部,但那条曲线到底对应哪种微结构,一直缺一座桥。",
+      "summary_zh": "固态电池被车企寄予快充和更安全的厚望,而固态电解质的微观结构(晶界、孔隙、界面)对性能影响极大。电化学阻抗谱(EIS)是探测电荷转移和传输过程的常用无损手段,难点在于:测出来的阻抗谱怎么定量对应到底层微结构。这篇做的就是分辨微结构的阻抗建模,把「测到的曲线」和「里面长什么样」连起来。对做固态电解质工艺的人是把有用的诊断尺子——能从阻抗反推是晶界还是界面在拖后腿,而不是只看一条总曲线。",
+      "tags": ["固态电池", "阻抗谱", "微结构建模"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Single-condition neural solvers encode transferable response spaces for parametric differential equations",
+      "title_zh": "单工况训练的神经求解器,竟藏着可迁移的「响应空间」",
+      "url": "https://arxiv.org/abs/2609.15432",
+      "authors": "Wenbo Cao、Weiwei Zhang",
+      "upvotes": 0,
+      "one_liner": "只在一个工况上训的模型,它的输出雅可比就定义了一整片跨工况解的可复用子空间。",
+      "summary_zh": "参数化偏微分方程的算子学习通常要建覆盖整个参数域的全局模型,得跨工况采数据或做昂贵的物理约束训练。这篇反过来:一个只在单一工况训练的神经解模型,它输出对参数的雅可比矩阵,本身就张成了一个「响应空间」,能表达解随工况的变化。他们提出线性化子空间迁移(LST),在这个空间里对目标 PDE 残差做最小化,就能恢复新工况的解——不用重训、不用跨工况数据。视角很省:把一次训练的「局部灵敏度」当成迁移的资本,适合参数扫描类的仿真;能推多远取决于非线性有多强。",
+      "tags": ["神经PDE求解", "算子学习", "迁移"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "JustVugg/colibri",
+      "url": "https://github.com/JustVugg/colibri",
+      "language": "C",
+      "stars": 33690,
+      "stars_today": "2,035",
+      "one_liner": "纯 C 零依赖,把 MoE 专家从磁盘边读边算,普通电脑也能跑巨型模型。",
+      "summary_zh": "纯 C、零依赖的推理引擎,把 MoE 大模型的专家权重从磁盘按需流式加载,让你在手头现有的普通硬件上跑前沿 MoE。核心卖点是引擎极小、模型可以极大,本质是拿磁盘 IO 换显存内存。适合想在消费级机器上本地跑大 MoE、又懒得装一堆依赖的人。"
+    },
+    {
+      "domain": "ai",
+      "name": "alibaba/open-code-review",
+      "url": "https://github.com/alibaba/open-code-review",
+      "language": "Go",
+      "stars": 28323,
+      "stars_today": "2,751",
+      "one_liner": "确定性流水线 + LLM Agent 的混合代码审查,给到行级评论。",
+      "summary_zh": "阿里开源的代码审查工具,走「确定性规则流水线 + LLM Agent」的混合架构,能给出精确到行的评论,内置多语言规则集(空指针、线程安全等)。号称在阿里内部大规模跑过,主打把机械的规则检查和 LLM 的语义判断拼在一起。想给团队接一个自托管的自动 review、又不想全押在纯 LLM 上的,可以看看。"
+    },
+    {
+      "domain": "ai",
+      "name": "debpalash/VoiceStudio",
+      "url": "https://github.com/debpalash/VoiceStudio",
+      "language": "Python",
+      "stars": 30807,
+      "stars_today": "2,081",
+      "one_liner": "全本地的 ElevenLabs 平替:克隆、配音、转写一条龙,支持几百种语言。",
+      "summary_zh": "开源、完全本地运行的语音工作台,对标 ElevenLabs——语音克隆、语音设计、视频配音、听写、转写、有声书制作都在一个盒子里,号称支持 646 种语言。卖点是数据不出本机,适合注重隐私、或想批量做多语言配音而不想按调用付费的人。本地语音生成这条赛道最近很挤,它胜在功能面铺得全。"
+    },
+    {
+      "domain": "ai",
+      "name": "alphaXiv/OpenResearch",
+      "url": "https://github.com/alphaXiv/OpenResearch",
+      "language": "Rust",
+      "stars": 3259,
+      "stars_today": "593",
+      "one_liner": "把你的编码 agent 变成研究 agent。",
+      "summary_zh": "alphaXiv 出的工具,目标是把现有的编码 agent 改造成能做研究的 agent——查文献、读论文、整理综述那一套。Rust 写的,踩在「agent 从写代码扩展到做科研」这个趋势上。适合想给自己的 agent 加一层研究工作流、而不是从零搭的人;还早,值得盯。"
+    },
+    {
+      "domain": "ai",
+      "name": "earendil-works/pi",
+      "url": "https://github.com/earendil-works/pi",
+      "language": "TypeScript",
+      "stars": 105631,
+      "stars_today": "437",
+      "one_liner": "一站式 agent 工具箱:统一 LLM API、agent 循环、TUI、编码 CLI。",
+      "summary_zh": "一个 AI agent 工具箱,把统一的多家 LLM API、agent 主循环、终端 UI 和编码 agent CLI 打包在一起。十万星量级、TypeScript 写的,想快速搭一个能跨模型切换的 agent 应用、又不想自己攒基础设施的,拿它当脚手架合适。"
+    },
+    {
+      "domain": "ai",
+      "name": "pacifio/atlas",
+      "url": "https://github.com/pacifio/atlas",
+      "language": "Rust",
+      "stars": 4569,
+      "stars_today": "102",
+      "one_liner": "给 agent 用的版本控制:多个编码 agent 的改动统一追踪、统一查询。",
+      "summary_zh": "把多个编码 agent 的改动集中管起来的「agent 版本控制」工具——用了不同的编码 agent,它们各自改了什么、都在一处追踪和查询。Rust 写的。当你同时跑好几个 agent、改动开始互相打架时,这类工具解决的就是「谁动了什么」的账。这条方向(agent 协作的治理层)刚冒头。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "OpenAI、Anthropic、Google 已就 AI 安全私下谈了数周,白宫嫌反应过度",
+      "url": "https://techcrunch.com/2026/09/15/openai-anthropic-google-have-been-in-talks-on-ai-safety-for-weeks/",
+      "source": "TechCrunch AI / The Verge / Ars Technica",
+      "summary_zh": "OpenAI 证实,已和 Anthropic、Google DeepMind 就 AI 安全谈了好几周,几家掌门人上周末松散达成「给前沿踩刹车、pace the frontier」的共识。但特朗普团队公开表示不必过度担忧、要跟上中国步伐,黄仁勋也当面唱反调。质疑者随即发问:这到底是安全公约,还是几家头部厂商借「安全」之名默契限速的卡特尔?一场关于「该不该主动减速」的行业辩论正式摆上台面。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Google 发布 Gemini 3.8 Live 与 Live Extended Thinking",
+      "url": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-3-8-live-gemini-3-8-live-extended-thinking/",
+      "source": "Google / Hacker News",
+      "summary_zh": "Google 推出 Gemini 3.8 Live 及其扩展思考版本,主打实时交互与更长的推理链路。HN 上讨论热度不低(近 200 分)。在「该不该给 AI 踩刹车」的舆论背景下,头部厂商的模型迭代节奏并没有真的停,发布照常。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Salesforce 联手英伟达推 Koa 推理模型,基于开源 Nemotron",
+      "url": "https://techcrunch.com/2026/09/15/salesforce-and-nvidias-new-reasoning-model-is-everything-the-ai-labs-should-fear/",
+      "source": "TechCrunch AI",
+      "summary_zh": "Salesforce 与英伟达合推的推理模型 Koa,建在英伟达开源权重的 Nemotron 之上,专门训练来做销售、营销和客服等企业任务。TechCrunch 的视角是:垂直企业玩家拿开源基座 + 自有场景数据,直接切进 AI 实验室的地盘,这正是纯模型公司该警惕的路径。"
+    },
+    {
+      "domain": "energy",
+      "title_zh": "到 2035 年,美国数据中心的天然气消耗可能超过德日两国之和",
+      "url": "https://techcrunch.com/2026/09/15/us-data-centers-could-consume-more-natural-gas-than-germany-and-japan-combined-by-2035/",
+      "source": "TechCrunch AI / SemiEngineering",
+      "summary_zh": "有测算显示,AI 热潮可能把美国数据中心推成全球最大的天然气消费方之一——到 2035 年其天然气消耗或超过德国和日本相加。与此同时 SemiEngineering 指出数据中心还有「电力被闲置囤积」的问题:为保供做的冗余供电线路,反而把本可支撑更多硬件的容量给锁死了。算力扩张正把瓶颈从芯片一路顶到电网和天然气。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Agility 的 Digit 5 人形机器人更新:新腿、新电池、更全的安全架构",
+      "url": "https://www.therobotreport.com/agilitys-digit-5-humanoid-has-new-legs-batteries-safety-upgrades/",
+      "source": "The Robot Report / Ars Technica",
+      "summary_zh": "Agility 发布第五代 Digit 人形机器人,换了新的膝关节和腿部结构、升级电池,并重做了更完整的安全架构——遇到人会停下、下蹲避让,以避免伤到共事的工人。意义在于:更完善的安全设计让人形机器人可以走出安全围栏、不设物理隔离地和人一起干活,这是它进工厂的实际前提之一。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "把 11B 视觉语言模型压到 2.7-bit 权重,塞进手机 CPU",
+      "url": "https://semiengineering.com/compressing-an-11b-vlm-to-2-7-bit-weights-for-mobile-cpus/",
+      "source": "SemiEngineering",
+      "summary_zh": "一项工作把 110 亿参数的视觉语言模型压缩到平均 2.7-bit 权重,目标是在手机 CPU 上跑多模态 AI。做法是设计一种便于高效解码的新权重格式,配合量化感知训练,在压体积的同时尽量保住精度。极低比特量化 + 端侧多模态,是把大模型真正落到手机上的关键一环。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "美军首次确认已在轨部署武器",
+      "url": "https://arstechnica.com/space/2026/09/for-the-first-time-the-us-military-confirms-it-has-deployed-weapons-in-orbit/",
+      "source": "Ars Technica Science",
+      "summary_zh": "美国军方首次公开确认已在轨道上部署武器,称「美国现在拥有能保卫联合部队的在轨太空控制武器」。这是太空军事化的一个明确节点,对商业航天而言意味着监管、频轨协调和在轨态势感知的需求都会随之升温。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "FDA 批准 Telix 的 Pixclara,首个用于脑癌的 FET-PET 成像药",
+      "url": "https://www.fiercebiotech.com/medtech/after-rejection-fda-approves-telixs-pixclara-first-fet-pet-imaging-drug-brain-cancer",
+      "source": "Fierce Biotech",
+      "summary_zh": "在一年多前被拒之后,FDA 批准了 Telix 的 Pixclara——首个针对脑胶质瘤的 FET-PET 成像诊断药。这类分子影像能帮临床更清楚地勾画脑肿瘤范围,对手术和随访有直接价值;先被拒后获批,也说明这条影像诊断的监管路径并不好走。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "AEO 创业公司 Profound 估值破独角兽,7 个月内再融 1.8 亿美元 D 轮",
+      "url": "https://techcrunch.com/2026/09/15/aeo-startup-profound-hits-unicorn-valuation-raises-180m-series-d-7-months-after-last-round/",
+      "source": "TechCrunch AI",
+      "summary_zh": "做「答案引擎优化」(AEO)的 Profound 完成 1.8 亿美元 D 轮,估值 18 亿美元,距上一轮 9600 万美元 C 轮不到七个月。当搜索入口从传统 SEO 转向大模型的直接回答,「怎么让品牌在 AI 答案里被提到」正长成一个新的营销品类,资本正在快速下注这个方向。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个「相位感知 KV 驱逐」的开源小库,专治 agent 长轨迹爆缓存",
+      "based_on": [
+        { "title": "AgentKV: Phase-Aware KV Eviction for Agentic LLMs", "url": "https://arxiv.org/abs/2609.14872" },
+        { "title": "The Router Within: Eliciting Native Skill Routing from a Frozen LLM", "url": "https://arxiv.org/abs/2609.15982" }
+      ],
+      "why_now": "AgentKV 刚指出 agent 生成的未来注意力是 think/act/tool 等多相位的混合,主曲线角度分析证明常见 KV 驱逐法「假设未来像最近」在 agent 上失效——但业界还没有一个即插即用、跨框架的开源实现;做成库正好补空。",
+      "feasibility": "纯推理、无需训练,单卡 24GB 跑 7B 就够(想测 tool-heavy 轨迹可上 40GB)。核心是一个 KV cache 钩子 + 相位标注 + 打分驱逐策略,约 2–3 周能出可用版本和 benchmark。",
+      "route": [
+        "跑通一个开源 agent 框架(如带工具调用的 ReAct 循环)在 7B 模型上的长轨迹推理,记下 KV 峰值显存和吞吐当基线",
+        "按论文思路给生成过程打「相位」标签(think/act/tool/other),用主角度分析确认不同相位的 query 分布确实分开",
+        "实现相位感知的分组驱逐,和 StreamingLLM、H2O、SnapKV 等常见基线接同一套接口对比精度-显存曲线",
+        "封装成 pip 库 + 一键 benchmark 脚本,配几条真实 agent 轨迹当回归测试,冲 GitHub star"
+      ],
+      "risk": "相位标注若依赖具体 agent 框架的提示结构,泛化性会打折;要设计得对提示模板不敏感,否则库只能服务一种 agent。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "把 GSComplete 的「2D 扩散先验补全 3D 高斯」迁到新采集场景,验证泛化",
+      "based_on": [
+        { "title": "GSComplete: Gaussian Splat Completion with 2D Diffusion Priors", "url": "https://arxiv.org/abs/2609.08449" }
+      ],
+      "why_now": "GSComplete 是 training-free 的:用 SDS(得分蒸馏)加一个「该可见处保留原始 splat」的保持损失来补全高斯,不需要稀缺的 3D 训练数据。training-free 方法最便宜的可发表扩展,就是「迁到另一类输入验证泛化」——目前只在少数对象上示范过。",
+      "feasibility": "单卡 24–40GB 跑通 SDS 补全即可,不训练大模型;主要成本是调 SDS 与保持损失的权衡。约 2–4 周。",
+      "route": [
+        "跑通 GSComplete 官方补全流程,在其示例上复现结果,摸清 SDS 步数和保持损失的敏感度",
+        "换一类残缺来源(如单视角扫描的大缺口、或跨类别物体),固定超参先看崩不崩",
+        "设计「保持 vs 补全」的定量指标(可见区 PSNR/LPIPS 对保留度、缺口区的几何合理性),画不同权重下的权衡曲线",
+        "做消融:去掉保持损失、换不同 2D 扩散先验,看补全质量和一致性各受多大影响"
+      ],
+      "risk": "SDS 本身方差大、易过饱和,换场景后缺口区可能生成与原物体不一致的几何;保持损失调不好会「补了新的、毁了旧的」。"
+    },
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "把点云上采样当「免训练前端」,补跨分辨率 3D 感知的稀疏缺口",
+      "based_on": [
+        { "title": "PC$^2$-AD: Point Cloud Upsampling to Safeguard 3D Anomaly Detection with Resolution-constrained Edge Devices", "url": "https://arxiv.org/abs/2609.14722" }
+      ],
+      "why_now": "PC²-AD 精确指出一个可衡量的痛点:边缘设备的低分辨率传感器让测试点云比训练时稀疏得多,这个「训练-测试采样分辨率鸿沟」改变了局部几何、直接拖垮 3D 异常检测。它把上采样当成补偿前端——这个「先补稠密再送下游」的思路值得迁到检测/分割等其它跨分辨率任务上系统验证。",
+      "feasibility": "单卡 24GB,上采样器 + 一个冻结的下游 3D 模型即可,不改下游权重。约 3 周。",
+      "route": [
+        "在一个公开 3D 数据集上人工降采样制造「稀疏测试 / 稠密训练」的分辨率鸿沟,量出下游任务掉多少点当基线",
+        "跑通一个预训练点云上采样器,按 PC²-AD 的域候选生成思路让它适配目标几何",
+        "把上采样接在下游模型前(下游冻结),测不同上采样倍率下的精度恢复曲线",
+        "对照实验:直接在稀疏数据上微调下游 vs 用上采样前端,比数据成本和最终精度"
+      ],
+      "risk": "上采样可能引入下游没见过的分布伪影,反而误导检测器;对稀疏得太狠(如 16 线激光)的输入,补出来的稠密点可能几何不可信。"
+    }
+  ]
+}
