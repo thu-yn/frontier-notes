@@ -1,0 +1,413 @@
+{
+  "date": "2026-09-17",
+  "editor_note": "今天 HF 榜被一股「递归自我改进」(RSI)的风吹得东倒西歪——《人类造的最后一个 AI》《ScienceBuddy 的递归套递归》一类标题一个比一个唬人,点进去大多还是 agent 循环套壳,先看热闹别当真。真正能落地的反而在效率这条线上:GVA 把 KV cache 的键改成按需重构,Orthrus 那篇复现直接把「无损投机解码」的无损性拆穿——换成 BF16 就只有四成能精确对上,提醒我们「lossless」这词得看用什么精度说。阶跃星辰一口气放出 StepAudio 3 的实时对话版和音乐版,边说边想、边想边唱的思路值得点开。产业侧 Anthropic 把 Claude 聊天和 Cowork 并成一个入口、还端出对标 Google 的 Docs/Slides,把办公套件这块也圈了进来;另一头 AI 数据中心正和电网、城市、电子垃圾正面撞上,算力的账单终究要有人付。每日一理讲散度定理(和点云的泊松重建正好呼应),思想碰撞拿库普曼算子去撞激光雷达序列压缩——都在做同一件事:把复杂问题降一维。",
+  "math_note": {
+    "name": "散度定理",
+    "name_en": "Divergence Theorem (Gauss–Ostrogradsky)",
+    "field": "向量分析 / 微积分",
+    "one_liner": "只要知道场在表面上怎么流,就不用去数内部每一个源头。",
+    "statement": "散度定理说的是:一个向量场 $F$ 穿过闭曲面 $\\partial V$ 往外的总流量,恰好等于它的散度在所围体积 $V$ 里的积分——$\\iint_{\\partial V} F\\cdot dS=\\iiint_V (\\nabla\\cdot F)\\,dV$。这里散度 $\\nabla\\cdot F=\\partial F_x/\\partial x+\\partial F_y/\\partial y+\\partial F_z/\\partial z$ 度量的是每一点上流体在「冒出来」还是「被吸进去」。一句话:边界上的净流出,等于内部所有小源头的加总。",
+    "origin": "高斯 1813 年前后研究引力和静电势时用到了它的雏形,俄国数学家奥斯特罗格拉茨基 1826 年给出一般形式的证明,所以它也叫高斯–奥斯特罗格拉茨基公式。动机很实在:那个年代物理学家想把「一团电荷激发的场」从繁琐的曲面积分,换成对电荷密度的体积分——散度定理正是这座桥。",
+    "derivation": [
+      { "math": "\\iint_{\\partial V} F\\cdot dS", "note": "想算的是向量场穿过整个闭曲面往外漏了多少;曲面形状一复杂,直接在上面积分就很难受。" },
+      { "math": "V=\\bigcup_i \\Delta V_i", "note": "把体积切成许多小盒子。相邻盒子贴在一起的那些内壁,流出这个盒子就等于流进隔壁盒子,方向相反,正好两两抵消。" },
+      { "math": "\\oint_{\\partial \\Delta V_i} F\\cdot dS \\approx (\\nabla\\cdot F)\\,\\Delta V_i", "note": "对一个小盒子,六个面的净流出除以体积、取极限就是散度的定义——散度本质是「单位体积的净流出率」。" },
+      { "math": "\\sum_i \\oint_{\\partial \\Delta V_i} F\\cdot dS = \\iint_{\\partial V} F\\cdot dS", "note": "把所有小盒子的净流出加起来,内部相邻面全消掉,只剩最外层没人抵消的那一层——正是原来的闭曲面。" },
+      { "math": "\\iint_{\\partial V} F\\cdot dS = \\iiint_V (\\nabla\\cdot F)\\,dV", "note": "左边(边界积分)= 右边(散度的体积分),两头一夹,定理就出来了。" }
+    ],
+    "applications": [
+      { "area": "电磁学", "detail": "高斯定律 $\\oint E\\cdot dS=Q/\\varepsilon_0$ 就是它的直接产物:把「电场穿过闭面的通量」换成「里面包了多少电荷」,麦克斯韦方程的积分-微分互换全靠它。" },
+      { "area": "流体与传热", "detail": "连续性方程「流进减流出 = 密度变化」用它从积分形式写成微分形式,CFD 求解器的守恒律离散都建在这上面。" },
+      { "area": "点云表面重建", "detail": "泊松重建把带朝向的点云看成一个指示函数的梯度场,用散度把法向信息汇总成一个泊松方程再解出连续表面——散度定理是这套流程的数学地基。" },
+      { "area": "几何处理", "detail": "计算网格体积、检测封闭性、做无散度的流体动画,都靠边界积分和体积分之间的这层等价关系。" }
+    ],
+    "takeaway": "「边界能告诉你内部发生了什么」——只要看清场在表面上怎么流,就不必窥探内部每一点。这种把体积分降到面积分的「降一维」思想,是格林公式、斯托克斯定理乃至上同调的共同母题。",
+    "viz": {
+      "type": "vectorfield",
+      "caption": "拖动种子点放到不同位置看流线:这个场处处向外发散(散度恒为 2),流线一律往外冲。定理(平面版)说不管你画多大的闭曲线,穿过它的净流量都等于圈住的面积乘以散度。",
+      "params": { "fx": "x", "fy": "y", "xmin": -2, "xmax": 2, "ymin": -2, "ymax": 2, "density": 11, "seedX": 0.6, "seedY": 0.4, "steps": 200, "dt": 0.02 }
+    }
+  },
+  "crossover": {
+    "theory": "库普曼算子",
+    "theory_en": "Koopman Operator",
+    "field": "动力系统 / 算子理论",
+    "era": "1931 年库普曼提出,2000 年代动态模态分解(DMD)等数据驱动方法出现后才真正能算",
+    "one_liner": "非线性的世界,借一双「观测」的眼睛就变线性了——只要你肯先替点云排好座位。",
+    "theory_core": "库普曼算子的想法是:一个非线性动力系统 $x_{t+1}=f(x_t)$ 本身难缠,但如果不看状态本身、改看状态的「观测函数」 $g(x)$,那么这些观测量随时间的演化是线性的——存在一个(无穷维)线性算子 $\\mathcal{K}$ 使 $g(x_{t+1})=\\mathcal{K}g(x_t)$。实践里用动态模态分解(DMD)在有限个观测量上求 $\\mathcal{K}$ 的有限维近似 $K$:让 $X_{t+1}\\approx K X_t$ 最小二乘,$K$ 的特征值就给出各模态的频率与衰减。好处是把「预测下一帧」变成一次矩阵乘法。",
+    "pc_problem": "自动驾驶的激光雷达是连续帧的点云序列:一帧 64 线 LiDAR 约 10 万点、2MB 上下,10Hz 跑一小时就是几十 GB。现在的时序压缩(MPEG V-PCC、学界的 OctSqueeze / VoxelContext-Net)大多做帧间预测 + 残差编码,但预测器要么是重网络(编码慢),要么只用上一帧的局部运动,对「整场景怎么演化」没有全局模型;下游做轨迹预测 / 占用栅格预测时,也常常一帧一帧地跑深网络,几十毫秒起步。",
+    "bridge": "把库普曼里的对象逐一对到点云序列上:动力系统的状态 $x_t$ ↔ 第 $t$ 帧点云体素化后的占用 / 特征网格(拉平成固定长度向量);状态演化 $f$ ↔ 场景随时间的真实变化(车流、自车运动);观测函数 $g$ ↔ 对体素网格做的一组特征提升(可以是恒等,也可以是一层小编码器给的嵌入);库普曼算子 $\\mathcal{K}$ ↔ 一个在嵌入空间里预测下一帧的线性矩阵 $K$;DMD 的特征值与模态 ↔ 场景里周期性或稳定衰减的运动成分。",
+    "angles": [
+      {
+        "dim": "算法优化",
+        "idea": "用 DMD 学一个线性预测器,替掉帧间的深度预测网络。把最近 $m$ 帧的体素嵌入堆成矩阵,最小二乘解出 $K$,预测下一帧就只是 $\\hat z_{t+1}=Kz_t$ 再解码回占用网格;还能滑动窗口在线更新 $K$,适应场景切换。",
+        "gain": "预测从一次深网络前向(几十 ms)降到一次矩阵乘(维度几百时约 $O(d^2)$,亚毫秒级,估算);编码端也省掉一个大预测器。",
+        "cost": "线性模型只吃「近似线性可预测」的运动,急转弯、突然窜出的物体会预测崩、残差变大,得靠残差编码兜底。"
+      },
+      {
+        "dim": "存储",
+        "idea": "不存每帧完整网格,只存初始帧 + $K$ 的低秩特征模态(DMD modes)+ 每帧的模态系数。整段序列被压成「一组时空模态的线性组合」,系数是少数几个标量。",
+        "gain": "若场景由 $r$ 个主模态主导($r\\ll d$),一段序列的存储从 $T\\cdot d$ 降到 $d\\cdot r + T\\cdot r$,长序列码率有望省一大截(估算,取决于场景可线性预测的程度)。",
+        "cost": "只对结构化、重复性强的场景(高速巡航)划算;城市复杂路口模态数暴涨,优势就消失了。"
+      },
+      {
+        "dim": "复杂度",
+        "idea": "求 $K$ 用截断 SVD 的 compressed DMD,只在低维子空间上做,而不是在原始 $d$ 维网格上直接求最小二乘。",
+        "gain": "从直接最小二乘的约 $O(d^3)$ 降到 $O(d r^2)$($r$ 是保留的秩),单卡甚至 CPU 就能实时更新 $K$。",
+        "cost": "截断秩 $r$ 选小了丢细节、选大了没省到,需要按场景调;体素分辨率一高,$d$ 变大,特征提升那一步还是会拖慢。"
+      },
+      {
+        "dim": "鲁棒性",
+        "idea": "点云没有帧间点对应,直接对原始点做 DMD 会错位;先固定体素网格把每帧投到同一坐标系再做 Koopman。用带控制项的版本把自车位姿当外部输入 $u_t$($z_{t+1}=Kz_t+Bu_t$),消掉自车运动带来的整体平移。",
+        "gain": "把「自车动」和「场景动」解耦,预测残差里只剩真正的物体运动,估计能显著降低残差能量。",
+        "cost": "体素化本身丢精度(网格越粗越丢),且若改用学习的软对应而学不好,线性假设直接不成立。"
+      }
+    ],
+    "experiment": [
+      "在 KITTI 或 nuScenes 的一小段连续帧上,把每帧点云体素化成固定分辨率占用网格、拉平成向量,用 numpy/PyDMD 跑通标准 DMD(纯 CPU 即可),先看「预测下一帧占用」的 IoU 有多高。",
+      "换成「初始帧 + 模态 + 系数」的重建方式,画码率–重建 IoU 曲线,和直接存体素、或简单帧间差分作对比。",
+      "加入带控制项的 Koopman,把自车位姿当输入,看残差能量能降多少。",
+      "把恒等观测换成一层小自编码器学到的嵌入(单卡训练),看非线性观测能不能扩大可线性预测的场景范围。",
+      "和一个轻量学习 baseline(如帧间 3D 卷积预测)比编码耗时与精度,给出「什么场景下 Koopman 划算」的结论。"
+    ],
+    "prior_art": [
+      { "title": "Dynamic Mode Decomposition(Schmid, 2010)与库普曼算子的数据驱动近似", "note": "DMD 早已是流体、视频动力学预测的成熟工具,PyDMD 有现成实现;但主要用在规则网格 / 流场上,没进点云这条线。" },
+      { "title": "V-PCC / OctSqueeze / VoxelContext-Net 等 LiDAR 序列压缩工作", "note": "这些是点云时序压缩的现有 baseline,做帧间预测 + 残差,但预测器是启发式或深网络,没用算子理论的全局线性模型。" },
+      { "note": "查下来没找到直接把 Koopman/DMD 用于 LiDAR 序列压缩或占用预测的公开工作,最接近的是把 Koopman 用于视频 / 物理场预测、以及可变形物体建模;点云这条线的空白正是机会,也可能正因为「没对应关系」这个坑没人趟通。" }
+    ],
+    "reality_check": "点云帧间没有天然对应关系,而 DMD 骨子里假设每一维都是同一个「状态坐标」——不先把点云钉死到固定网格或学好软对应,线性算子学到的就是一堆错位噪声;可一旦为了对齐把体素调粗,你省下的码率又被精度损失吃回去。"
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Continual Learning Mechanisms Compose for Long-Horizon Memorization",
+      "title_zh": "长程记忆:多种持续学习机制组合起来才不忘",
+      "url": "https://arxiv.org/abs/2609.06986",
+      "hf_url": "https://huggingface.co/papers/2609.06986",
+      "authors": "Zheyuan Zhang、Alvin Zhang、Daniel Khashabi 等",
+      "affiliation": "约翰霍普金斯大学",
+      "upvotes": 287,
+      "one_liner": "单个抗遗忘技巧撑不住 100 个任务,几种一起上才行。",
+      "summary_zh": "提出「长程记忆」设定:模型连续微调学 100 个问答任务,既不回看旧数据、推理时也不给任务提示,考验的是能不能记住早期学过的东西。他们发现任何单一持续学习机制(正则、回放、参数隔离等)都扛不住这么长的序列,但把针对不同遗忘来源的机制组合起来,保留率明显更好。结论朴素但有用:抗遗忘不是找一招鲜,而是按遗忘的不同成因叠加对策。",
+      "tags": ["持续学习", "LLM", "灾难性遗忘"]
+    },
+    {
+      "domain": "ai",
+      "title": "AI for Games in the Foundation Model Era",
+      "title_zh": "基座模型时代的游戏 AI:一张全流程地图",
+      "url": "https://arxiv.org/abs/2609.16679",
+      "hf_url": "https://huggingface.co/papers/2609.16679",
+      "authors": "Meng Luo、Yanlin Li、Hao Li 等",
+      "affiliation": "新加坡国立大学",
+      "upvotes": 106,
+      "one_liner": "从会玩游戏,到会做游戏、改游戏、评游戏,一次梳理清楚。",
+      "summary_zh": "一篇综述,把基座模型和世界模型在游戏全生命周期里的用法归成六个角色:玩与行动、给玩家和玩法建模、设计游戏、开发维护、运行时生成与适配、以及评测。作者想回答的是哪些能力能跨游戏 / 引擎 / 玩家群迁移、哪些是绑死在具体游戏上的。适合想入场「AI + 游戏」又被满地碎片工作绕晕的人拿来当索引。",
+      "tags": ["游戏", "基座模型", "综述"]
+    },
+    {
+      "domain": "ai",
+      "title": "StepAudio 3 Realtime Technical Report",
+      "title_zh": "StepAudio 3 实时版:边说边想的语音对话模型",
+      "url": "https://arxiv.org/abs/2609.14005",
+      "hf_url": "https://huggingface.co/papers/2609.14005",
+      "authors": "Bin Lin、Bo Zhao、Boyang Zhang 等",
+      "affiliation": "阶跃星辰(StepFun)",
+      "upvotes": 91,
+      "one_liner": "私下推理和开口说话并行,不用想完再答。",
+      "summary_zh": "面向实时语音交互的音频-语言模型,围绕「听-聊-想-做」的连续闭环设计:深度感知抓声学线索理解意图,双工建模处理停顿、附和和打断。最关键的是「边说边想」——把内部推理和语音输出并行跑,化解「想得深」和「延迟低」的矛盾。推理模式下在 StepAudioChat 上拿到 73.0 的宏平均。",
+      "tags": ["语音", "实时交互", "音频大模型"]
+    },
+    {
+      "domain": "ai",
+      "title": "StepAudio 3 Music Technical Report",
+      "title_zh": "StepAudio 3 音乐版:能做长曲,还听得懂文本指挥",
+      "url": "https://arxiv.org/abs/2609.16034",
+      "hf_url": "https://huggingface.co/papers/2609.16034",
+      "authors": "Chengli Feng、Zhiyue Wu、Jiahao Song 等",
+      "affiliation": "阶跃星辰(StepFun)",
+      "upvotes": 70,
+      "one_liner": "单码本 tokenizer + 流匹配 DiT,长音乐也稳得住结构。",
+      "summary_zh": "大规模长时音乐生成模型,支持显式的音乐编排和开放文本控制。音频用一个 65536 词、50Hz 的单码本 tokenizer 表示,靠语义自监督 + 多任务训练保住乐曲结构;再用流匹配的扩散 Transformer 预测连续 VAE 隐变量,解码成 48kHz 音频。作者把单码本 VQ、语义 / 声学 RVQ、不同 DiT 配置都摆出来对比,这种「把设计选择讲清楚」的技术报告比只报分数实在。",
+      "tags": ["音乐生成", "扩散模型", "音频"]
+    },
+    {
+      "domain": "ai",
+      "title": "Grouped Value Attention: Efficient KV Caching via On-Demand Key Reconstruction",
+      "title_zh": "分组值注意力:键按需重构,给 KV cache 减负",
+      "url": "https://arxiv.org/abs/2609.13285",
+      "hf_url": "https://huggingface.co/papers/2609.13285",
+      "authors": "Vishesh Tripathi、Abhay Kumar、Ramsha Khan",
+      "upvotes": 64,
+      "one_liner": "只存值不存键,键用一个线性映射临时重造出来。",
+      "summary_zh": "KV cache 是 Transformer 解码的主要瓶颈,显存和读带宽都随序列变长。GQA 靠共享键值头省了一半,但键和值每步都还得存。GVA 只存「分组后的值」,内容键用一个学到的线性映射按需重构,推理时这个映射还能吸进 query 里、根本不用把键显式算出来;位置信息则由一小段解耦的 RoPE 通道单独缓存。省 KV 的思路很干净,代价是那个线性映射得训练、且重构键有没有精度损失要看配置。",
+      "tags": ["KV cache", "注意力", "推理效率"]
+    },
+    {
+      "domain": "ai",
+      "title": "How Lossless Is Lossless Speculative Decoding? The Role of Numerical Precision in Orthrus",
+      "title_zh": "无损投机解码到底有多无损?精度才是关键",
+      "url": "https://arxiv.org/abs/2609.15504",
+      "hf_url": "https://huggingface.co/papers/2609.15504",
+      "authors": "Ilya Koziev、Leonid Sinev、Ivan Oseledets",
+      "upvotes": 29,
+      "one_liner": "换成 BF16,「无损」就只剩四成能精确对上。",
+      "summary_zh": "Orthrus 是个自回归 + 扩散的混合架构,用冻结的自回归骨干并行出多 token 来加速,核心卖点是「内部共识」能做到无损投机解码、输出和纯自回归完全一致。这篇独立复现直接把这个说法放到不同数值精度下检验:BF16 推理时,作者 checkpoint 只有 45%、自己训的只有 43% 的样本能精确对上(1190 条 prompt、12 个领域)。一句话:「lossless」得看你用什么精度说,这种较真的复现值得多来点。",
+      "tags": ["投机解码", "推理加速", "复现"]
+    },
+    {
+      "domain": "ai",
+      "title": "Learning to Solve Hard Problems in RL for LLMs by Never Giving Up",
+      "title_zh": "RL 训 LLM 的「马太效应」:越会的题涨得越多",
+      "url": "https://arxiv.org/abs/2609.13443",
+      "hf_url": "https://huggingface.co/papers/2609.13443",
+      "authors": "Michael Noukhovitch、Hamish Ivison、Nathan Lambert 等",
+      "affiliation": "Ai2(艾伦 AI 研究所)",
+      "upvotes": 9,
+      "one_liner": "别把算力都花在已经会做的简单题上。",
+      "summary_zh": "指出用 RL 训 LLM 时收益极不均匀——简单题(模型本来就会)涨得多,难题涨得少,像经济学里的「富者愈富」。作者说这不只是难题需要更多算力,现代 RL 方法本身在简单题上浪费了太多采样。他们提出 Never Give Up(NGU)自适应采样,把算力动态挪向难题。思路直白,能不能真把难题啃下来是关键看点。",
+      "tags": ["强化学习", "LLM", "采样策略"]
+    },
+    {
+      "domain": "ai",
+      "title": "Expert-Space Exploration in MoE Reinforcement Learning",
+      "title_zh": "在专家空间里探索:给 MoE 的 RL 加一味多样性",
+      "url": "https://arxiv.org/abs/2609.13058",
+      "hf_url": "https://huggingface.co/papers/2609.13058",
+      "authors": "Hongyi He、Zhenghao Lin、Xiao Liu 等",
+      "affiliation": "微软研究院",
+      "upvotes": 5,
+      "one_liner": "扰动路由等于变相调高温度,给 rollout 添花样。",
+      "summary_zh": "MoE 模型做 RL 后训练时,大家一般把专家选择当固定组件、只顾优化稳定性。作者发现扰动路由能有效改变输出、增加 rollout 多样性,效果类似调高解码温度;但硬扰会激活不合适的专家。于是他们设计了受控的「专家空间探索」,在保留有用专家的前提下引入多样性。给 MoE 的 RL 探索开了个不靠温度的新旋钮。",
+      "tags": ["MoE", "强化学习", "后训练"]
+    },
+    {
+      "domain": "ai",
+      "title": "The Router Within: Eliciting Native Skill Routing from a Frozen LLM",
+      "title_zh": "冻结的 LLM 自己就知道该调哪个技能",
+      "url": "https://arxiv.org/abs/2609.15982",
+      "hf_url": "https://huggingface.co/papers/2609.15982",
+      "authors": "Ruishuo Chen、Xun Wang、Yu Chen 等",
+      "affiliation": "清华大学",
+      "upvotes": 3,
+      "one_liner": "两个线性映射,就能从模型的前向里读出该用哪个 skill。",
+      "summary_zh": "给 agent 加 skill,关键是选对。现在的做法要么把所有 skill 的说明塞进上下文(分散注意力、还限制 skill 数量),要么用检索把选择挪到模型能力之外。作者证明冻结的 agent LLM 在自己的前向里已经带着路由信号,只用两个线性映射就能读出来、上下文里一个 skill 文本都不用放。方法叫 Gavel:先扫一眼投影中层状态、再下判断。省上下文又不丢能力,思路很讨巧。",
+      "tags": ["Agent", "技能路由", "LLM"]
+    },
+    {
+      "domain": "ai",
+      "title": "Thought without systematicity? Evaluating reasoning models on rule induction tasks",
+      "title_zh": "推理模型有「系统性」吗?换个同构的题就露馅",
+      "url": "https://arxiv.org/abs/2609.13948",
+      "hf_url": "https://huggingface.co/papers/2609.13948",
+      "authors": "Simon Schug、Brenden M. Lake",
+      "affiliation": "普林斯顿大学",
+      "upvotes": 2,
+      "one_liner": "会做一道题,不代表会做它结构等价的变体。",
+      "summary_zh": "人类认知讲究「系统性」——懂一个概念就该懂它的近亲变体。作者把认知科学里的规则归纳任务搬来考推理模型:用重组、替换等同构变换造出结构等价的题目变体。结果发现模型能解出某道题,却在它的等价变体上翻车,系统性并不稳。给「推理模型到底在推理还是在记模式」又添了一个具体的反例。",
+      "tags": ["推理", "评测", "认知科学"]
+    },
+    {
+      "domain": "ai",
+      "title": "ModaLens: Measuring Image Sensitivity in Report-Conditioned Medical VLMs",
+      "title_zh": "ModaLens:医学 VLM 到底看没看那张片子?",
+      "url": "https://arxiv.org/abs/2609.15635",
+      "hf_url": "https://huggingface.co/papers/2609.15635",
+      "authors": "Sebastián Andrés Cajas Ordóñez、Maximin Lange、Quang Bui 等",
+      "affiliation": "MIT",
+      "upvotes": 1,
+      "one_liner": "有报告在手时,换掉图像,模型答案几乎不变。",
+      "summary_zh": "放射报告本身往往就能答临床问题,于是很难判断视觉-语言模型是不是真用了图像。ModaLens 用「配对换图」审计:把每个病例的图像换成另一张(常是同病人另一次检查),问题和报告不动,看答案变不变。结果 MedGemma-27B 在有报告时只有 4.26% 的答案会变、没报告时是 20.94%——差 16.7 个百分点,说明报告一在,模型基本就不看图了。一个简单又扎实的「模型有没有偷懒」探针。",
+      "tags": ["医学VLM", "多模态", "评测"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "alibaba/open-code-review",
+      "url": "https://github.com/alibaba/open-code-review",
+      "language": "Go",
+      "stars": 31601,
+      "stars_today": "3,215",
+      "one_liner": "确定性流水线 + LLM Agent,阿里内部实战过的代码审查工具。",
+      "summary_zh": "阿里开源的代码审查工具,走「确定性流水线 + LLM Agent」的混合路线,能定位到具体行、号称在阿里规模下经过实战检验。定位是给团队用的自动 code review,又快又省。想给 CI 接一个能落到行级、又不是纯 prompt 套壳的审查器,可以看看。"
+    },
+    {
+      "domain": "ai",
+      "name": "JustVugg/colibri",
+      "url": "https://github.com/JustVugg/colibri",
+      "language": "C",
+      "stars": 34951,
+      "stars_today": "1,532",
+      "one_liner": "纯 C 零依赖,把 MoE 专家从磁盘边读边算,手头的机器也能跑巨模型。",
+      "summary_zh": "纯 C、零依赖的推理引擎,把 MoE 大模型的专家权重从磁盘按需流式加载,本质是拿磁盘 IO 换显存内存。卖点是引擎极小、模型可以极大,让消费级硬件也能跑前沿 MoE。适合想在本地跑大 MoE、又不想装一堆依赖的人。"
+    },
+    {
+      "domain": "ai",
+      "name": "jamiepine/voicebox",
+      "url": "https://github.com/jamiepine/voicebox",
+      "language": "TypeScript",
+      "stars": 54318,
+      "stars_today": "409",
+      "one_liner": "开源 AI 语音工作室:克隆、听写、创作一条龙。",
+      "summary_zh": "开源的 AI 语音工作室,支持声音克隆、语音听写和音频创作,把一堆语音能力打包成一个能自己部署的工具。想要一条不依赖闭源 API 的语音生产线可以试。和今天阶跃的 StepAudio 正好一个偏产品、一个偏模型。"
+    },
+    {
+      "domain": "ai",
+      "name": "alphaXiv/OpenResearch",
+      "url": "https://github.com/alphaXiv/OpenResearch",
+      "language": "Rust",
+      "stars": 4332,
+      "stars_today": "1,036",
+      "one_liner": "给你的编码 agent 装上「做研究」的本事。",
+      "summary_zh": "把编码 agent 改造成研究 agent 的开源框架,让它去查文献、跑实验、串起研究流程,而不只是写代码。冲着「自动化科研助手」去的,适合想搭自己那套 research agent、又不想从零写调度的人。"
+    },
+    {
+      "domain": "ai",
+      "name": "Tencent/WeKnora",
+      "url": "https://github.com/Tencent/WeKnora",
+      "language": "Go",
+      "stars": 25208,
+      "stars_today": "1,201",
+      "one_liner": "把一堆散文档变成能问答的 RAG、会推理的 agent、自维护的 Wiki。",
+      "summary_zh": "腾讯开源的 LLM 知识平台,把原始文档喂进去,产出可查询的 RAG、能自主推理的 agent 和自我维护的 Wiki。定位是企业内部知识库的一站式方案。想快速搭一个上档次的文档问答系统、又要能私有部署的团队可以关注。"
+    },
+    {
+      "domain": "ai",
+      "name": "multimodal-art-projection/YuE",
+      "url": "https://github.com/multimodal-art-projection/YuE",
+      "language": "Python",
+      "stars": 9336,
+      "stars_today": "370",
+      "one_liner": "前沿音乐生成:符号化编排、零样本翻唱、还能像 agent 一样改曲。",
+      "summary_zh": "开源的前沿音乐生成项目 YuE2,支持符号化的音乐规划、零样本翻唱和 agent 式的音乐编辑。和今天阶跃的 StepAudio 3 Music 撞题,给想在本地折腾音乐生成、又想要开放权重的人多一个选择。"
+    },
+    {
+      "domain": "ai",
+      "name": "roboflow/supervision",
+      "url": "https://github.com/roboflow/supervision",
+      "language": "Python",
+      "stars": 50568,
+      "stars_today": "292",
+      "one_liner": "计算机视觉的「瑞士军刀」,检测、跟踪、标注的活儿都替你写好。",
+      "summary_zh": "Roboflow 维护的计算机视觉工具库,把检测、分割、跟踪、标注、计数这些反复要写的活儿封装成可复用组件,能和主流模型接上。属于做 CV 工程绕不开的基础设施,新手上手快、老手省事。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "Anthropic 把 Claude 聊天和 Cowork 并成一个入口,还端出 Docs 和 Slides",
+      "url": "https://techcrunch.com/2026/09/16/anthropic-merges-claude-chat-and-cowork-in-one-interface/",
+      "source": "TechCrunch AI / The Verge",
+      "summary_zh": "Anthropic 把原本分开的 Claude 聊天和 Cowork(协作工作区)合并到同一个界面,聊天和「让 Claude 干活」不再来回切换。同时推出对标 Google 的 Claude Docs 和 Slides,把文档和幻灯片生成也收进来。信号很清楚:Anthropic 想把办公套件这块地也圈进 Claude。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Google 开放智能家居,任何 AI agent 都能通过 MCP 控制你的家",
+      "url": "https://www.theverge.com/tech/996310/google-home-mcp-integration-agentic-ai-smart-home-price-release-date",
+      "source": "The Verge / TechCrunch AI",
+      "summary_zh": "Google 让第三方 AI agent 通过 MCP 接口接管 Google Home 设备,不再限定自家助手。也就是说你可以让别家的 agent 直接开灯、调温、管门锁。智能家居从「单一助手」走向「谁来都能连」的开放接口,MCP 又落一城。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "SK 海力士传与英特尔洽谈,在美国合建存储芯片",
+      "url": "https://techcrunch.com/2026/09/16/sk-hynix-reportedly-in-talks-with-intel-to-build-memory-chips-in-us/",
+      "source": "TechCrunch AI",
+      "summary_zh": "有消息称 SK 海力士正与英特尔洽谈,借英特尔的美国厂能力生产存储芯片。若成真,一边是存储龙头想在美国本土落产能、避关税和供应链风险,一边是英特尔想把闲置的代工产能盘活。AI 内存(HBM、LPDDR)需求爆表,存储厂的美国布局在加速。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Agility 新款人形机器人 Digit 5:遇到人会停下、下蹲避让",
+      "url": "https://arstechnica.com/ai/2026/09/agilitys-new-humanoid-robot-will-stop-squat-to-avoid-harming-human-coworkers/",
+      "source": "Ars Technica / The Robot Report",
+      "summary_zh": "Agility Robotics 发布 Digit 5,换了新的腿部结构和电池,重点在安全升级:检测到人靠近会停下甚至下蹲,减少撞伤同事的风险。人形机器人进厂和人同场作业,安全设计比炫动作更决定它能不能真被工厂接受。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "诺华一天两条:砍掉 ALS 项目,又花 1.25 亿美元买血脑屏障平台",
+      "url": "https://www.fiercebiotech.com/biotech/novartis-pays-sironax-125m-acquire-platform-crossing-blood-brain-barrier",
+      "source": "Fierce Biotech",
+      "summary_zh": "诺华二期失败后终止了渐冻症(ALS)项目,给本就承压的研发线又添一道坎;同一天它掏 1.25 亿美元收购 Sironax 的血脑屏障穿透平台。一砍一买之间能看出取舍:退出没跑通的适应症,押注「把药送进大脑」这个中枢神经领域的老大难技术。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "被拒之后,FDA 批准 Telix 的 Pixclara——首个脑癌 FET-PET 成像药",
+      "url": "https://www.fiercebiotech.com/medtech/after-rejection-fda-approves-telixs-pixclara-first-fet-pet-imaging-drug-brain-cancer",
+      "source": "Fierce Biotech",
+      "summary_zh": "经历一次拒绝后,FDA 批准了 Telix 的 Pixclara,这是首个用于脑癌的 FET-PET 成像药物。FET-PET 能比常规 MRI 更清楚地区分肿瘤活性组织和治疗后的坏死、水肿,帮医生判断复发、圈定放疗范围。诊断端一个实打实的空白被补上。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "黄仁勋:不需要 AI 监管,安全交给我们就行",
+      "url": "https://techcrunch.com/2026/09/15/we-dont-need-ai-regulation-leave-safety-to-us-nvidias-jensen-huang-says/",
+      "source": "TechCrunch AI",
+      "summary_zh": "黄仁勋公开表态,反对给 AI 加监管,主张把安全交给厂商自律。这和 OpenAI、Anthropic 那边「给前沿踩刹车」的调子正好唱反调。「该不该主动减速、该由谁来管」的行业分歧,正在头部人物之间摆到台面上。"
+    },
+    {
+      "domain": "energy",
+      "title_zh": "AI 数据中心的电力与电子垃圾账单,正撞上电网和城市的反对",
+      "url": "https://techcrunch.com/2026/09/15/the-ai-data-center-boom-is-colliding-with-cities-scarred-by-big-industry/",
+      "source": "TechCrunch AI / The Verge",
+      "summary_zh": "多篇报道指向同一件事:AI 数据中心的狂飙正和现实撞车——巨大的电力需求压向本就吃紧的电网,快速淘汰的硬件堆出成山的电子垃圾,曾被重工业伤过的城市对新建数据中心普遍反感,民调里数据中心几乎哪都不受待见。算力的账最终要落到电网、土地和废弃物上,这笔环境与能源成本躲不掉。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "一个 4B 小模型,把查询计划做得比 Postgres 快 81%",
+      "url": "https://rohanbansal.com/qorl",
+      "source": "Hacker News",
+      "summary_zh": "有人用强化学习训了个 4B 的小模型来做数据库查询优化,生成的执行计划比 Postgres 自带优化器快 81%(作者自测)。思路是把「选哪个查询计划」当成 RL 问题,让小模型学会挑更快的执行路径。小模型 + 专门任务打过通用启发式,是 AI 渗进系统软件底层的一个有意思信号,当然还得看它在更杂的真实负载上稳不稳。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个「投机解码到底无不无损」的开源审计小库",
+      "based_on": [
+        { "title": "How Lossless Is Lossless Speculative Decoding? The Role of Numerical Precision in Orthrus", "url": "https://arxiv.org/abs/2609.15504" }
+      ],
+      "why_now": "这篇复现刚把「无损投机解码」在 BF16 下只有四成能精确对上的事实摆出来,但社区里各种投机解码(EAGLE/Medusa/Orthrus 等)都自称 lossless,却没有一个统一、即插即用的工具去量化它到底在什么精度、什么输入下才真无损——正好做成库补空。",
+      "feasibility": "纯推理、无需训练,单卡 24GB 跑 7B 就够,想只测逻辑甚至用小模型 CPU 也行。核心是一个「对同一批 prompt,分别用投机解码和贪心自回归各跑一遍,逐 token 比对 + 分精度统计」的 harness,约 2–3 周能出可用版本。",
+      "route": [
+        "选一个开源投机解码实现(如 EAGLE 或 Medusa),在 7B 模型上跑通它和纯自回归贪心解码,先各得到一份输出序列",
+        "写比对器:统计精确匹配率、首次分歧位置,按领域 / 长度分桶,先在 FP32 下确认能对上",
+        "切到 BF16/FP16 重跑,复现论文那种「精度一降匹配率大跌」的现象,画精度–匹配率曲线",
+        "封装成 pip 库 + 一键报告脚本,支持接入任意「draft + verify」式解码器,配几个模型当回归基线,冲 GitHub star"
+      ],
+      "risk": "不同投机解码框架的接口五花八门,想做到「即插即用」得设计一层足够通用的适配接口,否则库只能测一两种实现。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "把「值分组 + 键重构」搬到别的开源模型上,验证 KV 压缩能不能泛化",
+      "based_on": [
+        { "title": "Grouped Value Attention: Efficient KV Caching via On-Demand Key Reconstruction", "url": "https://arxiv.org/abs/2609.13285" }
+      ],
+      "why_now": "GVA 提出只存分组值、键用一个学到的线性映射按需重构,但论文只在自己那套配置里验证;「基本零训练地迁移到已有 GQA 模型、只学那个线性映射、看精度掉多少」本身就是个低成本、可发表的泛化性扩展。",
+      "feasibility": "单卡 24–40GB,拿一个已训好的 GQA 小模型(如 7B),冻结主干、只训键重构的线性映射(参数量极小),几天能跑出一版;评估 KV 显存、长上下文困惑度和下游精度,整体 2–3 周。",
+      "route": [
+        "跑通一个 GQA 开源模型的标准推理,记下 KV cache 峰值显存和长上下文困惑度当基线",
+        "实现 GVA 的「分组值 + 线性映射重构内容键 + 解耦 RoPE 位置键」,在一个校准集上只训这个线性映射、主干冻结",
+        "在长上下文任务上比 GVA 版和原版的显存-困惑度曲线,定位精度损失主要来自哪些层 / 哪些头",
+        "做消融:映射秩、分组大小、要不要少量微调,给出「零训练直接换 vs 轻微调」的性价比结论"
+      ],
+      "risk": "键本身可能不是低秩可线性重构的,零训练直接换精度可能掉得多;若必须联合微调才能追平,「即插即用」的卖点就打折。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个通用的「VLM 到底看没看图」配对审计工具",
+      "based_on": [
+        { "title": "ModaLens: Measuring Image Sensitivity in Report-Conditioned Medical VLMs", "url": "https://arxiv.org/abs/2609.15635" }
+      ],
+      "why_now": "ModaLens 用「配对换图」漂亮地证明了医学 VLM 在有文本时基本不看图,但它绑在放射报告场景;这套「换掉图像看答案变不变」的探针其实对所有带文本上下文的 VLM 都通用(文档问答、图表推理、多模态 agent),做成开源库正合适。",
+      "feasibility": "纯推理、无需训练,单卡跑本地 VLM 或直接调开源权重都行,小规模评测甚至 CPU 可跑。核心是「配对换图 + 答案变化率统计 + 分层报告」的评测流程,2 周内能出第一版。",
+      "route": [
+        "复现 ModaLens 的核心指标:对一个开源 VLM,在「有文本上下文 / 无文本上下文」两种设定下,把图像替换成同类另一张,统计答案变化率",
+        "抽象出与领域无关的接口:数据集(图像 + 问题 + 可选上下文)、换图策略、答案比较器,先在一个公开 VQA 集上跑通",
+        "加几种换图策略(同类替换、随机替换、加噪 / 遮挡)和图像敏感度指标,让「模型有没有偷懒」可量化对比",
+        "封装成 pip 库 + 排行榜脚本,给主流开源 VLM 各跑一遍出「图像依赖度」榜单,冲 GitHub star"
+      ],
+      "risk": "「答案有没有变」的自动判定在开放式回答上不好做,得设计稳健的答案等价性比较(不能只靠字符串匹配),否则统计噪声会淹没信号。"
+    }
+  ]
+}
