@@ -1,0 +1,404 @@
+{
+  "date": "2026-09-19",
+  "editor_note": "今天最扎堆的还是「怎么把大模型塞进有限内存」这件事:DeepSeek 直接开一版 Flash 死磕 KV cache,Edge0 把 35B MoE 从 SSD 里流式喂出来,连 arXiv 上都是 D-Quant、Fathom、MeshKV 一路 KV cache 打到底——推理成本的战线已经从算力彻底转到了带宽和字节。想点开一条的话,我选剪桥那篇 XConf:它把「置信度」从只看这一次推理,改成让模型翻自己的历史成绩单,思路挺对我胃口。另一条暗线是 agent harness,HF 榜和 GitHub Trending 双双被「给 agent 造脚手架」的活儿占满,cloudflare 的安全审计 skill 一天涨三千星。非 AI 这边,钙钛矿叠层电池的蒸镀路径、脂质纳米粒往肝外递送的可解释建模都值得一看。至于「用 Claude 黑进 OpenAI」那条,当个乐子看看就好——真正该背脊发凉的是那条 AI 幻觉出中国核部件、差点让美军登船的新闻。今天的思想碰撞聊行列式点过程能不能替掉点云里的 FPS,敢想,但那个 n×n 行列式是真门槛,我先把丑话说在前头。",
+  "math_note": {
+    "name": "傅里叶级数(狄利克雷收敛定理)",
+    "name_en": "Fourier Series & Dirichlet's Convergence Theorem",
+    "field": "数学分析 / 调和分析",
+    "one_liner": "任何不太离谱的周期信号,都是一堆正弦波按频率叠出来的——连它跳变的地方都逃不掉。",
+    "statement": "把周期为 $2\\pi$ 的函数 $f$ 展成三角级数 $f(x)\\sim\\frac{a_0}{2}+\\sum_{n\\ge1}\\left(a_n\\cos nx+b_n\\sin nx\\right)$,系数由积分算出,比如 $a_n=\\frac{1}{\\pi}\\int_{-\\pi}^{\\pi}f(x)\\cos nx\\,dx$($a_n$ 就是「$f$ 里含多少第 $n$ 号余弦波」)。狄利克雷定理给出了它到底收不收敛的条件:只要 $f$ 分段光滑(分成几段、每段自己和导数都连续),这个级数在每个连续点就老老实实收敛到 $f(x)$,而在跳变点收敛到左右极限的平均值 $\\frac{f(x^+)+f(x^-)}{2}$——正好落在断崖的半腰。",
+    "origin": "1807 年傅里叶研究热在金属棒里怎么传,大胆断言「任意函数都能写成三角级数」,把当时的大佬拉格朗日、拉普拉斯得罪了个遍,论文被压着不给发。争议的点很实在:一堆处处光滑的正弦波,凭什么能拼出带尖角、带跳变的函数?直到 1829 年,狄利克雷才第一次给出严格的收敛条件,把傅里叶这个「物理直觉先行」的猜想真正坐实,也顺带开创了对「函数」本身的现代讨论。",
+    "derivation": [
+      { "math": "\\int_{-\\pi}^{\\pi}\\cos mx\\,\\cos nx\\,dx=\\pi\\,\\delta_{mn}", "note": "先立地基:不同频率的正弦、余弦两两正交,积一下就是 0,只有自己跟自己积才非零。这正交性就是一把「筛子」。" },
+      { "math": "a_n=\\frac{1}{\\pi}\\int_{-\\pi}^{\\pi}f(x)\\cos nx\\,dx", "note": "拿这把筛子去乘 $f$ 再积分,其他频率全被筛成 0,只剩第 $n$ 号系数漏下来——这就是系数公式的由来,不是凭空规定的。" },
+      { "math": "S_N(x)=\\frac{1}{2\\pi}\\int_{-\\pi}^{\\pi}f(t)\\,D_N(x-t)\\,dt,\\quad D_N(u)=\\frac{\\sin\\left((N+\\tfrac12)u\\right)}{\\sin(u/2)}", "note": "把前 $N$ 项加起来,代数一并,发现部分和其实是 $f$ 跟一个叫「狄利克雷核」$D_N$ 的东西做卷积。收敛问题就全压到 $D_N$ 身上了。" },
+      { "math": "\\frac{1}{2\\pi}\\int_{-\\pi}^{\\pi}D_N(u)\\,du=1,\\quad D_N\\ \\text{随}\\ N\\ \\text{在}\\ u=0\\ \\text{处越来越尖}", "note": "$D_N$ 的总质量恒为 1,而且 $N$ 越大它越集中在 $u=0$ 的小尖峰上——活脱脱一个越来越准的「加权平均器」,只对 $x$ 附近的 $f$ 取值敏感(这叫局部化)。" },
+      { "math": "S_N(x)\\to\\frac{f(x^+)+f(x^-)}{2}", "note": "既然只看 $x$ 邻域:连续点两边一样,平均下来就是 $f(x)$;跳变点两边不一样,就卡在左右极限的正中间。顺带留下 Gibbs 现象——断崖两侧那约 9% 压不平的过冲,项数再多都在。" }
+    ],
+    "applications": [
+      { "area": "信号处理", "detail": "频谱分析、滤波、调制解调的根基:把时域信号拆成频率分量,才能设计低通/带通滤波器、看懂一段音频里有哪些频率。" },
+      { "area": "偏微分方程", "detail": "热方程、波动方程用分离变量求解时,解天然写成三角级数——每个正弦模态独立衰减或振荡,傅里叶当年正是为这个发明的它。" },
+      { "area": "音视频压缩", "detail": "JPEG 的 DCT、MP3/AAC 的子带编码本质都是傅里叶家族:把图像块或声音切到频域,再把人眼人耳不敏感的高频系数狠狠量化掉。" },
+      { "area": "量子力学", "detail": "位置基与动量基之间正是傅里叶变换,波包的展开、不确定性原理里「时宽×带宽有下界」都是同一个数学事实的不同说法。" }
+    ],
+    "takeaway": "把一个复杂对象拆到一组正交基上,再逐个分量处理——这是数学和工程反复使用的同一招,傅里叶只是最经典的那次。而 Gibbs 现象是个温柔的提醒:逐点收敛不等于一致收敛,间断处永远留着那约 9% 的倔强过冲,别指望靠多加几项抹平它。",
+    "viz": {
+      "type": "fourier",
+      "caption": "拖动项数滑块,看方波怎样被一层层正弦波逼近;盯住跳变处那两个永远压不平的小尖角——那就是 Gibbs 现象,项数再多也在。",
+      "params": { "wave": "square", "terms": 5, "maxTerms": 40 }
+    }
+  },
+  "crossover": {
+    "theory": "行列式点过程",
+    "theory_en": "Determinantal Point Processes (DPP)",
+    "field": "概率论 / 随机矩阵",
+    "era": "1975 年 Macchi 为描述费米子的互斥统计提出,2012 年 Kulesza–Taskar 把它搬进机器学习并给出可扩展采样,才真正能算能用",
+    "trigger": { "title": "Incremental Column Subset Selection via Conditional Determinantal Point Processes", "url": "https://arxiv.org/abs/2609.20556" },
+    "one_liner": "FPS 是贪心地「离得远」,DPP 是概率地「铺得开」——但那个 n×n 行列式,才是真正的门槛。",
+    "theory_core": "DPP 定义了一种「选子集」的概率分布:从 $n$ 个元素里抽出子集 $S$ 的概率正比于核矩阵的子式行列式 $\\det(L_S)$。关键在于行列式的几何意义——$\\det(L_S)$ 等于这些元素对应特征向量张成的平行多面体体积的平方。两个元素越像,它们的向量越平行,体积越小,一起被选中的概率就越低。于是 DPP 天生偏爱「互相不像」的子集,是一种带负相关、会自动铺开的采样。固定选 $k$ 个的版本叫 $k$-DPP,精确采样要对 $L$ 做特征分解,代价 $O(n^3)$。",
+    "pc_problem": "点云网络的下采样这一环又慢又粗。主流骨干(PointNet++、多数 3D 检测头)靠最远点采样 FPS 保证覆盖均匀,但贪心 FPS 选 $k$ 个点是 $O(nk)$——一帧 KITTI 十几万点、要下采到几千点时,这一步能占到前向不小的比例,百万级稠密点云上更是瓶颈。想快就退回随机采样($O(n)$),可随机采样会漏掉稀疏细结构(电线杆、路牌边缘、长尾类别),下游分割 mIoU 掉几个点是常事。体素下采样又把密度信息抹平。缺的是一个「接近线性、又懂几何/语义多样性」的采样器。",
+    "bridge": "映射很干净:DPP 的基集 $=$ 整帧点云的全部 $n$ 个点;抽出的 $k$ 元子集 $=$ 下采样后的点云;核矩阵元素 $L_{ij}$ $=$ 点 $i$ 与点 $j$ 的相似度(比如在 xyz、法向、或骨干特征上的 RBF 核);$\\det(L_S)$ 大 $=$ 选中的点在特征空间里铺得开、互相不冗余。FPS 是在「最小两两距离最大化」这个准则上贪心,DPP 则是它的概率化、体积化表亲——不只看 xyz 的欧氏距离,还能把法向、曲率、语义特征一起纳进核里决定「像不像」。",
+    "angles": [
+      {
+        "dim": "复杂度",
+        "idea": "别用精确 DPP(要 $O(n^3)$ 特征分解),换成基于随机特征或 Nyström 的近似 $k$-DPP 采样器:把核 $L$ 隐式表示成 $L=\\Phi\\Phi^\\top$($\\Phi$ 是 $n\\times d$ 的低维随机特征),再用低秩情形下的对偶采样,或者用树结构/拒绝采样把每次抽样压到近线性。",
+        "gain": "把一次下采样从 FPS 的 $O(nk)$、精确 DPP 的 $O(n^3)$ 拉到大致 $O(n d^2+ndk)$,当特征维 $d$ 远小于 $n$ 时接近线性,理论上比 FPS 更适合百万级点云(是估算,点云上没见人实测过)。",
+        "cost": "近似一旦丢掉行列式的精确性,多样性保证就名存实亡,弄不好退化成「加了噪声的随机采样」;随机特征维 $d$ 取小了核逼近差,取大了又把省下的复杂度吃回去。"
+      },
+      {
+        "dim": "算法优化",
+        "idea": "把核建在骨干特征而非纯 xyz 上:先跑一层浅编码(甚至只用法向+曲率手工特征)得到每点嵌入,再以其 RBF 核做 DPP,让采样偏向保留几何/语义上稀有的点(薄结构、边缘、长尾类)。工程上先用 greedy MAP(贪心最大化 $\\det$)当 FPS 的直接替换件,跑通再上真采样。",
+        "gain": "稀疏细结构和长尾类别的保留率上去,下游分割/检测在这些类上估计能捡回几个点的 mIoU(量级估计,取决于核设计)。",
+        "cost": "鸡生蛋问题:要用特征算核,就得先跑一遍网络,和「采样是为了给网络省算力」自相矛盾;只能退而用轻量手工特征,那多样性红利又打折。"
+      },
+      {
+        "dim": "存储",
+        "idea": "把 DPP 当 coreset 选择器:对一整帧大点云或一个数据集,用 DPP 挑出「有覆盖保证的多样子集」长期存储/传输,而不是存全量或均匀抽稀。行列式最大的子集在信息上冗余最低,天然是压缩友好的。",
+        "gain": "同等下游精度下存的点更少;相比随机抽稀,DPP 子集对稀有结构更友好,估计能在同精度下再省一档点数(需实测)。",
+        "cost": "DPP 子集不是度量意义上的 $\\varepsilon$-net,不保证「任意点附近都有代表」,重建/上采样时局部密度信息会丢;且核一旦选偏,coreset 可能系统性漏掉某类结构。"
+      }
+    ],
+    "experiment": [
+      "在 ModelNet40 或一帧 KITTI 上跑通标准 FPS 下采到 $k=1024/4096$,记下耗时和下游分类/分割精度当 baseline——纯 CPU 或单卡一两天就能出。",
+      "用现成 DPP 库(如 DPPy)在同样 $k$ 下做 greedy $k$-DPP MAP,核先用 xyz 上的 RBF,比覆盖度、耗时、精度。",
+      "把核换成 xyz+法向,专门统计薄结构/边缘点的保留率,看是否比 FPS 更能抓稀有几何。",
+      "上近似采样器(随机特征/Nyström),把点数从几千推到十万级,实测复杂度曲线,验证是否真接近线性。",
+      "拿一个小 PointNet++ 分割头,分别在 FPS 与 DPP 采样输入上微调,报 mIoU 差异和长尾类表现。"
+    ],
+    "prior_art": [
+      { "title": "SampleNet: Differentiable Point Cloud Sampling(CVPR 2020)", "note": "做的是任务驱动的可微采样网络,优化的是下游损失、不是多样性/行列式,和 DPP 是两条路;可当「学习式采样」这条线的对照基线。" },
+      { "title": "DPP 作为通用 coreset 选择器(Tremblay 等的快速 DPP 采样工作)", "note": "把 DPP 用于一般机器学习的样本/列子集选择已相当成熟,采样加速也有现成算法;但直接把它当点云下采样器、并塞进 3D 骨干里做端到端的公开工作,我查下来没找到明确的,最接近的就是上面的可微采样和一般 coreset。" }
+    ],
+    "reality_check": "最可能栽在「采样为了省算力,却要先跑网络算特征」这个死循环上;退用手工特征核又拿不满多样性红利,而近似 DPP 一旦精度不够,就是个更贵版本的随机采样——省下的时间还不够补精度掉的坑。"
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "LimiX-2: A Contextual Mechanism Network Towards General Structured-Data Intelligence",
+      "title_zh": "LimiX-2:面向通用结构化数据智能的情境机制网络",
+      "url": "https://arxiv.org/abs/2609.17488",
+      "hf_url": "https://huggingface.co/papers/2609.17488",
+      "authors": "Xingxuan Zhang、Gang Ren 等",
+      "affiliation": "Stable AI",
+      "upvotes": 166,
+      "one_liner": "表格数据也想要自己的「基础模型」,这次学的是数据生成的机制,不只是预测 y。",
+      "summary_zh": "延续 LimiX 系列,把表格/结构化数据的上下文学习从「给 x 预测 y」($p(y\\mid x)$)改成学联合结构 $p(x,y)$,作者管这叫情境机制网络。预训练全用结构因果模型合成的数据,想让模型抓住「数据是怎么生成的」而不是死记映射。榜上票数最高,思路上确实跳出了传统 tabular PFN 的框子;不过合成数据到真实业务表的迁移到底稳不稳,还得看实测。",
+      "tags": ["表格模型", "上下文学习", "基础模型"]
+    },
+    {
+      "domain": "ai",
+      "title": "Rethinking Critic Learning in PPO: Understanding and Mitigating Value Flattening",
+      "title_zh": "重审 PPO 里的 Critic 学习:理解并缓解「价值压平」",
+      "url": "https://arxiv.org/abs/2609.18708",
+      "hf_url": "https://huggingface.co/papers/2609.18708",
+      "authors": "Yizhuo Li、Jianhao Yan 等",
+      "affiliation": "上海人工智能实验室",
+      "upvotes": 62,
+      "one_liner": "真实价值在中间步骤上下起伏,critic 却学成一条平线——这毛病随状态空间变大越发严重。",
+      "summary_zh": "作者发现 LLM 的 PPO 训练里 critic 有个系统性故障:用多次蒙特卡洛续写估出的真实状态价值在中间步骤剧烈变化,critic 的预测却相对平坦,他们叫它 Value Flattening,在 FrozenLake 这种可控环境里也能复现且随状态空间增大更明显。理论上把它归因到 critic 损失里隐含的方差惩罚和时序相关状态带来的冗余更新。诊断清晰、锚点具体,对做 RLHF/RLVR 的人是个该查的坑。",
+      "tags": ["PPO", "RLHF", "价值函数"]
+    },
+    {
+      "domain": "ai",
+      "title": "DeepSeek-V4.1-Flash: Pushing the Limits of KV Cache Compression",
+      "title_zh": "DeepSeek-V4.1-Flash:把 KV Cache 压缩推到极限",
+      "url": "https://arxiv.org/abs/2609.19969",
+      "hf_url": "https://huggingface.co/papers/2609.19969",
+      "authors": "DeepSeek-AI、Anyi Xu 等",
+      "affiliation": "DeepSeek",
+      "upvotes": 56,
+      "one_liner": "长上下文 agent 把负载压成「输入重」,于是这版直接冲着 KV cache 的字节去。",
+      "summary_zh": "面向长程 agent 越来越「输入重」的现实,DeepSeek 出了一版多模态 MoE:552B 骨干、支持百万 token,解码时每 token 只激活 16B。核心是 Causal Encoder-Decoder 架构配上激进的 KV cache 压缩,目标是同时缓解算力、显存/SSD 容量和数据搬运带宽这三重瓶颈。今天 arXiv 上 D-Quant、Fathom、MeshKV 都在打 KV cache,这版是把这条线做到产品级的信号。",
+      "tags": ["KV Cache", "MoE", "长上下文"]
+    },
+    {
+      "domain": "ai",
+      "title": "The Other Half of the Memory Wall: Serving 35B MoEs from SSD with Trained Routing Prediction",
+      "title_zh": "内存墙的另一半:用训练出的路由预测,从 SSD 服务 35B MoE",
+      "url": "https://arxiv.org/abs/2609.18063",
+      "hf_url": "https://huggingface.co/papers/2609.18063",
+      "authors": "Yu Lin、Yiming Wang 等",
+      "affiliation": "Edge0",
+      "upvotes": 10,
+      "one_liner": "MoE 在消费级硬件上卡的是「字节」不是「算力」,而 SSD offload 天生慢半拍。",
+      "summary_zh": "35B 级 MoE 就算 4-bit 也要 19.5GB,稀疏只省了每 token 的计算、省不了要驻留的字节。难点在于第 N+1 层的专家要在第 N 层输出出来之前就选好,朴素 offload 的 SSD 读根本来不及藏进计算里。Edge0 的招是一个 prerouter:每层一个小头提前一个 token 预测下一层路由,并把预测直接当成真路由用,让预取的专家集正好等于被路由的集合;质量损失靠一个未合并的恢复 LoRA 补回来。给「想在单机跑大 MoE」的人一条实打实的工程路子。",
+      "tags": ["MoE", "推理系统", "SSD offload"]
+    },
+    {
+      "domain": "ai",
+      "title": "Confidence Comes from Experience: Experiential Confidence Estimation from Reasoning to Agents",
+      "title_zh": "置信来自经验:从推理到 Agent 的经验式置信度估计",
+      "url": "https://arxiv.org/abs/2609.17708",
+      "hf_url": "https://huggingface.co/papers/2609.17708",
+      "authors": "Caiqi Zhang、Xiaochen Zhu 等",
+      "affiliation": "剑桥大学",
+      "upvotes": 54,
+      "one_liner": "别只盯着这一次推理来判断有没有把握,让模型翻翻自己的历史成绩单。",
+      "summary_zh": "现有置信度估计的通病是只读当前这次推理——要么自省、要么看 token 概率、要么重采样。作者主张这不够,提出 XConf:把置信度和模型自己积累的「经验」一起估,经验存成一份带评分的过往记录,每条含任务、模型的反思和结果。思路很对味——人判断自己靠不靠谱,本来就要参考过去在类似题上栽没栽过。对要决定「哪个输出直接发、哪个升级、哪个重试」的 agent 系统尤其实用。",
+      "tags": ["置信度校准", "Agent", "可靠性"]
+    },
+    {
+      "domain": "embodied",
+      "title": "ActionPiece: Rethinking Action Tokenization for Autoregressive Vision-Language-Action Models",
+      "title_zh": "ActionPiece:重新思考自回归 VLA 模型的动作 token 化",
+      "url": "https://arxiv.org/abs/2609.18487",
+      "hf_url": "https://huggingface.co/papers/2609.18487",
+      "authors": "Shijie Lian、Bin Yu 等",
+      "affiliation": "DeepCybo",
+      "upvotes": 39,
+      "one_liner": "动作 token 化只看 MSE 是不够的——重建误差再小,不同情境该有的细微调整可能已经被抹平了。",
+      "summary_zh": "自回归 VLA 里动作 tokenizer 既是训练目标也是最终执行的命令,大家习惯用 MSE 这种逐点重建指标评它的好坏。作者指出这掩盖了真问题:压缩后相似动作会聚到一个代表性运动上,不同情境需要的微调被削弱甚至反转。为此提出「物理秩一致性 PRC」来衡量 token 化有没有保住局部物理距离的排序关系。切中了 VLA 一个常被忽视的细节,评测视角比方法本身更有启发。",
+      "tags": ["VLA", "动作 token 化", "机器人"]
+    },
+    {
+      "domain": "embodied",
+      "title": "FAMOS: Feed-Forward 3D Articulation Modeling from Sparse Observations",
+      "title_zh": "FAMOS:从稀疏观测前馈式建模 3D 关节结构",
+      "url": "https://arxiv.org/abs/2609.20817",
+      "hf_url": "https://huggingface.co/papers/2609.20817",
+      "authors": "Kevin Qu、Tao Sun 等",
+      "affiliation": "斯坦福大学",
+      "upvotes": 5,
+      "one_liner": "给几片零散的局部点云,就能一口气吐出「哪些部件会动、绕哪个轴转」。",
+      "summary_zh": "从稀疏单目视角建模关节物体(抽屉、柜门这类)很难,每个观测只露出局部几何和运动线索,多数前馈方法只吃单帧、重度依赖类别级形状先验。FAMOS 直接从一组无序的局部点云预测可动部件分割和关节参数,能吃可变数量的输入(单帧也行),靠一个多状态关节 Transformer 在「状态内」和「全局」注意力之间交替聚合线索。对做操作、数字孪生的人是块实用积木,也是点云 × 关节理解的一个干净样本。",
+      "tags": ["点云", "关节物体", "3D 感知"]
+    },
+    {
+      "domain": "chip",
+      "title": "MiX: Micro-Inverted-Scaling for End-to-End Low-Bit Vision-Language Model Acceleration",
+      "title_zh": "MiX:面向端到端低比特视觉语言模型加速的微反缩放格式",
+      "url": "https://arxiv.org/abs/2609.19683",
+      "authors": "Yuan Liao、Jae-sun Seo",
+      "upvotes": 0,
+      "one_liner": "一个巨大离群值就能劫持整组共享指数,把周围的数全冲下溢——MiX 干脆把微缩放反过来做。",
+      "summary_zh": "VLM 上边缘设备卡在内存带宽上,只能上 8-bit 以下的激进量化,而边缘加速器受面积功耗所限需要端到端全量化。问题是多模态 token 的动态范围差得离谱,标准的块浮点格式会「微缩放崩溃」:一个超大离群值独占共享指数,周围元素全下溢,注意力图直接毁掉。MiX(微反缩放)在数学上把微缩放范式倒过来,缓解这种崩溃。做端侧 VLM 部署的硬件同学值得一读,是把量化格式的坑讲得很具体的一篇。",
+      "tags": ["量化", "边缘加速", "VLM"]
+    },
+    {
+      "domain": "energy",
+      "title": "Divergent Solid-state Conversion Pathways in Evaporated All-perovskite Tandem Solar Cells",
+      "title_zh": "蒸镀全钙钛矿叠层电池中相异的固态转化路径",
+      "url": "https://arxiv.org/abs/2609.20326",
+      "authors": "Huagui Lai、Amber Wright 等",
+      "upvotes": 0,
+      "one_liner": "宽带隙和窄带隙的前驱体膜,同样是蒸镀,固态成相走的却是两条不同的路。",
+      "summary_zh": "顺序热蒸镀是一条无溶剂、有望做高质量钙钛矿的路线,但用到全钙钛矿叠层电池的宽带隙和窄带隙吸光层时,大家对固态转化机制一直没摸清。作者用分时的离位分析发现两者机制分道扬镳:宽带隙里甲脒类物种先渗入无机模板、Br/I 重分布先于三维钙钛矿大量生成,光活性相再从中结晶。对做钙钛矿叠层、想把蒸镀路线做稳的人是实打实的机理输入,而不是又一个刷效率的报告。",
+      "tags": ["钙钛矿", "叠层电池", "薄膜工艺"]
+    },
+    {
+      "domain": "bio",
+      "title": "Decoding Extrahepatic Targeting of Lipid Nanoparticles with Interpretable Machine Learning",
+      "title_zh": "用可解释机器学习破解脂质纳米粒的肝外靶向",
+      "url": "https://arxiv.org/abs/2609.17721",
+      "authors": "Asal Mehradfar、Mohammad Shahab Sepehri 等",
+      "upvotes": 0,
+      "one_liner": "RNA 药物老往肝里堆,想送去别的器官,先得搞懂配方到底怎么决定去向。",
+      "summary_zh": "脂质纳米粒(LNP)是 RNA 药物的载体,但系统给药后大多堆积在肝脏,限制了它治别的病。作者建了个可解释机器学习框架,预测 LNP 是进肝还是肝外,并从中读出「往肝外递送」的分子设计规则。数据是从 81 篇研究里手工整出的 476 个静脉注射 LNP 配方,整合了配方组成、脂质化学结构和活体成像的生物分布。样本量不算大、又是文献汇编,结论得当线索用;但把「配方→去向」这件事做成可解释的规则,方向很对。",
+      "tags": ["脂质纳米粒", "RNA 递送", "可解释 ML"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "How Does Distribution Shift Shape Pretraining Gains in Neural PDE Surrogates?",
+      "title_zh": "分布偏移如何塑造神经 PDE 代理模型的预训练收益?",
+      "url": "https://arxiv.org/abs/2609.20814",
+      "authors": "Pochinapeddi Sai Bhargav、Nithin Somasekharan 等",
+      "upvotes": 0,
+      "one_liner": "预训练能省多少 CFD 数据,取决于新任务偏移在哪一维——换几何比换物理模型好补得多。",
+      "summary_zh": "神经 PDE 代理模型预训练后,换几何或换物理时能少标不少新 CFD 数据,但到底哪种分布偏移最吃预训练红利一直没量化。作者在 25 万条某翼型族的 RANS 解上预训练,再迁到新翼型族的两种设置:同样的湍流建模、以及加了转捩建模。结果很具体:在同建模目标上,预训练模型用 1000 个样本就能追平从头训练用 3.25 倍样本的精度;换到转捩目标只值 2.58 倍。把「预训练到底省多少」拆到分布偏移的不同成分上,对做科学计算代理模型的人是有用的定标。",
+      "tags": ["神经PDE", "CFD代理", "迁移学习"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "cloudflare/security-audit-skill",
+      "url": "https://github.com/cloudflare/security-audit-skill",
+      "language": "JavaScript",
+      "stars": 13381,
+      "stars_today": "3,019",
+      "one_liner": "把安全审计做成 agent 的 skill,还强制产出可机读、被独立验证过的发现。",
+      "summary_zh": "Cloudflare 开源的一个编码 agent skill,把安全审计拆成多阶段流程,产出的是结构化、可机读、且经过独立验证的发现,而不是一堆随口的建议。一天涨三千星,说明「给 agent 造带验证闭环的脚手架」正是当下最热的方向。做 AppSec、或想给自己 agent 加一套靠谱审计流程的人值得抄作业。"
+    },
+    {
+      "domain": "ai",
+      "name": "alibaba/open-code-review",
+      "url": "https://github.com/alibaba/open-code-review",
+      "language": "Go",
+      "stars": 36552,
+      "stars_today": "2,724",
+      "one_liner": "确定性流水线 + LLM Agent 的混合架构,行级评论,阿里内部规模压过测。",
+      "summary_zh": "阿里开源的代码审查工具,走「确定性规则流水线 + LLM Agent」的混合路线,能给精确到行的评论,内置多语言规则集(空指针等),号称经受住了阿里的规模检验。纯 LLM 审查容易漂、纯规则又太死,混合架构是当下比较务实的折中。想给团队 CI 接一套自托管代码审查的可以看看。"
+    },
+    {
+      "domain": "ai",
+      "name": "Tencent/BrowserSkill",
+      "url": "https://github.com/Tencent/BrowserSkill",
+      "language": "TypeScript",
+      "stars": 5218,
+      "stars_today": "1,319",
+      "one_liner": "让 AI 直接用你已登录的真浏览器干活,还不打断你自己在用。",
+      "summary_zh": "腾讯开源的浏览器自动化方案,CLI + 扩展,让 AI agent 借用你本地那个已经登录好的真浏览器操作,不用重新处理登录态,也不霸占你正在用的会话。跨任意支持 shell 的 agent 都能接。对做需要登录态的网页自动化、又不想碰一堆 cookie/反爬的人挺省事。"
+    },
+    {
+      "domain": "ai",
+      "name": "coder/coder",
+      "url": "https://github.com/coder/coder",
+      "language": "Go",
+      "stars": 15239,
+      "stars_today": "478",
+      "one_liner": "给开发者和他们的 agent 一个安全隔离的开发环境。",
+      "summary_zh": "自托管的云开发环境平台,现在明确把「开发者和他们的 agent」都当作服务对象,强调安全隔离。agent 越来越会自己跑命令、改代码,给它一个可控、可回滚的沙盒环境正变成刚需。做平台工程、或想给自动化 agent 圈个安全围栏的团队可以关注。"
+    },
+    {
+      "domain": "ai",
+      "name": "supermemoryai/supermemory",
+      "url": "https://github.com/supermemoryai/supermemory",
+      "language": "TypeScript",
+      "stars": 30225,
+      "stars_today": "140",
+      "one_liner": "一个快、可扩展、能完全本地跑的记忆与上下文引擎。",
+      "summary_zh": "面向 AI 应用的记忆/上下文引擎,主打速度和可扩展,并且支持完全本地部署,提供一套「AI 时代的记忆 API」。长上下文和 agent 火起来后,怎么把外部记忆存好、取快、还能本地化,是个反复被问的问题。做个人 AI 助手或注重数据不出本地的应用值得一看。"
+    },
+    {
+      "domain": "ai",
+      "name": "Fission-AI/OpenSpec",
+      "url": "https://github.com/Fission-AI/OpenSpec",
+      "language": "TypeScript",
+      "stars": 69290,
+      "stars_today": "298",
+      "one_liner": "先写规格再让 AI 编码——把「说清楚要什么」变成开发流程的第一环。",
+      "summary_zh": "面向 AI 编码助手的规格驱动开发(SDD)框架,主张先把需求写成明确规格,再交给 AI 实现,减少「越改越歪」。当 agent 能一口气写很多代码,先把意图钉死反而成了控质量的关键。适合想让 AI 参与但又要保持工程约束的团队。"
+    },
+    {
+      "domain": "ai",
+      "name": "asciimoo/hister",
+      "url": "https://github.com/asciimoo/hister",
+      "language": "Go",
+      "stars": 4914,
+      "stars_today": "842",
+      "one_liner": "你自己的搜索引擎——数据和索引都在自己手里。",
+      "summary_zh": "一个自托管的搜索引擎(作者也是 SearXNG 那位),让你搭建、掌控自己的搜索栈而不依赖大厂。在「web 越来越被 AI 内容和信息流稀释」的当下,自建可控的检索入口越来越有意义,也天然是给自己 agent 接一个可信搜索后端的候选。喜欢折腾自托管、或想给 RAG 配私有搜索的人可以玩。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "安全研究者用 Claude 攻进了 OpenAI:接管员工账号、摸到内部代码库",
+      "url": "https://techcrunch.com/2026/09/18/researchers-used-anthropics-claude-to-hack-into-openai/",
+      "source": "TechCrunch",
+      "summary_zh": "安全研究者用 Anthropic 的 Claude 去挖 OpenAI 系统的漏洞,一路接管了员工账号、拿到内部代码仓库的访问权,随后上报了这些缺陷。多家媒体和 HN 都在转,与其看两家「互黑」的热闹,不如认真对待:能自主链式利用漏洞的 AI 已经是现实攻防的一部分。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "AI 幻觉出「中国核部件」,美军差点登船检查",
+      "url": "https://arstechnica.com/ai/2026/09/report-us-almost-boarded-chinese-ship-over-hallucinated-ai-arms-report/",
+      "source": "Ars Technica",
+      "summary_zh": "一份报告称美军因 AI 生成的、含幻觉内容的情报,差点登临一艘中国船只检查所谓核部件。事后军方对 AI 的整体使用反而在加速。比起「Claude 黑 OpenAI」那种段子,这条才是真正该让人后背发凉的——把没有事实核验的生成式情报塞进决策链,代价可能是国际事件。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Crusoe 融资 39 亿美元建大型数据中心和小型模块化「AI 工厂」,估值 309 亿",
+      "url": "https://techcrunch.com/2026/09/17/crusoe-raises-3-9b-to-build-massive-data-centers-and-small-modular-ai-factories/",
+      "source": "TechCrunch",
+      "summary_zh": "数据中心公司 Crusoe 拿到 39 亿美元新融资,这轮把它的估值推到 309 亿美元,资金用于建大型数据中心和小型模块化「AI 工厂」。配合今天一堆「怎么省内存带宽」的推理论文看,一头在拼命建算力供给,一头在拼命压部署成本,是同一场战争的两端。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Show HN:Cactus Needle 3,8–29MB 的端侧模型号称能追平 DeepSeek V4 Flash",
+      "url": "https://cactuscompute.com/needle",
+      "source": "Hacker News",
+      "summary_zh": "一个 Show HN 项目,主打 8–29MB 的超小自动化模型,声称在特定任务上能对标 DeepSeek V4 Flash(HN 126 分)。数字要打问号——比的是窄任务而非通用能力,但方向和今天的 KV cache/边缘量化论文是一路的:大家都在往「更小、更省、能上端」挤。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "软银同意收购 Robotics and AI Institute",
+      "url": "https://www.therobotreport.com/softbank-agrees-to-acquire-robotics-and-ai-institute/",
+      "source": "The Robot Report",
+      "summary_zh": "软银同意收购 Robotics and AI Institute(RAI,前身与波士顿动力研究渊源颇深),此事传了几个月,现进入美国外资投资委员会(CFIUS)审查。软银在机器人和算力上继续加注,叠加本月机器人投资总额冲到 49 亿美元,这个赛道的资本热度肉眼可见。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "芯片行业一周要闻:大额存储交易、2nm 及以下进展、华为攻势、各国产能布局",
+      "url": "https://semiengineering.com/chip-industry-week-in-review/",
+      "source": "SemiEngineering",
+      "summary_zh": "SemiEngineering 的每周综述这期信息量很大:一桩重大存储交易、AI Infra Summit 消息、美国芯片产能计划、2nm 及以下先进制程进展、华为的芯片攻势、面向数据中心与 AI SoC 的可信根(RoT)方案、中国设备厂商份额上升、印度产能建设,以及欧洲 AI 基础设施的短板。想快速扫一遍半导体产业动向,一条顶好几条。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "Satrec Initiative 将为韩华星座造 10 厘米级光学卫星",
+      "url": "https://spacenews.com/satrec-initiative-to-build-10-centimeter-class-optical-satellites-for-hanwha-constellation/",
+      "source": "SpaceNews",
+      "summary_zh": "韩国 Satrec Initiative 与母公司韩华系统合作,为 7 月宣布的合成孔径雷达(SAR)星座提供高分辨率地球影像,Satrec 拿下 25 厘米级光学能力、并将造 10 厘米级光学卫星。高分辨率对地观测需求在涨,光学与 SAR 混合组网正成为商业遥感星座的标配打法。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "SpaceX 是怎么把猛禽发动机「做减法」做出来的",
+      "url": "https://www.construction-physics.com/p/how-spacex-streamlined-the-raptor",
+      "source": "Hacker News",
+      "summary_zh": "一篇被 HN 顶上来的长文,拆解 SpaceX 如何一代代精简猛禽(Raptor)发动机的设计——减零件、降成本、提可制造性。工程上的「做减法」往往比堆参数更难也更值钱,对做硬件迭代的人是很好的方法论读物。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "罗氏与 Dualitas 签约,合作筛选超 30 万种双特异性组合",
+      "url": "https://www.fiercebiotech.com/biotech/roche-pays-dualitas-365m-pair-big-bispecific-screening-drive",
+      "source": "Fierce Biotech",
+      "summary_zh": "罗氏预付 Dualitas Therapeutics 3650 万美元(整体交易规模约 10 亿美元),合作筛选超过 30 万种新型双特异性抗体组合,瞄准免疫与炎症疾病的新疗法。大厂用高通量筛选押注双抗组合空间,是当前免疫领域「拼组合、拼规模」的又一例。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "把「训练自由的开放词表点云分割」搬到别的骨干上,验证它到底泛不泛化",
+      "based_on": [
+        { "title": "Training-Free Open-Vocabulary 3D Point-Cloud Segmentation on the Generalized Few-Shot Benchmark", "url": "https://arxiv.org/abs/2607.15331" },
+        { "title": "On the Efficacy of Self-Supervised Point Cloud Encoders for Efficient 3D Large Language Models", "url": "https://arxiv.org/abs/2607.29136" }
+      ],
+      "why_now": "训练自由/即插即用的方法复现便宜,而「换个 encoder 或换个场景验证泛化性」本身就是低风险的可发表扩展;这篇训练自由的开放词表分割刚出、大概率只在一两个骨干上验证过,正好补上跨骨干的证据。",
+      "feasibility": "纯推理、零训练,单卡 24GB 甚至更小就能跑,想省钱先用小规模场景。核心工作量是把方法从原骨干拆下来接到别的自监督点云编码器上,约 2–3 周能出一版对比结果。",
+      "route": [
+        "跑通原论文官方推理,在其自带 benchmark 上复现开放词表分割的报告数字,当基线",
+        "换掉底层点云编码器(如换成一个自监督预训练的 encoder),保持分割逻辑不变,看精度掉多少",
+        "在一个分布不同的场景数据集(室内↔室外、稠密↔稀疏)上测零样本迁移,记录哪类物体最先崩",
+        "把「编码器 × 数据集」做成一张交叉表,总结方法对骨干的敏感度,给出一份可复用的评测脚本"
+      ],
+      "risk": "训练自由方法常和某个特定编码器的特征空间强耦合,换骨干后可能直接失效,那样结论会变成「它其实不通用」——但这本身也是有价值的负结果。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个统一接口对比点云 Transformer 各种参数高效微调(PEFT)的小库",
+      "based_on": [
+        { "title": "Position Anchor Tuning: Towards Efficient Adaptation of Pre-Trained Point Cloud Transformers", "url": "https://arxiv.org/abs/2609.18056" },
+        { "title": "GAPrompt++: Multi-Granular Geometry-Aware Point Cloud Prompt for 3D Vision Model", "url": "https://arxiv.org/abs/2609.19716" }
+      ],
+      "why_now": "点云 Transformer 的 PEFT 这两天连出两篇(位置锚点微调、几何感知 prompt),加上老牌 LoRA/adapter,方法各自开源却没人放到同一接口下公平对比——缺统一 harness 的方向天生适合做成 repo 攒 star。",
+      "feasibility": "全是单卡微调量级,在 ModelNet40 / ScanObjectNN 上跑一个预训练点云 Transformer,单张 24GB 卡足够。核心是抽象出一层「冻结骨干 + 可插拔 PEFT 模块」的接口,约 3 周能出可用版本。",
+      "route": [
+        "选一个开源预训练点云 Transformer,先跑通全量微调和线性探针两个基线,固定数据划分和随机种子",
+        "把 Position Anchor Tuning、prompt tuning、LoRA、adapter 各实现成同一接口下的模块,保证可一键切换",
+        "在同一张表里报可训练参数量、显存、精度,画「参数量 vs 精度」的帕累托前沿",
+        "封装成 pip 库 + 一键跑分脚本,支持接入新骨干和新 PEFT 方法,配基线结果冲 GitHub star"
+      ],
+      "risk": "不同 PEFT 方法对骨干结构假设不一,想做到真「即插即用」得设计足够通用的挂载点,否则库只能覆盖一两种骨干,通用性大打折扣。"
+    },
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "在 LIBERO 仿真里复现并推广「跳步/自适应采样」式的 VLA 推理加速",
+      "based_on": [
+        { "title": "SkipVLA: Skipping VLA Steps with Classical Planning for Fast Robot Manipulation", "url": "https://arxiv.org/abs/2609.20648" },
+        { "title": "FASA: Feedback-Aware Sampling Adaptation for Efficient Diffusion-Based VLA Models", "url": "https://arxiv.org/abs/2609.19475" }
+      ],
+      "why_now": "VLA 慢在测试时反复查询策略,而这两篇都在推理时动刀(用经典规划跳步、按反馈自适应采样),不改权重、复现便宜;把两条思路迁到同一个开源 VLA 和 LIBERO 仿真上对比,是典型「真机非必要、仿真可完整复现」的低风险扩展。",
+      "feasibility": "纯仿真 + 推理,单卡就能在 LIBERO 上跑一个开源 VLA,无需真机、无需大规模采集。工作量在实现两种加速策略并统一测延迟-成功率,约 3–4 周。",
+      "route": [
+        "在 LIBERO 上跑通一个开源 VLA 的原始推理,记录每任务的成功率和单步延迟当基线",
+        "实现 SkipVLA 式的「经典规划跳步」,统计跳掉多少次策略查询、成功率掉多少",
+        "再实现 FASA 式的反馈自适应采样,和跳步在同一批任务上比延迟-成功率曲线",
+        "分析两者在长程 vs 短程任务上的差异,尝试把「跳步 + 自适应采样」组合起来看能否叠加收益"
+      ],
+      "risk": "加速策略在自家论文的任务集上调得很好,换到 LIBERO 的任务分布上可能水土不服;跳步一旦跳掉关键闭环反馈,长程任务的成功率会断崖式下跌。"
+    }
+  ]
+}
