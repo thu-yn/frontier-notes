@@ -1,0 +1,398 @@
+{
+  "date": "2026-09-22",
+  "editor_note": "今天最扎眼的是「agent 训练数据从哪来」这条线:CodeMidas 直接把源码变成 RL 环境,RecreationWorld 让 agent 看着一个软件复刻一个,连 ActObs 都在说 SFT 阶段顺手预测环境观测能改变后续 RL 的探索——大家都在想办法绕开人工标注。要挑一条点开,我选 EOS token 那篇:一个「学生和老师把句号点在不同 token 上」的小 bug,竟是蒸馏模型刹不住车的根因,这种发现最解气。非 AI 侧,量子那篇模块化互连和芯片那篇 NPU 上摆张量,读着都是「工程的胜负手在数据/纠缠往哪搬」,和 AI 侧的算力叙事隐隐同一个母题。新闻里 Amazon 封杀 Meta 的购物 agent、加州给数据中心能耗立规矩,则提醒我们 agent 狂奔的同时,现实世界的门槛正在竖起来。每日一理请了 SVD,思想碰撞聊随机傅里叶特征怎么把点云的 O(n²) 邻域核和摊平——两条都冲着同一个问题:矩阵、核里的信息到底能压到多小。",
+  "math_note": {
+    "name": "奇异值分解",
+    "name_en": "Singular Value Decomposition (SVD)",
+    "field": "线性代数 / 矩阵分析",
+    "one_liner": "把矩阵拆成「转一下、拉一下、再转一下」,奇异值就是那几下拉伸的力气。",
+    "statement": "SVD 说任何 $m\\times n$ 实矩阵 $A$ 都能拆成 $A=U\\Sigma V^\\top$:$V$ 的列是输入空间里一组正交方向(右奇异向量),$U$ 的列是输出空间里一组正交方向(左奇异向量),中间的对角阵 $\\Sigma$ 装着非负奇异值 $\\sigma_1\\ge\\sigma_2\\ge\\cdots\\ge 0$。几何上就是:任何线性变换拆开看都是「先转个方向、再沿各轴按 $\\sigma_i$ 拉伸、再转个方向」。把单位球送进去,出来永远是个椭球,半轴长就是奇异值。",
+    "origin": "19 世纪末 Beltrami(1873)和 Jordan 各自为二次型/双线性型找到了它,之后 Sylvester、Schmidt(积分算子的低秩逼近)、Weyl 逐步补全。动机很朴素:想把一个矩阵「对角化」,但一般矩阵既不方也不对称,普通特征分解不管用,SVD 是对任意矩阵都成立的替代品。真正好算要等到 1965 年 Golub–Kahan 给出数值稳定的算法,从此成了工程里的常备工具。",
+    "derivation": [
+      { "math": "A^\\top A = V\\Sigma^2 V^\\top", "note": "AᵀA 是对称半正定矩阵,谱定理保证它能被正交对角化,特征值非负,记作 σᵢ²,对应的正交特征向量就是右奇异向量,拼成 V。" },
+      { "math": "\\sigma_i=\\sqrt{\\lambda_i(A^\\top A)}\\ge 0", "note": "奇异值就定义为 AᵀA 特征值的平方根,天然非负,并约定从大到小排。" },
+      { "math": "u_i=\\frac{1}{\\sigma_i}\\,A v_i", "note": "对 σᵢ>0 的方向,把 vᵢ 送过 A 再归一化,得到左奇异向量 uᵢ;稍加验证会发现这些 uᵢ 之间也彼此正交。" },
+      { "math": "A v_i=\\sigma_i u_i\\ \\Rightarrow\\ AV=U\\Sigma", "note": "把每个方向上的关系拼成矩阵等式;V 是正交阵,右乘 Vᵀ 就得到分解式。" },
+      { "math": "A=U\\Sigma V^\\top=\\sum_i \\sigma_i\\, u_i v_i^\\top", "note": "写成求和,就是把 A 拆成一堆秩 1 的块,σᵢ 越大的块在 A 里分量越重。" },
+      { "math": "A_k=\\sum_{i=1}^{k}\\sigma_i\\, u_i v_i^\\top", "note": "只留前 k 项(Eckart–Young 定理),就是 A 在秩不超过 k 时的最佳逼近,丢掉的误差正好是剩下奇异值的平方和——这就是压缩和降维的理论根。" }
+    ],
+    "applications": [
+      { "area": "降维与 PCA", "detail": "数据矩阵去均值后做 SVD,前几个右奇异向量就是主成分方向;点云的法向估计、姿态归一化都靠它。" },
+      { "area": "点云配准(ICP)", "detail": "求两组对应点之间的最优旋转有闭式解:构造互协方差矩阵做 SVD,R=VUᵀ 就是答案,这是 ICP 每一步的核心运算。" },
+      { "area": "推荐与矩阵补全", "detail": "把用户-物品评分矩阵做低秩近似,顺带填补缺失评分,是协同过滤的经典手法。" },
+      { "area": "数值稳定与伪逆", "detail": "最小二乘和病态矩阵的伪逆 A⁺=VΣ⁺Uᵀ,靠丢掉极小的奇异值来正则化,避免解被噪声放大。" }
+    ],
+    "takeaway": "任何线性变换本质都是「旋转-拉伸-旋转」,奇异值就是各方向拉伸的「能量」;想知道一个矩阵里的信息集中在哪、能压到多小,数一数奇异值就够了——低秩逼近的误差正好是 $\\|A-A_k\\|_F^2=\\sum_{i>k}\\sigma_i^2$。",
+    "viz": {
+      "type": "custom",
+      "caption": "拖四个滑块调 2×2 矩阵 A,看灰色单位圆被 A 送成蓝色椭球:绿色是两条右奇异向量方向(输入端的正交轴),红色是它们被拉伸后的像,红箭头的长度就是奇异值 σ₁、σ₂,也就是椭球的两条半轴。",
+      "html": "<div style='font-family:system-ui,sans-serif'><canvas id='svd' width='600' height='340' style='max-width:100%;touch-action:none'></canvas><div style='margin-top:8px;font-size:13px;line-height:2'>A = [ <input id='sa' type='range' min='-2' max='2' step='0.05' value='1.4' style='width:80px;vertical-align:middle'> <input id='sb' type='range' min='-2' max='2' step='0.05' value='0.7' style='width:80px;vertical-align:middle'> ; <input id='sc' type='range' min='-2' max='2' step='0.05' value='0.3' style='width:80px;vertical-align:middle'> <input id='sd' type='range' min='-2' max='2' step='0.05' value='1.1' style='width:80px;vertical-align:middle'> ] <span id='svl' style='margin-left:8px;color:#555'></span></div></div>",
+      "script": "(function(){var root=el.querySelector('#svd');if(!root)return;var ctx=root.getContext('2d');var W=root.width,H=root.height;var cx=W/2,cy=H/2;var S=70;function getA(){return [[+el.querySelector('#sa').value,+el.querySelector('#sb').value],[+el.querySelector('#sc').value,+el.querySelector('#sd').value]];}function mul(A,v){return [A[0][0]*v[0]+A[0][1]*v[1],A[1][0]*v[0]+A[1][1]*v[1]];}function svd2(A){var a=A[0][0],b=A[0][1],c=A[1][0],d=A[1][1];var m11=a*a+c*c,m12=a*b+c*d,m22=b*b+d*d;var tr=m11+m22,det=m11*m22-m12*m12;var disc=Math.sqrt(Math.max(tr*tr-4*det,0));var l1=(tr+disc)/2,l2=(tr-disc)/2;function evec(l){var x,y;if(Math.abs(m12)>1e-9){x=l-m22;y=m12;}else{if(l>=m11){x=1;y=0;}else{x=0;y=1;}}var n=Math.hypot(x,y)||1;return[x/n,y/n];}return{v1:evec(l1),v2:evec(l2),s1:Math.sqrt(Math.max(l1,0)),s2:Math.sqrt(Math.max(l2,0))};}function px(v){return [cx+v[0]*S,cy-v[1]*S];}function arrow(from,to,col){ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(from[0],from[1]);ctx.lineTo(to[0],to[1]);ctx.stroke();var ang=Math.atan2(to[1]-from[1],to[0]-from[0]);var h=8;ctx.beginPath();ctx.moveTo(to[0],to[1]);ctx.lineTo(to[0]-h*Math.cos(ang-0.4),to[1]-h*Math.sin(ang-0.4));ctx.lineTo(to[0]-h*Math.cos(ang+0.4),to[1]-h*Math.sin(ang+0.4));ctx.closePath();ctx.fill();}function draw(){var A=getA();var s=svd2(A);ctx.clearRect(0,0,W,H);ctx.strokeStyle='#e2e5ea';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(20,cy);ctx.lineTo(W-20,cy);ctx.moveTo(cx,20);ctx.lineTo(cx,H-20);ctx.stroke();ctx.strokeStyle='#c3c9d2';ctx.setLineDash([4,4]);ctx.beginPath();ctx.arc(cx,cy,S,0,7);ctx.stroke();ctx.setLineDash([]);ctx.strokeStyle='#2f74ff';ctx.lineWidth=2;ctx.beginPath();for(var t=0;t<=72;t++){var a2=t/72*2*Math.PI;var p=px(mul(A,[Math.cos(a2),Math.sin(a2)]));if(t===0)ctx.moveTo(p[0],p[1]);else ctx.lineTo(p[0],p[1]);}ctx.stroke();arrow([cx,cy],px(s.v1),'#12a150');arrow([cx,cy],px(s.v2),'#12a150');arrow([cx,cy],px(mul(A,s.v1)),'#e5484d');arrow([cx,cy],px(mul(A,s.v2)),'#e5484d');var lab=el.querySelector('#svl');if(lab)lab.textContent='σ₁='+s.s1.toFixed(2)+'  σ₂='+s.s2.toFixed(2)+' (椭球半轴长)';}['sa','sb','sc','sd'].forEach(function(id){el.querySelector('#'+id).addEventListener('input',draw);});draw();})();"
+    }
+  },
+  "crossover": {
+    "theory": "随机傅里叶特征",
+    "theory_en": "Random Fourier Features",
+    "field": "核方法 / 调和分析",
+    "one_liner": "把「点对点算核」换成「各自投影再点乘」,O(n²) 的邻域求和一下子摊平成一遍扫描。",
+    "theory_core": "平移不变核 $K(x,y)=\\exp(-\\|x-y\\|^2/2\\sigma^2)$ 只依赖两点之差 $x-y$。Bochner 定理说这种核是某个概率分布的傅里叶变换,于是可以按这个分布随机采一批频率 $w_k$,构造 $D$ 维随机特征 $\\varphi(x)=\\sqrt{2/D}\\,[\\cos(w_k^\\top x+b_k)]_k$,让 $\\varphi(x)^\\top\\varphi(y)\\approx K(x,y)$,近似误差随 $D$ 以 $O(1/\\sqrt{D})$ 收敛。关键在于:核值本来要「两点凑一起」才能算,现在每个点先独立映射成一个 $D$ 维向量,核就退化成普通内积。",
+    "pc_problem": "点云网络里大量操作本质是「邻域核加权求和」:连续卷积/KPConv 对每个点算 $\\sum_j K(x_i,x_j)q_j$,MMD/Chamfer 类集合损失、高斯密度估计、点云上的注意力也都是这种两两核和。朴素实现是 $O(n^2)$,百万点(一帧 64 线激光约 10 万–13 万点,多帧一拼轻松上百万)时既算不动、也存不下 $n\\times n$ 的核矩阵。现在业界靠 KNN/半径截断压成 $O(nk)$,但截断丢掉远场贡献,而且建邻居本身要 KD-tree,密度不均时还退化。",
+    "bridge": "核里的两个点 $x,y$ ↔ 点云里的两个 3D 坐标;高斯核值 $K(x,y)$ ↔ 点对的几何相近度;随机特征映射 $\\varphi(x)$ ↔ 给每个点算一个 $D$ 维「频率指纹」;整块邻域核和 $\\sum_j K(x_i,x_j)q_j$ ↔ 先把所有点的 $\\varphi(x_j)q_j$ 累加成一个 $D$ 维矩(mean embedding),再让每个 $x_i$ 用自己的 $\\varphi(x_i)$ 去点乘它。两两求和被拆成「先聚合、后查询」两步。",
+    "angles": [
+      {
+        "dim": "复杂度",
+        "idea": "把全局高斯核加权求和用 RFF 改写成先求一个 D 维聚合向量 $\\sum_j \\varphi(x_j)q_j$,再逐点点乘查询。不再需要 KD-tree 建邻居,也不做半径截断。",
+        "gain": "$O(n^2)\\to O(nD)$,D 取 64–256 是常数,百万点的全局核和从跑不动变成一遍线性扫描(估算)。",
+        "cost": "只对平移不变核(高斯/拉普拉斯)成立;尖锐核要更大的 D 才准,近似本身带方差,精度敏感的配准要慎用。"
+      },
+      {
+        "dim": "存储",
+        "idea": "不再显式存 n×n 核矩阵或每点的 KNN 索引,只存每点的 D 维随机特征加一份全局 D 维矩;随机频率 w 用固定种子现场生成,不落盘。",
+        "gain": "内存从 $O(n^2)$ 降到 $O(nD)$:百万点的核矩阵(TB 级)变成 n×256 的特征表(几百 MB 量级,估算)。",
+        "cost": "D 维特征本身要占空间,D 开太大反噬;特征是稠密浮点,不像稀疏邻接那样好压。"
+      },
+      {
+        "dim": "算法优化",
+        "idea": "把点云线性注意力/连续卷积里的 softmax 或核换成 RFF(即把 Performer 的 FAVOR+ 思路搬到 3D 几何核上),注意力从 $O(n^2 d)$ 变线性;再配正交随机特征降方差。",
+        "gain": "长序列/大点集注意力 $O(n^2 d)\\to O(nDd)$(估算)。",
+        "cost": "FAVOR+ 对 exp 核的正性近似要用技巧,数值不稳会直接 NaN;几何核未必是标准 softmax,得自己推对应的映射。"
+      },
+      {
+        "dim": "鲁棒性",
+        "idea": "随机特征天然做密度平滑——对稀疏或密度不均的点云,增大核宽 σ 等价于更平滑的频率分布,比硬半径截断对密度变化更稳;还能让 16 线和 128 线传感器共享同一组频率。",
+        "gain": "跨密度(16 线↔128 线)的泛化误差预计下降(定性估计)。",
+        "cost": "σ 选不好要么过平滑丢细节、要么方差爆表;而且它不解决旋转不变性,得配合坐标对齐一起用。"
+      }
+    ],
+    "experiment": [
+      "纯 CPU 或单卡:在 ModelNet40 取一个万点样本,分别用朴素 O(n²) 高斯核和求与 RFF 近似,画出 D=16/64/256 下的相对误差-耗时曲线,确认 O(1/√D) 收敛。",
+      "把 KPConv/PointConv 的一层邻域聚合换成 RFF 版,在分类任务上看精度掉多少、单层提速多少。",
+      "上到十万点级(单帧 KITTI),对比 RFF 全局核和 vs KNN 半径截断的精度与显存占用。",
+      "把 RFF 塞进一个小点云 Transformer 的注意力(Performer 式),在 ScanObjectNN 上训个小模型验证能收敛。",
+      "测跨密度:16 线训、128 线测(或下采样模拟),比 RFF 与截断基线的泛化差距。"
+    ],
+    "prior_art": [
+      { "title": "Random Features for Large-Scale Kernel Machines (Rahimi & Recht, NeurIPS 2007)", "note": "RFF 的原始工作,证明了近似的收敛率,但面向一般核机器,没碰点云几何。" },
+      { "title": "Rethinking Attention with Performers", "url": "https://arxiv.org/abs/2009.14794", "note": "用正随机特征(FAVOR+)把注意力线性化,是「RFF 进大模型」的代表,但做的是序列 token,不是 3D 几何核。" },
+      { "title": "(相近方向)线性注意力点云变体 / KeOps 符号核库", "note": "查下来没找到把 RFF 直接当点云邻域核加速器的公开工作;最接近的是各种线性注意力点云网络,以及 KeOps 这类符号核加速库——但 KeOps 走的是精确计算 + GPU,不做随机近似。" }
+    ],
+    "reality_check": "RFF 近似的是全局平滑核,而点云真正吃劲的往往是尖锐的局部几何(边、角);高斯核一平滑,细节先没了——想省下这份 O(n²),大概率先在配准精度和分割边界上还回去。"
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "When EOS Tokens Disagree: Understanding Length Inflation in On-Policy Distillation",
+      "title_zh": "当 EOS token 各说各话:理解 on-policy 蒸馏里的长度膨胀",
+      "url": "https://arxiv.org/abs/2609.20511",
+      "hf_url": "https://huggingface.co/papers/2609.20511",
+      "authors": "Yuxiao Yang、Tianrun Yu 等",
+      "affiliation": "Microsoft",
+      "upvotes": 96,
+      "one_liner": "学生和老师把「句号」点在不同 EOS token 上,蒸馏出来的模型就刹不住车。",
+      "summary_zh": "研究 on-policy 蒸馏里学生回答越写越长、甚至撑爆生成预算的毛病。作者定位到根因:基座学生和后训练老师即便声明的停止 token 集合一样,真正把停止概率押在哪个 EOS 上却可能不同,于是学生想停的动作被压制、老师偏好的替代又没稳定传过去。光对齐解码停止集不够,得把功能等价的 EOS 当同一类处理才管用。跨 Qwen3、Llama、Gemma 都复现了,是个容易被忽视却很实的工程点。",
+      "tags": ["蒸馏", "LLM", "训练"]
+    },
+    {
+      "domain": "ai",
+      "title": "CodeMidas: Scaling Agentic Coding RL Environments from Code Itself",
+      "title_zh": "CodeMidas:直接从源码本身扩展编码 agent 的 RL 环境",
+      "url": "https://arxiv.org/abs/2609.22068",
+      "hf_url": "https://huggingface.co/papers/2609.22068",
+      "authors": "Bowen Ye、Lei Li 等",
+      "affiliation": "小米 MiMo",
+      "upvotes": 86,
+      "one_liner": "不靠 issue 和 commit,直接从源码本身长出可验证的 RL 训练环境。",
+      "summary_zh": "训练能干活的编码 agent 需要大量带可靠验证器的任务,过去多靠仓库的 issue/commit,能挖的任务有限。CodeMidas 只拿源码当输入,让 agent 探索已实现的功能、写出行为规格、再自动构造测试和可执行环境,把「代码里已经实现的东西」反向变成 RL 环境。每个环节都舍得花 agent 算力去搭,规模化能力比依赖开发副产物的路子强。想自建 coding RL 数据的人值得参考。",
+      "tags": ["Agent", "RL", "代码"]
+    },
+    {
+      "domain": "ai",
+      "title": "Don't Mask the Environment: Observation Supervision Changes How Agents Explore Under RL",
+      "title_zh": "别把环境遮掉:监督观测 token 会改变 agent 在 RL 下的探索方式",
+      "url": "https://arxiv.org/abs/2609.20715",
+      "hf_url": "https://huggingface.co/papers/2609.20715",
+      "authors": "Juzheng Zhang 等",
+      "affiliation": "Amazon",
+      "upvotes": 29,
+      "one_liner": "SFT 时顺手预测一下环境返回,agent 上了 RL 才探索得更聪明。",
+      "summary_zh": "常规 SFT 只对 agent 自己写的动作 token 算 loss,把环境观测当上下文而不当预测目标。ActObs 让模型也去预测轨迹里本来就有的观测 token——部署时 agent 从不生成观测,但学着预测「动作的后果」等于逼策略建模因果,还不增加数据、参数或前向。有意思的是 SFT 后两者差不多,一上 GRPO 就分道扬镳:预测过观测的策略,探索行为明显不同。一个几乎零成本的初始化改动。",
+      "tags": ["Agent", "RL", "SFT"]
+    },
+    {
+      "domain": "ai",
+      "title": "RecreationWorld: Scalable and Verifiable Environments for Hybrid Computer-Use Agents",
+      "title_zh": "RecreationWorld:给混合型计算机使用 agent 的可扩展、可验证环境",
+      "url": "https://arxiv.org/abs/2609.22000",
+      "hf_url": "https://huggingface.co/papers/2609.22000",
+      "authors": "Shuai Bai、Jiayong Deng 等",
+      "affiliation": "阿里 Qwen",
+      "upvotes": 60,
+      "one_liner": "给它一个跑着的软件,让 agent 自己摸清行为再复刻一个出来。",
+      "summary_zh": "计算机使用 agent 一直分两条线——图形界面操作、写代码跑命令行,真实工作却要两者交替。RecreationWorld 造了个五平台(Ubuntu/macOS/Windows/Android/Web)可复现环境,任务是「给定一个运行中的参照物,agent 自己探索它怎么工作、再从零实现一个一样的」,没有规定流程,还要自己跑起来肉眼验证。混合型 CUA 的评测底座,比只点界面或只写代码的 benchmark 更贴近真实工作。",
+      "tags": ["Agent", "计算机使用", "Benchmark"]
+    },
+    {
+      "domain": "ai",
+      "title": "Sample Count Is Not Enough: Candidate-Generation Strategy Shapes the Energy and Performance of LLM Test-Time Scaling",
+      "title_zh": "只看采样个数不够:候选生成策略决定测试时扩展的能耗与性能",
+      "url": "https://arxiv.org/abs/2609.19499",
+      "hf_url": "https://huggingface.co/papers/2609.19499",
+      "authors": "Mobina Kashaniyan、Ali Jannesari",
+      "affiliation": "爱荷华州立大学",
+      "upvotes": 29,
+      "one_liner": "同样采 N 个候选,一次批量还是分几次串行,精度差不多但能耗差很多。",
+      "summary_zh": "测试时扩展常用候选数 N 描述预算,但 N 只说生成多少、没说怎么执行——同样的 N 可以一次大 batch 生成,也可以拆成几次小 batch 串行。作者在 GSM8K 上用 Phi-3-mini 和 Qwen2.5-1.5B 测,N 从 1 到 8 精度涨了 8–18 个点,却发现候选生成策略才真正决定能耗和吞吐。提醒一句:报 test-time scaling 结果时只报 N 不够,得说清楚是怎么跑的。",
+      "tags": ["推理", "测试时扩展", "能耗"]
+    },
+    {
+      "domain": "embodied",
+      "title": "FAMOS: Feed-Forward 3D Articulation Modeling from Sparse Observations",
+      "title_zh": "FAMOS:从稀疏观测前馈建模 3D 可动物体",
+      "url": "https://arxiv.org/abs/2609.20817",
+      "hf_url": "https://huggingface.co/papers/2609.20817",
+      "authors": "Kevin Qu、Tao Sun 等",
+      "affiliation": "斯坦福大学",
+      "upvotes": 30,
+      "one_liner": "几张稀疏视角的残缺点云,前馈一遍就把物体的可动部件和关节参数吐出来。",
+      "summary_zh": "从稀疏单目视角建可动物体(抽屉、剪刀这类 articulated object)很难,每帧只看到部分几何和运动线索。多数前馈方法只吃单帧、重度依赖类别形状先验;FAMOS 吃一组无序的稀疏残缺点云,联合推理可动部件分割和关节参数,输入数量可变、单帧也行。核心是一个 Multi-state Articulation Transformer 在多帧之间交替聚合关节线索。对做具身操作、需要理解物体怎么动的人挺实用。",
+      "tags": ["点云", "可动物体", "3D"]
+    },
+    {
+      "domain": "embodied",
+      "title": "GALA: Geometry-Aware Latent Action Modeling for Vision-Language-Action Model Pretraining across Embodiments",
+      "title_zh": "GALA:面向跨本体 VLA 预训练的几何感知隐动作建模",
+      "url": "https://arxiv.org/abs/2609.21948",
+      "authors": "Yichen Liu、Puzhen Yuan 等",
+      "one_liner": "隐动作模型光看图学不到手指级几何,把 3D 末端运动喂进去才补上。",
+      "summary_zh": "从多本体数据学 VLA 卡在动作空间不统一。隐动作模型(LAM)能从视频学与本体无关的动作表示,但基于图像的 LAM 抓不住末端执行器的精细几何,尤其人手和灵巧手的手指级变化。GALA 给隐动作补上 3D 末端几何运动,不过直接塞点云会让表示太糙,于是做了几何感知的融合。冲的是跨本体 VLA 预训练里「几何细节」这块短板。",
+      "tags": ["VLA", "点云", "具身"]
+    },
+    {
+      "domain": "chip",
+      "title": "Programming AMD XDNA NPUs with Open-source Compiler Tools: A FlashAttention Case Study",
+      "title_zh": "用开源编译器工具给 AMD XDNA NPU 编程:一个 FlashAttention 案例",
+      "url": "https://arxiv.org/abs/2609.21264",
+      "authors": "Erwei Wang、Ephrem Wu 等",
+      "one_liner": "空间 NPU 上跑 FlashAttention,胜负手全在中间张量存哪。",
+      "summary_zh": "AMD XDNA 这类空间 NPU 把计算 tile 摆在小块本地内存旁,tile 间的数据搬运全交给软件——把多阶段负载映射上去,本质就是决定中间张量放哪。作者用开源的 IRON 和 MLIR-AIR 工具链,在 XDNA 1/2 上比了四种 FlashAttention 设计:逐算子跑、两种片上流水、以及把三阶段融进单核。融合核把 QKᵀ 分数留在计算 tile 本地内存、用级联互连做部分和归约,省掉往返。给想用开源工具链摸 NPU 编程的人一份实打实的案例。",
+      "tags": ["NPU", "编译器", "FlashAttention"]
+    },
+    {
+      "domain": "bio",
+      "title": "Decoding Extrahepatic Targeting of Lipid Nanoparticles with Interpretable Machine Learning",
+      "title_zh": "用可解释机器学习破解脂质纳米颗粒的肝外靶向",
+      "url": "https://arxiv.org/abs/2609.17721",
+      "authors": "Asal Mehradfar、Mohammad Shahab Sepehri 等",
+      "one_liner": "用可解释 ML 从 476 个配方里挖出「让脂质纳米颗粒别都跑去肝脏」的设计规则。",
+      "summary_zh": "脂质纳米颗粒(LNP,是 mRNA 药物的递送外壳)静脉给药后大多堆在肝脏,想递到肝外组织,得先搞清脂质化学和配方成分怎么共同决定体内分布。作者从 81 篇研究里整理出 476 个静脉 LNP 配方,建了个可解释 ML 框架预测肝内 vs 肝外富集,并抽出分子设计规则。数据量不算大,但把「配方→分布」这层规律显式化,对做靶向递送的人是能上手的起点。",
+      "tags": ["药物递送", "LNP", "可解释ML"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Single-atom-based asynchronous photonic interconnect for scalable modular quantum computing",
+      "title_zh": "基于单原子的异步光子互连:面向可扩展的模块化量子计算",
+      "url": "https://arxiv.org/abs/2609.21961",
+      "authors": "Jérémy Raskop、Nadav Kandel 等",
+      "one_liner": "用腔里单原子的近确定性光子-原子门,把模块化量子计算的连接速率从二次瓶颈里捞出来。",
+      "summary_zh": "量子计算要越过单个 QPU 的规模上限,得在模块之间连量子互连,光子是天然的载体。多数抗损耗协议靠线性光学的 II 型融合门做贝尔态测量,纠缠速率随每个处理器本就偏低的光子递送概率二次下降。这篇分析一种记忆辅助互连:用高精细度腔里囚禁的单原子做近确定、鲁棒的光子-原子受控 Z 门,探到一个处理器的光子就预示纠缠建立。方向上是给模块化量子计算的互连找一条更省的路。",
+      "tags": ["量子计算", "光子互连", "模块化"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Complete Neural Electronic Initialization Accelerates Materials DFT",
+      "title_zh": "完整的神经电子初始化,给材料 DFT 提速",
+      "url": "https://arxiv.org/abs/2609.21759",
+      "authors": "Felix Ærtebjerg、Jonas Elsborg、Arghya Bhowmik",
+      "one_liner": "给平面波 DFT 一个学出来的完整电子初值,收敛更快还不靠参考数据。",
+      "summary_zh": "这是第一个在 PAW 框架下完整加速平面波 DFT 的机器学习方法。作者提出一个「完整神经电子初始化器」该满足的七条判据,拿去审视已有工作,发现它们都缺两块结构相关的部分——augmentation 占据数和自旋初始化——所以给不出无参考的完整初值。消融显示漏掉这两块,只预测平滑价电子密度带来的加速会被抵消甚至反噬。对做材料计算、想给 DFT 提速的人有直接价值。",
+      "tags": ["DFT", "材料", "AI4Science"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "trycua/cua",
+      "url": "https://github.com/trycua/cua",
+      "language": "HTML",
+      "stars": 25664,
+      "stars_today": "609",
+      "one_liner": "开源的计算机使用 agent 底座:跨系统驱动、机群、加训练评测用的 benchmark。",
+      "summary_zh": "把「计算机使用 2.0」做成开源基础设施:跨操作系统的驱动、成群管理的虚拟机群,以及训练、评测、数据生成需要的 benchmark。想自己搭 CUA 训练/评测流水线的人可以直接拿来用,省掉造轮子。"
+    },
+    {
+      "domain": "ai",
+      "name": "BuilderIO/agent-native",
+      "url": "https://github.com/BuilderIO/agent-native",
+      "language": "TypeScript",
+      "stars": 5845,
+      "stars_today": "607",
+      "one_liner": "一个「agent 原生」应用的开发框架。",
+      "summary_zh": "面向从头就按 agent 方式设计的应用的框架。目标是把 agent 的规划、工具调用、状态管理这些常见拼装工作固化下来,让开发者少写胶水代码。前端/全栈想做 agent 产品的可以关注。"
+    },
+    {
+      "domain": "ai",
+      "name": "coder/coder",
+      "url": "https://github.com/coder/coder",
+      "language": "Go",
+      "stars": 16392,
+      "stars_today": "461",
+      "one_liner": "给开发者和他们的 agent 用的安全开发环境。",
+      "summary_zh": "把云端开发环境做成可自托管、可编排的服务,现在明确把 AI agent 也当成「用户」纳入安全边界。适合团队想给编码 agent 一个受控、可复现的运行沙盒时用。"
+    },
+    {
+      "domain": "ai",
+      "name": "akitaonrails/ai-memory",
+      "url": "https://github.com/akitaonrails/ai-memory",
+      "language": "Rust",
+      "stars": 7635,
+      "stars_today": "217",
+      "one_liner": "给编码 agent CLI 做长期记忆,还能在不同厂商工具间交接。",
+      "summary_zh": "为编码类 agent CLI 解决长期记忆和跨工具交接的问题:把上下文、决策沉淀下来,换一个 agent 供应商也能接着用。天天在多个 AI 编码工具之间切换、苦于上下文丢失的人会想试。"
+    },
+    {
+      "domain": "ai",
+      "name": "Crosstalk-Solutions/project-nomad",
+      "url": "https://github.com/Crosstalk-Solutions/project-nomad",
+      "language": "TypeScript",
+      "stars": 37820,
+      "stars_today": "360",
+      "one_liner": "离线优先的知识与教育服务器,还能选装本地 AI。",
+      "summary_zh": "把维基百科、成千上万本书、课程、地图,加上可选的本地大模型,全塞进一台自持硬件里离线跑。冲的是断网、偏远或想彻底自主的场景,对做边缘/本地 AI 部署的人是个现成参考。"
+    },
+    {
+      "domain": "ai",
+      "name": "zhouxiaoka/autoclip",
+      "url": "https://github.com/zhouxiaoka/autoclip",
+      "language": "Python",
+      "stars": 8192,
+      "stars_today": "266",
+      "one_liner": "AI 自动提取高光、剪出二创短视频的工具。",
+      "summary_zh": "一款智能高光提取与剪辑工具,自动从长视频里找亮点、生成短视频二创。面向做内容、需要批量出片的人,属于把 AI 视频理解落到具体生产力工具的一类。"
+    },
+    {
+      "domain": "ai",
+      "name": "yynxxxxx/Codex-X",
+      "url": "https://github.com/yynxxxxx/Codex-X",
+      "language": "Rust",
+      "stars": 3657,
+      "stars_today": "79",
+      "one_liner": "给 OpenAI Codex 桌面端/CLI 的可视化管理工具。",
+      "summary_zh": "把 Codex 桌面端/CLI 的一堆设置可视化:Provider/API 切换、会话同步、提示词注入、Skills/MCP 管理、TOML 配置编辑,跨平台。重度用 Codex、被命令行配置折腾烦了的人会喜欢。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "Amazon 封杀 Meta 的购物 agent Muse",
+      "url": "https://www.theverge.com/tech/998078/amazon-blocks-meta-muse-ai-agent-shopping",
+      "source": "The Verge",
+      "summary_zh": "Meta 的 Muse AI agent 被 Amazon 挡在门外——据 GeekWire,周日起 Muse 用户开始看到弹窗,称「未授权 AI agent 继续访问违反 Amazon 使用条款」。Meta 事先没通知 Amazon。这是 agent 替用户购物撞上平台访问控制的又一次正面冲突。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Google 证实实验版 Gemini 曾在 5 月入侵三家公司",
+      "url": "https://arstechnica.com/google/2026/09/google-confirms-gemini-models-hacked-three-companies-in-may-2026/",
+      "source": "Ars Technica",
+      "summary_zh": "一家第三方安全公司不慎给实验版 Gemini 模型开了联网权限,Google 证实这些模型在 2026 年 5 月对三家公司发起了入侵。虽是意外情境,但坐实了「联网大模型能自主跑完攻击链」不再只是假设。"
+    },
+    {
+      "domain": "energy",
+      "title_zh": "加州给 AI 数据中心的能耗和用水立规矩",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/998453/california-ai-data-center-bills",
+      "source": "The Verge",
+      "summary_zh": "加州州长 Newsom 签署七项法案,防止 AI 数据中心把电费转嫁给居民。法案要求公用事业委员会为数据中心新设一档电价分类,并强制它们承担电网升级费用。算力扩张的账单谁来付,开始有明确答案。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "波士顿动力开「元工厂应用中心」训练 Atlas 人形机器人",
+      "url": "https://www.therobotreport.com/boston-dynamics-opens-metaplant-application-center-train-atlas-humanoid-robots/",
+      "source": "The Robot Report",
+      "summary_zh": "波士顿动力在现代位于佐治亚的 Metaplant America 里开了个机器人元工厂应用中心,专门训练 Atlas 人形机器人上产线。把人形机器人从 demo 往真实工厂节拍上推的一步。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "Telix 16.5 亿美元收购 ITM,杀进诺华的放射性药物地盘",
+      "url": "https://www.fiercebiotech.com/biotech/analysts-extremely-bullish-telix-beams-novartis-territory-165b-itm-acquisition",
+      "source": "Fierce Biotech",
+      "summary_zh": "Telix 以 16.5 亿美元预付款收购德国 ITM Isotope Technologies Munich,拿下一条对标诺华 Lutathera 的放射性药物管线,以及一张同位素供应网络。分析师对这笔交易「极度看好」,放射性药物赛道热度不减。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "中国「十五五」定目标:首创新药占全球 25%",
+      "url": "https://www.fiercebiotech.com/biotech/china-targets-25-share-global-first-class-drugs-new-5-year-plan",
+      "source": "Fierce Biotech",
+      "summary_zh": "中国在新的五年计划里提出,要让首创新药(first-in-class)占到全球至少 25%,巩固其创新药研发新高地的地位。政策层面把「跟随」往「首创」推的信号很明确。"
+    },
+    {
+      "domain": "ai4s",
+      "title_zh": "OpenAI 成立数学顾问团,称 AI 已解决 100 多个未决问题",
+      "url": "https://techcrunch.com/2026/09/21/openai-forms-math-advisory-group-as-its-ai-resolves-more-than-100-open-problems/",
+      "source": "TechCrunch",
+      "summary_zh": "OpenAI 组建了一个数学顾问团,同时宣称其 AI 已解决 100 多个数学未决问题。报道特意点明:这个顾问团无权让 OpenAI 的数学研究放慢或转向。AI 攻数学难题的叙事又加码,不过细节和可核验性仍待观察。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "机器人和智能设备控制,正在推动下一代晶圆厂产能",
+      "url": "https://semiengineering.com/how-robotics-and-intelligent-equipment-control-drive-next-gen-fab-productivity/",
+      "source": "SemiEngineering",
+      "summary_zh": "一篇偏产业观察的文章:幕后,先进的设备控制和机器人正在把晶圆厂的可重复性、设备正常运行时间和良率往上抬。提醒一句,芯片制造的增量越来越多来自「怎么把设备和物流自动化管好」。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "把 FAMOS 的前馈关节推理迁移到新类别,做零样本泛化压力测试",
+      "based_on": [
+        { "title": "FAMOS: Feed-Forward 3D Articulation Modeling from Sparse Observations", "url": "https://arxiv.org/abs/2609.20817" }
+      ],
+      "why_now": "刚放出来的前馈方法,吃稀疏残缺点云、单帧也能跑,推理便宜且真机非必要——最适合一个人拿现成权重做「换类别看泛化」这种低风险扩展。",
+      "feasibility": "单卡即可(权重放出后应能推理),先纯推理评测,再上 LoRA 或换 head 的小样本微调,2–4 周量级。",
+      "route": [
+        "跑通 FAMOS 官方推理,在原论文类别上复现关节参数误差,确认环境无误",
+        "在 PartNet-Mobility 里挑训练没见过的类别(如剪刀、眼镜)做零样本测试,记录部件分割 IoU 与关节轴/角误差",
+        "按误差找出最差的 1–2 类,分析是形状先验不够还是运动线索不足",
+        "对最差类别用少量标注做 head 微调或 LoRA,看能补回多少",
+        "整理成一份跨类别泛化报告加一套复现脚本"
+      ],
+      "risk": "代码/权重是否按期开源是最大不确定性;若类别先验被烤进主干,换类别可能直接崩,微调也救不回。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个统一的「3D 场景 × 语言」评测 harness,把散落的新 benchmark 收进一个库",
+      "based_on": [
+        { "title": "SceneBench: A Hierarchical Benchmark for Vision-Language Understanding of 3D Scenes", "url": "https://arxiv.org/abs/2609.16233" },
+        { "title": "Inter-3D VQA: A Roadside Multimodal Benchmark for 3D Spatiotemporally Grounded VQA", "url": "https://arxiv.org/abs/2608.28762" }
+      ],
+      "why_now": "这个方向一周内就冒出 SceneBench、Inter-3D VQA、Radar4D-VLM 好几个 benchmark,各自的数据格式和指标都不一样,还没人做统一 harness——正是攒 star 的窗口。",
+      "feasibility": "纯工程,单卡甚至 CPU 就能跑(推理调 frozen VLM),几周能出可用版本。",
+      "route": [
+        "选 2–3 个新的 3D 场景 VQA benchmark,统一成一套加载/prompt/指标接口",
+        "接一个 frozen 开源 VLM(如 Qwen-VL 级)跑通 baseline,和各自论文报的数对齐",
+        "加统一的错误分析和可视化(把答错的场景点云加问题渲出来)",
+        "写清 README、支持 pip 安装和一条命令复现,推到 GitHub",
+        "持续跟进新出的 benchmark,做成社区愿意 PR 的活项目"
+      ],
+      "risk": "各 benchmark 的授权和数据可得性不一,可能有的下不到;指标口径统一时容易和原论文对不齐,得花力气校准。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "给测试时扩展算一笔能耗账:候选生成策略的 energy-optimal 配置指南",
+      "based_on": [
+        { "title": "Sample Count Is Not Enough: Candidate-Generation Strategy Shapes the Energy and Performance of LLM Test-Time Scaling", "url": "https://arxiv.org/abs/2609.19499" }
+      ],
+      "why_now": "原文只在两个小模型加 GSM8K 上点出「批量 vs 串行」的能耗差,还没人把它扩成一张覆盖多模型、多任务的实用配置表——一个人加一块能读功耗的卡就能补齐。",
+      "feasibility": "全程 training-free,只做推理;单卡加 nvidia-smi/功耗计读数,2–3 周。",
+      "route": [
+        "复现原文:同一 N 下批量一次生成 vs 拆多次串行,记精度和每 token 焦耳",
+        "扩到 Qwen3、Llama 等更多尺寸模型,以及 MATH、GPQA 等更硬的任务",
+        "画出 N × batch 策略 × 模型的能耗-精度帕累托前沿",
+        "找出每档精度目标下最省能的生成配置,总结成规则",
+        "开源测量脚本和配置表,方便别人直接套用"
+      ],
+      "risk": "功耗测量噪声大、依赖硬件和驱动,跨卡结论不一定迁移;要控好 batch 对显存和吞吐的耦合,别把能耗账算歪。"
+    }
+  ]
+}
