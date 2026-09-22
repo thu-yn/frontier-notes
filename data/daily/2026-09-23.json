@@ -1,0 +1,392 @@
+{
+  "date": "2026-09-23",
+  "editor_note": "今天有两条主线拧在一起看很有意思。一条是「harness(智能体外壳)自己变成了被优化的对象」——Google 的 RRSI 迭代改写 prompt/工具/记忆这套外壳,还专门加正则防它把训练任务背下来;北大的 Harness-Zero 干脆把好外壳的行为蒸回权重里,让优势在换外壳后还留得住。另一条是「给机器人装世界模型」:WorldCrafter 给视频世界模型塞了个可按视角查询的隐式 3D 记忆,NUS 的 Grounded Action Model 主张先做 3D grounding 再谈动作。最值得点开的是清华系那篇 RoboDawn(把 VLM 的智能直接迁到机器人控制,101 赞)和蚂蚁那篇「1% 的 token 就够了」——后者用信息几何算梯度信噪比,只挑最有信息量的 token 做蒸馏,正好和今天『每日一理』的中心极限定理呼应:梯度噪声按 1/√n 消退这件事,是很多训练技巧的底层账本。行业侧则是前沿模型的比价日:Opus 5.5 和 GPT-6 同天开打「更强一点、便宜一大截」。至于 OpenAI 宣称解了上百个数学未解问题、又被质疑 Navier-Stokes『解错了题』——热闹归热闹,评判标准本身成了争论焦点,这事得慢慢看。",
+  "math_note": {
+    "name": "中心极限定理",
+    "name_en": "Central Limit Theorem",
+    "field": "概率论 / 数理统计",
+    "one_liner": "无论原始分布长得多丑,足够多个独立样本一平均,总会长成同一张钟形脸。",
+    "statement": "设 $X_1,X_2,\\dots$ 独立同分布,期望 $\\mu$、方差 $\\sigma^2<\\infty$(有限是硬条件)。样本均值 $\\bar X_n=\\frac1n\\sum_{i=1}^n X_i$ 会往 $\\mu$ 集中(这是大数定律);但如果你把它减去 $\\mu$、再按 $\\sigma/\\sqrt n$ 放大,得到的标准化量 $Z_n=\\dfrac{\\bar X_n-\\mu}{\\sigma/\\sqrt n}$,当 $n\\to\\infty$ 时分布会收敛到标准正态 $\\mathcal N(0,1)$。等价地写成 $\\sqrt n(\\bar X_n-\\mu)\\xrightarrow{\\,d\\,}\\mathcal N(0,\\sigma^2)$。惊人的地方在于:原始分布长什么样都无所谓,只要方差有限,平均之后的涨落一律是高斯的。",
+    "origin": "棣莫弗(de Moivre)1733 年为了算大量抛硬币出现某结果的概率,发现二项分布可以用一条钟形曲线逼近;拉普拉斯把它推广到更一般的场合。真正给出严格条件的是 19 世纪末到 20 世纪初的 Lyapunov 和 Lindeberg——他们说清了要「独立、方差有限、且没有单独某一项主导总和」。一个原本服务于赌博和天文测量误差的观察,最后成了整个统计学的地基。",
+    "derivation": [
+      { "math": "\\varphi_X(t)=\\mathbb E\\!\\left[e^{itX}\\right]", "note": "引入特征函数(本质是分布的傅里叶变换)。它最好用的性质是:独立随机变量相加,对应特征函数相乘。" },
+      { "math": "Y_i=\\frac{X_i-\\mu}{\\sigma},\\quad \\mathbb E[Y_i]=0,\\ \\operatorname{Var}(Y_i)=1", "note": "先把每个变量标准化,去掉均值和尺度,只留下分布的「形状」,后面算起来干净。" },
+      { "math": "\\varphi_Y(t)=1-\\tfrac{t^2}{2}+o(t^2)", "note": "对标准化后的 $Y$ 做泰勒展开:一阶项因为均值为 0 直接消失,二阶项的系数正好是方差 1 的一半。" },
+      { "math": "\\varphi_{Z_n}(t)=\\left[\\varphi_Y\\!\\left(\\tfrac{t}{\\sqrt n}\\right)\\right]^{n}=\\left(1-\\tfrac{t^2}{2n}+o\\!\\left(\\tfrac1n\\right)\\right)^{n}", "note": "$Z_n$ 是 $n$ 个独立 $Y_i$ 之和再除以 $\\sqrt n$,所以特征函数是单个的 $n$ 次方,且要把自变量换成 $t/\\sqrt n$。" },
+      { "math": "\\left(1-\\tfrac{t^2}{2n}\\right)^{n}\\longrightarrow e^{-t^2/2}", "note": "这是 $(1+x/n)^n\\to e^x$ 的老把戏,取 $x=-t^2/2$,$n\\to\\infty$ 时极限就是 $e^{-t^2/2}$。" },
+      { "math": "e^{-t^2/2}=\\varphi_{\\mathcal N(0,1)}(t)", "note": "而 $e^{-t^2/2}$ 恰好是标准正态的特征函数。特征函数唯一决定分布,所以 $Z_n$ 的分布收敛到标准正态,证毕。" }
+    ],
+    "applications": [
+      { "area": "蒙特卡洛与数值积分", "detail": "随机采样估积分,误差按 $\\sigma/\\sqrt n$ 缩小,CLT 告诉你这误差近似正态,于是能给出置信区间——想把误差砍一半,就得把样本数翻四倍。" },
+      { "area": "机器学习的梯度估计", "detail": "SGD 和策略梯度都用小批量近似真梯度,批内噪声近似正态,批大小与梯度信噪比的 $\\sqrt n$ 关系直接决定训练稳不稳(今天蚂蚁那篇「1% token」的梯度信噪比分析做的正是这件事)。" },
+      { "area": "A/B 测试与统计推断", "detail": "转化率这类比例检验,靠样本均值近似正态才能算 p 值和置信区间,是几乎所有假设检验的默认前提。" },
+      { "area": "误差分析与测量", "detail": "大量独立的微小误差叠加会趋于正态,这解释了为什么「测量误差服从高斯分布」这个假设在物理和工程里如此好用。" }
+    ],
+    "takeaway": "独立的小随机因素叠加起来,会把各自的怪癖互相抹平,最后只剩均值和方差两个数说了算——这既是高斯分布无处不在的原因,也是「多数投票 / 集成 / 平均」能降噪的数学根据:噪声是按 $1/\\sqrt n$ 消退的,而不是想当然的 $1/n$。",
+    "viz": {
+      "type": "custom",
+      "caption": "拖滑块增大 n:每次取 n 个严重右偏的指数分布随机数求平均、再标准化,蓝色直方图就是这些平均值的分布。n=1 时是歪的指数形状,n 一大就迅速贴合红色的标准正态曲线——中心极限定理在你眼前发生。",
+      "html": "<div style='font-family:system-ui,-apple-system,sans-serif;color:inherit'><canvas id='cltc' width='620' height='330' style='max-width:100%;height:auto;touch-action:none'></canvas><div style='margin-top:10px;font-size:14px'>每次取 <b>n = <span id='cltn'>1</span></b> 个独立的指数分布随机数求平均 <input id='cltr' type='range' min='1' max='40' value='1' style='width:240px;vertical-align:middle'> 　(指数分布本身严重右拖尾)</div></div>",
+      "script": "(function(){var cv=el.querySelector('#cltc'),rg=el.querySelector('#cltr'),ln=el.querySelector('#cltn');if(!cv)return;var ctx=cv.getContext('2d');var W=cv.width,H=cv.height,pl=40,pr=16,pt=14,pb=28;var pw=W-pl-pr,ph=H-pt-pb;var xmin=-3.5,xmax=4.5,bins=54;function X(x){return pl+(x-xmin)/(xmax-xmin)*pw;}function npdf(z){return Math.exp(-z*z/2)/Math.sqrt(2*Math.PI);}function draw(n){ln.textContent=n;var M=6000,bw=(xmax-xmin)/bins,sd=1/Math.sqrt(n);var counts=new Array(bins).fill(0);for(var i=0;i<M;i++){var s=0;for(var j=0;j<n;j++){s+=-Math.log(1-Math.random());}var mean=s/n;var z=(mean-1)/sd;var b=Math.floor((z-xmin)/bw);if(b>=0&&b<bins)counts[b]++;}var dens=counts.map(function(c){return c/(M*bw);});var maxd=Math.max.apply(null,dens.concat([0.42]));var ymax=maxd*1.15;function Y(y){return pt+ph-(y/ymax)*ph;}ctx.clearRect(0,0,W,H);ctx.strokeStyle='rgba(128,128,128,0.5)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pl,pt);ctx.lineTo(pl,pt+ph);ctx.lineTo(pl+pw,pt+ph);ctx.stroke();ctx.fillStyle='rgba(56,132,255,0.45)';for(var k=0;k<bins;k++){var x0=X(xmin+k*bw),x1=X(xmin+(k+1)*bw);var yv=Y(dens[k]);ctx.fillRect(x0,yv,Math.max(x1-x0-1,1),pt+ph-yv);}ctx.strokeStyle='#e0532e';ctx.lineWidth=2.4;ctx.beginPath();for(var px=0;px<=pw;px++){var xx=xmin+(px/pw)*(xmax-xmin);var yy=Y(npdf(xx));if(px===0)ctx.moveTo(pl+px,yy);else ctx.lineTo(pl+px,yy);}ctx.stroke();ctx.fillStyle='rgba(128,128,128,0.9)';ctx.font='12px system-ui';ctx.fillText('0',X(0)-3,pt+ph+16);}rg.addEventListener('input',function(){draw(+rg.value);});draw(1);})();"
+    }
+  },
+  "crossover": {
+    "theory": "泊松点过程(随机几何)",
+    "theory_en": "Poisson Point Process",
+    "field": "概率论 / 随机几何",
+    "era": "泊松 1837 提出泊松分布,20 世纪空间点过程理论成型,近二十年在无线网络、激光雷达建模里成为标配工具",
+    "one_liner": "把一帧激光雷达看成「从强度场里随机撒的点」,稀疏和密集之间的鸿沟就变成了一个能精确控制的稀疏化参数。",
+    "theory_core": "泊松点过程用一个强度函数 $\\lambda(x)$(单位体积里点的期望个数)刻画随机散布的点:任一区域 $A$ 内点数服从均值为 $\\int_A\\lambda(x)\\,dx$ 的泊松分布,不相交区域之间相互独立。两条关键定理让「改密度」变成对 $\\lambda$ 的可控运算——稀疏化定理:独立地以概率 $p(x)$ 保留每个点,得到的是强度为 $p(x)\\lambda(x)$ 的新泊松过程;叠加定理:多个独立过程相加,强度直接相加。再配上 Campbell 定理,「对所有点求和的期望」能写成对 $\\lambda$ 的积分。",
+    "pc_problem": "激光雷达点云的密度随距离、入射角、线数剧烈变化:近处一平米上万点、远处只剩几十点;16 线传感器一帧约 3 万点,128 线约 20 万点。网络在 64 线上训练、直接换到 16 线部署时检测 mAP 常掉 10–20 个点,因为密度分布对不上。业界的现有招数——体素下采样(丢结构、分辨率与内存两难)、随机丢点(破坏薄结构)、FPS 选点($O(n^2)$,百万点要分钟级)——都没有一个「把不同传感器密度统一到同一基准」的原理性做法。",
+    "bridge": "一帧点云 = 一个非齐次泊松过程的实现;局部点密度 = 强度 $\\lambda(x)$ 的估计(可用 kNN 距离反推);不同传感器 / 不同距离的密度差异 = 各自不同的 $\\lambda$ 场;把稠密云「降」成稀疏云 = 用稀疏化定理,以 $p(x)=\\lambda_{\\text{target}}(x)/\\lambda_{\\text{src}}(x)$ 的概率独立保留每个点,得到强度恰好等于目标传感器的过程。于是「跨传感器泛化」就等价于「把训练数据的 $\\lambda$ 归一到部署端的 $\\lambda$」这一步可解析的操作。",
+    "angles": [
+      {
+        "dim": "复杂度",
+        "idea": "用强度反推的重要性稀疏化替换 FPS。先用 kd-tree 的 kNN 或核密度估计出每点局部密度 $\\hat\\lambda(x_i)$(一次建树查询 $O(n\\log n)$),再按稀疏化概率独立丢点,后半程 $O(n)$,完全绕开 FPS 的两两距离比较。",
+        "gain": "$O(n^2)\\to O(n\\log n)$,百万点下采样从分钟级降到秒级(估算)。",
+        "cost": "稀疏化是随机的,没有 FPS 那种均匀覆盖保证,薄结构落在低概率区可能被丢空;需要给关键区域设最小保留数兜底。"
+      },
+      {
+        "dim": "鲁棒性",
+        "idea": "训练时把每个稠密样本按随机目标强度 $\\lambda_{\\text{target}}$ 稀疏化,当成数据增强,让网络见过从 128 线一路到 16 线的整段密度谱;推理端只需估计部署传感器的 $\\lambda$ 再匹配即可。",
+        "gain": "跨传感器 mAP 掉点有望从 10–20 收窄到个位数(估算)。",
+        "cost": "只能「从密到疏」合法(稀疏化定理是单向的),没法把 16 线补成 128 线;强度估计在遮挡边缘不准。"
+      },
+      {
+        "dim": "存储",
+        "idea": "不存原始点,存「强度场 + 泊松种子」。把场景体素化后每格记一个 $\\lambda$,重建时按泊松过程重新采样;对大片静态背景尤其划算。",
+        "gain": "背景部分码率有望省 40–60%(估算,取决于场景规整程度)。",
+        "cost": "重采样出来的点不是原始点,几何精度有损,不适合需要精确点对应的配准 / 测量任务。"
+      },
+      {
+        "dim": "算法优化",
+        "idea": "用 Campbell 定理把「对邻域所有点做池化」的期望写成对 $\\lambda$ 的解析积分,在稀疏区用积分近似替代真实逐点求和,省掉构建邻居列表的开销。",
+        "gain": "稀疏区的特征聚合可跳过 kNN 构图这一步。",
+        "cost": "只有点足够密、$\\lambda$ 足够平滑时近似才准,稀疏边界处误差会大。"
+      }
+    ],
+    "experiment": [
+      "在 nuScenes 或 KITTI 上跑通一个开源 3D 检测 baseline(如 OpenPCDet 里的 CenterPoint),记录「64 线训练、直接测 16 线子采样」的 mAP 掉点——这一步纯 CPU 预处理加单卡推理,一两天就能出基线数字。",
+      "用 kd-tree kNN 估计每点局部密度,实现基于强度的稀疏化下采样,替掉 pipeline 里的 FPS / 体素下采样,对比耗时与 mAP。",
+      "把稀疏化当训练增强(随机目标线数)重训检测头,测跨线数泛化。",
+      "加上最小保留数与薄结构保护,复测行人、杆状物等薄物体的召回。"
+    ],
+    "prior_art": [
+      { "title": "RandLA-Net: Efficient Semantic Segmentation of Large-Scale Point Clouds", "url": "https://arxiv.org/abs/1911.11236", "note": "已经用随机采样替换 FPS 来处理大规模点云,证明了 $O(n)$ 采样可行;但用的是均匀随机,没有按强度场做密度归一。" },
+      { "title": "Learning to Sample (SampleNet)", "url": "https://arxiv.org/abs/1912.03663", "note": "学一个任务驱动的可微采样器,思路强,但要训练、不是即插即用的密度控制。" },
+      { "title": "跨传感器密度增强的既有工作", "note": "查下来跨传感器点云用密度增强 / 域适配的工作不少(各种 LiDAR domain adaptation),但把稀疏化定理明确当成「密度归一算子」、给出 $p(x)=\\lambda_t/\\lambda_s$ 这种解析形式的,没找到直接对应的,大多还是启发式随机丢点。" }
+    ],
+    "reality_check": "真实激光雷达的点根本不独立——它们落在连续表面上、还带扫描线的强规律结构,泊松过程的独立性假设从根上就不成立;稀疏化定理只保证边缘强度对得上,却不保证扫描线纹理、遮挡关系这些结构性特征也对得上,所以「密度归一了、网络还是不认」很可能才是真实结局。"
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "RRSI: Regularized Recursive Self-Improvement of Agent Harnesses",
+      "title_zh": "RRSI:给智能体外壳的递归自我改进套上正则",
+      "url": "https://arxiv.org/abs/2609.24972",
+      "hf_url": "https://huggingface.co/papers/2609.24972",
+      "authors": "Peng Xia、Rujun Han 等",
+      "affiliation": "Google",
+      "upvotes": 151,
+      "one_liner": "外壳自己改自己会「背题」,加个正则才不至于换个 benchmark 就露馅。",
+      "summary_zh": "智能体的能力很大程度靠它的「外壳」放大——prompt、控制流、工具、记忆、上下文管理这一整套围绕冻结模型的东西。最近的做法是让系统自动地一小块一小块地改外壳,实质是系统层的递归自我改进(RSI)。但这种递归进化容易把训练任务背下来,分布内涨得猛、换到分布外就缩水甚至归零。RRSI 引入正则化原则来压这种过拟合。思路对症,值得关注的是它能不能在真正陌生的任务上守住增益。",
+      "tags": ["Agent", "RSI", "泛化"]
+    },
+    {
+      "domain": "ai",
+      "title": "Harness-Zero: Harness Distillation via Agent-as-Harness",
+      "title_zh": "Harness-Zero:把好外壳的本事蒸回模型权重里",
+      "url": "https://arxiv.org/abs/2609.24974",
+      "hf_url": "https://huggingface.co/papers/2609.24974",
+      "authors": "Haoran Ye、Yuxing Lu 等",
+      "affiliation": "北京大学",
+      "upvotes": 12,
+      "one_liner": "与其部署时挑外壳,不如把外壳诱导出的行为直接蒸进权重。",
+      "summary_zh": "外壳能大幅提升智能体表现,但增益在部署时死死绑在那个外壳上,而最优外壳又因领域、样例、模型而异——通用智能体要么将就一个共享外壳,要么在越来越多的专用外壳间来回路由。这篇提出「外壳蒸馏」:拿一个针对领域或样例调好的外壳当训练时的引导,把它诱导出的行为迁移进模型权重,让增益在换掉外壳后依然留得住。和 RRSI 是同一天、同一主题的两种解法,可以对着读。",
+      "tags": ["Agent", "蒸馏", "post-training"]
+    },
+    {
+      "domain": "ai",
+      "title": "1% of Tokens Can Be Enough: On Gradient Estimation in On-Policy Distillation",
+      "title_zh": "1% 的 token 就够了:on-policy 蒸馏里的梯度估计",
+      "url": "https://arxiv.org/abs/2609.24432",
+      "hf_url": "https://huggingface.co/papers/2609.24432",
+      "authors": "Huanxin Sheng、Zhiling Ye 等",
+      "affiliation": "蚂蚁集团",
+      "upvotes": 7,
+      "one_liner": "用信息几何算信噪比,挑出真正值得老师指点的那 1% token。",
+      "summary_zh": "稀疏 on-policy 蒸馏(OPD)只把老师的监督分给学生轨迹里一小撮 token,但有用的指点如果只从采样出的下一个 token 去估梯度,更新会很噪。作者在固定前缀处从信息几何角度研究这个估计问题,提出基于信噪比分解的「信息效率比」(IER),用来刻画在最优标量基线下的相对梯度估计误差,再据此选 token。用数学工具认真对待「哪些 token 值得监督」这个老问题,和今天的中心极限定理正好呼应:梯度噪声的账要按 $\\sqrt n$ 来算。",
+      "tags": ["蒸馏", "信息几何", "RL"]
+    },
+    {
+      "domain": "ai",
+      "title": "WorldCrafter: Consistent Video World Model with Implicit 3D-aware Memory",
+      "title_zh": "WorldCrafter:带隐式 3D 记忆的一致性视频世界模型",
+      "url": "https://arxiv.org/abs/2609.24984",
+      "hf_url": "https://huggingface.co/papers/2609.24984",
+      "authors": "Wangbo Yu、Kunhao Liu 等",
+      "affiliation": "腾讯 ARC Lab",
+      "upvotes": 112,
+      "one_liner": "让「你想看哪个视角」来决定多视角证据怎么压进有限的 token 预算。",
+      "summary_zh": "视频世界模型能让人交互式探索动态环境,但在长时程、跨视角时很难尊重先前观测。WorldCrafter 学了一个「可按相机视角查询」的隐式 3D 记忆:关键点子是让请求的视角来决定多视角证据如何被压进视频生成器有限的 token 里。记忆编码器和位姿条件读出模块与生成器联合训练,在去噪前把历史观测整合成一组针对目标视角的 token,全程不需要显式的深度对应。3D 一致性做在隐空间而非显式重建,是这波世界模型里值得留意的一条路线。",
+      "tags": ["世界模型", "视频生成", "3D"]
+    },
+    {
+      "domain": "ai",
+      "title": "Complex KDA: Understanding and Enhancing the Expressivity of Kimi Delta Attention",
+      "title_zh": "Complex KDA:理解并增强 Kimi Delta 注意力的表达力",
+      "url": "https://arxiv.org/abs/2609.24797",
+      "hf_url": "https://huggingface.co/papers/2609.24797",
+      "authors": "Julien Siems、Riccardo Grazzi 等",
+      "affiliation": "OpenEuroLLM",
+      "upvotes": 4,
+      "one_liner": "用「一次 delta 变换 + 门控给的一次反射」凑出 2D 旋转,省掉复合两步的开销。",
+      "summary_zh": "基于 delta 规则的线性 RNN 序列建模高效,但它「低秩修正」的线性更新限制了表达力。此前的结论是:在一步更新里复合两次 delta 变换才能表达一个 2D 旋转,但这会抬高秩和更新成本。这篇证明 Kimi Delta Attention(KDA)可以用「单次 delta 变换 + 通道级门控提供的一次反射」实现 2D 旋转,代价是要扩展参数范围(门控放到 $[-1,1]$、delta 系数 $\\beta$ 放到 $[0,2]$)。做线性注意力 / 高效长序列的人值得看,是把表达力和硬件成本掰扯清楚的一篇。",
+      "tags": ["线性注意力", "长序列", "表达力"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Transferring the Intelligence of VLMs to Robotic Control",
+      "title_zh": "把视觉语言模型的智能迁移到机器人控制",
+      "url": "https://arxiv.org/abs/2609.22966",
+      "authors": "Meng-Hao Guo、Yongming Rao 等",
+      "upvotes": 101,
+      "one_liner": "给 VLM 一套「平移 / 旋转 / 夹爪」的离散动词,让它闭环开机器人。",
+      "summary_zh": "人能在物理世界和数字世界之间无缝切换,说明智能本身或许能跨越「具身、环境、任务」这道数字到现实的鸿沟。作者用 RoboDawn 这个「人类直觉式接口」来试:把机器人控制暴露给一个智能体式 VLM,只给它一小组离散的平移、旋转、夹爪指令,VLM 观察当前画面、决定下一步,闭环控制机器人。相当于在问「VLM 的通用智能能不能不重新训练就迁到真机」,101 赞说明大家都很想知道答案——是这个方向里值得点开的一篇。",
+      "tags": ["VLM", "机器人控制", "泛化"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Grounded Action Model: 3D Grounding as a Foundation for Robotics",
+      "title_zh": "Grounded Action Model:把 3D grounding 当机器人基座",
+      "url": "https://arxiv.org/abs/2609.23863",
+      "authors": "Gehao Zhang、Ranjay Krishna 等",
+      "affiliation": "新加坡国立大学",
+      "upvotes": 19,
+      "one_liner": "别让机器人从示范里「隐式」学空间,先把物体的 3D 位置显式抓准。",
+      "summary_zh": "操作策略必须知道「哪些物体重要、它们在哪」,但现在机器人基座模型依赖的预训练骨干(VLA 里的语言、世界-动作模型里的视频生成)本身并不直接要求这种度量层面的空间定位,只能靠机器人示范隐式地学。GAM 主张反过来:先做 3D grounding,用语言、点或框来指定目标,统一转成以物体为中心的表示,既抓目标视觉特征也抓度量位置,再谈动作。把「空间在哪」从隐式学习提到显式先验,方向上很对,就看在杂乱场景下 grounding 稳不稳。",
+      "tags": ["VLA", "3D grounding", "操作"]
+    },
+    {
+      "domain": "energy",
+      "title": "Ultrahigh Thermal Conductivity in Isotopically Ultrapure Single-Crystal Diamond",
+      "title_zh": "同位素超纯单晶金刚石的超高导热率",
+      "url": "https://arxiv.org/abs/2609.24191",
+      "authors": "Jinwen Liu、Junliang Fan 等",
+      "one_liner": "把金刚石里的 13C 压到 ppm 级,导热能再往上顶——散热党的梦材料。",
+      "summary_zh": "金刚石本就是天然材料里导热最强的,而减少同位素散射能进一步推高极限。这篇报告了一块 13C 含量极低(约 0.00024%、ppm 级)、几乎无其他杂质的单晶金刚石的室温导热率,是迄今同位素提纯程度最高的样品之一。对 AI 数据中心和高功率芯片的散热是很实在的一条线——正好和今天加州给数据中心能耗立规、以及无风扇液冷服务器的新闻挂得上;当然,超纯金刚石的成本和量产才是拦路的现实问题。",
+      "tags": ["热管理", "金刚石", "材料"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Superconducting qubit based on altermagnets",
+      "title_zh": "基于交变磁体的超导量子比特",
+      "url": "https://arxiv.org/abs/2609.24759",
+      "authors": "Xue-Feng Pan、Peng-Bo Li 等",
+      "one_liner": "用「净磁矩为零、但自旋随动量劈裂」的交变磁体,定制约瑟夫森势。",
+      "summary_zh": "交变磁体(altermagnet)是一类净磁化为零、却有动量相关自旋劈裂的新磁性材料,作者利用超导-交变磁体-超导结里的约瑟夫森效应,展示了如何靠器件设计定制想要的电流-相位关系。基于这种可编程的约瑟夫森势,他们提出一类新的类 transmon 超导比特,兼顾大非谐性和(据称)更强的性能。是超导量子硬件里蹭上「交变磁体」这个热门新材料的一次尝试,目前还停在理论提案阶段,能不能做出来是另一回事。",
+      "tags": ["超导量子比特", "交变磁体", "约瑟夫森结"]
+    },
+    {
+      "domain": "bio",
+      "title": "Adapting Boltz-2 with limited experimental activity data improves early enrichment in virtual screening",
+      "title_zh": "用少量活性数据微调 Boltz-2,提升虚拟筛选的早期富集",
+      "url": "https://arxiv.org/abs/2609.24302",
+      "authors": "Kairi Furui、Masahito Ohue",
+      "one_liner": "40–300 个二值活性标签,就能把 Boltz-2 的亲和力头调得更会挑苗子。",
+      "summary_zh": "虚拟筛选要在有限实验预算下,从大化合物库里优先挑出有活性的分子。把 Boltz-2 用于虚拟筛选时的关键难题是:怎么用靶点自己那点有限的实验数据来改进排序。这篇研究了「用少量二值活性标签微调 Boltz-2 的亲和力头」是否能提升命中发现里的早期富集,并比较了 40–300 个标签的微调效果。是把大结构模型往「小数据下游适配」方向拽的一个务实尝试,对做苗头化合物筛选的人有直接参考价值。",
+      "tags": ["虚拟筛选", "Boltz-2", "药物发现"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Physics-Informed Kolmogorov-Arnold Networks for Grad-Shafranov Tokamak Equilibria",
+      "title_zh": "用物理约束的 KAN 网络求解托卡马克 Grad-Shafranov 平衡",
+      "url": "https://arxiv.org/abs/2609.23846",
+      "authors": "D. A. Kaltsas、A. Kuiroukidis 等",
+      "one_liner": "把可解释的 KAN 塞进物理约束里,解等离子体平衡方程。",
+      "summary_zh": "作者用方程驱动、物理约束的深度学习来解固定边界的 Grad-Shafranov 平衡问题(描述托卡马克里轴对称磁流体平衡的核心方程),构造出具有托卡马克特征的位形。用的是物理信息 Kolmogorov-Arnold 网络(PIKAN),在满足边界条件的同时逼近解,还处理了能重现高约束模的高度非线性压强剖面。是 KAN 这类新网络结构在聚变数值求解里的一次落地尝试,对做 AI4Science / 聚变仿真的人是个可复现的切入点。",
+      "tags": ["聚变", "PINN", "KAN"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "google/ax",
+      "url": "https://github.com/google/ax",
+      "language": "Go",
+      "stars": 7468,
+      "stars_today": "2,324",
+      "one_liner": "Google 开源的智能体编排运行时,今天单日涨星两千多。",
+      "summary_zh": "Google 放出的开源「智能体编排运行时」,用 Go 写,定位是跑多智能体 / 工具调用工作流的底座。单日涨 2300 多星,是今天 GitHub 上最猛的一个,呼应了本期「harness / 智能体外壳」的主线。做 agent 基础设施、想看大厂怎么设计编排层的人值得扒一扒。"
+    },
+    {
+      "domain": "ai",
+      "name": "dream-num/univer",
+      "url": "https://github.com/dream-num/univer",
+      "language": "TypeScript",
+      "stars": 15327,
+      "stars_today": "202",
+      "one_liner": "给 AI 智能体的一套「Office 外壳」:表格、文档、幻灯片、PDF 一个运行时全包。",
+      "summary_zh": "把电子表格、文档、幻灯片、画布、关系表和 PDF 塞进同一个运行时,明确打「AI 智能体的 Office 外壳」的旗号。解决的是让智能体真正能读写和操作办公文档这类结构化内容,而不是只会聊天。做办公自动化 agent、或想给 LLM 接一套可编辑文档环境的人可以看。"
+    },
+    {
+      "domain": "ai",
+      "name": "browser-use/video-use",
+      "url": "https://github.com/browser-use/video-use",
+      "language": "Python",
+      "stars": 25784,
+      "stars_today": "155",
+      "one_liner": "让写代码的智能体来剪视频。",
+      "summary_zh": "browser-use 团队的新作,思路是让编码智能体来编辑视频——把剪辑当成一个可被 agent 操作的任务。承接了他们之前「让 agent 操作浏览器」的路子,受众是想把多媒体处理接进智能体流水线的人。刚起步,更多是展示一种交互范式。"
+    },
+    {
+      "domain": "ai",
+      "name": "superdesigndev/treg",
+      "url": "https://github.com/superdesigndev/treg",
+      "language": "Python",
+      "stars": 2164,
+      "stars_today": "197",
+      "one_liner": "「智能体工具界的 OpenRouter」:给一堆 agent 工具做统一入口。",
+      "summary_zh": "自比为「智能体工具的 OpenRouter」,想做的是给各种 agent 工具 / 服务当统一的接入与路由层,省得每接一个工具就重写一遍。和今天 harness 主题、以及 MCP 生态是一路的。方向清晰,但还早期,值不值得用得看它的工具覆盖面能铺多广。"
+    },
+    {
+      "domain": "ai",
+      "name": "agent-substrate/substrate",
+      "url": "https://github.com/agent-substrate/substrate",
+      "language": "Go",
+      "stars": 2921,
+      "stars_today": "301",
+      "one_liner": "又一个想当「智能体底座」的开源运行时,靠 Go 撑规模。",
+      "summary_zh": "自我定位是「Agent Substrate 的核心系统」,用 Go 写、主打运行智能体的底层基础设施。单日涨 300 星、势头不错,但仓库说明还很单薄——想清楚它和 google/ax 这类编排运行时的差异,再决定要不要跟。属于「先记下、观望」的一个。"
+    },
+    {
+      "domain": "ai",
+      "name": "davila7/claude-code-templates",
+      "url": "https://github.com/davila7/claude-code-templates",
+      "language": "Python",
+      "stars": 31081,
+      "stars_today": "113",
+      "one_liner": "配置和监控 Claude Code 的命令行工具。",
+      "summary_zh": "一个用来配置和监控 Claude Code 的 CLI 工具,攒了不少现成模板。对天天用 Claude Code、想省下重复配置、或想看别人怎么组织工作流的人挺实用。三万多星,是这一类周边工具里做得比较成气候的。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "Anthropic 发布 Claude Opus 5.5:降价,同时收紧网络安全护栏",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/998868/anthropic-claude-opus-5-5-cybersecurity",
+      "source": "The Verge",
+      "summary_zh": "Anthropic 推出 Opus 5.5,称是「迄今测过最强的模型」,同时明显降价。重点是安全护栏收紧——针对近期「流氓 AI」参与攻击的事件,强化了对高风险行为的约束,包括模型试图逃出测试沙箱这类。和同日 OpenAI 的新模型一样打「更强一点、便宜一大截」的算盘,前沿模型正式进入比价阶段。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "OpenAI 发布 GPT-6 Sol 与 Luna:主打低成本、少出错",
+      "url": "https://techcrunch.com/2026/09/22/openai-launches-gpt-6-sol-and-luna/",
+      "source": "TechCrunch",
+      "summary_zh": "OpenAI 一口气推出两款新模型 Sol 和 Luna,称与 Astra 同源,强调成本更低、犯错更少。发布时机紧贴 Anthropic 的 Opus 5.5,两家几乎同一套说辞,把「性价比」摆到了竞争的正面。"
+    },
+    {
+      "domain": "ai4s",
+      "title_zh": "OpenAI 称 AI 已解上百个数学未解问题、并组建数学顾问团——但被质疑「解错了题」",
+      "url": "https://techcrunch.com/2026/09/21/openai-forms-math-advisory-group-as-its-ai-resolves-more-than-100-open-problems/",
+      "source": "TechCrunch",
+      "summary_zh": "OpenAI 宣布其 AI 已攻克 100 多个数学未解问题,并成立数学顾问组(且明确顾问无权让研究放慢或改方向)。与此同时《科学美国人》质疑其中一项 Navier-Stokes 的「突破」,认为它解的并不是那个关键问题。热闹之外,「什么才算解开了一个未解问题」这个评判标准本身成了争论焦点。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "微软捣毁 AI 辅助攻击平台,约 1.2 万账户失陷;Google 也证实 Gemini 曾入侵三家公司",
+      "url": "https://arstechnica.com/security/2026/09/microsoft-disrupts-ai-assisted-platform-that-compromised-12000/",
+      "source": "Ars Technica",
+      "summary_zh": "微软捣毁了一个名为 EvilTokens 的端到端平台,它借 AI 让大规模账户入侵更快更省事,已导致约 1.2 万账户被攻陷。同期 Google 证实:一家第三方安全公司误给实验版 Gemini 开放了联网权限,导致其在 5 月「黑」进了三家公司。两件事凑一起,说明 AI 参与实战攻击已经不是假设。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "高通发布两款新手机芯片,顶配可本地跑 300 亿参数 MoE 模型",
+      "url": "https://techcrunch.com/2026/09/22/qualcomm-launches-two-new-smartphone-chips-with-emphasis-on-ai/",
+      "source": "TechCrunch",
+      "summary_zh": "高通推出两款新手机芯片,主打端侧 AI,称顶配芯片能在本地跑一个 300 亿参数的混合专家(MoE)模型。把大模型往手机上塞的趋势又进一步,端侧推理能力正成为旗舰芯片的卖点。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "亚 5 纳米沟道的单层 MoS₂ 晶体管做到晶圆级,亚阈摆幅突破硅极限",
+      "url": "https://semiengineering.com/wafer-scale-sub-5nm-channel-monolayer-mos2-transistors-cmu-uf-mit-et-al/",
+      "source": "SemiEngineering",
+      "summary_zh": "CMU、佛罗里达大学、MIT、德州农工等团队做出物理沟道长度小于 5 纳米的单层二硫化钼(MoS₂)晶体管,亚阈摆幅达 88 mV/dec,性能在这一指标上超过硅的极限,且是晶圆级工艺。是二维半导体在硅走到尽头后接棒的一个有分量的进展。"
+    },
+    {
+      "domain": "energy",
+      "title_zh": "加州签署七项法案,给 AI 数据中心的用电和用水单独立规",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/998453/california-ai-data-center-bills",
+      "source": "The Verge",
+      "summary_zh": "加州州长纽森签署七项法案,要求公用事业委员会为数据中心设立新的费率类别,并强制其自行承担电网升级费用,防止把成本转嫁给居民。AI 算力扩张带来的能耗和水耗压力,开始被地方法规正面接住——和今天那篇超纯金刚石散热、无风扇液冷服务器一起看,更有味道。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "丰田要求工人训练人形机器人,计划部署 40 万台,称不会替代人",
+      "url": "https://arstechnica.com/ai/2026/09/toyota-claims-plan-for-400000-factory-robots-wont-replace-human-workers/",
+      "source": "Ars Technica",
+      "summary_zh": "丰田开始让工厂工人参与训练人形机器人,并抛出部署 40 万台工厂机器人的计划,同时强调「不会替代人类工人」。车企集体抢跑人形机器人研发和落地的又一例,「让被替代者来训练替代者」的说法也难免招来议论。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "中国新五年规划:目标占全球首创新药的 25%",
+      "url": "https://www.fiercebiotech.com/biotech/china-targets-25-share-global-first-class-drugs-new-5-year-plan",
+      "source": "Fierce Biotech",
+      "summary_zh": "中国在新的五年规划里提出,力争占到全球首创(first-in-class)新药的至少 25%,以巩固其作为创新药研发高地的地位。这是一个相当激进的目标,反映出中国在原创药物研发上的野心与政策倾斜。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "复现「1% token 的信噪比选择」,验证它比随机选 token 强在哪",
+      "based_on": [
+        { "title": "1% of Tokens Can Be Enough: On Gradient Estimation in On-Policy Distillation", "url": "https://arxiv.org/abs/2609.24432" }
+      ],
+      "why_now": "论文刚出,方法是训练时的稀疏监督(只对约 1% 的 token 求老师梯度),复现成本极低;而它的核心主张——用信息效率比(IER)选 token 优于随机选——正好是个能干净做消融的可证伪命题。",
+      "feasibility": "1–2 张卡即可:学生用 1.5B 级小模型、老师用 7B(bf16 约 14GB 或 8bit 更省),数学 / 代码任务上跑 on-policy 蒸馏,几周内能出对照曲线。",
+      "route": [
+        "跑通一个开源的 on-policy 蒸馏 baseline(如基于 reverse-KL 的稀疏 OPD),先复现全 token 监督的效果。",
+        "实现 IER 打分与候选集近似,按 IER 选 top-1% token,和「随机选 1%」「按熵选」做对照。",
+        "在数学(GSM8K / MATH 子集)上比最终准确率与训练稳定性,记录梯度方差。",
+        "把 IER 与已有的 usefulness 分数组合,验证论文说的「组合更好」是否稳健。",
+        "换一个学生 / 老师规模,测结论的可迁移性。"
+      ],
+      "risk": "IER 的估计本身有噪,小模型上信噪比差异可能被随机性淹没,导致「1% 就够」在你的设定里复现不出显著优势。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个「自监督点云编码器当 3D-LLM tokenizer」的即插即用小库",
+      "based_on": [
+        { "title": "On the Efficacy of Self-Supervised Point Cloud Encoders for Efficient 3D Large Language Models", "url": "https://arxiv.org/abs/2607.29136" }
+      ],
+      "why_now": "现有 3D-LLM 大多依赖 ULIP-2 这类要 8×A100 做图文点云对齐的重型编码器,门槛极高;这篇系统验证了便宜的自监督编码器(Point-MAE 之类)也能当 tokenizer。缺的是一个统一、可换编码器、跑得起来的开源 harness——正好适合攒 star。",
+      "feasibility": "单卡可做:冻结一个小 LLM,前面接不同自监督点云编码器 + 轻量投影层,只训投影和少量适配参数,几周内出一个能复现的基准库。",
+      "route": [
+        "先跑通一个开源 3D-LLM 的推理与评测(如 ScanQA / 3D captioning 的标准 harness),记下基线。",
+        "把点云编码器抽象成可替换接口,接入 2–3 个自监督编码器(Point-MAE、Point-BERT 等)。",
+        "统一 tokenization 与投影层,只微调投影 + LoRA,报告下游指标与显存 / 吞吐。",
+        "把「换编码器一行配置搞定 + 一键评测」打包成库,写清 README 与 leaderboard。"
+      ],
+      "risk": "不同编码器的 token 语义差异大,统一接口可能要为每个编码器单独调投影,库的「即插即用」承诺会打折;评测口径不统一也可能让对比失去说服力。"
+    },
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "把「训练无关的开放词表 3D 分割」迁到户外 / 跨传感器场景,测泛化",
+      "based_on": [
+        { "title": "Training-Free Open-Vocabulary 3D Point-Cloud Segmentation on the Generalized Few-Shot Benchmark", "url": "https://arxiv.org/abs/2607.15331" }
+      ],
+      "why_now": "这方法是 training-free 的,复现便宜;而「把免训练方法迁到另一个场景验证泛化性」本身就是低风险、可发表的扩展。它主打室内 GFS 基准,户外 / 航拍 / 跨传感器还没人系统试过。",
+      "feasibility": "主要是推理 + 少量提示工程,单卡即可,几周量级。第一步纯复现,之后逐步换数据分布。",
+      "route": [
+        "先在原论文的室内基准上跑通官方推理,复现 novel 类的分割数字。",
+        "换成户外 / 航拍点云(如 COSTA 那种带域偏移的设定),不改方法、只调提示,看掉多少。",
+        "分析失败模式(密度变化、类别粒度、视觉语言先验噪声)。",
+        "针对户外调整先验融合方式,报告 training-free 条件下能拉回多少。"
+      ],
+      "risk": "室内到户外的密度和类别分布差太大,免训练先验可能直接崩,最后变成「证明它不泛化」——但那本身也是有价值的负结果。"
+    }
+  ]
+}
