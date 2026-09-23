@@ -1,0 +1,421 @@
+{
+  "date": "2026-09-24",
+  "editor_note": "今天最抓眼的是 Anthropic 那条——它新建的湿实验室让 Claude「自主发现」了一套类 CRISPR 的酶系统,AI 从读文献真的走到了实验台边上;宣传口径先打个折,但味道确实变了。另一条暗线是「AI 的尽头是电和热」:一篇论文在啃 3D 异构集成的多千瓦供电,一篇行业文在说机柜过了 250 kW、液冷加风扇都不够,连意大利议会都投票重启核能了,芯片、能源、数据中心被同一股算力洪流推到台前。模型侧,Flash-dLLM 把扩散 LLM 的推理瓶颈定位到显存 IO 上、直接快了一个数量级;「有品味的智能体」则把 agent 的中间决策单拎出来测,发现最强模型也只答对六成——两条都在提醒,能力的边界越来越多在工程和判断力这两头,而不是模型再大一点。最值得点开的是腾讯的 GAE,它说服了我「几何一致性是表示问题、不是输出问题」,只换隐空间就把 3D 生成的相机误差砍半。每日一理挑了拉格朗日乘子法,思想碰撞拿扩散映射去撞点云下采样——都是「被约束、被密度顶住」的故事,凑巧呼应了一把。",
+  "math_note": {
+    "name": "拉格朗日乘子法",
+    "name_en": "Method of Lagrange Multipliers",
+    "field": "多元微积分 / 约束优化",
+    "one_liner": "想翻过等高线,却被约束面顶住——两个梯度顶到平行的那一刻,就是最优。",
+    "statement": "要在约束 $g(x)=0$ 下求目标 $f(x)$ 的极值(这里 $x$ 是自变量向量,$\\nabla f$ 是 $f$ 的梯度,指向上升最快的方向)。定理说:在约束极值点 $x^\\star$ 处,$f$ 的梯度和约束的梯度必然平行,即存在一个数 $\\lambda$(拉格朗日乘子)使得 $\\nabla f(x^\\star)=\\lambda\\,\\nabla g(x^\\star)$。等价地,构造 $\\mathcal L(x,\\lambda)=f(x)-\\lambda\\,g(x)$,让它对 $x$ 和 $\\lambda$ 都取驻点,就同时逼出「梯度平行」和「约束满足」两件事。",
+    "origin": "拉格朗日(Joseph-Louis Lagrange)1788 年在《分析力学》里把它系统化。他当时要处理的是带约束的力学问题——一个质点被限制在某个曲面或曲线上运动,受的约束力方向总是垂直于约束面。他发现,与其去解那些讨厌的约束力,不如引入一个待定的乘子,把约束「软」进目标里,让整个问题重新变成无约束的求驻点。乘子 $\\lambda$ 最初就对应着约束力的大小,这个物理直觉一直延续到今天的「影子价格」解读。",
+    "derivation": [
+      { "math": "g(x)=0,\\qquad \\nabla g(x)\\cdot v=0", "note": "约束 g(x)=0 定义一张曲面,可行点只能在面上动。允许的移动方向 v 必须让 g 不变,一阶看就是 v 与约束梯度正交——这些 v 张成约束面的切空间。" },
+      { "math": "\\nabla f(x^\\star)\\cdot v=0\\quad\\text{对所有 } v:\\ \\nabla g(x^\\star)\\cdot v=0", "note": "在极值点沿任何可行方向走,f 一阶不再变化,否则往变小的那边挪一点就更优了。于是 ∇f 与每一个「和 ∇g 正交」的方向都正交。" },
+      { "math": "\\nabla f(x^\\star)\\in\\operatorname{span}\\{\\nabla g(x^\\star)\\}", "note": "一个向量若跟所有与 ∇g 垂直的方向都垂直,它就只能落在 ∇g 这条线上。几何上就是:目标的等高线在最优点必须和约束面相切。" },
+      { "math": "\\nabla f(x^\\star)=\\lambda\\,\\nabla g(x^\\star),\\quad \\mathcal L=f-\\lambda g", "note": "落在同一条线上就意味着成比例,比例系数记作 λ。把它整理成拉格朗日函数 L=f-λg,对 x 求梯度为零复现平行条件,对 λ 求偏导为零复现约束 g=0——两件事一次拿下。" },
+      { "math": "\\nabla f=\\sum_{i}\\lambda_i\\,\\nabla g_i", "note": "多个约束时结论照推:目标梯度落在所有约束梯度张成的子空间里,每个约束配一个乘子。这正是 KKT 条件在等式约束下的样子。" }
+    ],
+    "applications": [
+      { "area": "机器学习(SVM)", "detail": "支持向量机的最大间隔问题就是带约束的二次规划,拉格朗日对偶把它转成只依赖内积的对偶问题,顺手引出核方法和支持向量。" },
+      { "area": "信息论 / 最大熵", "detail": "在归一化和若干矩约束下最大化熵,用乘子法解出来的正是指数族分布(玻尔兹曼分布),乘子对应温度和场强等物理量。" },
+      { "area": "经济学", "detail": "预算约束下最大化效用,乘子 λ 就是「影子价格」——预算每放松一块钱,最优效用能多涨多少。" },
+      { "area": "约束力学", "detail": "拉格朗日最初的战场:质点被约束在曲面上运动时,乘子直接给出约束反力的大小,免去逐个求解约束力。" }
+    ],
+    "takeaway": "乘子 λ 不是配角,而是约束的「影子价格」:放松约束一个单位,最优目标改善的速率恰好是 $\\partial f^\\star/\\partial c=\\lambda$。更普适的直觉是——约束优化的最优点,就是目标的下降方向被约束的法向「顶住」、动弹不得的那个地方。",
+    "viz": {
+      "type": "custom",
+      "caption": "拖动圆(约束 x²+y²=1)上的红点,绿箭头是目标 f=x+2y 的梯度、蓝箭头是约束的梯度。看它俩何时平行——那一刻黄色等高线正好和圆相切,就是约束极值。",
+      "html": "<div id=\"lagviz\" style=\"width:100%;max-width:440px;height:330px;margin:0 auto;\"></div>",
+      "script": "var box=el.querySelector('#lagviz'); if(!box||!window.JXG){return;} var b=JXG.JSXGraph.initBoard(box,{boundingbox:[-2.2,2.4,2.6,-2.0],keepaspectratio:true,axis:true,showNavigation:false,showCopyright:false,pan:{enabled:false},zoom:{enabled:false}}); var circ=b.create('circle',[[0,0],1],{strokeColor:'#8a8f98',strokeWidth:2,fillOpacity:0,fixed:true,highlight:false}); var s=0.42; var P=b.create('glider',[0.55,0.83,circ],{name:'',size:4,color:'#e5484d',strokeColor:'#e5484d'}); b.create('line',[[function(){return P.X()+4;},function(){return P.Y()-2;}],[function(){return P.X()-4;},function(){return P.Y()+2;}]],{strokeColor:'#e5b000',dash:2,strokeWidth:1.5,highlight:false}); b.create('arrow',[[function(){return P.X();},function(){return P.Y();}],[function(){return P.X()+s;},function(){return P.Y()+2*s;}]],{strokeColor:'#2a9d5c',strokeWidth:3,highlight:false}); b.create('arrow',[[function(){return P.X();},function(){return P.Y();}],[function(){return P.X()+s*2*P.X();},function(){return P.Y()+s*2*P.Y();}]],{strokeColor:'#3b82f6',strokeWidth:3,highlight:false}); b.create('text',[-2.1,2.15,function(){var val=P.X()+2*P.Y();var dd=2*P.X()-P.Y();return 'f = x + 2y = '+val.toFixed(3)+(Math.abs(dd)<0.03?'   梯度平行 → 约束极值':'');}],{fontSize:14,color:'#94a3b8',highlight:false,fixed:true});"
+    }
+  },
+  "crossover": {
+    "theory": "扩散映射与热核",
+    "theory_en": "Diffusion Maps & Heat Kernel",
+    "field": "调和分析 / 谱几何",
+    "era": "2005–2006 Coifman、Lafon 等在调和分析里提出扩散映射;2009 年 Sun 等做成热核签名搬进几何处理,近年随点云谱方法零星回潮",
+    "one_liner": "别让最远点采样跟着激光的疏密跑——把「远近」换成热扩散量出来的距离,采样就只认几何、不认传感器。",
+    "theory_core": "扩散映射把点云看成图上的随机游走。给点之间连 kNN 边、权重用高斯核 $w_{ij}=\\exp(-\\lVert x_i-x_j\\rVert^2/\\varepsilon)$,归一化成转移矩阵 $P=D^{-1}W$。走 $t$ 步后,两点的「扩散距离」$D_t(i,j)^2=\\sum_k (P^t_{ik}-P^t_{jk})^2/\\phi_k$ 度量的是「有多少条长度约 $t$ 的路径把它俩连起来」——比欧氏距离更懂流形上的远近,还天然抗单条噪声边。关键一招是 $\\alpha=1$ 归一化(先 $\\tilde W=D^{-1}WD^{-1}$ 再归一),它能把采样密度的影响消掉,逼近纯由几何决定的 Laplace–Beltrami 算子。最后取 $P$ 的前 $k$ 个特征向量作「扩散坐标」,在这个低维空间里欧氏距离就等于扩散距离。",
+    "pc_problem": "点云下采样几乎是所有点云网络的第一步,主流用最远点采样(FPS):从已选集合出发,每次挑欧氏空间里离得最远的点。毛病有两个。一是复杂度,逐点贪心是 $O(n\\cdot m)$,从一帧 12 万点的 KITTI 激光里采 4096 个点就是约 $5\\times10^8$ 次距离比较,大规模点云上 FPS 常年是 dataloader 的瓶颈之一。二是它密度盲、离群点敏感:FPS 在欧氏空间里量远近,哪里点稀就往哪采,还特别爱挑几何极端点和离群噪点,于是 16 线和 128 线激光扫同一场景,采出来的点分布差很多,跨传感器几乎不泛化。",
+    "bridge": "映射逐项对得上:随机游走的图 ↔ 点云的 kNN 图(每个点一个节点);转移概率 $P_{ij}$ ↔ 从一个点扩散到邻点的权重;$\\alpha=1$ 归一化消掉的那个「采样密度」 ↔ LiDAR 近密远疏、多线少线造成的密度差;扩散距离 $D_t$ ↔ 替代 FPS 里那把欧氏尺子的新「远近」度量;而前 $k$ 个特征向量组成的扩散坐标 ↔ 把「密度无关的内蕴几何」摊平成一个低维向量,FPS 只要改在这个空间里跑,就自动变成密度无关的采样。",
+    "angles": [
+      {
+        "dim": "复杂度",
+        "idea": "把 FPS 从原始三维坐标搬到 $k$ 维扩散坐标里跑。先用近似最近邻建 kNN 图,再用 Lanczos 解出稀疏图 Laplacian 的前 $k$(取 16–64)个特征向量,最后在 $\\mathbb R^k$ 里用 KD 树加速的 FPS 采样。几何信息被压进低维,采样本身反而更省。",
+        "gain": "采样这一环从 $O(n\\cdot m)$ 降到约 $O(n\\log n)$(建图)加一次 $O(nk)$ 的特征分解,量级上省一大截。",
+        "cost": "多了一次全局特征分解,是一次性开销;$k$ 取小了扩散坐标不够表达几何,取大了分解变慢,得调。"
+      },
+      {
+        "dim": "鲁棒性",
+        "idea": "靠 $\\alpha=1$ 归一化拿密度不变性。把采样准则从欧氏距离换成扩散距离后,同一场景不论 16 线还是 128 线,采样点都落在内蕴几何决定的位置上,而不是跟着传感器密度走。",
+        "gain": "跨传感器(16 线↔128 线)下采样的一致性显著提升(估计,缺公开数),下游检测/分割的跨密度泛化跟着受益。",
+        "cost": "只在 kNN 图搭得干净时成立。离群点会连出「短路边」,把本不相邻的两块流形粘到一起,扩散距离直接失真,必须先做鲁棒的邻域裁剪。"
+      },
+      {
+        "dim": "存储",
+        "idea": "把每点的前 $k$ 个扩散坐标(即热核签名的离散版)当成一个 $k$ 维多尺度几何描述子存下来,替代反复重算的邻域统计。改扩散时间 $t$ 就是换观察尺度,一份特征分解能导出任意尺度的描述子。",
+        "gain": "每点 16–64 个浮点数,换来密度无关、自带多尺度的几何编码,描述子不必每层网络现算。",
+        "cost": "特征向量有全局符号和顺序的不确定性,跨帧不对齐,做时序任务前得先解决特征向量匹配。"
+      },
+      {
+        "dim": "并行",
+        "idea": "Lanczos 的核心是稀疏矩阵-向量乘,天然适合 GPU;kNN 建图也有成熟的 GPU 实现。整条前 $k$ 个特征向量的求解能和点云网络本身共用一张卡。",
+        "gain": "特征分解能吃满 GPU,不用把点云搬回 CPU 单独算,端到端流水线不被采样这步卡住。",
+        "cost": "Lanczos 迭代数受谱隙影响,谱隙小时收敛慢;实时 10 Hz 预算下,12 万点做 top-64 分解可能就是压死实时性的最后一根稻草。"
+      }
+    ],
+    "experiment": [
+      "纯 CPU 半天:在 ModelNet40 或几个 ScanNet 场景上,用 pydiffmap 或手搓建 kNN 图、算扩散坐标;把点云随机抽稀一半模拟密度不均,比较「扩散坐标 FPS」与「欧氏 FPS」的覆盖度(最小覆盖半径)——没有正向信号就别往下走。",
+      "单卡两三天:把 PointNet++ 的 FPS 采样层换成扩散坐标 FPS,重训分类/分割,看干净数据上掉不掉点。",
+      "一周:跨密度测试——在 64 线上训练,在抽稀成 16 线的点云上测,对比换采样前后的掉点幅度。",
+      "收尾:在 12 万点的 KITTI 帧上给特征分解计时,找出它在哪个点数/实时预算下崩掉,老实报出来。"
+    ],
+    "prior_art": [
+      { "title": "Coifman & Lafon, Diffusion Maps (Applied and Computational Harmonic Analysis, 2006)", "note": "扩散映射、扩散距离、α 归一化的原始出处,理论都在这。它面向一般数据流形,没专门管点云下采样。" },
+      { "title": "Sun, Ovsjanikov, Guibas, Heat Kernel Signature (SGP 2009)", "note": "把热扩散做成逐点的多尺度描述子(HKS),但基于网格上的 Laplace–Beltrami,搬到点云要先解决无网格 Laplacian 的构造。" },
+      { "title": "查下来把扩散映射直接当点云下采样准则的公开工作很少", "note": "相近的是把热核/谱特征当描述子或做谱分割;把它接到 FPS 这一步、并主打密度不变性的,没找到直接对应的,这正是空档。" }
+    ],
+    "reality_check": "最可能栽在特征分解的成本和 kNN 图的脆弱上:12 万点求 top-64 特征向量在实时预算里很可能超时,一旦为提速上 Nyström/地标近似,又回到「得先采样才能算」的鸡生蛋;而离群点连出的短路边会让扩散距离整段失真,不先做鲁棒邻域裁剪,密度不变性一分都拿不到。"
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Realtime-Venus: A full-duplex interaction system with asynchronous delegation",
+      "title_zh": "Realtime-Venus:带异步委派的全双工实时交互系统",
+      "url": "https://arxiv.org/abs/2609.13814",
+      "hf_url": "https://huggingface.co/papers/2609.13814",
+      "authors": "Ruixiang Zhao、Hualei Wang 等",
+      "affiliation": "inclusionAI",
+      "upvotes": 205,
+      "one_liner": "一边听你说话一边后台干活,还能被随时打断——把「全双工」做成了能落地的样子。",
+      "summary_zh": "inclusionAI 放出两个 9B 模型,一个管音视频、一个管纯语音,都当成完整的对话前端:连续感知、对话控制、原生语音生成跑在同一条因果时间线上,再配一个双循环运行时——前台聊天不停,后台的 Harness 异步执行工具、把结果塞回对话。数字上,语音版在 Full-Duplex-Bench 上能应对 75% 的打断,背景人声下续话率 86%,三项续话指标都压过 Gemini 3.1 Live 和 GPT-4o。真正难的不是单点分数,是把打断、插话、后台任务这些异步事件缝进一条时间线还不乱。",
+      "tags": ["全双工", "多模态", "语音"]
+    },
+    {
+      "domain": "ai",
+      "title": "The Tasteful Agent: Measuring and Improving Taste in Long-Horizon Tasks",
+      "title_zh": "有品味的智能体:度量并训练长程任务里的「审美」",
+      "url": "https://arxiv.org/abs/2609.25804",
+      "hf_url": "https://huggingface.co/papers/2609.25804",
+      "authors": "Wenbo Pan、Zhichao Liu 等",
+      "affiliation": "Microsoft",
+      "upvotes": 111,
+      "one_liner": "不看结果对不对,专问「这一步该往哪拐」——agent 的品味第一次被单拎出来测。",
+      "summary_zh": "微软想量化 agent 在长程任务里做中间决策的「品味」——该验哪个假设、在哪份实现上接着写。做法是从平行尝试和同一条轨迹里的绕路中自动挖「决策岔口」,让模型在看不到岔口之后发生什么的前提下选方向,零人工标注建成 Taste-Bench。结论有点扎心:最强的模型也只答对 59.7%,关键证据出现得越晚越难,加大推理预算还不管用。好消息是品味能蒸馏——把见过结果的老师的判断灌给学生,学生在没见过的任务和 SWE-bench Pro 上都变好了。",
+      "tags": ["Agent", "评测", "蒸馏"]
+    },
+    {
+      "domain": "ai",
+      "title": "GAE: Learning a Geometry-Native Latent Space for 3D-Consistent World Generation",
+      "title_zh": "GAE:为 3D 一致的世界生成学一个几何原生的隐空间",
+      "url": "https://arxiv.org/abs/2609.24981",
+      "hf_url": "https://huggingface.co/papers/2609.24981",
+      "authors": "Jiahao Lu、Minghao Yin 等",
+      "affiliation": "腾讯 ARC Lab",
+      "upvotes": 38,
+      "one_liner": "生成模型的隐空间只顾好看不顾几何——把几何基础模型的特征重参数化进去,画面和 3D 一致性一起涨。",
+      "summary_zh": "腾讯 ARC Lab 的观点是,视频/世界生成之所以画着画着 3D 就飘,不只是模型问题,更是表示问题:生成器演化的是「外观隐变量」,而感知模型恢复的是带跨视角结构的几何空间。GAE 把一个几何基础模型的特征重参数化成紧凑隐空间,这个隐变量能同时解码出外观、深度、相机和点图。控制变量对比里(生成器和训练协议都固定),只换隐空间,RealEstate10K 和 DL3DV 上 FVD 降 12.7% 和 23.1%,相机轨迹误差直接砍半。",
+      "tags": ["世界模型", "3D生成", "表示学习"]
+    },
+    {
+      "domain": "ai",
+      "title": "Bellman Policy Optimization",
+      "title_zh": "贝尔曼策略优化:用贝尔曼方程把策略镜像下降改成无 critic 的轨迹级目标",
+      "url": "https://arxiv.org/abs/2609.15987",
+      "hf_url": "https://huggingface.co/papers/2609.15987",
+      "authors": "Zhuoqing Song、Haotian Xu 等",
+      "affiliation": "Apodex",
+      "upvotes": 24,
+      "one_liner": "终局奖励的自回归生成,不必估中间状态价值——BPO 把这步绕掉了。",
+      "summary_zh": "从策略镜像下降(PMD)出发,针对「只有终局奖励的自回归生成」这个特例,用贝尔曼方程把 PMD 重写成轨迹级目标,绕开估计中间状态价值的麻烦,是个无 critic 方法。作者证明它和原 PMD 有同一个唯一最优解,实际 loss 里那个「失配校正权重」是互补 token 概率的平滑比值。数学推理 benchmark 上有效。属于 RLVR 这波里把账在理论上算清楚的一类,做 RL 训练的人值得看一眼推导。",
+      "tags": ["RLVR", "强化学习", "LLM推理"]
+    },
+    {
+      "domain": "ai",
+      "title": "Flash-dLLM: IO-Aware KV Caching and Parallel Decoding for Fast, Memory-Efficient Diffusion LLMs",
+      "title_zh": "Flash-dLLM:面向扩散语言模型的 IO 感知 KV 缓存与并行解码",
+      "url": "https://arxiv.org/abs/2609.26796",
+      "hf_url": "https://huggingface.co/papers/2609.26796",
+      "authors": "Quan Nguyen-Tri、Mukul Ranjan 等",
+      "affiliation": "MBZUAI",
+      "upvotes": 13,
+      "one_liner": "扩散 LLM 慢在显存搬运,不在算——先治 KV 缓存的 IO 瓶颈,再让它自己给自己打草稿。",
+      "summary_zh": "扩散语言模型(dLLM)非自回归生成很香,但没有好用的 KV 缓存和并行解码,推理一直慢。这篇先指出真正的瓶颈是 GPU 显存 IO,用一个 IO 感知的融合 KV 缓存 kernel 减少冗余搬运;再在此之上让 dLLM 自己既当起草者又当验证者,做「起草-验证」式解码,不需要额外的小模型。全程 training-free。GSM8K 和 HumanEval 上比之前最强的 Elastic-Cache 分别快 5.1 倍和 11 倍。想在单卡上把开源 dLLM 跑得动的人,这是现成的加速件。",
+      "tags": ["扩散LLM", "推理加速", "KV缓存"]
+    },
+    {
+      "domain": "ai",
+      "title": "Document Retrieval-Aware Chunking (D-RAC)",
+      "title_zh": "D-RAC:把任意企业文档统一成检索友好切块的摄取流程",
+      "url": "https://arxiv.org/abs/2609.24220",
+      "hf_url": "https://huggingface.co/papers/2609.24220",
+      "authors": "Uday Allu、Abhivanth Sivaprakash 等",
+      "affiliation": "Yellow.ai",
+      "upvotes": 53,
+      "one_liner": "先把什么格式都渲染成 PDF,再一遍多模态转 Markdown——RAG 摄取成本砍到零头。",
+      "summary_zh": "企业 RAG 要吞 PDF、Word、PPT、扫描件,内容锁在复杂版式、多栏、密集表格里;规则抽取和 OCR 会毁掉阅读顺序、压平表格,纯 agentic 切块又贵又容易幻觉。D-RAC 的取巧点是:任何格式都有一份忠实的 PDF 渲染,先统一成 PDF,再用一遍多模态 LLM 把渲染页转成检索优化的 Markdown(表格改写成自洽的散文句、保留标题层级),之后切块只在 ID 上做轻量规划、不重生成正文。在 795 页的企业文档子集上,72 分钟零错误跑完,切块阶段输出 token 降 95.7%、成本降约 78%–86%,并且随页数线性扩展。",
+      "tags": ["RAG", "文档理解", "检索"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Imperfection for Precision: Upcycling Imperfect Data for High-Precision Robotic Manipulation",
+      "title_zh": "以次充精:回收两类被丢弃的数据去做高精度机器人操作",
+      "url": "https://arxiv.org/abs/2609.26672",
+      "authors": "Hao Wei、Yang Liu 等",
+      "one_liner": "高精度示教太贵——把目标任务的低精度数据和别的任务的高精度数据「回收」着用。",
+      "summary_zh": "训练高精度操作的 VLA 一般得靠又慢又贵的遥操作高质量数据。ε4P 的想法是回收两类平时会被扔掉的数据:目标任务的低精度数据、以及不匹配任务的高精度数据。关键不是把它们一股脑混进 co-training,而是控制每种数据在流匹配轨迹的哪一段起作用——低精度数据管方向、高精度数据管末端精修。思路干净,冲着「不加采集成本又不掉精度」去,适合被数据采集卡住的机器人团队试。",
+      "tags": ["VLA", "机器人操作", "数据"]
+    },
+    {
+      "domain": "chip",
+      "title": "Toward Multi-kW Power Delivery Methodologies for Advanced 3D Heterogeneous Integration",
+      "title_zh": "面向先进 3D 异构集成的多千瓦级供电方法",
+      "url": "https://arxiv.org/abs/2609.24904",
+      "authors": "Peiyi Yue、Hangyu Zhang 等",
+      "affiliation": "明尼苏达大学",
+      "one_liner": "万亿晶体管系统的瓶颈不在算力,在怎么把几千瓦电稳稳送进去。",
+      "summary_zh": "AI 把系统规模往万亿晶体管推,异构集成的 2D/3D 芯粒叠在基板上,算力上去了,供电成了硬骨头:功率密度极高、引脚数又是瓶颈。这篇综述性地梳理了针对 3D 异构集成的供电设计方法学——怎么在高电流密度下做可靠稳健的电源分配网络。和当下 AI 数据中心「单机柜 250 kW 打不住」的供电-散热双重压力正好对上,是硬件产业侧值得盯的一条线。",
+      "tags": ["先进封装", "供电", "3D集成"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Good Quantum Locally Testable Codes from Product Expansion",
+      "title_zh": "从乘积扩张构造「好的」量子局部可测码",
+      "url": "https://arxiv.org/abs/2609.26735",
+      "authors": "Mitali Bafna、Anqi Li、Quynh T. Nguyen",
+      "one_liner": "常数码率、常数距离、常数可测性——量子 LTC 的「三好」终于在一个构造里凑齐(还差一个猜想)。",
+      "summary_zh": "量子局部可测码(LTC)是纠错码里很硬的目标:希望只查常数个比特就能判断码字错没错,同时码率和距离都不塌。这篇在 Bafna–Vyas 关于 Reed-Solomon 码的一个「乘积扩张」猜想的变体下,构造出同时具备常数码率、距离、可靠性和局部性的量子 LTC,用的是 Dinur–Lin–Vidick 的高维扩张框架配非阿贝尔立方复形。前提还挂在一个未证的猜想上,但把「好的量子 LTC 该长什么样」这条路铺得更明确了。同日还有一篇姊妹作在此构造上做出了横向非 Clifford 门。",
+      "tags": ["量子纠错", "LTC", "高维扩张"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Lowest-known Energy Configuration of N=100000 Coulomb Charges in a Disk",
+      "title_zh": "圆盘上 10 万个库仑电荷的最低能量组态:突破十万大关",
+      "url": "https://arxiv.org/abs/2609.24722",
+      "authors": "Georgiy K. Lavrov、Eduard G. Nikonov",
+      "one_liner": "汤姆逊问题的老大难,单机 24 核跑 31 小时,把纪录从 4 万推到 10 万。",
+      "summary_zh": "经典汤姆逊问题:一堆按 1/r 相互作用的点电荷放进圆盘,能量最低时怎么排。这篇算出了 N=100000 的最低已知组态,把前纪录(40886)翻了一倍多。关键是一个「自适应缺陷定位子域优化」策略,让每轮的墙钟时间随 N 近似线性增长,10 万个电荷在一台 24 核、无 GPU 的机器上约 31 小时算完。这类大规模离散能量最小化在材料、自组装、点分布采样里都能借力,方法比结论更值得看。",
+      "tags": ["汤姆逊问题", "能量最小化", "计算物理"]
+    },
+    {
+      "domain": "bio",
+      "title": "Adapting Boltz-2 with limited experimental activity data improves early enrichment in virtual screening",
+      "title_zh": "用少量实验活性数据微调 Boltz-2,提升虚拟筛选的早期富集",
+      "url": "https://arxiv.org/abs/2609.24302",
+      "authors": "Kairi Furui、Masahito Ohue",
+      "one_liner": "不重训,只拿几百条活性标签微调亲和力头,top 1% 里的活性分子多出近八成。",
+      "summary_zh": "虚拟筛选要在有限实验预算下把活性化合物排到前面。这篇问的是:手上只有目标靶点的少量实验数据时,能不能用它把 Boltz-2 的排序调好。做法是拿 40–300 条二元活性标签去微调 Boltz-2 的亲和力预测头,在 8 个 MF-PCBA 靶点上做回顾性评估。结论是用 300 条活性测量,top 1% 里的活性分子数量几何平均提升 1.77 倍。对做苗头发现、又只有小批实测数据的人,是个低成本的实用路子。",
+      "tags": ["虚拟筛选", "药物发现", "微调"]
+    },
+    {
+      "domain": "energy",
+      "title": "Topology-Stratified Materials Discovery with A Flow-Based Generative Model",
+      "title_zh": "按拓扑分层的晶体生成:用流模型学 Wyckoff 表示的拓扑特征",
+      "url": "https://arxiv.org/abs/2609.26547",
+      "authors": "Jingyi Zhou、Oyshee Chowdhury 等",
+      "one_liner": "晶体生成难在结构和成分空间太大——先按 Wyckoff 的拓扑把空间分层,再让流模型逐层攻。",
+      "summary_zh": "生成式晶体设计想为极端环境(航空航天、增材制造、聚变系统)找高性能材料,但结构一复杂、成分一多样,现有生成模型就吃力。UFO-MGen 是个通用流模型,学的是 Wyckoff 表示(晶体里等价原子位置的对称性编码)的拓扑特征,用这个信息在巨大的结构-化学空间里更准地生成晶体,跟当前最好的生成模型比有提升。晶体结构预测这两年被生成模型刷得很热,把对称性/拓扑先验显式塞进去是其中较扎实的一条思路。",
+      "tags": ["晶体生成", "材料发现", "流模型"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "google/ax",
+      "url": "https://github.com/google/ax",
+      "language": "Go",
+      "stars": 8947,
+      "stars_today": "1,542",
+      "one_liner": "谷歌下场做 agent 编排运行时,Go 写的,一天涨 1500 多星。",
+      "summary_zh": "谷歌开源的「agentic 编排运行时」,定位是把多个 agent、工具调用和长流程编排起来的底座。Go 实现、工程味重,冲的是生产级 agent 系统的运行时这一层。刚放出来热度就很高,做 agent 基础设施的可以关注它和现有编排框架之间的取舍。"
+    },
+    {
+      "domain": "ai",
+      "name": "dream-num/univer",
+      "url": "https://github.com/dream-num/univer",
+      "language": "TypeScript",
+      "stars": 16272,
+      "stars_today": "1,140",
+      "one_liner": "给 AI agent 用的「Office 运行时」——表格、文档、幻灯片、PDF 一套里搞定。",
+      "summary_zh": "把电子表格、文档、幻灯片、画布、关系表、PDF 塞进同一个运行时,主打「AI agent 的 Office harness」。对想让 agent 真正操作办公文档(读写单元格、改格式、生成报表)的人是现成底座,比让 agent 硬啃截图或纯文本靠谱得多。"
+    },
+    {
+      "domain": "ai",
+      "name": "harry7557558/spirula-studio",
+      "url": "https://github.com/harry7557558/spirula-studio",
+      "language": "C++",
+      "stars": 711,
+      "stars_today": "99",
+      "one_liner": "跨厂商的 3D 高斯泼溅训练器,视频进、splat 和网格出,Vulkan 或 CUDA 都能跑。",
+      "summary_zh": "一个 3DGS 训练工具:从视频重建出高斯泼溅、再导出网格,后端支持 Vulkan 或 CUDA,不锁定 N 卡。对做 3D 重建、又不想被 CUDA-only 管线绑死的人挺实用,星不多但方向对独立研究者的胃口。"
+    },
+    {
+      "domain": "ai",
+      "name": "DeusData/codebase-memory-mcp",
+      "url": "https://github.com/DeusData/codebase-memory-mcp",
+      "language": "C",
+      "stars": 44515,
+      "stars_today": "266",
+      "one_liner": "把代码库毫秒级建成持久知识图谱的 MCP 服务,158 种语言、亚毫秒查询。",
+      "summary_zh": "一个高性能代码智能 MCP 服务器,把整个代码库索引成持久的知识图谱,号称平均仓库毫秒级建好、支持 158 种语言、查询亚毫秒。给编码 agent 当「代码记忆」用,解决的是每次都要重新读一遍仓库的老问题。"
+    },
+    {
+      "domain": "ai",
+      "name": "HKUDS/CLI-Anything",
+      "url": "https://github.com/HKUDS/CLI-Anything",
+      "language": "Python",
+      "stars": 49881,
+      "stars_today": "41",
+      "one_liner": "把所有软件都变成 agent 原生——给 agent 一个统一的 CLI 入口。",
+      "summary_zh": "HKUDS 出的项目,思路是让各种软件都能被 agent 通过统一 CLI 驱动,还配了个 CLI-Hub 目录站。冲的是「agent 操作软件缺统一接口」这个痛点。星数已经很高,当天增速放缓,适合想统一 agent 工具调用入口的人看看它的抽象合不合用。"
+    },
+    {
+      "domain": "ai",
+      "name": "superdesigndev/treg",
+      "url": "https://github.com/superdesigndev/treg",
+      "language": "Python",
+      "stars": 2666,
+      "stars_today": "502",
+      "one_liner": "agent 工具界的 OpenRouter——一个入口路由到各种 agent 工具。",
+      "summary_zh": "把「OpenRouter 之于模型」搬到 agent 工具上:做一个统一的路由层,让 agent 通过一个入口接到各种工具。当天涨得快,适合被工具集成碎片化搞烦了的人试。偏早期,先看它支持的工具面够不够。"
+    },
+    {
+      "domain": "ai",
+      "name": "obra/superpowers",
+      "url": "https://github.com/obra/superpowers",
+      "language": "Shell",
+      "stars": 290648,
+      "stars_today": "485",
+      "one_liner": "一套 agentic「技能」框架加配套的开发方法论,星数已近 30 万。",
+      "summary_zh": "一个 agentic skills 框架,把可复用的「技能」和一套软件开发方法论打包起来,给 agent 按需装配能力。星数体量巨大、社区活跃,适合想给自己的 agent 加一层结构化技能系统的人参考它的组织方式。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "bio",
+      "title_zh": "Anthropic 湿实验室让 Claude「自主发现」一套类 CRISPR 酶系统",
+      "url": "https://www.anthropic.com/news/claude-discovers-novel-enzyme-system",
+      "source": "Anthropic / The Verge",
+      "summary_zh": "Anthropic 说它新建的湿实验室拿出了第一个结果:Claude 自主发现了一套新的酶系统,机制上类似 CRISPR 背后的基因编辑机器,公司把它与 CRISPR 相提并论。这是 Claude 在科学发现上「有没有用」的一次早期实测,也踩在公司准备上市的节点上。宣传口径要打折看,但 AI 从「读文献」走到「进湿实验室出结果」这一步本身值得记一笔。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Anthropic 发布 Claude Opus 5.5,主打更强的网络安全护栏",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/998868/anthropic-claude-opus-5-5-cybersecurity",
+      "source": "The Verge / Ars Technica",
+      "summary_zh": "Anthropic 推出 Claude Opus 5.5,在近期「AI 被用于黑客攻击」的风波后加强了风险行为的护栏,包括压制模型试图逃出测试沙箱的行为。同期 Ars 的观察是,Anthropic 和 OpenAI 的新模型给的是同一个承诺——性能小涨、价格大降,前沿模型竞赛进入「比价」阶段。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "高通收购 PickNik Robotics,承诺 MoveIt 继续开源",
+      "url": "https://www.therobotreport.com/qualcomm-acquires-picknik-robotics-keep-moveit-open-source/",
+      "source": "The Robot Report",
+      "summary_zh": "高通收购机器人操作软件公司 PickNik,计划把自家 Dragonwing 和 Arduino 平台与 PickNik 维护的 MoveIt 开源操作框架整合,并承诺 MoveIt 保持开源。MoveIt 是 ROS 生态里做机械臂运动规划的事实标准,芯片厂把它收进来、又不闭源,对机器人开发者算是稳住了一块地基。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "晶圆级亚 5nm 沟道单层 MoS₂ 晶体管:亚阈值性能越过硅极限",
+      "url": "https://semiengineering.com/wafer-scale-sub-5nm-channel-monolayer-mos2-transistors-cmu-uf-mit-et-al/",
+      "source": "SemiEngineering",
+      "summary_zh": "CMU、佛罗里达大学、MIT、德州农工等团队报告了晶圆级的单层二硫化钼(MoS₂)晶体管,沟道长度做到亚 5nm,亚阈值性能超过硅的极限。二维半导体一直是「硅之后」的候选材料之一,难点在从单器件走到晶圆级一致性;做到晶圆级是往产业化方向挪的一步。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "GPUThor:用非均匀 hammering 放大对 GPU 的 Rowhammer 攻击",
+      "url": "https://semiengineering.com/high-intensity-rowhammer-attack-on-gpus-leveraging-non-uniform-hammering-u-of-toronto/",
+      "source": "SemiEngineering",
+      "summary_zh": "多伦多大学提出 GPUThor,一种针对 NVIDIA GPU 的高强度 Rowhammer 攻击,靠非均匀 hammering 模式放大位翻转,并声称能打穿带 ECC 保护的显存。随着 GPU 成为 AI 算力的绝对主力,显存侧的硬件安全边界越来越值得担心——ECC 挡得住随机错误,不一定挡得住精心构造的攻击。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "Enveda 融资 3.11 亿美元,把天然物衍生的 AI 药物推进临床",
+      "url": "https://techcrunch.com/2026/09/23/enveda-secures-311m-to-bring-more-nature-derived-ai-drugs-into-clinical-trials/",
+      "source": "TechCrunch",
+      "summary_zh": "AI 药物公司 Enveda 完成 3.11 亿美元融资,估值 20 亿美元;它靠 AI 从天然物里挖药,目前在测的适应症包括皮肤病和停用 GLP-1 后的体重维持。天然物加 AI 这条线一直有人做,能拿到这个额度,说明资本对「AI 缩短早期发现」还在下注。"
+    },
+    {
+      "domain": "energy",
+      "title_zh": "意大利议会投票重启核能",
+      "url": "https://apnews.com/article/italy-nuclear-chernobyl-4891b6b7c7791ae84db6b0bf0f7cf567",
+      "source": "AP News / Hacker News",
+      "summary_zh": "意大利议会投票通过,为时隔多年重启核能铺路——该国在切尔诺贝利事故后曾公投弃核。在数据中心和电气化把电力需求往上顶的背景下,欧洲对核电的态度正在转向,这条政策信号对新能源和电网格局都有分量。"
+    },
+    {
+      "domain": "energy",
+      "title_zh": "液冷 AI 服务器走向无风扇:目标 100% 热量捕获",
+      "url": "https://spectrum.ieee.org/fanless-liquid-cooled-ai-servers-coolit",
+      "source": "IEEE Spectrum",
+      "summary_zh": "一篇(由 CoolIT 赞助的)技术文章指出,机柜功率过了 250 kW,靠液冷加空气的混合方案就不够看了——70/30 的液空比会留下 75 kW 的空气负载要处理,方向是走向 100% 热量捕获的全液冷乃至无风扇。软文归软文,这个数字是实的:AI 算力的尽头是供电和散热,这条和当天那篇「多千瓦 3D 供电」的论文正好一头一尾。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "丰田要求工人训练人形机器人,同时称不会取代人",
+      "url": "https://arstechnica.com/ai/2026/09/toyota-claims-plan-for-400000-factory-robots-wont-replace-human-workers/",
+      "source": "Ars Technica",
+      "summary_zh": "丰田计划在工厂部署大量工厂/人形机器人(报道提到 40 万台的规模),并要求工人参与训练这些机器人,同时对外强调不会取代人类工人。车厂集体下场做人形机器人是今年的主线之一,「让被替代风险方去训练替代者」这件事本身就够微妙。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "桑德斯提案:禁止开发「超级智能」,违者入狱",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/999443/bernie-sanders-ai-superintelligence-ban-act",
+      "source": "The Verge",
+      "summary_zh": "参议员桑德斯和众议员 Casar 提出新立法,拟禁止任何人开发「超级智能」——法案把它定义为可能「毁灭或剥夺人类权力」、包括推翻政府的技术。提案能不能走下去是另一回事,但监管这边开始用最激进的措辞给 AI 划红线,是个值得留意的政治信号。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "把 training-free 开放词汇 3D 分割迁到新的 2D 分割器上,验证泛化",
+      "based_on": [
+        { "title": "Training-Free Open-Vocabulary 3D Point-Cloud Segmentation on the Generalized Few-Shot Benchmark", "url": "https://arxiv.org/abs/2607.15331" }
+      ],
+      "why_now": "这篇刚把「无训练、无 3D 标签、连 few-shot 支持都不要」做通,靠冻结的 3D 视觉语言模型(RegionPLC)当稠密先验、加冻结的可提示分割器(SAM3)只用类名提示。全流程 training-free,复现便宜,而「换个 2D 分割器或 3D 先验看还灵不灵」正是最省事的可发表扩展。",
+      "feasibility": "全程只推理不训练,单张 24GB 卡够跑;几周内能出跨模型泛化的对照结果。",
+      "route": [
+        "先跑通原文的推理管线(RegionPLC 加 SAM3),在 ScanNet200 的 novel 类上复现出报告的分割指标",
+        "把 SAM3 换成另一个可提示分割器(如 SAM2 或不同的开集检测器),固定其余部分,量化 mIoU 的变化",
+        "把 3D 先验 RegionPLC 换成另一个开放词汇 3D 模型,交叉组合,画一张「先验 × 分割器」的泛化矩阵",
+        "在户外点云(nuScenes/SemanticKITTI 的开放类)上试同一套,看室内到室外掉多少",
+        "把最稳的组合和失败案例整理成一个可复现的 benchmark 脚本放出去"
+      ],
+      "risk": "冻结模型两两组合可能出现「先验和分割器各说各话」的对齐崩塌,提示词工程的敏感度也可能盖过换模型带来的信号。"
+    },
+    {
+      "domain": "embodied",
+      "type": "repo",
+      "title": "做一个 VLA 策略的闭环视觉鲁棒性评测工具箱(可插进 LIBERO)",
+      "based_on": [
+        { "title": "LIBERO-VPro: Benchmarking Closed-Loop Visual Robustness of Robotic Foundation Models", "url": "https://arxiv.org/abs/2609.24350" }
+      ],
+      "why_now": "LIBERO-VPro 把闭环执行时的视觉扰动拆成四个维度(视觉证据退化、相机延迟、视觉源一致性、任务相关场景变化)、12 类、96 种设置,但它给的是一套评测结果;把这套扰动做成即插即用、能挂到任意 LIBERO/SIMPLER rollout 上的开源库,目前没有现成的统一实现。",
+      "feasibility": "纯推理加图像扰动,单卡即可;工具本身工程量小,几周能出一个能用的版本,目标是攒 star。",
+      "route": [
+        "在 LIBERO 上跑通一个开源 VLA(如 OpenVLA 或 π0 系列)的 baseline rollout,记录干净环境成功率",
+        "实现一组可组合的视觉扰动算子(模糊、遮挡、光照、丢帧/延迟、传感器噪声),做成 wrapper 挂在观测流上",
+        "输出一张「扰动维度 × 成功率」的鲁棒性记分卡,附每种扰动的失败录像",
+        "接第二个 VLA 做横向对比,验证工具的通用性",
+        "写清文档和一键脚本,发布成 pip 包加 GitHub 仓库"
+      ],
+      "risk": "不同 VLA 的观测接口不统一,wrapper 的通用性是最大工程坑;扰动若不物理真实,评测结论会被质疑「测了个假鲁棒性」。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "在单卡上复现 Flash-dLLM 的免训练加速,并验证换个扩散 LLM 还灵不灵",
+      "based_on": [
+        { "title": "Flash-dLLM: IO-Aware KV Caching and Parallel Decoding for Fast, Memory-Efficient Diffusion LLMs", "url": "https://arxiv.org/abs/2609.26796" }
+      ],
+      "why_now": "dLLM 推理慢一直是落地拦路虎,Flash-dLLM 是 training-free 的 IO 感知 KV 缓存加自起草自验证解码,报了对 Elastic-Cache 的 5–11 倍加速。training-free 方法最好的可发表扩展就是「迁到另一个模型或场景验证泛化」——它是不是只在原文那个 dLLM 上灵?",
+      "feasibility": "只做推理,单张 24–40GB 卡能跑 7–8B 级的开源 dLLM(LLaDA/Dream);几周能出跨模型的加速对照。",
+      "route": [
+        "先在原文用的 dLLM 上跑通 baseline 与 Flash-dLLM,复现出 GSM8K/HumanEval 的加速比",
+        "把方法迁到另一个开源 dLLM,固定硬件,测端到端 tokens/s、显存峰值和生成质量",
+        "拆开消融:单看 IO 感知 KV kernel 的贡献,对比起草-验证解码的贡献,看哪部分可迁移",
+        "扫长序列和大 batch,复核「随长度/批量更省」的说法在新模型上还成不成立",
+        "把移植适配层和 benchmark 脚本整理开源"
+      ],
+      "risk": "不同 dLLM 的掩码/去噪调度差异大,IO kernel 可能得为每个模型重写;起草-验证若在新模型上质量掉点,加速就是虚的。"
+    }
+  ]
+}
