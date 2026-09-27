@@ -1,0 +1,393 @@
+{
+  "date": "2026-09-28",
+  "editor_note": "今天最扎眼的是 CMU 那篇——拿婴儿认知里的「物体恒存」去考视频世界模型,发现它们连「东西被挡住还在不在」都没自发学会。世界模型这两天在榜上扎堆(HappyWorld-Bench、Agent-Editing、Rolling-WAM），大家都在琢磨怎么让生成的世界经得起交互。另一边是可解释性的小惊喜:Transformer 里藏着一条线性叠加通道,叠两段文本进去输出竟约等于两份分布相加。生物医学这块今天几乎被并购和临床读数刷屏(诺和诺德、基因泰克、默沙东、Grail),资本对减肥针剂、双抗和早筛的下注一点没停。最后留个隐隐的呼应:今天「每日一理」讲佩龙–弗罗贝尼乌斯定理(正矩阵的主特征值说了算),而 AI 榜上的 Neural Spectral Capacity 正好用随机矩阵的谱来给架构打分——一整天都在跟「谱里那个最大的方向」打交道。",
+  "math_note": {
+    "name": "佩龙–弗罗贝尼乌斯定理",
+    "name_en": "Perron–Frobenius Theorem",
+    "field": "线性代数 / 矩阵理论",
+    "one_liner": "正矩阵里总有一个「说了算」的方向,反复相乘,所有向量都会乖乖倒向它。",
+    "statement": "如果一个方阵 $A$ 的元素全是正数(或者非负且「不可约」,即状态之间能互相到达),那它一定有一个「最大」的特征值 $\\lambda_{\\max}>0$:它是实数、模严格大于其它所有特征值($|\\lambda|<\\lambda_{\\max}$),而且只出现一次(单根);对应的特征向量 $v>0$ 每个分量都严格为正。直白说——正矩阵有一个「说了算」的主方向,你随便拿个向量反复乘它、每步归一化 $x_{k+1}=Ax_k/\\|Ax_k\\|$,最后都会倒向这个 $v$,和起点无关。",
+    "origin": "1907 年 Oskar Perron 在研究正矩阵时发现了这个「最大特征值又实又正、还带正特征向量」的现象;1912 年 Georg Frobenius 把它推广到更一般的非负、不可约矩阵,条件放宽了、结论依然成立。当年只是纯矩阵论里的好奇心,后来才发现它是马尔可夫链平稳分布、Leslie 种群模型、Leontief 经济模型乃至 PageRank 的共同数学核。",
+    "derivation": [
+      { "math": "A>0,\\ x\\ge 0,\\ x\\ne 0\\ \\Rightarrow\\ Ax>0", "note": "正矩阵把任何非负、非零的向量都映射成「每个分量都严格大于零」的向量。所以迭代只会把方向越推越往正锥内部,不会卡在边界——这是后面一切结论的地基。" },
+      { "math": "\\lambda_{\\max}=\\max_{x>0}\\ \\min_i\\ \\frac{(Ax)_i}{x_i}", "note": "这是 Collatz–Wielandt 刻画:对每个正向量 $x$ 算「放大得最少的那一维」的比值,再挑让这个最小比值最大的 $x$。这个极值就是那个「说了算」的最大特征值,不用先去解特征方程。" },
+      { "math": "Av=\\lambda_{\\max}\\,v,\\qquad v>0", "note": "取到上一步极值的 $x$ 就是特征向量 $v$,而且能证明它每个分量都严格为正——这就是「佩龙向量」,并且不计缩放是唯一的。" },
+      { "math": "|\\lambda|\\,|y_i|=\\Big|\\sum_j a_{ij}y_j\\Big|\\le \\sum_j a_{ij}|y_j|", "note": "对任何别的特征值 $\\lambda$ 用三角不等式,再配合矩阵的严格正性,可证 $|\\lambda|<\\lambda_{\\max}$:没有第二个特征值能追平它的模。这一步是「主方向唯一」的关键。" },
+      { "math": "A^k x_0=\\lambda_{\\max}^{\\,k}\\big(c\\,v+o(1)\\big),\\quad c>0", "note": "把初始向量按特征向量展开,反复乘 $A$ 后,其它成分按 $(|\\lambda|/\\lambda_{\\max})^k\\to 0$ 衰减,只剩佩龙向量方向。归一化后就收敛到 $v$——这正是幂迭代和 PageRank 收敛的原理。" }
+    ],
+    "applications": [
+      { "area": "网页排序 / 搜索引擎", "detail": "PageRank 把网页链接建成一个随机矩阵,其平稳分布正是佩龙向量——每个网页的重要性得分就是这个主特征向量的分量。" },
+      { "area": "马尔可夫链", "detail": "不可约非周期链的唯一平稳分布,就是转移矩阵的佩龙左特征向量;这保证了「跑够久就忘记初始状态」的极限存在且唯一。" },
+      { "area": "种群生态", "detail": "Leslie 矩阵描述分年龄段的繁殖与存活,其最大特征值就是种群长期的年增长率,佩龙向量给出稳定的年龄结构。" },
+      { "area": "投入产出经济学", "detail": "Leontief 模型里,佩龙根小于 1 是经济体能自洽生产、需求可被满足的条件,直接决定模型有没有非负解。" }
+    ],
+    "takeaway": "正性等于在非负锥里做一种「压缩」:不管你从哪个初始分布出发,反复作用同一个正矩阵,都会被吸到那个最大特征值对应的方向上。幂迭代、PageRank、马尔可夫链的平稳分布,甚至图神经网络里「层数一多所有节点表示塌到一起」的过平滑,背后都是这同一件事——$A^k$ 把一切压向主特征向量。",
+    "viz": {
+      "type": "custom",
+      "caption": "拖动滑块加大迭代次数,四根柱子(代表一个任意初始分布)会齐刷刷倒向灰色虚线标出的平稳分布——不管从哪开始都被「最大特征值方向」吸走,这就是 PageRank 反复迭代收敛的动画版。",
+      "html": "<div style=\"font:14px sans-serif;color:#333\"><label>迭代次数 k = <b id=\"pfk\">0</b></label><br><input id=\"pfs\" type=\"range\" min=\"0\" max=\"40\" value=\"0\" style=\"width:100%;margin:8px 0\"><br><canvas id=\"pfc\" width=\"600\" height=\"300\" style=\"max-width:100%\"></canvas></div>",
+      "script": "(function(){\n  var root=el;\n  var cv=root.querySelector('#pfc'), sl=root.querySelector('#pfs'), lab=root.querySelector('#pfk');\n  var ctx=cv.getContext('2d');\n  var P=[[0.10,0.50,0.30,0.10],[0.20,0.10,0.40,0.30],[0.35,0.25,0.10,0.30],[0.25,0.35,0.20,0.20]];\n  var n=4;\n  function step(v){var r=[0,0,0,0];for(var j=0;j<n;j++){var s=0;for(var i=0;i<n;i++)s+=v[i]*P[i][j];r[j]=s;}return r;}\n  var stat=[1,0,0,0];for(var t=0;t<3000;t++)stat=step(stat);\n  var col=['#4C8BF5','#34A853','#FBBC05','#EA4335'];\n  function draw(k){var v=[1,0,0,0];for(var t=0;t<k;t++)v=step(v);ctx.clearRect(0,0,600,300);var bw=90,gap=48,x0=70,base=250,h=180;ctx.fillStyle='#555';ctx.textAlign='left';ctx.font='13px sans-serif';ctx.fillText('灰色虚线 = 平稳分布(佩龙向量)',60,28);for(var i=0;i<n;i++){var x=x0+i*(bw+gap);var ys=base-stat[i]*h;ctx.setLineDash([6,4]);ctx.strokeStyle='#999';ctx.beginPath();ctx.moveTo(x-10,ys);ctx.lineTo(x+bw+10,ys);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=col[i];ctx.fillRect(x,base-v[i]*h,bw,v[i]*h);ctx.fillStyle='#222';ctx.textAlign='center';ctx.fillText('状态'+(i+1),x+bw/2,base+18);ctx.fillText(v[i].toFixed(3),x+bw/2,base-v[i]*h-6);}}\n  sl.addEventListener('input',function(){lab.textContent=sl.value;draw(+sl.value);});\n  draw(0);\n})();"
+    }
+  },
+  "crossover": {
+    "theory": "信息几何与自然梯度",
+    "theory_en": "Information Geometry & Natural Gradient",
+    "field": "微分几何 / 统计学",
+    "era": "1945 Rao 提出 Fisher–Rao 度量,1998 Amari 的自然梯度让它在机器学习里真正能用起来",
+    "trigger": { "title": "Riemannian Gradient Descent for Gaussian Mixture Models with unknown diagonal covariances", "url": "https://arxiv.org/abs/2609.30220" },
+    "one_liner": "给点云配准的 EM 换一副「合身的度量尺」,病态的各向异性方向不再拖后腿——前提是别在对称结构上被 Fisher 的奇异性反咬一口。",
+    "theory_core": "信息几何把一族参数分布 $p_\\theta$ 看成一个黎曼流形,配上 Fisher 度量 $g_{ij}(\\theta)=\\mathbb{E}[\\partial_i\\log p_\\theta\\,\\partial_j\\log p_\\theta]$。自然梯度 $\\tilde\\nabla L=g^{-1}\\nabla L$ 是在这个内在度量下的最速上升方向:它对参数怎么写(重参数化)不敏感,还会按局部曲率给每个方向重新缩放步长,于是病态、各向异性的方向也能迈出合适的一步。对高斯分布,这个 Fisher 度量恰好就是均值与协方差上的 Fisher–Rao / 仿射不变几何——今天那篇触发论文正是靠它来优化 GMM。",
+    "pc_problem": "基于 GMM 的刚体配准(CPD、GMMReg、FilterReg)把源点云建成一个高斯混合、把目标点当采样,用 EM 在刚体变换上最大化似然。问题是:朴素 CPD 每次 EM 迭代要 $O(NM)$($N$ 源点、$M$ 目标点),得跑 50–150 次,万级点就要几秒到几分钟;FilterReg 用 permutohedral 滤波把单步压到约 $O(N)$,但 M-step 仍是普通 EM、对步长「盲」。一旦混合的协方差各向异性、或两片点云密度差得多,EM 隐含的更新方向就严重失配——要么慢慢爬,要么早早收敛到错的位姿。",
+    "bridge": "映射写清楚:GMM 里的每个高斯分量 ↔ 源点云的一个局部密度团;待优化参数 $\\theta=(R,t,\\sigma)$(旋转、平移、带宽)↔ 统计流形上的坐标;EM 的 M-step「对对数似然求普通梯度再更新」↔ 忽略了 Fisher 度量的欧氏梯度步;用自然梯度 $g^{-1}\\nabla$ 替换 M-step ↔ 按似然对每个参数的敏感度重新缩放步长;各向异性协方差造成的病态 ↔ 自然梯度用 $g^{-1}$ 正好补偿的那一块;带宽/协方差沿 SPD 流形做仿射不变的指数映射更新 ↔ 触发论文里的 Fisher–Rao 几何。",
+    "angles": [
+      {
+        "dim": "算法优化",
+        "idea": "E-step 的软对应照旧,只把 CPD 的 M-step 从闭式/普通梯度换成对刚体参数 $(R,t)$ 的自然梯度步:构造 $6\\times6$ 的 Fisher 信息块当预条件子,沿 $\\mathrm{SE}(3)$ 更新。相当于给「怎么迈这一步」装上了对似然曲率敏感的尺子。",
+        "gain": "迭代次数有望从 ~80 降到 ~20–30(估计,参照自然梯度在其它似然优化上普遍 2–3× 的提速),整体收敛墙钟时间约省一半。",
+        "cost": "要多估并求逆 Fisher 块,虽然只有 $6\\times6$ 很便宜,但近对称结构下刚体自由度退化会让它病态,得加阻尼。"
+      },
+      {
+        "dim": "复杂度",
+        "idea": "关键是这一改不动单步复杂度的量级:Fisher 块只有 $6\\times6$(加带宽也就 $7\\times7$),求逆是 $O(1)$;E-step 仍是 $O(NM)$ 或 permutohedral 的 $O(N)$。总复杂度 $O(T\\cdot NM)$ 里,净收益全来自把迭代数 $T$ 压小。",
+        "gain": "$T:80\\to25$ 约 $3\\times$;若只对刚体参数上自然梯度,额外开销可忽略。",
+        "cost": "一旦想对每个高斯分量的各向异性协方差都上 SPD 自然梯度,参数维度升到 $O(K)$($K$ 为分量数),Fisher 变块对角,求逆成本随 $K$ 线性增长。"
+      },
+      {
+        "dim": "鲁棒性",
+        "idea": "自然梯度对重参数化不变,所以对初始带宽 $\\sigma_0$ 和点云整体尺度不敏感,能缓解「$\\sigma$ 设错就不收敛」的老毛病;再配一个用 Fisher 定义 KL 步长上限的信任域,防止低重叠时一步跳飞。",
+        "gain": "收敛域变宽、对 $\\sigma$ 初值的敏感度显著下降(估计);低重叠对上的成功率有望提升。",
+        "cost": "本质仍是局部方法,大转角(>60°)照样进错盆地,得先用 FGR/RANSAC 之类做全局初始化。"
+      },
+      {
+        "dim": "并行",
+        "idea": "E-step 的软对应和 Fisher 块累加都是逐点求和,天然能在单卡 GPU 上批处理;自然梯度只多一个小矩阵求逆,不破坏并行度。",
+        "gain": "万级点在单张 24GB 卡上每次迭代可到亚秒级(估计)。",
+        "cost": "稠密 $O(NM)$ 的软对应矩阵($10^4\\times10^4$ fp32 约 0.4GB)再大就得分块;permutohedral 滤波的 GPU 实现本身有门槛。"
+      }
+    ],
+    "experiment": [
+      "先用开源库 probreg 在 CPU 上跑通 CPD / FilterReg 对 ModelNet40 一对点云的配准,记下迭代数、耗时、最终 RMSE 当基线。",
+      "固定 $\\sigma$,只给刚体参数 $(R,t)$ 加 $6\\times6$ Fisher 自然梯度 M-step,和原版比迭代数与耗时。",
+      "把带宽 $\\sigma$ 也纳入,沿 SPD 流形做自然梯度更新,在各向异性、不同密度的合成对上测收敛稳定性。",
+      "换低重叠(30–50%)子集,配 Fisher-KL 信任域,画收敛域对比图。",
+      "把 E-step 搬上单卡 GPU,测万级点单次迭代耗时。"
+    ],
+    "prior_art": [
+      { "title": "Point Set Registration: Coherent Point Drift (Myronenko & Song, IEEE TPAMI 2010)", "note": "GMM 配准的经典,用 EM 求解,M-step 是普通更新、没碰 Fisher 度量。" },
+      { "title": "FilterReg: Robust and Efficient Probabilistic Point-Set Registration (Gao & Tedrake, CVPR 2019)", "note": "用 permutohedral 滤波把 EM 单步压到约 $O(N)$,是加速方向,但优化度量仍是欧氏的。" },
+      { "title": "Natural Gradient Works Efficiently in Learning (Amari, 1998)", "note": "自然梯度本体,证明了 Fisher 预条件的效率优势,但没往点云配准这个方向用。" },
+      { "title": "(检索小结)", "note": "查下来没找到公开工作直接把自然梯度/信息几何用到 GMM 点云配准的 M-step 上;最相近的是 Bayesian CPD 一类加速变体,走的是概率先验而非 Fisher 度量。" }
+    ],
+    "reality_check": "Fisher 块在近对称或大片平面的点云上本身就病态(刚体自由度退化),$g^{-1}$ 会把噪声放大——自然梯度的「自动缩放」在这里反而可能把步长炸掉,必须先上 Levenberg 式阻尼 $g+\\lambda I$,否则比原版 EM 还不稳。"
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Training Object Permanence in World Models",
+      "title_zh": "教世界模型学会「物体不会凭空消失」",
+      "url": "https://arxiv.org/abs/2609.28654",
+      "hf_url": "https://huggingface.co/papers/2609.28654",
+      "authors": "Haotian Zhang、Fengyuan Yu 等",
+      "affiliation": "卡内基梅隆 / CMU",
+      "upvotes": 203,
+      "one_liner": "视频大模型连「东西被挡住还在不在」都没搞明白,先补上婴儿级的认知课。",
+      "summary_zh": "作者做了个叫 WROP 的数据基建,用 Blender 造了 150 个受认知科学启发的任务(物体被遮挡、被容器装住之后还在不在这类),随机化光照、速度、机位但保住任务的认知结构,合出 150 万训练样本加一份 300 题的考卷,拿去考 14 个视频生成模型。结论是现成的视频「世界模型」其实没自发学到物体恒存性,但用这套数据针对性训一训能补上。方向对——把发展心理学的经典范式搬来当探针很聪明,只是合成数据和真实物理的差距仍是这类工作绕不开的坎。",
+      "tags": ["世界模型", "视频生成", "认知先验"]
+    },
+    {
+      "domain": "ai",
+      "title": "Your Transformer Can Hold Two Thoughts at Once: Evidence of Linear Superposition in LLMs",
+      "title_zh": "Transformer 能同时「想两件事」:大模型里的线性叠加",
+      "url": "https://arxiv.org/abs/2609.29845",
+      "hf_url": "https://huggingface.co/papers/2609.29845",
+      "authors": "Pavel Tikhonov、Anton Korznikov 等",
+      "upvotes": 75,
+      "one_liner": "把两段文本线性叠加喂进去,输出竟约等于两者下一 token 分布的叠加——非线性网络里藏着一条线性通道。",
+      "summary_zh": "作者发现,把来自两路文本的输入做线性组合后,模型输出近似等于各自 next-token 分布的叠加,称之为「叠加线性假设」。更有意思的是他们论证这是 Transformer 架构本身的性质、而非训练涌现,且预训练越久这种线性反而越弱;但轻量微调就能把它「找回来」,还能配一个引导解码把叠在一起的两路输出拆开。对做可解释性和多任务并行推理的人挺有启发,不过「线性叠加」能撑到多复杂的输入,还得看后续。",
+      "tags": ["可解释性", "Transformer", "叠加"]
+    },
+    {
+      "domain": "ai",
+      "title": "Just-in-Time Memory: Learning to Curate Task-Adaptive Memory for LLM Agents",
+      "title_zh": "即时记忆:让智能体在「用的时候」再整理记忆",
+      "url": "https://arxiv.org/abs/2609.27334",
+      "hf_url": "https://huggingface.co/papers/2609.27334",
+      "authors": "Yefan Zhou、Yang Li 等",
+      "affiliation": "Salesforce AI Research",
+      "upvotes": 35,
+      "one_liner": "别在写入时就急着总结,把原始轨迹留着,等真正的查询来了再按需提炼。",
+      "summary_zh": "现在的 agent 记忆多是「写入时就把轨迹蒸成一个固定工件(反思、工作流、技能)」,问题是你得在不知道未来会问什么之前就决定留什么,信息一旦丢了就找不回。这篇反过来:保留原始轨迹,把整理推迟到读取时——当前任务已知,再从检索到的轨迹里现提炼出对口的记忆。思路顺,和检索增强是一路子;代价是存储和读取时算力都涨,记忆库大了之后检索质量会是瓶颈。可以和今天的 hindsight 仓库对着看。",
+      "tags": ["Agent", "记忆", "检索增强"]
+    },
+    {
+      "domain": "ai",
+      "title": "Learning to Discover Interesting Mathematics",
+      "title_zh": "教模型分辨「有意思的数学」",
+      "url": "https://arxiv.org/abs/2609.28603",
+      "hf_url": "https://huggingface.co/papers/2609.28603",
+      "authors": "Niket Patel、Ahmad Rammal 等",
+      "affiliation": "纽约大学 / NYU",
+      "upvotes": 11,
+      "one_liner": "定理有不有趣?用「证明长度 ÷ 陈述长度」来量,居然和它的下游用处正相关。",
+      "summary_zh": "LLM 越来越能证定理,但新证出来的东西是否「有意思、有用」没人量得清。作者把定理的内在趣味定义成「证明长度与陈述长度之比」(说得短却要证很久的更有料),并显示它和下游效用的外在指标强相关;再把「给定前提下证明的难度」作为可计算的原子量,训了个 27B 模型专门预测证明难度,比通用前沿模型更准。给「AI 做数学」补了个一直缺的评价维度,这个比值定义粗糙但抓得挺准,值得点开。",
+      "tags": ["LLM", "数学发现", "评测"]
+    },
+    {
+      "domain": "ai",
+      "title": "Neural Spectral Capacity: Measuring and Designing Architectures from Network Specification Alone",
+      "title_zh": "神经谱容量:只看网络设计图就能给架构打分",
+      "url": "https://arxiv.org/abs/2609.23087",
+      "hf_url": "https://huggingface.co/papers/2609.23087",
+      "authors": "Chenyu Zhu、Ruoyu Zhao、Zhichao Lu",
+      "affiliation": "香港城市大学 / CityU",
+      "upvotes": 8,
+      "one_liner": "不用建模型、不用数据,靠权重矩阵的奇异值谱和 Marchenko-Pastur 定律,几秒钟在 CPU 上选出最优架构。",
+      "summary_zh": "参数量和 FLOPs 只反映规模,不反映结构——同样参数预算下深宽比、头数、FFN 怎么分配会带来不同行为,这俩标量却看不出来。作者提出「神经谱容量」(NSC),用每个权重矩阵奇异值谱构造的闭式标量;在标准随机初始化下,Marchenko-Pastur 定律让 NSC 只凭架构规格就能算出来,不用实例化、不用数据和梯度,再配个动态规划求解器,在预算约束下几秒钟给出 NSC 最优架构。把随机矩阵理论落到架构搜索上很干净,不过 NSC 高是否真等于任务性能好,还得看更多实证。",
+      "tags": ["架构搜索", "随机矩阵", "Transformer"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Faster Visuomotor Policy Learning on Action Manifolds via Riemannian MeanFlow",
+      "title_zh": "让视觉运动策略在动作流形上跑得更快",
+      "url": "https://arxiv.org/abs/2609.30127",
+      "authors": "S. Talha Bukhari、Austin Garrett 等",
+      "one_liner": "扩散/流匹配策略生成动作要多步积分太慢,MeanFlow 把它压成一步,还顺手尊重了机器人动作空间的几何。",
+      "summary_zh": "基于扩散和流匹配的视觉运动策略能建模动作序列的多模态分布,但生成动作要对学到的向量场做多步数值积分,慢,拖累机器人需要的高控制频率。而且机器人动作通常定义在光滑可微的流形上(比如关节角、旋转),策略理应尊重这个内在几何。作者用 Riemannian MeanFlow 把多步积分压成一步,并让生成结果落在动作流形上。一步流匹配是当下加速策略的热门路子,配上流形约束对旋转类动作更合理;就是一步化后多模态会不会掉、接触密集任务成功率如何,得看实测。",
+      "tags": ["VLA", "流匹配", "机器人策略"]
+    },
+    {
+      "domain": "energy",
+      "title": "AI-guided high-throughput discovery of iridium- and ruthenium-free palladium-oxide catalysts for durable acidic oxygen evolution",
+      "title_zh": "AI 闭环找出无铱无钌的钯氧化物析氧催化剂",
+      "url": "https://arxiv.org/abs/2609.30133",
+      "authors": "Ken J. Jenewein、Faezeh Habib Zadeh 等",
+      "one_liner": "酸性析氧长期被铱、钌垄断,供应链卡脖子;一套 90% 自动化的闭环平台找到了钯基替代。",
+      "summary_zh": "质子交换膜电解水(PEMWE)的阳极析氧几乎全靠铱或钌,而这俩供应集中、成本高,卡住了吉瓦级铺开。作者搭了个自动化率超 90% 的人机闭环平台:组合溅射合成、高通量筛选、机器学习成分-性能模型、多目标优化,还加了个大模型做情境推理,把领先的钯氧化物催化剂推进到 1 M 硫酸、10 mA/cm² 的长期验证。AI4Science 里少见的真做到湿实验闭环、还上了耐久性测试的工作,含金量比纯计算预测高不少;能不能替下铱,得看寿命和电流密度能不能再上一个台阶。",
+      "tags": ["电解水", "催化剂", "高通量"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Non-Abelian sheaf quantum LDPC codes: good and magical",
+      "title_zh": "非阿贝尔层码:又好又「带魔力」的量子 LDPC 码",
+      "url": "https://arxiv.org/abs/2609.30159",
+      "authors": "Zimu Li、Fuchuan Wei 等",
+      "one_liner": "用层码做非阿贝尔量子 LDPC,拿到常码率、线性距离,还自带做非 Clifford 门的「魔力」。",
+      "summary_zh": "非阿贝尔量子码把纠错、物质相和计算资源连在一起。作者给出一个通用框架:通过 cup product 对层码做规范化(gauging),构造出非阿贝尔的量子 LDPC 码,得到常数编码率、线性距离的码族,并基于 Knill-Laflamme 条件严格处理了码距。qLDPC 是超越表面码、降容错开销的主线之一,「自带魔力」意味着可能少走一些魔态蒸馏的弯路;不过这是偏理论的构造,离实际布线和解码器还有距离。",
+      "tags": ["量子纠错", "qLDPC", "容错计算"]
+    },
+    {
+      "domain": "bio",
+      "title": "Motif-Vocab: Statistically Calibrated Transcription-Factor-Identity Tokenization for Genomic Language Models",
+      "title_zh": "Motif-Vocab:给基因组语言模型换一套「懂生物学」的分词",
+      "url": "https://arxiv.org/abs/2609.28386",
+      "authors": "Liangyu Li、Michael White",
+      "one_liner": "DNA 分词别再死用 k-mer,先扫出统计显著的转录因子结合 motif,把它当成一个 token。",
+      "summary_zh": "基因组语言模型的分词多用字符、定长 k-mer 或按频率切的子词,没利用 DNA 结合调控因子(转录因子)特异性的先验。Motif-Vocab 双链扫描、用统计校准的零分布判定 motif 是否显著命中(把不同长度、不同简并度的位置权重矩阵放到可比的尺度上),命中就发一个转录因子身份 token,剩下的序列再用核苷酸、k-mer 或 BPE。把生物先验塞进分词这一层,比在模型结构上硬堆更省事,思路对味;就看下游任务上真比通用分词强多少、以及 motif 库覆盖不到的区域会不会吃亏。",
+      "tags": ["基因组", "语言模型", "分词"]
+    },
+    {
+      "domain": "chip",
+      "title": "An Open-Source Standard-Cell Library for IHP 130nm Developed by Students",
+      "title_zh": "学生们做出来的开源 130nm 标准单元库",
+      "url": "https://arxiv.org/abs/2609.29965",
+      "authors": "Oscar Castañeda、Lavinia Recchioni 等",
+      "affiliation": "苏黎世联邦理工 / ETH Zurich",
+      "one_liner": "标准单元库很少有课教,苏黎世联邦理工让 19 个学生用开源 130nm PDK 自己造了一套 220 单元的库。",
+      "summary_zh": "标准单元库是晶体管级设计和自动化数字流程之间的关键接口,但它的设计与表征在 VLSI 课上很少讲透。这篇介绍了 ETH Zurich 的研究生课 VLSI 5:学生用 IHP 开源的 130nm SG13G2 工艺,自己设计、布局、表征并集成标准单元,首届 19 名学生做出了 EZ130 8T——一个含 220 个单元的开源八轨标准单元库,还用八个综合基准评测了迭代版本。开源 EDA 生态难得的教学与产出双赢,对想入门数字后端、又摸不到商业 PDK 的人是很实在的资源。",
+      "tags": ["EDA", "标准单元", "开源芯片"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Beyond Compression: Training Latent Representations for Stable Long-Horizon Rollout in Neural Surrogate Solvers",
+      "title_zh": "别只顾压缩:让潜空间代理求解器长时间滚动不发散",
+      "url": "https://arxiv.org/abs/2609.30198",
+      "authors": "Andreas E. Robertson、Ashley T. Lenau 等",
+      "one_liner": "潜空间神经代理求解器一长时间自回归就误差爆炸——问题不在压缩,而在潜表示只为重建训练。",
+      "summary_zh": "潜空间神经代理求解器靠演化压缩后的潜空间来加速时变物理系统的模拟,但长时间自回归滚动时误差往往迅速累积。作者指出这种不稳定不是潜表示本身的锅,而是当它只为「重建」训练时,得到的表示并不适合长时预测;并系统评估了若干训练层面的干预来改善长程滚动。点出了「重建损失 ≠ 好动力学表示」这个常被忽视的坑,对做神经代理、AI for PDE 的人是有用的提醒;具体哪种干预最管用,还得看它给的对比。",
+      "tags": ["神经代理", "PDE", "长程预测"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "paperclipai/paperclip",
+      "url": "https://github.com/paperclipai/paperclip",
+      "language": "TypeScript",
+      "stars": 89609,
+      "stars_today": "2,527",
+      "one_liner": "企业里管理各种 AI agent 的开源「总控台」,一周窜到 8.9 万 star。",
+      "summary_zh": "定位是「公司里人人都在用的、管理工作用 agent 的开源应用」。眼下 agent 满天飞、各自为政,这类统一管理与编排的入口正好戳中企业落地的痛点。适合在团队里要统一调度、观测多个 agent 的人关注。"
+    },
+    {
+      "domain": "ai",
+      "name": "vectorize-io/hindsight",
+      "url": "https://github.com/vectorize-io/hindsight",
+      "language": "Python",
+      "stars": 37107,
+      "stars_today": "4,463",
+      "one_liner": "会自我学习的 agent 记忆库,和今天那篇「即时记忆」论文正好对着看。",
+      "summary_zh": "主打「能学习的 agent 记忆」(Agent Memory That Learns),给智能体一个能随经验演进的记忆后端。agent 记忆现在是明显瓶颈,这个方向很热;适合在做长期记忆、经验复用的人拿来试。"
+    },
+    {
+      "domain": "ai",
+      "name": "debpalash/VoiceStudio",
+      "url": "https://github.com/debpalash/VoiceStudio",
+      "language": "Python",
+      "stars": 39859,
+      "stars_today": "3,060",
+      "one_liner": "全本地、开源版 ElevenLabs:克隆、配音、转写一条龙,支持 646 种语言。",
+      "summary_zh": "把语音克隆、声音设计、视频配音、听写、转写、有声书制作打包成一个完全本地运行的开源工具,号称覆盖 646 种语言。冲着 ElevenLabs 这类云端付费服务去的,数据不出本机对隐私敏感场景友好;适合想自建语音流水线的人。"
+    },
+    {
+      "domain": "ai",
+      "name": "dream-num/univer",
+      "url": "https://github.com/dream-num/univer",
+      "language": "TypeScript",
+      "stars": 20111,
+      "stars_today": "920",
+      "one_liner": "给 AI agent 用的「Office 底座」:表格、文档、幻灯片、PDF 一套运行时全包。",
+      "summary_zh": "把电子表格、文档、幻灯片、画布、关系表和 PDF 统一到一个运行时里,定位是给 AI agent 操作办公文档的底层能力。agent 要真去改一个 Excel 或文档,需要这种可编程的结构化后端;适合做办公自动化 agent 的人。"
+    },
+    {
+      "domain": "ai",
+      "name": "vercel-labs/scriptc",
+      "url": "https://github.com/vercel-labs/scriptc",
+      "language": "TypeScript",
+      "stars": 5361,
+      "stars_today": "186",
+      "one_liner": "把 TypeScript 直接编译成原生代码的编译器,来自 Vercel Labs。",
+      "summary_zh": "一个 TypeScript-to-Native 编译器,目标是让 TS 代码不经 JS 运行时直接编译成原生二进制。对想要 TS 的开发体验又想要原生性能与部署的人有意思;还早期,能覆盖多少 TS 语义要看后续。"
+    },
+    {
+      "domain": "ai",
+      "name": "mvschwarz/openrig",
+      "url": "https://github.com/mvschwarz/openrig",
+      "language": "TypeScript",
+      "stars": 895,
+      "stars_today": "114",
+      "one_liner": "把 Claude Code 和 Codex 当成一个系统一起跑的多智能体框架。",
+      "summary_zh": "一个多 agent 编排框架,让 Claude Code 和 Codex 在同一套系统里协同工作。适合想把不同厂商的编码 agent 组合起来、互相取长补短的人;star 还小,属于早期项目。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "Anthropic CEO 阿莫代伊将与特朗普单独共进晚餐",
+      "url": "https://techcrunch.com/2026/09/27/anthropics-ceo-is-about-to-have-dinner-with-president-trump/",
+      "source": "TechCrunch",
+      "summary_zh": "据报道,这将是 Dario Amodei 与 Donald Trump 的首次一对一会面。在 AI 监管和政企关系持续升温的当下,头部实验室 CEO 与总统的直接接触值得留意。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "保险公司称医院用 AI 工具正在推高医疗开支",
+      "url": "https://techcrunch.com/2026/09/26/insurers-claim-ai-is-already-increasing-healthcare-costs/",
+      "source": "TechCrunch",
+      "summary_zh": "Blue Cross Blue Shield 表示,医院使用 AI 工具在两年内多产生了 9.42 亿美元的医疗支出。和「AI 降本增效」的普遍叙事相反,这给医疗 AI 的实际经济账浇了盆冷水。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "谷歌在印度测试通过 Gemini 和 AI Mode 直接下单购物",
+      "url": "https://techcrunch.com/2026/09/26/google-tests-buying-from-walmart-owned-flipkart-through-gemini-and-ai-mode-in-india/",
+      "source": "TechCrunch",
+      "summary_zh": "谷歌在印度小范围测试通过 Gemini 与 AI Mode 从沃尔玛旗下 Flipkart 购物,目前覆盖部分商品和用户,计划 10 月晚些时候更大范围推开。这是「对话式购物 / agent 下单」从演示走向真实交易的一步。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "llama.cpp 里更快的 prompt lookup 投机解码",
+      "url": "https://jadidbourbaki.github.io/blog/prompt-lookup-llama-cpp/",
+      "source": "Hacker News",
+      "summary_zh": "一篇技术博客介绍在 llama.cpp 中改进 prompt lookup 式的投机解码,用输入里已有的 n-gram 当草稿来加速生成。对本地跑大模型、想榨推理吞吐的人是实用的小优化。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "从 14 个城市到 15000 个:robotaxi 规模化卡在「修车」上",
+      "url": "https://www.therobotreport.com/from-14-cities-to-15000-what-it-will-take-to-scale-robotaxis/",
+      "source": "The Robot Report",
+      "summary_zh": "文章指出 robotaxi 的驾驶能力已被验证,真正制约全球铺开的是不起眼的本地化快速维保——车队规模上去后,谁来就近、快速地保养和修车成了瓶颈。提醒大家自动驾驶落地的下半场是运营和供应链,不只是算法。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "诺和诺德 13 亿美元牵手 Nanexa,做长效减肥针剂",
+      "url": "https://www.fiercebiotech.com/biotech/novo-inks-13b-nanexa-deal-unlock-long-acting-obesity-injectables",
+      "source": "Fierce Biotech",
+      "summary_zh": "诺和诺德以约 11.7 亿欧元(13 亿美元)达成合作,把 Nanexa 的长效注射给药平台用到自家减肥和 2 型糖尿病药物上。长效化、拉长给药间隔,是 GLP-1 减肥药下一轮竞争的关键方向。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "罗氏旗下基因泰克 15 亿美元与 Earendil 合作开发双抗",
+      "url": "https://www.fiercebiotech.com/biotech/genentech-inks-15b-bispecific-pact-fast-rising-earendil",
+      "source": "Fierce Biotech",
+      "summary_zh": "基因泰克先付 Earendil Labs 5500 万美元首付款,合作发现并开发多个双特异性抗体,聚焦肿瘤,含里程碑后总额可超 15 亿美元。大药企继续用「首付加里程碑」的方式向新锐买双抗管线。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "Grail 多癌血检 Galleri 通过 FDA 顾问委员会投票",
+      "url": "https://www.fiercebiotech.com/medtech/grail-survives-adcomm-vote-it-now-awaits-fda-decision-cancer-blood-test",
+      "source": "Fierce Biotech",
+      "summary_zh": "尽管今年早些遭遇重大试验挫折、有效性屡受质疑,Grail 的多癌种早筛血液检测 Galleri 仍获 FDA 顾问委员会正面推荐,接下来等 FDA 正式决定。液体活检早筛能否闯过监管,这一票是关键信号。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "默沙东 30 亿美元收购的眼病三抗关键试验达标",
+      "url": "https://www.fiercebiotech.com/biotech/merck-co-uncorks-pivotal-victory-3b-eye-disease-prospect",
+      "source": "Fierce Biotech",
+      "summary_zh": "默沙东的 Brunello 试验达到主要终点,验证了一款糖尿病黄斑水肿(DME)三特异性抗体候选药的效果——这款药是它以 30 亿美元收购而来。三抗在眼科拿到关键胜利,给这笔大额并购兑现了一部分。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个 training-free KV-Cache 淘汰方法的统一评测库",
+      "based_on": [
+        { "title": "Risk-Controlled KV-Cache Eviction: From Memory Budgets to Risk Targets", "url": "https://arxiv.org/abs/2609.27981" },
+        { "title": "DeltaS: Reading the Gated Linear Attention State for KV Cache Eviction in Streaming Video", "url": "https://arxiv.org/abs/2609.27470" }
+      ],
+      "why_now": "这周一口气冒出好几个 training-free 的 KV cache 淘汰/压缩方法(风险可控淘汰、读门控线性注意力状态、两级 KV 共享),但各写各的、没有统一 harness 和可比口径,正好是「缺开源实现和统一评测」的空档。",
+      "feasibility": "纯推理、单张 24GB 卡就够,几周内能从「跑通一个方法」做到「三个方法一个 API」,完全不涉及训练。",
+      "route": [
+        "先跑通 Risk-Controlled KV-Cache Eviction 的官方推理(或复现其核心逻辑),在 Llama / Qwen 上量出显存-质量曲线",
+        "把 2–3 种淘汰策略抽象到同一个 KV 管理接口后面(统一喂 attention 分数或状态)",
+        "在 LongBench 加一个流式长视频 / 长上下文场景上跑同一套评测,记显存占用与任务分",
+        "补上一键复现脚本和排行榜,发成 repo 攒 star"
+      ],
+      "risk": "各方法和具体 attention 实现(FlashAttention、线性注意力)耦合深,抽统一接口时可能被迫改内核,泛化到不同模型架构是最大不确定。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "把刚开源的 3DGS 压缩法迁到动态和水下场景验证泛化",
+      "based_on": [
+        { "title": "Towards Practical Compression of 3D Gaussian Splatting", "url": "https://arxiv.org/abs/2609.30245" },
+        { "title": "OceanXL: Large-scale Underwater 3D Gaussian Splatting via Block Partitioning and Adaptive Pruning", "url": "https://arxiv.org/abs/2609.29985" }
+      ],
+      "why_now": "3DGS 压缩这周扎堆出(实用压缩、水下大规模剪枝、观测感知外观压缩),但大多在静态标准场景上测;动态、水下这类「外观随时间或介质变化」的场景上还没人系统验证泛化。",
+      "feasibility": "单张 24GB 卡逐场景优化,几周量级;有开源 3DGS 和这些压缩方法的话,主要工作是复现加迁移测试。",
+      "route": [
+        "先在 Mip-NeRF360 一个标准静态场景上复现 Towards Practical Compression,量出压缩率与 PSNR",
+        "把同一压缩流程套到一个动态 3DGS 或水下场景上,看质量掉多少",
+        "针对动态性调剪枝阈值 / 码本,画率-失真曲线",
+        "和 OceanXL 的自适应剪枝对比,总结哪类冗余假设在非静态场景失效"
+      ],
+      "risk": "静态场景的压缩靠外观冗余,动态、水下场景外观本就在变,冗余假设可能直接不成立,压缩率-质量会明显退化。"
+    },
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "在 LIBERO 上把多步流匹配操作策略蒸成一步并测代价",
+      "based_on": [
+        { "title": "Faster Visuomotor Policy Learning on Action Manifolds via Riemannian MeanFlow", "url": "https://arxiv.org/abs/2609.30127" },
+        { "title": "Distillation for Efficient Multitask Manipulation Policies via Conditional Flow Matching", "url": "https://arxiv.org/abs/2609.28107" }
+      ],
+      "why_now": "流匹配、扩散策略生成动作要多步积分、控制频率上不去;这周有把它压成一步(MeanFlow)和用条件流匹配做蒸馏的两条思路同时出现,适合在仿真里对比验证。",
+      "feasibility": "LIBERO / ManiSkill 仿真、单卡就能跑,真机非必要,几周量级。",
+      "route": [
+        "先在 LIBERO 上跑通一个多步扩散 / 流匹配基线策略,记成功率和单步生成耗时 / 控制频率",
+        "实现 MeanFlow 式一步蒸馏,比一步与多步的成功率和速度",
+        "加上动作流形约束(旋转类动作),看接触密集任务上一步化会不会掉点",
+        "在多任务子集上测蒸馏后的泛化"
+      ],
+      "risk": "一步生成容易丢掉动作分布的多模态,接触密集或需要精细调整的任务上,成功率可能明显低于多步基线。"
+    }
+  ]
+}
