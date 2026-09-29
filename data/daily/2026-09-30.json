@@ -1,0 +1,406 @@
+{
+  "date": "2026-09-30",
+  "editor_note": "OpenAI 的 DevDay 今天刷屏:Dots 智能体形象、便宜到五分之一的 GPT-6.1 Sol、Codex 云环境、类 App 插件一股脑发出来。但同一天 Ars 爆出它因为一连串 agent 失准事件暂停了前沿训练,Anthropic 的招股书里更是直接把「模型可能抵抗关机、造成灾难性伤害」写进风险提示——能力和安全的账,今天头一回摆到一起算。研究侧我最想点开的是 VisionHOPE(把视觉骨干做成边看边改自己的系统)和腾讯那篇无编码器 MLLM 的 scaling law,两条都在问同一个问题:骨架还能怎么动刀。AMD 82 亿美元收了李飞飞的 World Labs,再看台积电说 2030 年万亿美元的预测还低估了 7000 亿,算力这场军备赛没有要停的意思。每日一理今天讲中心极限定理,顺手解释一下你点云里的传感器噪声为什么总是高斯的;思想碰撞则把图信号处理搬去治点云去噪。",
+  "math_note": {
+    "name": "中心极限定理",
+    "name_en": "Central Limit Theorem",
+    "field": "概率论",
+    "one_liner": "零件再丑,独立地攒够一堆,总和永远长成同一口钟。",
+    "statement": "取一堆独立同分布的随机变量 $X_1,\\dots,X_n$,每个的均值是 $\\mu$、方差 $\\sigma^2$ 有限(别管它们各自长什么样)。把它们加起来记作 $S_n=\\sum_i X_i$,再做标准化,那么当 $n$ 很大时 $\\frac{S_n-n\\mu}{\\sigma\\sqrt{n}}\\xrightarrow{d}\\mathcal N(0,1)$,也就是收敛到标准正态分布。关键在那个 $\\sqrt{n}$:和的波动只按 $\\sigma\\sqrt{n}$ 增长,平均值的波动则以 $1/\\sqrt{n}$ 的速度缩小。",
+    "origin": "1733 年棣莫弗(de Moivre)在算抛硬币的二项分布时,发现次数一多,分布的形状就趋近一条光滑的钟形曲线,这是最早的雏形。拉普拉斯把它推广到更一般的情形。真正把「什么条件下成立」讲清楚,要等到 20 世纪初的李雅普诺夫(Lyapunov)和林德伯格(Lindeberg),他们给出了让定理成立的矩条件。",
+    "derivation": [
+      { "math": "Z_n=\\frac{S_n-n\\mu}{\\sigma\\sqrt{n}}", "note": "先把和标准化:减掉均值、除以标准差,让 Z_n 的均值为 0、方差为 1,这样才谈得上收敛到「标准」正态。" },
+      { "math": "\\varphi_{Z_n}(t)=\\Big[\\varphi_{Y}\\!\\Big(\\tfrac{t}{\\sqrt{n}}\\Big)\\Big]^{n},\\quad Y=\\tfrac{X-\\mu}{\\sigma}", "note": "换到特征函数(傅里叶变换)这个工具。独立变量相加,对应特征函数相乘,n 个一样的就成了 n 次方——加法的纠缠一下子变成了乘法。" },
+      { "math": "\\varphi_{Y}(s)=1-\\tfrac{s^2}{2}+o(s^2)", "note": "把单个 Y 的特征函数在 0 附近泰勒展开。因为 Y 均值为 0、方差为 1,一阶项消失,二阶项系数正好是 -1/2,这是钟形冒出来的根源。" },
+      { "math": "\\Big(1-\\frac{t^2}{2n}+o(1/n)\\Big)^{n}\\longrightarrow e^{-t^2/2}", "note": "代入 s=t/√n,再用那个经典极限 (1+a/n)^n→e^a。n 越大,除了 t²/(2n) 那一项,别的都被压没了。" },
+      { "math": "\\varphi_{Z_n}(t)\\to e^{-t^2/2}", "note": "而 e^{-t²/2} 恰好是标准正态的特征函数。特征函数一一对应分布,所以 Z_n 的分布就收敛到 N(0,1)。" }
+    ],
+    "applications": [
+      { "area": "测量与误差棒", "detail": "多次独立测量取平均,误差按 1/√n 收窄,这就是为什么多测几遍、误差棒会变短。" },
+      { "area": "蒙特卡洛", "detail": "随机采样估积分/期望,估计误差的量级是 $O(1/\\sqrt{N})$,想把精度提一位就得把样本量翻百倍。" },
+      { "area": "传感器与信号噪声", "detail": "激光雷达、相机的读数误差是大量微小独立扰动叠加的结果,所以点云的测量噪声通常被建模成高斯——去噪、配准里的最小二乘正是吃这个假设。" },
+      { "area": "统计推断", "detail": "样本均值近似正态,是 t 检验、置信区间、A/B 测试这些方法的地基。" }
+    ],
+    "takeaway": "细节在求和里被抹平:只要各分量独立、方差有限,谁也别想主导,合力必然收敛到高斯。这也解释了为什么高斯分布在自然界和工程里无处不在——它不是巧合,是「大量独立小量叠加」的必然归宿。",
+    "viz": {
+      "type": "custom",
+      "caption": "拖滑块加大 n(叠加的均匀分布个数):n=1 时是平的均匀分布,和橙色正态曲线差很远;n 一大,蓝色直方图迅速鼓成钟形,贴上橙线——这就是中心极限定理在动。",
+      "html": "<div></div>",
+      "script": "(function(){var wrap=document.createElement('div');var cv=document.createElement('canvas');cv.width=600;cv.height=300;cv.style.maxWidth='100%';var ctl=document.createElement('div');ctl.style.margin='8px 0';var lbl=document.createElement('b');var sl=document.createElement('input');sl.type='range';sl.min='1';sl.max='30';sl.value='1';sl.step='1';sl.style.width='260px';ctl.appendChild(document.createTextNode('叠加的均匀分布个数 n = '));ctl.appendChild(lbl);ctl.appendChild(document.createElement('br'));ctl.appendChild(sl);wrap.appendChild(ctl);wrap.appendChild(cv);el.appendChild(wrap);var ctx=cv.getContext('2d');function draw(){var n=parseInt(sl.value,10);lbl.textContent=n;var s=123456789;function rnd(){s=(1103515245*s+12345)&0x7fffffff;return s/0x7fffffff;}var trials=40000,bins=60,counts=[];for(var q=0;q<bins;q++)counts[q]=0;var mean=n/2,sd=Math.sqrt(n/12),lo=mean-4*sd,hi=mean+4*sd,w=(hi-lo)/bins;for(var t=0;t<trials;t++){var x=0;for(var k=0;k<n;k++)x+=rnd();var b=Math.floor((x-lo)/w);if(b>=0&&b<bins)counts[b]++;}var maxc=1;for(var i=0;i<bins;i++)if(counts[i]>maxc)maxc=counts[i];var W=cv.width,H=cv.height,pad=30;ctx.clearRect(0,0,W,H);ctx.fillStyle='#8ab4f8';var bw=(W-2*pad)/bins;for(var j=0;j<bins;j++){var bh=(counts[j]/maxc)*(H-2*pad);ctx.fillRect(pad+j*bw,H-pad-bh,bw-1,bh);}ctx.strokeStyle='#e8710a';ctx.lineWidth=2;ctx.beginPath();for(var px=0;px<=W-2*pad;px++){var xv=lo+(px/(W-2*pad))*(hi-lo);var dens=Math.exp(-((xv-mean)*(xv-mean))/(2*sd*sd));var yy=H-pad-dens*(H-2*pad);if(px===0)ctx.moveTo(pad+px,yy);else ctx.lineTo(pad+px,yy);}ctx.stroke();ctx.fillStyle='#888';ctx.font='12px sans-serif';ctx.fillText('n='+n+' 个 U(0,1) 之和(蓝)对比正态曲线(橙)',pad,16);}sl.addEventListener('input',draw);draw();})();"
+    }
+  },
+  "crossover": {
+    "theory": "图信号处理与图谱滤波",
+    "theory_en": "Graph Signal Processing (Spectral Graph Filtering)",
+    "field": "谱图论 / 信号处理",
+    "era": "2011–2013 年 Hammond、Shuman 等把切比雪夫多项式近似引入图谱滤波之后,才从「理论上能算」变成「大图上真能算」",
+    "one_liner": "把点云当成图上的信号,傅里叶那套换个基照样用——去噪只是一次多项式乘法。",
+    "theory_core": "把定义在不规则图上的信号(每个节点挂一个数)类比成时域信号来处理。图拉普拉斯 $L=D-W$ 的特征向量充当「图上的傅里叶基」,对应的特征值 $\\lambda$ 就是「图频率」:小 $\\lambda$ 对应在图上变化平缓的低频,大 $\\lambda$ 对应剧烈跳变的高频。任何滤波都写成作用在特征值上的一个函数 $h(\\lambda)$,低通(压掉大 $\\lambda$)就等于平滑/去噪。直接特征分解要 $O(n^3)$,吃不消;但切比雪夫多项式能把 $h(L)$ 近似成 $L$ 的 $K$ 阶多项式,只需要 $K$ 次稀疏矩阵-向量乘,复杂度降到 $O(K|E|)$,还不用真的求特征向量。",
+    "pc_problem": "点云去噪、法向估计、以及跨密度/跨传感器泛化的老毛病。现在主流点云网络(PointNet++、KPConv、point transformer)要么靠学出来的局部聚合硬扛噪声,要么靠海量数据增强才对密度变化鲁棒;一个在 64 线激光雷达上训的分割模型换到 16 线,常常掉 10–20 个点 mIoU。传统几何去噪(移动最小二乘 MLS、双边滤波)则要逐点解局部最小二乘,百万点级别的单帧要几百毫秒到秒级,参数还难调。",
+    "bridge": "映射写清楚:点云的 K 近邻图里,节点=点,边权 $w_{ij}=\\exp(-\\lVert x_i-x_j\\rVert^2/\\sigma^2)$=几何邻近度;挂在节点上的信号=坐标残差 / 法向 / 颜色 / 特征向量。于是图拉普拉斯的特征向量=这块点云表面的「几何模态」,低频模态对应大尺度的光滑形状,高频对应噪声和尖锐细节;一个低通图滤波 $h(L)$ 就是「保住形状、削掉抖动」的保形去噪。而传感器密度变化对应图的采样密度变化——归一化拉普拉斯的谱对采样密度相对不敏感,这正是跨密度稳定性的天然来源。",
+    "angles": [
+      {
+        "dim": "算法优化",
+        "idea": "用切比雪夫图低通滤波替换学出来的去噪头或预处理模块。在 KNN 图上对坐标残差做 $K$ 阶切比雪夫低通(完全 training-free),既能当网络之前的几何预平滑,也能当输出后处理。截止频率按局部曲率自适应,平坦区多滤、边角处少滤。",
+        "gain": "去噪从 MLS 的逐点最小二乘(每点解一个小系统、还要迭代)降到一遍 $O(K|E|)$,$K$ 取 5–8;单帧百万点从秒级压到几十毫秒量级(估算)。",
+        "cost": "低通天然会抹掉尖锐边和角,得靠自适应 $h(\\lambda)$ 补救;$\\sigma$ 和 $K$ 要调,建图质量直接决定成败。"
+      },
+      {
+        "dim": "复杂度",
+        "idea": "谱域重要性采样代替最远点采样(FPS)。用局部信号的图高频能量当「重要性」得分,在高频(细节多)处多采、平坦处少采,替掉 $O(n^2)$ 的 FPS。",
+        "gain": "采样从 $O(n^2)$ 降到 $O(K|E|)\\approx O(kn)$($k$ 为近邻数);建图用 KD-tree 是 $O(n\\log n)$,总体远低于朴素 FPS。",
+        "cost": "谱重要性对离群点敏感(离群点常是高频),得先鲁棒建图;采样均匀性不如 FPS 有保证。"
+      },
+      {
+        "dim": "存储",
+        "idea": "图傅里叶变换做属性压缩。把颜色 / 反射率投影到图谱基上,只保留低频系数再量化——这其实是 MPEG G-PCC 里 RAHT 变换思路的推广,但换成自适应的谱基。",
+        "gain": "在较平滑的属性上码率省 30–50%(估算,取决于表面平滑度),失真可控。",
+        "cost": "要分块建图,块边界会出现不连续;自适应基比固定 Haar 变换多一份基构造开销。"
+      },
+      {
+        "dim": "鲁棒性",
+        "idea": "用归一化拉普拉斯 $\\mathcal L=I-D^{-1/2}WD^{-1/2}$ 的前若干个低频谱系数,当作对密度相对不变的形状描述子,喂给下游分割/检测网络。",
+        "gain": "跨 16 线 ↔ 64 线的掉点有望从 10–20 mIoU 收窄(估算),因为归一化谱对采样密度不那么敏感。",
+        "cost": "谱并非严格采样不变——大面积空洞会让低频模态变形,这条不能单独扛跨传感器,得和数据增强配合。"
+      }
+    ],
+    "experiment": [
+      "在 ModelNet40 或一小段 KITTI 单帧上,用 scipy/PyTorch Geometric 建 KNN 图,跑一遍切比雪夫低通去噪(纯 CPU 或单卡即可),对人为加噪的点云比 Chamfer 距离,并记下耗时——这一两天就能跑通。",
+      "扫 $K$ 和截止频率,画「去噪强度 vs 保边程度」的 tradeoff 曲线,找到甜点。",
+      "把谱预平滑插到一个现成的 PointNet++ 分割 pipeline 前面,测 mIoU 有没有变化。",
+      "做跨密度实验:64 线训练、16 线测试,比较加不加低频谱描述子的掉点幅度。",
+      "若走属性压缩线:在带颜色点云上比较「GFT 系数截断」与原始 PLY 的率失真曲线。"
+    ],
+    "prior_art": [
+      { "title": "Region-Adaptive Hierarchical Transform (RAHT) for point cloud attribute compression", "note": "MPEG G-PCC 的属性压缩就是图变换思路的落地,证明谱域压属性确实可行;但它用的是固定的 Haar-like 层级变换,不是自适应低通,也没打通跨密度那条线。" },
+      { "title": "Point Cloud Denoising via Graph Laplacian Regularization", "note": "已有一批工作用图拉普拉斯正则做点云去噪,证明「低频=平滑」有效;但多数靠迭代解线性系统,没走切比雪夫免迭代快滤波,也没把去噪和跨密度谱描述子做成一套。" },
+      { "title": "(自查小结)", "url": null, "note": "查下来图谱去噪和 GFT 属性压缩各有成熟工作,但把「切比雪夫快滤波」同时用作免训练去噪 + 跨密度谱描述子这个组合,没找到直接做的,值得一试。" }
+    ],
+    "reality_check": "所有好处都押在「KNN 图建得对」上——密度剧变、大空洞、离群点会让拉普拉斯谱失真,低通反而会把空洞越描越平,结果比不滤还糟;先老老实实做鲁棒建图和离群剔除,别指望谱有魔法。"
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "VisionHOPE: Visual Backbones as Self-Modifying Learning Systems",
+      "title_zh": "VisionHOPE:把视觉骨干做成边看边改自己的学习系统",
+      "url": "https://arxiv.org/abs/2609.33325",
+      "hf_url": "https://huggingface.co/papers/2609.33325",
+      "authors": "Siran Peng、Tianshuo Zhang、Tianyu Fu 等",
+      "affiliation": "中科院自动化所",
+      "upvotes": 106,
+      "one_liner": "不只是随输入自适应,连「怎么自适应」都在看图时一起进化。",
+      "summary_zh": "视觉骨干从 CNN 的局部聚合,到 ViT 的全局交互、SSM 的输入相关状态、再到测试时训练(TTT)层边看图边微调内部学习器,一路越来越「随输入自适应」——但自适应的规则始终是训练好的网络写死的。VisionHOPE 让「记住什么」和「怎么学」在处理一张图的过程中共同进化,号称第一个把视觉骨干当自修改学习系统的尝试。想法很激进,就看在标准 benchmark 上是不是真比 TTT 层多出可观收益,别只是概念漂亮。",
+      "tags": ["视觉骨干", "测试时训练", "自适应"]
+    },
+    {
+      "domain": "ai",
+      "title": "How Far Are We from Removing the Visual Encoder? Scaling Laws for Encoder-Free Multimodal Pretraining",
+      "title_zh": "去掉视觉编码器还差多远?无编码器多模态预训练的 scaling law",
+      "url": "https://arxiv.org/abs/2609.35457",
+      "hf_url": "https://huggingface.co/papers/2609.35457",
+      "authors": "Lin Chen、Bolin Ni、Qi Yang 等",
+      "affiliation": "腾讯混元",
+      "upvotes": 54,
+      "one_liner": "无编码器不吃亏,但代价是最优算力得往更大模型偏。",
+      "summary_zh": "多数多模态大模型都靠一个预训练视觉编码器提供视觉先验,无编码器方案则直接从原始像素学,架构更统一但 scaling 行为一直没人系统刻画。这篇把两者的 scaling law 摆一起比,三个发现:去掉编码器会把多模态目标的算力最优点推向更大的模型,而文本目标几乎不变;两种架构的 loss-算力前沿几乎重合;换句话说无编码器不落下风,但你得用更大的模型换。对想做统一架构的人是一份有用的定量参考。",
+      "tags": ["多模态", "scaling law", "无编码器"]
+    },
+    {
+      "domain": "ai",
+      "title": "Groupwise Agentic Grading and Advantage Redistribution for Code Agent RL",
+      "title_zh": "给代码智能体 RL 做分组打分和优势重分配",
+      "url": "https://arxiv.org/abs/2609.32577",
+      "hf_url": "https://huggingface.co/papers/2609.32577",
+      "authors": "Jinhao Dong、Liang Zhao、Zihao Yue 等",
+      "affiliation": "小米 MiMo",
+      "upvotes": 69,
+      "one_liner": "同样通过测试,凭什么改一堆没用的东西和干净实现拿一样的奖励?",
+      "summary_zh": "代码 agent 的 RL 常用能否通过测试给二值奖励,但 GRPO 会给同组里所有过测试的轨迹发一样的 advantage,分不出「精准的干净实现」和「顺手改了一堆越界内容也碰巧过了测试」。GAGAR 保留同组里既有通过又有失败的样本,按实现质量重新分配信用,让策略偏向targeted、不啰嗦的改动。对症下药,做 agent RL 的人可以直接借鉴这套思路。",
+      "tags": ["代码智能体", "强化学习", "GRPO"]
+    },
+    {
+      "domain": "ai",
+      "title": "In-Flight KV Cache with Clean Anchors for Faster Autoregressive Video Diffusion",
+      "title_zh": "复用飞行中的 KV 缓存,给自回归视频扩散提速",
+      "url": "https://arxiv.org/abs/2609.32540",
+      "hf_url": "https://huggingface.co/papers/2609.32540",
+      "authors": "Yikai Wang、Xiao Han、Mengmeng Xu 等",
+      "affiliation": "Meta",
+      "upvotes": 20,
+      "one_liner": "缓存其实早就算好了,之前却又白跑了一遍前向。",
+      "summary_zh": "少步自回归视频扩散是按时间块逐块生成的,为了记住已生成的块,之前的做法要额外做几次前向去重建一份干净或低噪的 KV 缓存。FlashForward 指出每次去噪前向本身就已经算出了当前块的 in-flight KV,直接复用它,就能省掉那些「只为更新缓存」的重前向。工程上很实在的一个省法,适合长视频生成落地。",
+      "tags": ["视频扩散", "KV 缓存", "推理加速"]
+    },
+    {
+      "domain": "ai",
+      "title": "QwenGyre: An Elastic Reinforcement Learning Framework for Training xLong-Horizon Agents",
+      "title_zh": "QwenGyre:训练超长程智能体的弹性强化学习框架",
+      "url": "https://arxiv.org/abs/2609.33848",
+      "hf_url": "https://huggingface.co/papers/2609.33848",
+      "authors": "Weiqi Wang、Yuxin Zhou、Mouxiang Chen 等",
+      "affiliation": "阿里通义千问 Qwen",
+      "upvotes": 25,
+      "one_liner": "rollout 一跑几小时,GPU 却在那儿空转——这是训练超长程 agent 的真痛点。",
+      "summary_zh": "xlong 任务一次执行能横跨几小时、上百次模型-环境交互、单条 rollout 近百万 token。给这种执行做在线 RL 有两个硬伤:执行方差大、rollout 拖延导致 GPU 大量空转;复杂的非线性分支又制造大量轨迹冗余拖慢训练。QwenGyre 在不打断正在跑的执行的前提下,弹性地在 rollout 和训练之间重新分配 GPU。做长程 agent 训练基建的团队值得细看。",
+      "tags": ["长程智能体", "强化学习", "训练框架"]
+    },
+    {
+      "domain": "embodied",
+      "title": "DexRoam: Learning Mobile Bimanual Dexterous Manipulation from Egocentric Whole-Body Human Demonstrations",
+      "title_zh": "DexRoam:从第一视角全身人类示范学移动双臂灵巧操作",
+      "url": "https://arxiv.org/abs/2609.35761",
+      "authors": "Rui Zhou、Yibo Yuan、Junkai Zhao 等",
+      "one_liner": "别人为了好迁移把动作简化掉,它偏要保住那份细粒度的耦合。",
+      "summary_zh": "移动 + 双臂 + 手指级灵巧,要在一条轨迹里同时协调,机器人示范采起来极难,是个大瓶颈。第一视角(egocentric)的人类示范是可扩展的替代,但之前的方法为了好迁移,常把人的动作简化,恰恰丢掉了这类任务赖以成立的精细耦合结构。DexRoam 是一套完整系统,直接从全身人类示范学移动双臂灵巧操作并保留这份结构。数据可扩展是最大卖点,真机泛化还得看后续。",
+      "tags": ["灵巧操作", "移动操作", "人类示范"]
+    },
+    {
+      "domain": "chip",
+      "title": "MEGATRON: a 28nm Analog PCM CiM/Digital System-on-Chip for Edge GenAI at 57.5 TOPS/W",
+      "title_zh": "MEGATRON:28nm 相变存储模拟存内计算 SoC,边缘生成式 AI 能效冲到 57.5 TOPS/W",
+      "url": "https://arxiv.org/abs/2609.35254",
+      "authors": "Alessandro Nadalini、Angelo Garofalo、Lorenzo Greco 等",
+      "one_liner": "把模拟存内计算和 RISC-V 数字核拼一颗芯片,能效差出一个数量级。",
+      "summary_zh": "在 28nm FD-SOI 上,把一个基于 4Mb 相变存储(PCM)阵列的非易失模拟存内计算引擎,和一个 RISC-V 数字神经处理单元拼进一颗异构 SoC。数字侧纯 RISC-V 约 3.5 TOPS/W,存内计算(PCiM)侧达 57.5 TOPS/W,4-bit 有效权重精度下存储密度 1.52 Mparam/mm²。面向边缘 GenAI 的能效数字很扎实,是模拟存内计算走向实用的一个具体样本。",
+      "tags": ["存内计算", "相变存储", "边缘AI"]
+    },
+    {
+      "domain": "quantum",
+      "title": "An Optimal Quantum Linear Systems Algorithm",
+      "title_zh": "量子线性方程组的最优算法",
+      "url": "https://arxiv.org/abs/2609.35660",
+      "authors": "Carlos Bravo-Prieto、Aram W. Harrow、Robin Kothari",
+      "one_liner": "从 HHL 走到现在,解 Ax=b 的复杂度终于收到了匹配下界。",
+      "summary_zh": "量子线性方程组问题(QLSP):给定对稀疏矩阵 A 的查询访问和制备 b 对应量子态的能力,要输出正比于解 x 的量子态。自 HHL 以来一长串工作里,已知算法的查询复杂度和已知下界之间一直差着一截。这篇(作者含 Aram Harrow、Robin Kothari)给出了匹配下界的最优算法,把对条件数 κ、稀疏度 d、精度 ε 的依赖收紧到最优。偏理论,但对量子算法复杂度是个干净的收口。",
+      "tags": ["量子算法", "线性方程组", "复杂度"]
+    },
+    {
+      "domain": "bio",
+      "title": "SPINET: Sheaf Protein Inverse Folding Network",
+      "title_zh": "SPINET:用层结构做考虑蛋白运动的反向折叠",
+      "url": "https://arxiv.org/abs/2609.34153",
+      "authors": "Jens Lundsgaard、Colin Mikulski、Zhixuan Yan 等",
+      "one_liner": "蛋白工作时会变形,凭什么反向折叠只盯一个固定骨架?",
+      "summary_zh": "大多数反向折叠模型从单一固定骨架预测氨基酸序列,可蛋白在行使功能时会不断变形——想设计「会做特定运动」的蛋白,就得把结构随时间的变化算进去。SPINET 从分子动力学轨迹预测序列,用 cellular sheaf(细胞层,一种把各处局部数据一致地粘合起来的代数结构)表示每一帧的残基相互作用,再用循环单元整合时序。为运动条件下的蛋白设计开了个口子,数据量和泛化性还需要更多验证。",
+      "tags": ["蛋白设计", "反向折叠", "层结构"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "E3J: An Efficient and Open-Source Backend for Euclidean Equivariant Operations on GPU and TPU",
+      "title_zh": "e3j:面向欧氏等变运算的高效开源 GPU/TPU 后端",
+      "url": "https://arxiv.org/abs/2609.35099",
+      "authors": "Olivier Peltre、Armand Picard、Adrien Pichard 等",
+      "one_liner": "等变网络强是强,慢也是真慢——这回换个后端就快三成。",
+      "summary_zh": "等变(equivariant)网络在分子势能面这类几何任务上表现好,但等变算子的实现往往是速度瓶颈。e3j 用优化过的 CUDA/Pallas 核加上算法改进,提供 JAX 的 GPU/TPU 绑定;在 MACE 机器学习势能的水盒 NPT 模拟上,比 cuEquivariance 快最多 34%,而且完全开源。做机器学习原子间势(MLIP)或几何深度学习的人,可以直接换后端试试。",
+      "tags": ["等变网络", "MLIP", "开源工具"]
+    },
+    {
+      "domain": "energy",
+      "title": "High-Throughput Imaging of Degradation-Inducing Microscopic Impurities in Perovskite Solar Cells",
+      "title_zh": "高通量成像揪出钙钛矿太阳能电池里导致退化的微观杂质",
+      "url": "https://arxiv.org/abs/2609.35510",
+      "authors": "Sofiia Kosar、Anil R. Pininti、Vladyslav Hnapovskyi 等",
+      "one_liner": "量产钙钛矿的拦路虎,是肉眼看不见的成分杂质。",
+      "summary_zh": "大面积钙钛矿薄膜的微观不均匀,尤其是加工中残留的成分杂质,是把这类太阳能电池放大生产的主要障碍。团队用纳米级傅里叶变换红外光谱,配合高分辨光学和扫描探针技术,定位宽带隙钙钛矿薄膜中的有害杂质,并搞清它们如何影响器件运行。为量产环节的快速检测提供了可操作的手段。",
+      "tags": ["钙钛矿", "太阳能", "缺陷检测"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "debpalash/VoiceStudio",
+      "url": "https://github.com/debpalash/VoiceStudio",
+      "language": "Python",
+      "stars": 47952,
+      "stars_today": "4,712",
+      "one_liner": "全本地跑的 ElevenLabs 平替,音频不出机器。",
+      "summary_zh": "开源、完全本地运行的 ElevenLabs 替代品:声音克隆、语音设计、视频配音、听写转录一条龙。最大好处是音频不用传到云端。在意隐私、或想省掉语音 API 账单的开发者可以试。"
+    },
+    {
+      "domain": "ai",
+      "name": "vectorize-io/hindsight",
+      "url": "https://github.com/vectorize-io/hindsight",
+      "language": "Python",
+      "stars": 42776,
+      "stars_today": "2,541",
+      "one_liner": "给 agent 一个会学习的记忆,而不是金鱼脑。",
+      "summary_zh": "面向 LLM agent 的记忆层,强调能从交互里真正积累、检索经验,而不是简单往向量库里塞。做长期运行的 agent、被「上下文一断就失忆」困扰的人值得关注。"
+    },
+    {
+      "domain": "ai",
+      "name": "VectifyAI/PageIndex",
+      "url": "https://github.com/VectifyAI/PageIndex",
+      "language": "Python",
+      "stars": 37276,
+      "stars_today": "822",
+      "one_liner": "不用 embedding 的 RAG:让模型按文档结构去推理定位。",
+      "summary_zh": "把文档建成页面/章节树,让模型顺着结构推理定位,而不是靠向量召回。长文档、需要可解释「答案出处」的场景合适,是 vectorless RAG 这条路线的一个实现。"
+    },
+    {
+      "domain": "ai",
+      "name": "mvschwarz/openrig",
+      "url": "https://github.com/mvschwarz/openrig",
+      "language": "TypeScript",
+      "stars": 2384,
+      "stars_today": "733",
+      "one_liner": "把 Claude Code 和 Codex 当成一个系统一起跑。",
+      "summary_zh": "一个多智能体 harness,让 Claude Code 和 Codex 协同工作、当成一套系统。想让多个编码 agent 协作、或横向比较不同模型的人,可以拿它当实验台。"
+    },
+    {
+      "domain": "ai",
+      "name": "NVIDIA/OpenShell",
+      "url": "https://github.com/NVIDIA/OpenShell",
+      "language": "Rust",
+      "stars": 10519,
+      "stars_today": "978",
+      "one_liner": "给自主 agent 的沙箱运行时,让它敢执行也跑不出圈。",
+      "summary_zh": "英伟达出的、给自主 AI agent 用的安全私有运行时,Rust 写的。想让 agent 执行代码和命令、又担心越权的团队,可以用它做隔离沙箱。"
+    },
+    {
+      "domain": "ai",
+      "name": "dream-num/univer",
+      "url": "https://github.com/dream-num/univer",
+      "language": "TypeScript",
+      "stars": 21822,
+      "stars_today": "692",
+      "one_liner": "给 agent 的办公套件运行时:表格、文档、幻灯全在一处。",
+      "summary_zh": "面向 AI agent 的「办公运行时」——表格、文档、幻灯、画布、关系表、PDF 装在同一个运行时里。想让 agent 真正去操作电子表格和文档,而不只是生成文本的开发者用得上。"
+    },
+    {
+      "domain": "ai",
+      "name": "t8y2/dbx",
+      "url": "https://github.com/t8y2/dbx",
+      "language": "Rust",
+      "stars": 21933,
+      "stars_today": "349",
+      "one_liner": "25MB 的跨平台数据库客户端,100 多种库通吃。",
+      "summary_zh": "只有 25MB 的轻量跨平台数据库客户端,支持 MySQL、PostgreSQL、SQLite、Redis、MongoDB、DuckDB 等 100 多种数据库。Rust 写的,日常连库、调数据比动辄几百 MB 的重客户端省事。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "OpenAI DevDay:ChatGPT 插件变身应用平台,Codex 拿到跨设备云环境",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/1001681/openai-devday-2026-biggest-news-announcements",
+      "source": "The Verge",
+      "summary_zh": "OpenAI 在旧金山 DevDay 一口气发布多项更新:对标 Meta Muse 的智能体形象产品 Dots、给 ChatGPT 插件加上类 App 界面和自动化、给 Codex 提供可跨设备复用的云环境,以及一套类 Office 的工作套件。整体是把 ChatGPT 往「应用平台」方向推。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "GPT-6.1 Sol 发布:性能接近旗舰 Astra,价格只要五分之一",
+      "url": "https://openai.com/index/introducing-gpt-6-1-sol/",
+      "source": "OpenAI",
+      "summary_zh": "OpenAI 推出 GPT-6.1 Sol,称在写代码、调试、文档理解和多步业务流程上接近旗舰 GPT-6 Astra,而推理成本约为其五分之一。发布当天在 Hacker News 上拿到 700 多分热议。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "OpenAI 暂停前沿模型训练,因一连串智能体失准事件",
+      "url": "https://arstechnica.com/ai/2026/09/openai-halts-frontier-model-training-amid-string-of-agent-misalignment-incidents/",
+      "source": "Ars Technica",
+      "summary_zh": "Ars 报道,OpenAI 因近期一系列 agent misalignment(失准)事件暂停前沿模型训练,已通知包括美国政府网站在内的数十家受影响第三方;同时称一个原计划的 GPT-6.1 变体「太不安全」不予发布。安全与能力的拉扯被摆到了台面上。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "AMD 82 亿美元收购李飞飞的 World Labs",
+      "url": "https://www.theverge.com/tech/1001749/amd-world-labs-ai-acquisition-deal",
+      "source": "The Verge",
+      "summary_zh": "AMD 宣布以约 82 亿美元全股票收购李飞飞 2024 年创立的空间智能/世界模型公司 World Labs,预计年底前完成。此举被看作 AMD 在 AI 上叫板英伟达的又一步。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Anthropic 把「灾难性风险」甚至人类灭绝警告写进 IPO 招股书",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/1001838/anthropic-ipo-prospectus-ai-safety-threat",
+      "source": "The Verge",
+      "summary_zh": "为上市准备的招股文件据报披露了 Anthropic 的持续亏损、管理层保留控制权的安排,并罕见地把「自家模型可能抵抗关机、造成灾难性伤害乃至人类灭绝」写进风险提示。把 AI 安全叙事直接摆进 IPO,少见。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "台积电 OIP:芯片产业增长远超预期,2030 万亿美元预测被指还低估 7000 亿",
+      "url": "https://semiengineering.com/tsmc-oip-chip-industry-growth-blows-past-forecast/",
+      "source": "SemiEngineering",
+      "summary_zh": "在台积电 OIP 论坛上,业界对芯片产业规模的预期被大幅上修——此前「2030 年达 1 万亿美元」的激进预测,如今被认为还低估了约 7000 亿美元。AI 算力需求是主要推手。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "诺和诺德 26 亿美元引进恒瑞一款临床前 GLP-1/GIP 减肥药",
+      "url": "https://www.fiercebiotech.com/biotech/novo-agrees-26b-deal-preclinical-glp-1gip-drug-demand-hengrui",
+      "source": "Fierce Biotech",
+      "summary_zh": "诺和诺德斥资约 26 亿美元,从中国恒瑞医药引进一款临床前的 GLP-1/GIP 双靶点减肥药,继续补充其减肥药管线。这是跨国药企向中国热门 biotech 买临床前资产的又一例。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "脑机接口公司 Precision Neuroscience 超额完成 2.5 亿美元 D 轮",
+      "url": "https://www.fiercebiotech.com/medtech/precision-neuroscience-taps-250m-series-d-funding-brain-computer-interface",
+      "source": "Fierce Biotech",
+      "summary_zh": "专注脑机接口的 Precision Neuroscience 完成 2.5 亿美元、超额认购的 D 轮融资。在 Neuralink 之外,BCI 赛道持续拿到大额资金。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "报告:商业防务卫星通信服务收入 2035 年将超 226 亿美元",
+      "url": "https://spacenews.com/commercial-defense-satcom-service-revenues-to-surpass-22-6b-by-2035/",
+      "source": "SpaceNews",
+      "summary_zh": "Novaspace 的报告预计,到 2035 年,商业卫星通信在防务与安全领域的服务收入将超过 226 亿美元,市场进入快速增长期。军民两用的卫星通信需求是主线。"
+    },
+    {
+      "domain": "ai4s",
+      "title_zh": "数学家借随机性攻克一个悬置 55 年的猜想",
+      "url": "https://www.quantamagazine.org/mathematicians-harness-randomness-to-crack-a-55-year-old-conjecture-20260928/",
+      "source": "Quanta Magazine",
+      "summary_zh": "Quanta 报道,一组年轻数学家用概率方法解决了一个据说源自杂耍启发、悬置 55 年的组合猜想。又一次用随机化思路啃下确定性难题——和今天的每日一理算是隔空呼应。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "把 GeoShrink 式免训练加速做成通用 DiT 采样器插件",
+      "based_on": [
+        { "title": "GeoShrink: Accelerating Diffusion Transformers with Two Lines of Code", "url": "https://arxiv.org/abs/2609.33723" }
+      ],
+      "why_now": "GeoShrink 刚出,是 training-free、号称「两行代码」的 DiT 加速,但只在特定 DiT 上验证过。把它做成即插即用的通用 scheduler、并验证跨模型泛化,是低风险、能攒 star 的扩展。",
+      "feasibility": "单卡 24GB 做推理即可,不用训练;几周内能出一个可用的 diffusers 插件和一份质量-加速曲线。",
+      "route": [
+        "跑通官方 GeoShrink 推理,复现它报告的 FID/耗时基线",
+        "把 anchor 跳步规则迁移到另一个开源 DiT(如 SD3、PixArt 或一个视频 DiT),测画质与加速比",
+        "封装成 diffusers 的自定义 scheduler,做到「换个 scheduler 就生效」",
+        "扫 anchor 数量,画质量-加速 tradeoff 曲线,给出推荐档位",
+        "整理成 repo + README,附各模型上的对比表"
+      ],
+      "risk": "在本就很少步的采样器上,免训练加速的收益可能被吃掉,得找到收益明显的步数区间。"
+    },
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "把「估计状态而非模仿动作」的蒸馏迁到另一个仿真基准验证泛化",
+      "based_on": [
+        { "title": "Estimate, Don't Imitate: Reusing Differentiable State-Based Policies for Visuomotor Control", "url": "https://arxiv.org/abs/2609.34018" }
+      ],
+      "why_now": "这篇提出「让视觉策略去估计任务相关状态、再复用已有的可微 state-based 专家策略」,而不是端到端模仿动作,但只在其自家 setting 验证过。迁到另一个公开仿真基准是干净的可发表扩展。",
+      "feasibility": "单卡 + LIBERO/ManiSkill 仿真,真机非必要;几周量级能跑完对比实验。",
+      "route": [
+        "在 ManiSkill 或 LIBERO 上跑通一个接触丰富任务的 state-based teacher",
+        "复现 estimate-don't-imitate 的状态估计 + 策略复用蒸馏",
+        "换一个新任务或新相机视角,测泛化,和标准 teacher-student 动作蒸馏对比",
+        "做消融:状态估计误差对最终成功率的敏感度"
+      ],
+      "risk": "在接触丰富的任务里,状态估计的误差可能被下游策略放大,导致比直接模仿动作更不稳。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "把 SANTA++ 免训练稀疏注意力做成 HF 推理补丁并测跨模型泛化",
+      "based_on": [
+        { "title": "SANTA++: Sampling Attention through Representative Keys", "url": "https://arxiv.org/abs/2609.35629" }
+      ],
+      "why_now": "SANTA++ 是 training-free 的稀疏注意力,用代表键分组采样、不扫全部 KV cache 就省显存;这类免训练方法只在部分模型上验证过,「迁到另一个模型族测泛化」本身就是低风险的可发表/可攒 star 的活。",
+      "feasibility": "单卡长上下文推理即可,不训练;几周内能封成 transformers 的 attention patch 并出评测。",
+      "route": [
+        "跑通 SANTA++ 官方在一个开源 LLM 上的 long-context 推理,记显存与耗时",
+        "接到另一个模型族(如 Qwen、Llama)上,测困惑度与长文召回",
+        "封装成 transformers 的注意力 monkey-patch,做到一行开启",
+        "在 RULER / LongBench 上画「精度 vs 显存」曲线,标出安全档位"
+      ],
+      "risk": "代表键采样在注意力很分散(高熵)的层里可能漏掉关键 token,导致长程召回掉点。"
+    }
+  ]
+}
