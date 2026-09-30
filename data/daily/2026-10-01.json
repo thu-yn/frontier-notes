@@ -1,0 +1,412 @@
+{
+  "date": "2026-10-01",
+  "editor_note": "今天 AI 榜被“怎么管上下文、怎么管 agent”刷屏——浙大把 on-policy 蒸馏的 scaling law 摸了出来(一个小 RL 老师能教出比自己更强的大学生),Meta 干脆让模型把 context 当成文件自己改,字节则戳破了分块 KV 压缩藏着“周期性盲区”,平均分正好帮它打掩护。最值得点开的是字节这条,做长上下文的人该去自查一下自己的模型是不是也有相位盲点。产业这边两件事对着看有意思:ElevenLabs 估值翻倍到 220 亿,GitHub 上全本地的开源替代 VoiceStudio 同期冲上热榜,开源和闭源在语音赛道正面顶牛。Google 一边发“强到暂时不给你用”的 Gemini 4 Argon,一边琢磨给 AI 设计的蛋白质打水印,能力和治理一起在往前拱。今天的“思想碰撞”拿持续同调去撞 3D 异常检测——专治局部特征看不见的“少个孔、断一截”那类结构缺陷,但别指望它抓划痕。",
+  "math_note": {
+    "name": "傅里叶级数(及狄利克雷收敛定理)",
+    "name_en": "Fourier Series & Dirichlet's Convergence Theorem",
+    "field": "数学分析 / 调和分析",
+    "one_liner": "任何规矩的周期信号,都是一堆正弦波按各自音量的合唱。",
+    "statement": "傅里叶级数说的是:一个周期为 $2\\pi$ 的“还算规矩”的函数 $f(x)$,能写成一堆正弦余弦的叠加 $f(x)=\\frac{a_0}{2}+\\sum_{n\\ge 1}(a_n\\cos nx+b_n\\sin nx)$,其中系数 $a_n=\\frac{1}{\\pi}\\int_{-\\pi}^{\\pi}f(x)\\cos nx\\,dx$、$b_n$ 把 $\\cos$ 换成 $\\sin$。狄利克雷给了收敛的充分条件:只要 $f$ 分段单调、只有有限个间断,级数就在连续点收敛到 $f(x)$,在跳变点收敛到左右极限的平均 $\\frac{f(x^+)+f(x^-)}{2}$。",
+    "origin": "1807 年傅里叶研究热在金属棒里怎么扩散,为解热方程,他大胆断言“任意”函数都能展成三角级数。当时拉格朗日、拉普拉斯这些大牛不买账,尤其不接受不连续函数也能这么展,论文被压了十几年。直到 1829 年狄利克雷第一个给出严格的收敛条件,才把这件事坐实,也顺带逼着数学家重新想“函数”“收敛”到底是什么。",
+    "derivation": [
+      { "math": "\\int_{-\\pi}^{\\pi}\\cos mx\\,\\cos nx\\,dx=\\pi\\,\\delta_{mn}", "note": "先看地基:正弦余弦族在 $[-\\pi,\\pi]$ 上两两正交——不同频率相乘积分为 0,同频率积分为 $\\pi$。相当于它们是函数空间里一组互相垂直的“坐标轴”。" },
+      { "math": "f(x)=\\tfrac{a_0}{2}+\\sum_{n\\ge 1}(a_n\\cos nx+b_n\\sin nx)", "note": "假设能这么展开,就是把 $f$ 当成这组正交基上的一个向量,系数 $a_n,b_n$ 就是它在每根轴上的“投影长度”。" },
+      { "math": "a_n=\\frac{1}{\\pi}\\int_{-\\pi}^{\\pi} f(x)\\cos nx\\,dx", "note": "两边同乘 $\\cos nx$ 再积分,靠上一步的正交性,其他项全被消掉,只剩第 $n$ 项,系数就被“筛”了出来。这就是投影公式的由来。" },
+      { "math": "S_N(x)=\\frac{1}{2\\pi}\\int_{-\\pi}^{\\pi} f(t)\\,D_N(x-t)\\,dt,\\quad D_N(u)=\\frac{\\sin((N+\\tfrac12)u)}{\\sin(u/2)}", "note": "把前 $N$ 项的部分和整理成 $f$ 与狄利克雷核 $D_N$ 的卷积。收敛问题就变成一个具体问题:这个核随 $N$ 变大,是不是越来越像一根冲激。" },
+      { "math": "\\lim_{N\\to\\infty}S_N(x)=\\tfrac{f(x^+)+f(x^-)}{2}", "note": "在 $f$ 分段光滑的假设下,狄利克雷核把 $f$ 在 $x$ 附近做了个加权平均:连续点取到 $f(x)$,跳变点取左右极限的中点。方波重构在跳变处那个消不掉的“吉布斯过冲”,也是从这一步来的。" }
+    ],
+    "applications": [
+      { "area": "信号处理与通信", "detail": "把时域信号拆成频率成分,滤波、调制、频谱分析整套语言都建在这上面。" },
+      { "area": "图像与音频压缩", "detail": "JPEG 把图像块做离散余弦变换(傅里叶的近亲)后丢掉高频系数,MP3 类似地在频域扔掉人耳听不见的成分。" },
+      { "area": "偏微分方程", "detail": "热方程、波动方程在傅里叶基下解耦成一堆互不打扰的常微分方程——这正是傅里叶当年的初衷。" },
+      { "area": "数值谱方法", "detail": "谱方法用傅里叶基展开未知函数,对光滑问题精度随项数指数收敛,比有限差分省格点。" }
+    ],
+    "takeaway": "核心直觉是“换一组正交基,缠在一起的东西就各自独立了”:时域搅成一团的信号,到频域成了互不干扰的坐标。这个“正交分解 + 投影”的套路,往后一路通到 SVD、PCA、小波,是整个信号与学习领域反复用的同一招。",
+    "viz": {
+      "type": "fourier",
+      "caption": "拖动项数,看正弦波一项项叠上去怎么逼近方波——项越多越像,但跳变处那个小过冲(吉布斯现象)永远消不掉。",
+      "params": { "wave": "square", "terms": 5, "maxTerms": 30 }
+    }
+  },
+  "crossover": {
+    "theory": "持续同调(拓扑数据分析)",
+    "theory_en": "Persistent Homology / Topological Data Analysis",
+    "field": "代数拓扑 / 计算拓扑",
+    "era": "1990s–2000s 成形(Edelsbrunner–Letscher–Zomorodian 2002),2010s 后靠 Ripser/GUDHI 这些库才真正算得动",
+    "trigger": { "title": "Sparse cubical complexes for efficient topology-preservation in image data", "url": "https://arxiv.org/abs/2609.37177v1" },
+    "one_liner": "让点云自己长出洞和环,拓扑指纹专治局部特征看不见的结构缺陷。",
+    "theory_core": "持续同调给一堆点算“多尺度的形状”。把半径 $\\epsilon$ 从 0 慢慢调大,每个点撑一个球,球相交就连边,得到一串越来越稠的复形(Vietoris–Rips 滤流)。过程中连通分量($H_0$)、环($H_1$)、空腔($H_2$)会不断出生、死亡,记下每个特征的生死区间,就是持续图。活得久的是真拓扑结构,一闪就没的是噪声。稳定性定理还给了保底:点云扰动多小,持续图在 bottleneck 距离下就只变多小,不会突变。",
+    "pc_problem": "3D 工业异常检测(3DAD)现在主流是“记忆库”路线(PatchCore-3D 那一类):用 FPFH、法向这些局部几何特征描述正常件,测试件偏离就判异常。麻烦在于局部特征对结构性/拓扑性缺陷——少了个孔、断裂、多出一个把手——不敏感,MVTec 3D-AD 上这类缺陷 AUROC 能掉到 0.7 附近;而且记忆库随点数线性涨,几百万点时动辄 GB 级内存,跨域(不同正常分布)时误报还高。",
+    "bridge": "映射很直接:点云的点集 ↔ 滤流里的顶点;过滤半径 $\\epsilon$ ↔ Rips 复形的建边阈值;“缺了个孔 / 断成两半”这种缺陷 ↔ 持续图里异常的 $H_1$ / $H_0$ 长条;正常件持续图的分布 ↔ 参考模板;测试件到模板的 bottleneck 或 Sliced-Wasserstein 距离 ↔ 异常打分。局部几何特征答不上来的“整体连法对不对”,正好是同调在回答的问题。",
+    "angles": [
+      {
+        "dim": "复杂度",
+        "idea": "别对全部点建全 Rips 复形(边数 $O(n^2)$、PH 求解最坏 $O(n^3)$)。先 FPS 下采样到几千点,再换 Alpha 复形或 witness 复形,只保留几何上必要的单形;触发论文那种稀疏滤流的思路能进一步砍掉对下游没用的单形。",
+        "gain": "把 PH 计算从 $O(n^3)$ 量级压到近线性 / $O(n\\log n)$ 量级(估算,具体看内在维度)。",
+        "cost": "下采样和 witness 选择会抹掉细小缺陷,太小的孔在粗尺度下可能根本没“出生”;采样密度得调。"
+      },
+      {
+        "dim": "存储",
+        "idea": "把每件正常样本的持续图向量化成 persistence image 或 persistence landscape,一件就是一个固定长度向量;参考模板只存这些向量,不再存百万点的特征记忆库。",
+        "gain": "模板存储从 GB 级记忆库降到 MB 级甚至更小(每件一个几百维向量,估算)。",
+        "cost": "向量化的分辨率、尺度带宽要调;信息有损,两个拓扑相同但几何不同的件会被认成一样。"
+      },
+      {
+        "dim": "算法优化",
+        "idea": "异常打分直接用测试件持续图到正常模板集的 bottleneck / Sliced-Wasserstein 距离,或在 persistence image 上训个轻量单类分类器。因为同调是拓扑不变量,天然对刚体旋转、采样密度变化不敏感,跨传感器(16 线 ↔ 128 线)比局部特征稳。",
+        "gain": "结构性缺陷类 AUROC 有望从 ~0.7 往 0.85+ 走,跨域误报下降(估算)。",
+        "cost": "纯拓扑对“尺寸略偏、表面凹陷”这种无拓扑变化的缺陷完全无感,必须和几何特征做后融合。"
+      }
+    ],
+    "experiment": [
+      "在 MVTec 3D-AD 挑一类,用 giotto-tda 或 Ripser 对下采样到约 2k 点的正常样本算 Vietoris–Rips 持续图,CPU 几分钟跑通,先画条形码看一眼。",
+      "把持续图转成 persistence image,拿正常件建模板,对测试件算到模板的 bottleneck 距离当异常分,报 AUROC,和 PatchCore-3D 这类 baseline 比。",
+      "换 Alpha / witness 复形,把点数从 2k 拉到 5 万,记下耗时曲线,确认复杂度真的降下来。",
+      "把拓扑分数和 FPFH 局部几何分数做后融合(加权或拼特征),看结构缺陷类和几何缺陷类能不能都吃到。"
+    ],
+    "prior_art": [
+      { "title": "PLLay: Efficient Topological Layer based on Persistence Landscapes (Kim et al., NeurIPS 2020)", "note": "把持续图做成可微网络层、证明了 PH 能端到端进模型;做的是分类 / 表示,不是工业 3D 异常检测,打分那套得自己搭。" },
+      { "title": "giotto-tda / Ripser++", "note": "成熟的 PH 计算库(Ripser++ 有 GPU 版),是这条路现成的算力底座;它们只管算持续图,怎么用在 3DAD 上是空白。" },
+      { "note": "查下来直接把持续同调用在工业点云异常检测上的公开工作很少,相近的是把 PH 当点云分类 / 分割的拓扑正则项,或医学影像里做拓扑保持分割;“PH 当 3DAD 打分器”这个具体组合基本没人系统做过。" }
+    ],
+    "reality_check": "最可能栽在“MVTec 里一大半缺陷压根没改变拓扑”——一个凹坑、一道浅划痕,洞还是那个洞,持续图纹丝不动;纯拓扑会漏掉这批,不和几何特征融合就是个偏科选手。"
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Scaling Properties of Same-Family On-Policy Distillation",
+      "title_zh": "同族 on-policy 蒸馏的 scaling 规律",
+      "url": "https://arxiv.org/abs/2609.32722",
+      "hf_url": "https://huggingface.co/papers/2609.32722",
+      "authors": "Yuntai Bao、Qinfeng Li 等",
+      "affiliation": "浙江大学",
+      "upvotes": 188,
+      "one_liner": "小老师能教出更强的大学生,蒸馏的 scaling law 被摸出来了。",
+      "summary_zh": "on-policy 蒸馏是让学生用自己采样的轨迹去对齐老师的分布。这篇系统研究了它跨规模的表现——弱到强、同基座、强到弱三种师生配置。发现早期训练里 held-out 准确率随着与初始学生的反向 KL 的平方根近似线性上升;更有意思的是,每一对“弱到强”里学生的峰值都超过了老师自己,也就是一个小的 RL 专家能把能力迁移给大得多的学生。还拟合了 power law 来预估最终收益,算是给蒸馏配了个粗略的“性价比计算器”。",
+      "tags": ["蒸馏", "RL", "scaling law"]
+    },
+    {
+      "domain": "ai",
+      "title": "Periodic Weak Spots: Phase Sensitivity from Chunked KV-Cache Compression",
+      "title_zh": "周期性盲区:分块 KV-Cache 压缩带来的相位敏感度",
+      "url": "https://arxiv.org/abs/2609.36322",
+      "hf_url": "https://huggingface.co/papers/2609.36322",
+      "authors": "Xingyu Zhu、Ang Lv 等",
+      "affiliation": "字节跳动 Seed",
+      "upvotes": 89,
+      "one_liner": "KV 压缩埋了周期性盲区,平均分正好把它藏起来。",
+      "summary_zh": "分块 KV-cache 压缩把连续 token 窗口按固定步长压成更少的 cache 条目,省显存也省注意力开销。作者发现这引入了一个新坐标——token 相对压缩窗口边界的“相位”:同一条信息在某个相位好检索、换个相位就难,长上下文检索准确率能差出 40 个百分点。要命的是平均 benchmark 分会把这种周期性盲点完全盖住。他们还从头预训了一组不同压缩设计的 transformer 来复现这个现象。给所有做长上下文压缩的人提了个醒:别只看平均分。",
+      "tags": ["长上下文", "KV Cache", "推理"]
+    },
+    {
+      "domain": "ai",
+      "title": "Context Language Models",
+      "title_zh": "会自己管上下文的语言模型",
+      "url": "https://arxiv.org/abs/2609.37725",
+      "hf_url": "https://huggingface.co/papers/2609.37725",
+      "authors": "Rulin Shao、Shannon Zejiang Shen 等",
+      "affiliation": "Meta",
+      "upvotes": 23,
+      "one_liner": "把上下文当文件交给模型自己改,比外挂策略更省也更准。",
+      "summary_zh": "思路很干脆:把 context 当成一个文件,允许模型任意改写它,让模型自己学该留什么。零样本套在现有模型上,就超过了 SOTA 的上下文管理策略——BrowseComp-Plus 上准确率高 11.4% 还省 21.5% FLOPs,12 小时的 EdgeBench 高 5 分省 59% FLOPs。关键是把上下文管理从外部 harness 的控制挪进模型的内在行为,这样多智能体也自然支持(多个 agent 的 context 就是并存的多个文件)。",
+      "tags": ["Agent", "上下文", "多智能体"]
+    },
+    {
+      "domain": "ai",
+      "title": "LLMs are General Asynchronous Agents",
+      "title_zh": "LLM 是通用异步智能体",
+      "url": "https://arxiv.org/abs/2609.35427",
+      "hf_url": "https://huggingface.co/papers/2609.35427",
+      "authors": "George Yakushev、Denis Mazur 等",
+      "affiliation": "Yandex Research",
+      "upvotes": 59,
+      "one_liner": "给 agent 装上“边想边听”的协程,不用每种并发都重造架构。",
+      "summary_zh": "现在的 agent 都是顺序循环:读—想—回复 / 调工具—重复。但语音助手、具身、监控这些场景不是顺序的,它们会在你思考或干别的事时又来新输入。这篇提出一个通用异步框架,让用户或 agent 自己定义“带重叠记忆状态的推理协程”,把语音、视频流、异步工具调用这些原本各自定制架构的场景统一起来。展示了 Qwen3.x 能直接做流式视频理解等异步操作。",
+      "tags": ["Agent", "异步", "流式"]
+    },
+    {
+      "domain": "ai",
+      "title": "Follow the Entities: A Corpus Map for Agentic Search",
+      "title_zh": "跟着实体走:给智能搜索画一张语料地图",
+      "url": "https://arxiv.org/abs/2609.37226",
+      "hf_url": "https://huggingface.co/papers/2609.37226",
+      "authors": "Soyeong Jeong、Sujay Kumar Jauhar 等",
+      "affiliation": "微软",
+      "upvotes": 68,
+      "one_liner": "给文档库画张“实体地图”,省得 agent 每次从头找关系。",
+      "summary_zh": "agentic search 在大文档库里常要跨多篇拼证据(审批在一篇、需求在另一篇、最新状态在第三篇)。但库若只是一堆扁平文件,相关文档之间毫无线索,agent 每个 query 都得重新发现这些关系,既漏互补证据又费 token。CorpusMap 是加的一层导航:围绕文档里反复出现的实体来组织语料,这些实体能从文档本身识别,把单篇和许多篇连起来。对做企业知识库检索的人是个实用结构。",
+      "tags": ["RAG", "Agent", "检索"]
+    },
+    {
+      "domain": "ai",
+      "title": "Same Bytes, Different Authority: Reserved-Token Representations in Chat-Template Prompt Injection",
+      "title_zh": "同样的字节,不同的权威:聊天模板提示注入里的保留 token",
+      "url": "https://arxiv.org/abs/2609.35932",
+      "hf_url": "https://huggingface.co/papers/2609.35932",
+      "authors": "Yan Zhan、Yunze Song 等",
+      "affiliation": "北京大学",
+      "upvotes": 7,
+      "one_liner": "同样的字节,保留 token 比子词“更有权威”——注入攻击的一半底气在这。",
+      "summary_zh": "针对 LLM agent 的提示注入,如果把注入指令裹进模型自己的聊天模板(比如伪造 <|im_start|>)会强很多。这个伪造标记既能作为单个保留控制 token 送进去,也能作为一串普通子词送进去——两者解码出的文本一模一样,而 tokenization 在服务端跑,所以防守方能决定模型收到哪种。作者用这点量化“注入指令的权威有多少来自保留 token 的学习表示”:把伪造标记编码成子词后,InjecAgent 上攻击成功率在三个开源家族掉了 39–66 个百分点。一个几乎零成本的防御抓手。",
+      "tags": ["安全", "提示注入", "Agent"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Rho: A Foundation for Efficiently Adaptable VLA Models",
+      "title_zh": "Rho:面向高效适配的 VLA 基座",
+      "url": "https://arxiv.org/abs/2609.38164v1",
+      "authors": "Rho Team 等",
+      "one_liner": "开源双臂 VLA,把“少数据适配”当第一目标来设计。",
+      "summary_zh": "一个开源权重的 VLA(视觉-语言-动作)家族,面向双臂操作,核心卖点是“数据轻量的下游适配”——在自己机器人上微调时不用堆大量演示。在三个代表性双臂平台(YAM Box、UR AI Trainer、FR3 Duo)上系统消融了 action-expert 架构和训练配方,发现“具身中期训练”(embodiment midtraining)能改善下游适配。对想在自家机器人上用 VLA 又不想从头训的团队有参考价值。",
+      "tags": ["VLA", "机器人", "开源"]
+    },
+    {
+      "domain": "quantum",
+      "title": "Classical Verification of Quantum Computation with Quasilinear Resources, from Compiled Nonlocal Games",
+      "title_zh": "拟线性资源下对量子计算的经典验证",
+      "url": "https://arxiv.org/abs/2609.38060v1",
+      "authors": "Finn Holler、Anand Natarajan",
+      "one_liner": "经典人只花拟线性代价,就能盯住量子机器有没有偷懒。",
+      "summary_zh": "计算自检(computational self-testing)让一个算力受限的经典验证者去指挥单个量子证明者的量子寄存器。这篇用它造出电路模型下第一个“总资源拟线性”的 BQP 论证系统:基于 LWE 假设,委托一个有 g 个门的电路,只需要与门数近似成正比的资源。做法是从编译的非局域博弈里构造一个新的计算自检来认证证明者的量子态,再用它把验证“去量子化”。对“经典机器怎么低成本核验量子计算机没骗人”这个方向是块硬进展。",
+      "tags": ["量子验证", "LWE", "BQP"]
+    },
+    {
+      "domain": "bio",
+      "title": "How 'Foundational' Are Current Molecular Foundation Models?",
+      "title_zh": "现在的分子基础模型,到底有多“基础”?",
+      "url": "https://arxiv.org/abs/2609.37550v1",
+      "authors": "Francesca Grisoni",
+      "one_liner": "给满屏的“分子基础模型”定了三把尺子,一量都还没真达标。",
+      "summary_zh": "一篇立场兼评测文章,追问这个被“foundation”标签刷屏的领域到底名副其实到什么程度。作者提了三条可检验标准:跨分子实体 / 性质 / 任务的通用性、对新应用少改或不改就能迁移、分布外泛化。拿它去量当前 SOTA,发现生物分子结构预测和机器学习原子间势上进展明显,但没有一个模型三条都达标。给一窝蜂的“分子基础模型”泼了盆冷静水,标准本身也值得借来自查。",
+      "tags": ["分子", "基础模型", "评测"]
+    },
+    {
+      "domain": "bio",
+      "title": "Leveraging secondary-structure information for accurate nucleic acid structure prediction with OFoldNA",
+      "title_zh": "OFoldNA:借二级结构信息做更准的核酸结构预测",
+      "url": "https://arxiv.org/abs/2609.37414v1",
+      "authors": "Valhalla Team",
+      "one_liner": "拿容易拿到的二级结构当拐杖,把核酸 3D 折叠往前推一步。",
+      "summary_zh": "核酸(RNA/DNA)的三维结构预测一直比蛋白难,因为构象太灵活、高质量 3D 数据又少。OFoldNA 是个全原子扩散模型,把二级结构(碱基配对和折叠拓扑,一种更容易拿到的结构信息)喂进核酸折叠以及蛋白-核酸共折叠。用更易得的二级结构当先验去补三级结构数据的稀缺,是很务实的一招,思路上和结构预测里“能拿到啥先验就用啥”一脉相承。",
+      "tags": ["核酸", "结构预测", "扩散"]
+    },
+    {
+      "domain": "chip",
+      "title": "Making Analog Training Scale: Co-Designing Mapping, Optimizer, and Converters",
+      "title_zh": "让模拟训练能扩展:映射、优化器与转换器的协同设计",
+      "url": "https://arxiv.org/abs/2609.36584v1",
+      "authors": "Zhaoxian Wu、Tayfun Gokmen 等",
+      "one_liner": "模拟域做乘法、数字域管更新——给存内训练找了个能扩展的分工。",
+      "summary_zh": "模拟存内计算(AIMC)直接在权重存储处做矩阵运算,想用它来训练模型。但硬件非理想——权重动态范围和写入粒度有限、ADC 分辨率有限、更新有噪声还不对称——让它很难扩展到现代深度模型。这篇的洞察是梯度累加对精度和舍入最敏感,于是走混合精度:前向反向的矩阵乘放在模拟域做,权重更新那一步搬到数字域算。给“模拟训练怎么才能 scale”给出了映射、优化器、转换器一起协同设计的答案。",
+      "tags": ["存内计算", "模拟芯片", "训练"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "PHASE: Multi-Regime Modeling of Incompressible Magnetohydrodynamics",
+      "title_zh": "PHASE:跨物理区间建模不可压磁流体",
+      "url": "https://arxiv.org/abs/2609.37609v1",
+      "authors": "Radhika Achikanath Chirakkara 等",
+      "one_liner": "一个算子吃下不同物理区间的 MHD,不用每换参数就重训。",
+      "summary_zh": "磁流体力学(MHD)是天体、空间、聚变、工程里等离子体建模的核心,但多尺度 MHD 算起来很贵。机器学习代理能加速,可现有模型每个物理区间(不同参数设置)都得单独训,泛化不过去。PHASE 是个“物理自适应”算子,靠迁移学习加上区间感知适配和残差纠错,用一个模型跨不同物理参数建不可压 MHD。对要做聚变 / 等离子体参数扫描的人省事——不用为每组参数重新训一遍代理。",
+      "tags": ["磁流体", "科学ML", "聚变"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "NVIDIA/OpenShell",
+      "url": "https://github.com/NVIDIA/OpenShell",
+      "language": "Rust",
+      "stars": 12515,
+      "stars_today": "1,280",
+      "one_liner": "英伟达给“会自己敲命令的 agent”配了个上锁的运行时。",
+      "summary_zh": "英伟达开源的“给自主 AI agent 用的安全、私密运行时”。定位是给会自己动手跑命令和工具的 agent 一个隔离沙箱,把安全和隐私边界收在运行时这一层。做 agent 执行环境、担心 agent 乱跑命令的人值得看看它怎么设计隔离。"
+    },
+    {
+      "domain": "ai",
+      "name": "debpalash/VoiceStudio",
+      "url": "https://github.com/debpalash/VoiceStudio",
+      "language": "Python",
+      "stars": 50348,
+      "stars_today": "3,481",
+      "one_liner": "把 ElevenLabs 那套搬到本地,646 种语言、数据不出门。",
+      "summary_zh": "全本地的 ElevenLabs 开源替代:声音克隆、语音设计、视频配音、听写转写、有声书,号称支持 646 种语言,全程本地跑数据不出机器。正好踩在 ElevenLabs 估值翻倍到 220 亿的当口,开源替代的热度可想而知——在意数据隐私或不想付订阅的人可以上手。"
+    },
+    {
+      "domain": "ai",
+      "name": "VectifyAI/PageIndex",
+      "url": "https://github.com/VectifyAI/PageIndex",
+      "language": "Python",
+      "stars": 38092,
+      "stars_today": "1,095",
+      "one_liner": "不建向量库,给文档搭个目录树让模型自己翻。",
+      "summary_zh": "主打“无向量、基于推理”的 RAG 文档索引:不建向量库、不做相似度召回,而是给文档建一个类似目录树的结构,让模型推理着找。对嫌向量检索召回不稳、想要可解释检索路径的人是另一条路子,尤其适合长文档、结构化报告。"
+    },
+    {
+      "domain": "ai",
+      "name": "colbymchenry/codegraph",
+      "url": "https://github.com/colbymchenry/codegraph",
+      "language": "C",
+      "stars": 72575,
+      "stars_today": "159",
+      "one_liner": "给编程 agent 一张随代码自动更新的全局地图,少 grep 少烧 token。",
+      "summary_zh": "预先索引的代码知识图谱,代码一改就自动同步,喂给 Claude Code、Codex、Cursor、Copilot 等一堆编程 agent,目标是更少 token、更少工具调用、100% 本地。给 agent 一张“全局代码地图”,省得它每次靠反复 grep 去拼上下文。"
+    },
+    {
+      "domain": "ai",
+      "name": "t8y2/dbx",
+      "url": "https://github.com/t8y2/dbx",
+      "language": "Rust",
+      "stars": 23133,
+      "stars_today": "1,133",
+      "one_liner": "25MB 塞进 100+ 种数据库,还自带 MCP 让 agent 直接连。",
+      "summary_zh": "25MB 的跨平台数据库客户端,支持 MySQL、PostgreSQL、SQLite、Redis、MongoDB、DuckDB、达梦等 100 多种库,内置 AI 助手和 MCP Server,桌面 / CLI / Docker 都有。轻、全、还带 MCP,适合想让 agent 直接连库查数、又不想装一堆重客户端的人。"
+    },
+    {
+      "domain": "ai",
+      "name": "mvschwarz/openrig",
+      "url": "https://github.com/mvschwarz/openrig",
+      "language": "TypeScript",
+      "stars": 2983,
+      "stars_today": "622",
+      "one_liner": "让 Claude Code 和 Codex 在一个 harness 里合伙干活。",
+      "summary_zh": "把 Claude Code 和 Codex 当成一个系统一起跑的多 agent harness。让两个编程 agent 协作、互补——一个擅长的地方补另一个的短板。对想组合多家编程 agent、又怕来回切上下文的人是个现成脚手架。"
+    },
+    {
+      "domain": "chip",
+      "name": "NawfalMotii79/PLFM_RADAR",
+      "url": "https://github.com/NawfalMotii79/PLFM_RADAR",
+      "language": "PLSQL",
+      "stars": 26408,
+      "stars_today": "466",
+      "one_liner": "一套开源低成本相控阵雷达,硬件图纸全给你。",
+      "summary_zh": "开源、低成本的 10.5GHz PLFM 相控阵雷达系统,硬件设计全公开。在一堆 AI agent 仓库里冒出来一个真·硬件项目挺难得,想上手相控阵、毫米波 DIY 或做射频教学的人可以直接抄作业。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "Google 发布 Gemini 4 Argon,却说你暂时还用不了",
+      "url": "https://arstechnica.com/google/2026/09/google-announces-gemini-4-argon-ai-model-but-you-cant-use-it-yet/",
+      "source": "Ars Technica",
+      "summary_zh": "Google 发布新一代 Gemini 4(代号 Argon),官方口径强调它能力强到暂时限制访问、只开放给“可信的网络防御者”,普通用户还摸不到。第三方(如 artificialanalysis)已经开始扒它的智能、性能和价格。争议点在“太强所以不给用”这套叙事本身,到底是安全考量还是营销姿态。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "AI 语音公司 ElevenLabs 估值翻倍至 220 亿美元",
+      "url": "https://techcrunch.com/2026/09/30/ai-voice-startup-elevenlabs-doubles-valuation-to-22b/",
+      "source": "TechCrunch",
+      "summary_zh": "ElevenLabs 新一轮融资估值翻倍到 220 亿美元。语音克隆 / 合成这条赛道还在猛涨,也正好解释了同期 GitHub 上全本地开源替代 VoiceStudio 的走红——闭源估值越高,开源替代的需求越旺。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "AMD 收购李飞飞的世界模型创业公司 World Labs",
+      "url": "https://arstechnica.com/ai/2026/09/amd-acquires-world-labs-ai-pioneer-fei-fei-lis-world-models-startup/",
+      "source": "Ars Technica",
+      "summary_zh": "AMD 收购 AI 创业公司 World Labs(李飞飞的世界模型 / 空间智能公司),加码对抗英伟达。把“世界模型”这块能力并进自己的 AI 版图,既补软件栈,也是在 GPU 之外抢生态位。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Anthropic 的 IPO 推介里写进了对人类灭绝风险的警告",
+      "url": "https://arstechnica.com/ai/2026/09/anthropics-ipo-pitch-includes-a-warning-about-human-extinction/",
+      "source": "Ars Technica",
+      "summary_zh": "Anthropic 在 IPO 推介材料里罕见地写进了对人类灭绝风险的警告。把 AI 安全叙事直接摆进招股文件,既是公司一贯的定位,也让“风险披露”这件事在 AI 行业变得更具体——投资人要为“可能很危险”的假设定价。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "Google 搞出给 AI 设计的蛋白质“打水印”的办法",
+      "url": "https://arstechnica.com/science/2026/09/google-figures-out-how-to-watermark-ai-designed-proteins/",
+      "source": "Ars Technica",
+      "summary_zh": "Google 研究出了给 AI 设计的蛋白质加“水印”的方法,想在合成生物里留下可追溯标记、防滥用。在 AI 做蛋白设计一路狂飙之后,这是配套治理的一步——让人能分辨一条序列是不是机器造的、出自谁手。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "礼来 amylin 与 Zepbound 联合疗法再抬减重标杆",
+      "url": "https://www.fiercebiotech.com/biotech/lilly-raises-weight-loss-bar-its-amylin-zepbound-combo",
+      "source": "Fierce Biotech",
+      "summary_zh": "礼来公布了 amylin 与 Zepbound 联合疗法的数据,把糖尿病 / 减重的疗效标杆又往上抬了一截。减重药军备竞赛还在升级,组合疗法成了各家争夺下一个高地的打法。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "uniQure 亨廷顿病基因疗法数据转弱,股价大跌",
+      "url": "https://www.fiercebiotech.com/biotech/uniqure-stock-crashes-huntingtons-gene-therapy-data-weaken",
+      "source": "Fierce Biotech",
+      "summary_zh": "uniQure 的亨廷顿病基因疗法最新数据走弱,股价应声崩盘。提醒一件老事:基因疗法后期数据的兑现风险很实在,早期信号再好,关键读出不及预期市场立刻翻脸。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "数据中心能耗趋势逼着芯片重新想供电方式",
+      "url": "https://semiengineering.com/data-center-energy-trends-force-a-rethink-of-chip-power-delivery/",
+      "source": "SemiEngineering",
+      "summary_zh": "数据中心能耗的攀升正逼着行业重新思考芯片的供电 / 功率传输方式。算力堆上去之后,配电和功率完整性成了新瓶颈,呼应着 AI 算力与能源那对反复出现的老矛盾——算得快的前提是喂得起电。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "报告预测商业国防卫通营收 2035 年将破 226 亿美元",
+      "url": "https://spacenews.com/commercial-defense-satcom-service-revenues-to-surpass-22-6b-by-2035/",
+      "source": "SpaceNews",
+      "summary_zh": "一份报告预测商业国防卫星通信服务营收到 2035 年将超过 226 亿美元。军方越来越多地采买商业卫通服务的大势在延续,给低轨星座运营商画出了一块确定性较高的长期市场。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "ASI 与软银联手,用自主车队补建筑业用工缺口",
+      "url": "https://www.therobotreport.com/tackling-construction-labor-shortages-asi-softbank-partner-autonomous-fleets/",
+      "source": "The Robot Report",
+      "summary_zh": "ASI 与软银合作,把自主作业车队搬进建筑工地,针对性地补建筑业的劳动力缺口。自动化在户外、非结构化场景的落地又推进一步——相比工厂里的机械臂,工地这种脏乱环境更考验自主系统的鲁棒性。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "验证并扩展“Transformer 过早停止思考,一个 tiny LoRA 就能救”",
+      "based_on": [
+        { "title": "Transformers Stop Thinking Too Early, and a Tiny LoRA Fixes It", "url": "https://arxiv.org/abs/2609.36585v1" }
+      ],
+      "why_now": "论文刚挂出来、结论很惊人:13 个基座模型只能可靠跟踪 1.4–3.6 行引用链,而在某一早层插一个 rank-8 LoRA、其余权重全冻,Qwen3-8B 就从 15.5% 冲到 99%。这么便宜的干预、这么强的效果,还没人在别的任务和模型上验证它的泛化性。",
+      "feasibility": "单张 24GB 卡足够:Qwen3-8B / Ouro-1.4B 推理加一个 rank-8 LoRA 微调,显存和数据都很轻,几周能出结果。",
+      "route": [
+        "跑通论文的引用跟踪合成任务和评测,复现 Qwen3-8B 基线只能跟 1.4–3.6 行的现象。",
+        "在一个早层插 rank-8 LoRA、冻结其余权重,复现准确率从十几到接近满分的提升。",
+        "换真实任务(多跳 QA、代码里的变量追踪)看 LoRA 学到的“接力传递 chain identity”能不能迁移。",
+        "用探针定位是哪些中层注意力头在传递链身份,验证论文说的“中继”机制。"
+      ],
+      "risk": "可能只在合成的链式任务上灵,一到真实任务收益就被别的瓶颈盖住。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "做一个“KV 压缩相位敏感度”开源评测 harness",
+      "based_on": [
+        { "title": "Periodic Weak Spots: Phase Sensitivity from Chunked KV-Cache Compression", "url": "https://arxiv.org/abs/2609.36322" }
+      ],
+      "why_now": "论文刚揭示分块 KV 压缩有周期性盲区(相位不同检索准确率差 40 个点),但目前没有统一工具去测它,而现有长上下文 benchmark 的平均分恰好把这种盲区盖住——正是做一个小而准的开源 eval 去攒 star 的窗口。",
+      "feasibility": "纯推理,单卡 <40GB 就能跑主流开源长上下文模型;主要工作量在构造相位对齐的探针和扫描脚本,没有训练成本。",
+      "route": [
+        "选一个用分块 KV 压缩的开源长上下文模型,先跑通它的 needle-in-haystack 检索。",
+        "写脚本把同一条 needle 放到相对压缩窗口的不同相位位置,扫准确率。",
+        "画相位-准确率曲线,复现论文的周期性盲区,标出最差相位。",
+        "封成一个 CLI 加可视化,支持多模型一键出报告,方便别人复现和对比。"
+      ],
+      "risk": "不同模型的压缩实现差异大,需要写适配层;有的闭源模型拿不到压缩细节,覆盖面会受限。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "把 training-free 的 GeoShrink 从图像扩散迁到点云 / 3D 扩散,验证泛化",
+      "based_on": [
+        { "title": "GeoShrink: Accelerating Diffusion Transformers with Two Lines of Code", "url": "https://arxiv.org/abs/2609.33723v1" },
+        { "title": "EMERGE: Resolution-Agnostic Point Cloud Generation with Equivariant Graph-Based Diffusion", "url": "https://arxiv.org/abs/2609.26039v1" }
+      ],
+      "why_now": "GeoShrink 刚开源、training-free、号称两行代码就能给扩散 transformer 提速,但原文只在图像扩散上验证过;把一个 plug-and-play 的加速方法迁到点云 / 3DGS 扩散验证泛化,本身就是低风险、可发表的扩展。",
+      "feasibility": "纯推理、不需要训练,单卡即可;点云扩散生成模型(如 EMERGE、Point Diffusion Mamba)有现成权重可接。",
+      "route": [
+        "跑通 GeoShrink 官方图像 demo,记下它的加速比和质量损失当基准。",
+        "把它的锚点调度接进一个点云扩散模型的采样循环里(改几行采样代码)。",
+        "扫锚点间距,测 Chamfer 距离 / 生成质量随采样步数的曲线。",
+        "对比在 3D 上是否保持了图像上的“加速—质量”权衡,不行就分析是哪条几何假设崩了。"
+      ],
+      "risk": "3D 扩散的 solver 轨迹几何性质可能和图像不同,GeoShrink 依赖的“弦切传输”假设未必成立,加速可能直接退化成掉质量。"
+    }
+  ]
+}
