@@ -1,0 +1,400 @@
+{
+  "date": "2026-10-02",
+  "editor_note": "今天 HF 榜被一篇把「潜在视觉推理」拉回现实的论文霸榜(202 票):它发现模型在连续隐 token 里「想」的时候,其实对图像改动不怎么敏感——推理没真正落到画面上。配合这几天满屏的 VLA、世界模型和 flow matching 加速,一个共同主题冒出来:大家都在想办法让模型少算一点、算得更稳一点。资讯这边,Google 把 Gemini 4 Argon 发了又不给用,只开给「可信的网络防御者」,姿态很微妙;另一条值得点开的是「决策模型」集体上线(Amazon、OpenAI、Cloudflare 各出一个小而快的 Jev clone),外加一篇严肃测算「网上野生 AI 文本」怎么反噬预训练——这俩放一起看有点黑色幽默:我们一边造又小又快的模型做决策,一边让又大又慢的模型去消化这些模型吐出来的网页。每日一理挑了李雅普诺夫稳定性,思想碰撞拿幂图去治点云体素化的老毛病,都和今天的「少算、算稳」隐隐呼应。",
+  "math_note": {
+    "name": "李雅普诺夫稳定性定理",
+    "name_en": "Lyapunov Stability Theorem (Lyapunov's Second Method)",
+    "field": "常微分方程 / 动力系统与控制",
+    "one_liner": "不用解方程,只要找到一个只降不升的「能量」,就知道系统会乖乖停下来。",
+    "statement": "考虑一个自治系统 $\\dot{x}=f(x)$,平衡点落在原点($f(0)=0$,即不受扰动时系统就待在这)。如果能找到一个「能量函数」$V(x)$:它在原点为零、在四周处处为正($V(x)>0$),而且沿着系统轨迹走的时候只减不增——也就是它随时间的变化率 $\\dot V(x)=\\nabla V\\cdot f(x)\\le 0$——那么原点就是稳定的:初值离得近,之后就一直离得近。再强一点,若除原点外严格下降($\\dot V(x)<0$),系统还会渐近收敛回原点。最妙的是,这一切你根本不用把微分方程解出来。",
+    "origin": "俄国数学家 Aleksandr Lyapunov 在 1892 年的博士论文《运动稳定性的一般问题》里提出。当时判断一个力学系统(行星轨道、旋转刚体)稳不稳,标准做法是把方程线性化再看特征根,可对强非线性系统这招经常失灵。他想要一个既不依赖求解、也不依赖线性化的判据,于是把「能量会耗散」的物理直觉抽象成一个标量函数。这套方法沉寂了几十年,到 20 世纪中叶才被控制理论奉为稳定性分析的基石。",
+    "derivation": [
+      { "math": "\\dot V(x)=\\dfrac{dV}{dt}=\\nabla V(x)\\cdot f(x)", "note": "先看 V 沿轨迹怎么变:对 V(x(t)) 用链式法则求时间导数,再把系统方程 \\dot x=f(x) 代进去。结果只跟当前位置 x 有关,不用知道轨迹长什么样——这是整套方法省力的关键。" },
+      { "math": "V(x(t))=V(x(0))+\\int_0^t \\dot V(x(s))\\,ds\\le V(x(0))", "note": "既然 \\dot V\\le 0,把它从 0 积到 t 就得到:任何时刻的能量都不超过初始能量。V 沿时间单调不增。" },
+      { "math": "\\Omega_c=\\{x:\\,V(x)\\le c\\}", "note": "V 正定意味着它的低水平集 \\Omega_c 是围住原点的一圈闭合区域(想象盆地的等高线)。能量不增,轨迹就被关在初始那条等高线里出不去——这正是「稳定」的几何含义。" },
+      { "math": "\\dot V(x)<0\\ (x\\neq 0)\\ \\Rightarrow\\ x(t)\\to 0", "note": "若能量严格下降,它只能一路掉到最低点,也就是原点,于是轨迹被逼回平衡点,这就是渐近稳定。(严谨版需要 LaSalle 不变集定理补一刀,这里给的是直觉。)" }
+    ],
+    "applications": [
+      { "area": "控制系统", "detail": "设计反馈让闭环系统有一个 V 单调下降,就能证明无人机、机械臂的控制器不会发散——Lyapunov 直接法是控制稳定性证明的默认工具。" },
+      { "area": "强化学习与优化", "detail": "把损失或势函数当作 V,用来证明梯度流、策略迭代收敛;安全 RL 还用 Lyapunov 函数划出「保证不出事」的可行状态域。" },
+      { "area": "机器人与具身", "detail": "阻抗控制和步态稳定性分析里用能量型 Lyapunov 函数,保证机器人受扰后能回到平衡、不摔。" },
+      { "area": "电网与流行病模型", "detail": "判断电网遭扰动后能否回到同步运行、传染病模型的平衡点是否稳定,都靠构造对应的 Lyapunov 函数。" }
+    ],
+    "takeaway": "核心直觉是:与其辛苦追踪每一条轨迹,不如找一个「只跌不涨」的标量——一个单调量往往比完整解更能说清系统的命运。这也是现代各种「势函数法」(优化收敛证明、安全 RL 约束)的祖师爷。",
+    "viz": {
+      "type": "vectorfield",
+      "caption": "拖动起点,看阻尼单摆的相轨迹一圈圈卷向中心——能量 E=½v²+(1−cosθ) 被摩擦不断抽走,正是一个 Lyapunov 函数单调下降、把系统逼回平衡点的样子。",
+      "params": { "fx": "y", "fy": "-sin(x)-0.3*y", "xmin": -3.3, "xmax": 3.3, "ymin": -3.2, "ymax": 3.2, "density": 15, "seedX": 2.6, "seedY": 2.4, "steps": 420, "dt": 0.03 }
+    }
+  },
+  "crossover": {
+    "theory": "幂图(Laguerre 剖分)",
+    "theory_en": "Power Diagrams / Laguerre Tessellation",
+    "field": "计算几何 / 半离散最优传输",
+    "era": "1980 年代 Aurenhammer 把幂图系统化;2010 年后 Mérigot、Lévy 将它接上半离散最优传输,再配 de Goes 的 Power Particles,大规模才真正能算。",
+    "trigger": { "title": "Task-Oriented Quantization for Quadratic Scheduling: Centroid Water-Filling and Power-Diagram Encoders", "url": "https://arxiv.org/abs/2609.20882" },
+    "one_liner": "给每个格子加个「体重」,普通体素网格立刻学会了看点稠不稠。",
+    "theory_core": "普通 Voronoi 图按「离哪个站点最近」切空间;幂图把距离换成「幂距离」$\\|x-s_i\\|^2-w_i$,给每个站点 $s_i$ 配一个权重 $w_i$,权重大的站点就抢到更大的格子。关键性质:把每个站点抬到抛物面上变成一张超平面,幂图恰好是这些超平面的下包络——于是在 $d$ 维算幂图等价于 $d{+}1$ 维求凸包,有成熟的 $O(n\\log n)$ 算法。更妙的是,给定一组目标「每格该装多少质量」,总能解出一组权重让每个幂胞恰好装到指定的量——这就是半离散最优传输,靠一个凸优化(牛顿法)把 $w_i$ 求出来。",
+    "pc_problem": "处理百万级点云,主流做法是体素化:把空间切成均匀网格,再在每格里聚合。均匀网格的病在于点云密度极不均——近处每立方米上万点、远处几十点。想保住近处细节就得把体素调小,可分辨率一翻倍,体素数按 $O(1/r^3)$ 爆涨:KITTI 一帧 64 线激光约 12 万点、分辨率 5cm 时有效体素就上十万,显存和哈希查找都吃紧;调粗了远处又糊成一团。FPS(最远点采样)能自适应却是 $O(n^2)$,百万点要几秒,实时别想。",
+    "bridge": "幂图里的站点 $s_i$ 对应点云的代表点/锚点(超点或体素中心);权重 $w_i$ 对应该区域的局部密度或尺度(点密的地方把权重调小、格子变小);每个幂胞对应一个自适应「体素」或超点簇;半离散最优传输里「每格装等量质量」的约束,对应让每个簇恰好包含差不多数目的点,从而得到天然均衡的分区;幂距离 $\\|x-s_i\\|^2-w_i$ 则对应带密度修正的点-簇分配准则。",
+    "angles": [
+      { "dim": "存储", "idea": "用一组(站点+权重)取代稠密体素网格:幂胞自适应——密处小、疏处大,近处细节和远处结构同一套参数都保得住。只存 n 个站点坐标和一个标量权重,不再存一堆空网格。", "gain": "等精度下胞数可降约一个量级,存储约省 60–80%(估算,取决于密度不均程度)。", "cost": "需要先解一轮权重;判断某点落在哪个胞,比查一次哈希网格略贵。" },
+      { "dim": "算法优化", "idea": "把 FPS / 均匀下采样换成「半离散最优传输做等质量分区」:解权重让每个幂胞装等量点,再取每胞质心当下采样点,得到既密度均衡又几何自适应的采样。求解就是重复「建幂图→更新权重」的牛顿迭代。", "gain": "$O(n^2)$ 的 FPS → 每轮 $O(n\\log n)$ 建图,典型几十轮收敛,百万点从秒级降到百毫秒级(估算)。", "cost": "迭代数随分布不均上升;对离群点敏感,得先做鲁棒截断,否则某些胞会塌成空集。" },
+      { "dim": "复杂度", "idea": "利用「幂图=抬到抛物面后的凸包下包络」这一等价,把点-胞归属查询转成 $d{+}1$ 维凸包的点定位,用成熟数据结构做 $O(\\log n)$ 查询;又因为每胞点数均衡,批处理时天然利于 GPU 分块(一个 warp 吃一个胞)。", "gain": "最近代表点 / 半径查询从依赖网格分辨率的 $O(k)$ 扫描降到 $O(\\log n)$;批次负载均衡,GPU 利用率更稳。", "cost": "凸包的维护与动态更新偏复杂,点云流式更新时重建代价高。" },
+      { "dim": "鲁棒性", "idea": "权重可随每点法向、密度做各向异性设置,让幂胞沿表面拉长、垂直表面压扁,减少把两张贴近的面混进同一个胞。", "gain": "跨传感器(16↔128 线)密度突变时分区更稳,降采样后表面保真度提升(估算)。", "cost": "各向异性幂图(椭球度量)构造更难,理论保证也更弱。" }
+    ],
+    "experiment": [
+      "纯 CPU:用 scipy / CGAL / geogram 在 ModelNet40 单个点云上建一次幂图(先退化成普通 Voronoi,权重全设 0),可视化胞并记下建图耗时,确认流程跑通。",
+      "接 Mérigot 风格的半离散 OT:对一个 KITTI 单帧解权重做等质量分区,和均匀体素化比较胞数、显存与近处细节保留。",
+      "把「等质量胞的质心」当下采样点,喂给现成的 PointNet++ / 点云分割 baseline,对比 FPS 下采样在精度和耗时上的差异。",
+      "跨密度测试:用 16 线模拟数据训练、128 线测试(或反过来),看幂图自适应采样是否比均匀/FPS 更抗密度漂移。"
+    ],
+    "prior_art": [
+      { "title": "Blue Noise through Optimal Transport (de Goes et al., SIGGRAPH Asia 2012)", "note": "用半离散 OT 做点采样 / 蓝噪声分布,证明了等质量胞的采样质量很好,但目标是采样,没往点云压缩、检测这类下游任务上接。" },
+      { "title": "A numerical algorithm for L2 semi-discrete optimal transport in 3D (Lévy)", "note": "给出 3D 半离散 OT 的牛顿法求解,是把权重真算出来的工程基础,但只做几何/仿真,没碰点云感知任务。" },
+      { "title": "Power Particles (de Goes et al., SIGGRAPH 2015)", "note": "用幂图给流体粒子做等体积剖分,等质量分区的思路可直接借,但服务的是物理仿真而非点云。" }
+    ],
+    "reality_check": "半离散 OT 的收敛和权重良态,要求站点分布别太病态、点云没有大面积空洞;真实激光点云偏偏有遮挡空洞和离群点,牛顿迭代可能来回震荡、某些胞塌成空集——不先做鲁棒截断和空胞合并,「等质量分区」会在第一帧真实数据上就崩给你看。何况若你只需要最近邻,KD 树已经 $O(\\log n)$,幂图的收益只在「真要均衡质量分区」时才成立,别为了用而用。"
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Rethinking Latent Visual Reasoning: Grounding Latent Reasoning in Visual Evidence",
+      "title_zh": "重审潜在视觉推理:把隐式推理钉回图像证据上",
+      "url": "https://arxiv.org/abs/2609.34563",
+      "hf_url": "https://huggingface.co/papers/2609.34563",
+      "authors": "Xi Xiao、Tianchen Zhao 等",
+      "affiliation": "Amazon",
+      "upvotes": 202,
+      "one_liner": "模型在隐 token 里「想」的东西,其实没怎么看图——这篇把问题挑明了。",
+      "summary_zh": "多模态模型近来流行让推理走在连续隐 token 里(而不是每步都写成文字),省 token 也更灵活。作者做了细致分析,发现一个「隐证据断链」:改动会改变正确答案的图像扰动,隐 token 几乎不响应——说明它没真正落到视觉证据上,病根在 GRPO 训练只给最终答案奖励、监督太弱。诊断比药方更有价值:它提醒大家别把「隐式推理」当黑箱银弹。",
+      "tags": ["多模态", "推理", "GRPO"]
+    },
+    {
+      "domain": "ai",
+      "title": "LoopVL: Recurrent Visual Intelligence",
+      "title_zh": "LoopVL:把循环结构塞进视觉语言模型",
+      "url": "https://arxiv.org/abs/2609.38426",
+      "hf_url": "https://huggingface.co/papers/2609.38426",
+      "authors": "Zhe Qian、Ziyang Gong 等",
+      "affiliation": "人民大学 RUC",
+      "upvotes": 24,
+      "one_liner": "让模型对着同一份视觉状态反复「想几遍」,还真想出了视觉版的 aha moment。",
+      "summary_zh": "LoopVL 研究 Loop Transformer 能不能搬到视觉语言模型上:用共享模块反复迭代更新一个统一的视觉-语言状态(含模块级循环和模型级循环),从头完整训练。结果在多模态理解和视觉推理榜上压过同规模甚至更大的非循环模型,还观察到「视觉 aha 时刻」——跨循环时视觉注意力发生明显迁移。算是给「循环式多模态建模」补了一块实打实的证据。",
+      "tags": ["多模态", "Loop Transformer", "循环"]
+    },
+    {
+      "domain": "ai",
+      "title": "I Have a Stream: Making Self-Supervised Learning Work on Continuous Video",
+      "title_zh": "我有一条视频流:让自监督学习在连续视频上真正跑起来",
+      "url": "https://arxiv.org/abs/2609.40333",
+      "hf_url": "https://huggingface.co/papers/2609.40333",
+      "authors": "Ivan Martinović、Lukas Knobel、Yuki M. Asano",
+      "affiliation": "UTN 纽伦堡工业大学 Fundamental AI Lab",
+      "upvotes": 12,
+      "one_liner": "不许全局洗牌、不许多轮重放——像婴儿一样按顺序看视频,现有方法大多撑不住。",
+      "summary_zh": "标准自监督靠全局打乱、多轮重放,这跟婴儿看世界完全不像。作者改成严格滑窗、按时间顺序喂帧、不重排不重放,还造了一个 95 小时城市漫步视频集 WT++ 做流式预训练。发现对比学习和蒸馏类方法在这种设定下都吃力,MAE 更稳但仍不及常规 i.i.d. 训练。是个老实的负结果,给「流式自监督」划出了当前的真实差距。",
+      "tags": ["自监督", "视频", "MAE"]
+    },
+    {
+      "domain": "ai",
+      "title": "Rubric Rewards from Item Response Theory",
+      "title_zh": "用项目反应理论做评分卡奖励",
+      "url": "https://arxiv.org/abs/2609.35646",
+      "hf_url": "https://huggingface.co/papers/2609.35646",
+      "authors": "Milad Yazdani、Yaser Souri 等",
+      "affiliation": "Microsoft",
+      "upvotes": 10,
+      "one_liner": "别再把评分卡的分数简单相加——哪条标准更能区分好坏,它说了才算。",
+      "summary_zh": "很多语言任务没有唯一可自动校验的答案,只能靠评分卡(rubric)判好坏,但要给 RL 当奖励就得把一堆判定压成一个标量。常见做法是满足的条目直接加分,问题是不同判定模式会得同一个分,且固定分值只编码「该条多重要」而非「它当前多能区分」。作者借项目反应理论(IRT,心理测量里按题目区分度加权的框架)来衡量质量、挑选真正有区分力的条目,顺带缓解条目一多就得问一堆评审的开销。",
+      "tags": ["RLHF", "奖励建模", "评估"]
+    },
+    {
+      "domain": "ai",
+      "title": "How Much Is an AI Token Worth? Scaling Laws for Wild AI-Generated Web Text",
+      "title_zh": "一个 AI token 值多少?野生 AI 网页文本的缩放律",
+      "url": "https://arxiv.org/abs/2609.40295",
+      "hf_url": "https://huggingface.co/papers/2609.40295",
+      "authors": "Jenna Russell、Ben Glickenhaus 等",
+      "affiliation": "Pangram",
+      "upvotes": 2,
+      "one_liner": "2026 年 8 月的网页清洗后仍有三成是 AI 写的——它到底喂坏没喂坏预训练?",
+      "summary_zh": "网页文本是预训练主料,而它正越来越多由 AI 生成:经 FineWeb 质量过滤后,2026 年 6 月的网页有 27.5% 被判为 AI 生成,8 月升到 31.1%。这批「野生」AI 文本不同于合成数据或模型崩溃实验——来自众多模型、写给人看、不带标签地混进语料。作者预训练了 800 个模型、改变 AI/人类 token 配比并拟合缩放律,发现数据紧缺时掺 AI 文本反而有帮助。这个话题和今天满屏的「小决策模型上线」放一起看格外应景。",
+      "tags": ["预训练", "数据", "缩放律"]
+    },
+    {
+      "domain": "embodied",
+      "title": "The Low-Rank Structure of VLA Reinforcement Learning",
+      "title_zh": "VLA 强化学习的低秩结构",
+      "url": "https://arxiv.org/abs/2609.34599",
+      "hf_url": "https://huggingface.co/papers/2609.34599",
+      "authors": "Minjae Oh、Yoonah Park 等",
+      "affiliation": "HOLI-LAB",
+      "upvotes": 8,
+      "one_liner": "RL 调 VLA,真正动的只是动作专家里一个一直被忽略的小模块。",
+      "summary_zh": "RL 越来越多用来后训练视觉-语言-动作(VLA)模型,但它到底改了策略的哪里,一直说不清。作者发现在 π0.5、GR00T N1.5/N1.6 等多个 flow-based VLA 上,RL 带来的参数更新都是低秩的,而且高度集中在动作专家的「时间步模块」(Timestep Modules)这个此前没人在意的小部件上。模块替换实验进一步表明,RL 的性能增益大头就来自这里。对想省算力微调 VLA 的人,这是很实用的结构洞察。",
+      "tags": ["VLA", "强化学习", "低秩"]
+    },
+    {
+      "domain": "embodied",
+      "title": "AssemblyWorld: Rethinking 3D Assembly with General-Purpose Agents",
+      "title_zh": "AssemblyWorld:用通用智能体重新审视 3D 拼装",
+      "url": "https://arxiv.org/abs/2609.40353",
+      "authors": "匿名(arXiv 预印)",
+      "one_liner": "不给网格顶点、只给渲染图,让通用智能体像人一样边看边拼。",
+      "summary_zh": "3D 拼装要把「零件及其关系」翻译成精确的空间摆放。作者问:预训练的通用智能体不经专门微调,靠视觉交互能不能把东西拼起来?于是造了交互式 3D 环境 AssemblyWorld——智能体只能看渲染视图、操作给定的刚性零件,参考图像或说明书来拼,而拿不到网格顶点面片。是个冲着「零件理解+空间规划」去的务实 benchmark,适合拿来摸通用智能体的空间上限。",
+      "tags": ["3D 拼装", "智能体", "benchmark"]
+    },
+    {
+      "domain": "bio",
+      "title": "Removing Timing Shortcuts Improves Non-Invasive Brain-to-Text",
+      "title_zh": "去掉时序捷径,非侵入式「脑到文本」才算真解码",
+      "url": "https://arxiv.org/abs/2609.40359",
+      "hf_url": "https://huggingface.co/papers/2609.40359",
+      "authors": "Dulhan Jayalath、Oiwi Parker Jones",
+      "affiliation": "PNPL 神经处理实验室",
+      "upvotes": 4,
+      "one_liner": "一篇被追捧的脑解码成果,不用任何脑数据就能大半复现——问题出在计时泄露。",
+      "summary_zh": "作者发现近期非侵入式脑解码的重大提升,很大程度上不用脑数据也能复现。以 d'Ascoli 等人(2025)的工作为例:脑活动按每个词起点切成定长窗口、相邻窗口重叠,这就隐隐泄露了词间间隔,而不同词时长不同(\"the\" 比 \"supercalifragilistic...\" 短得多),模型其实在偷学时序而非语义。去掉这条捷径后,真实解码能力才显形。这类「泼冷水」的方法学论文,对整个脑机接口领域比刷榜更值钱。",
+      "tags": ["脑机接口", "评估", "捷径学习"]
+    },
+    {
+      "domain": "bio",
+      "title": "LEMON-ZEST: Evolution-Informed Tokenization for Efficient Protein Language Modeling",
+      "title_zh": "LEMON-ZEST:用进化信息给蛋白质语言模型分词",
+      "url": "https://arxiv.org/abs/2609.37675",
+      "authors": "匿名(arXiv 预印)",
+      "one_liner": "蛋白质序列变了结构不变,标准分词恰恰抓不住这点——那就按保守区来切。",
+      "summary_zh": "蛋白质语言模型沿着 NLP 的缩放律一路进步,但分词这一环的潜力一直没被挖。不同于人类语言,蛋白质在序列大幅变化时仍能保住结构,标准分词根本捕捉不到这个性质。作者提出 ZEST:从多序列比对的保守区导出一套「进化知情」词表,把结构域级别的生物先验直接嵌进 token。思路很对味——把领域结构塞进输入表示,往往比堆参数更省更稳。",
+      "tags": ["蛋白质", "语言模型", "分词"]
+    },
+    {
+      "domain": "quantum",
+      "title": "All Unitaries Have Constant Depth Quantum Circuits",
+      "title_zh": "所有酉变换都有常数深度量子电路",
+      "url": "https://arxiv.org/abs/2609.40351",
+      "authors": "匿名(arXiv 预印)",
+      "one_liner": "代价是指数多的辅助比特,但「必须指数深度」这个老猜想被推翻了。",
+      "summary_zh": "众所周知任意 n 比特酉变换都能用 2^O(n) 深度的单双比特门电路实现,而「一般酉变换是否必须指数深度」一直悬而未决(哪怕允许无限辅助比特)。作者给出一个颇意外的结果:用 2^O(n) 个辅助比特,任意酉变换都能被 poly(n, log 1/ε) 深度的电路逼近到算子范数 ε——也就是可并行到多项式深度;若再允许无界扇出门还能更浅。深度换空间,这是量子线路复杂度里漂亮的一笔。",
+      "tags": ["量子线路", "复杂度", "理论"]
+    },
+    {
+      "domain": "chip",
+      "title": "Characterizing High Bandwidth Flash for LLM Serving",
+      "title_zh": "给大模型服务摸清高带宽闪存的脾气",
+      "url": "https://arxiv.org/abs/2609.39131",
+      "authors": "匿名(arXiv 预印)",
+      "one_liner": "KV 缓存越堆越大,HBM 不够用——那把 KV 搬到高带宽闪存行不行?",
+      "summary_zh": "大模型服务要存权重和 KV 缓存,模型变大、上下文变长后,显存容量和带宽越来越成瓶颈,agent 工作负载反复长交互更是雪上加霜。高带宽闪存(HBF)能廉价扩容,但访问代价和有限写寿命让它不好用。作者系统评测了把 HBF 用于 LLM 服务的可行性,给出访问模式和寿命约束下的取舍。对关心推理成本和内存墙的人,这是接地气的硬件侧参考。",
+      "tags": ["LLM 推理", "内存", "闪存"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Structure-preserving Fourier Neural Operators for Long-time Cahn-Hilliard Dynamics under Coarse Temporal Supervision",
+      "title_zh": "保结构傅里叶神经算子:在粗时间监督下预测长时 Cahn-Hilliard 动力学",
+      "url": "https://arxiv.org/abs/2609.39053",
+      "authors": "匿名(arXiv 预印)",
+      "one_liner": "代理模型反复迭代就会误差滚雪球,那就把物理「结构」焊进算子里。",
+      "summary_zh": "长时间预测 Cahn-Hilliard 动力学(相分离的晚期粗化阶段)计算量很大,ML 代理模型虽快,但把学到的映射反复迭代时,小误差会累积成大数值误差。作者抓住粗化动力学的「结构函数」做文章,让傅里叶神经算子保住这一物理不变量,从而在只有粗时间监督的情况下仍能稳定外推到长时。是科学机器学习里典型的「别只拟合、要保物理」的做法。",
+      "tags": ["神经算子", "相场", "科学计算"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "tile-ai/tilelang",
+      "url": "https://github.com/tile-ai/tilelang",
+      "language": "Python",
+      "stars": 8086,
+      "stars_today": "157",
+      "one_liner": "写高性能 GPU/CPU 核不想碰 CUDA 底层?用这门 DSL 把算子说清楚就行。",
+      "summary_zh": "一门面向高性能 GPU/CPU/加速器核开发的领域专用语言,目标是把手写 kernel 的门槛降下来。适合要为自定义算子、推理加速调性能,又不想从头啃 CUDA/汇编的人。"
+    },
+    {
+      "domain": "ai",
+      "name": "NVIDIA/OpenShell",
+      "url": "https://github.com/NVIDIA/OpenShell",
+      "language": "Rust",
+      "stars": 13982,
+      "stars_today": "2,503",
+      "one_liner": "让自主 agent 在一个安全、隔离的运行时里折腾,别把你的真实环境祸害了。",
+      "summary_zh": "NVIDIA 开源的、给自主 AI agent 用的安全私有运行时。agent 要执行代码、调工具时给它一个受控沙箱,解决「放它自由跑又怕它乱来」的矛盾,今天单日涨 2500+ 星,是本榜最热的一个。"
+    },
+    {
+      "domain": "ai",
+      "name": "earendil-works/pi",
+      "url": "https://github.com/earendil-works/pi",
+      "language": "TypeScript",
+      "stars": 111177,
+      "stars_today": "294",
+      "one_liner": "统一 LLM API + agent 循环 + TUI,一套工具箱把编码 agent 搭起来。",
+      "summary_zh": "一个 AI agent 工具箱,打包了统一的 LLM 接口、agent 主循环、终端界面和一个编码 agent CLI。想自己拼一个编码助手又不想从零造轮子的人可以直接拿来用。"
+    },
+    {
+      "domain": "ai",
+      "name": "mksglu/context-mode",
+      "url": "https://github.com/mksglu/context-mode",
+      "language": "TypeScript",
+      "stars": 24767,
+      "stars_today": "357",
+      "one_liner": "工具输出动辄塞爆上下文,这个把它压掉九成还顺手管了会话记忆。",
+      "summary_zh": "面向编码 agent 的上下文窗口优化工具:沙箱化工具输出(号称减少 98% 体量)、持久化会话记忆,并在多个平台间强制路由。对被长工具日志和上下文溢出折磨的 agent 开发者很对症。"
+    },
+    {
+      "domain": "embodied",
+      "name": "Friedrich-M/UniMate",
+      "url": "https://github.com/Friedrich-M/UniMate",
+      "language": "Python",
+      "stars": 1055,
+      "stars_today": "225",
+      "one_liner": "一个模型驱动各种骨架:人、动物、怪物的动画都能统一上。",
+      "summary_zh": "SIGGRAPH Asia 2026 的工作,一个统一模型用来驱动各类不同骨架的角色动画。对做 3D 角色、具身仿真或游戏资产的人有用——不必为每种骨架单独训一套动画模型。"
+    },
+    {
+      "domain": "ai",
+      "name": "mvschwarz/openrig",
+      "url": "https://github.com/mvschwarz/openrig",
+      "language": "TypeScript",
+      "stars": 3675,
+      "stars_today": "640",
+      "one_liner": "把 Claude Code、Codex、Pi 编成一支有角色、有共享上下文的常驻团队。",
+      "summary_zh": "用来搭建自己的 agent 网络:让不同的编码 agent 扮演固定角色、共享上下文、各自认领并持有任务,形成一支持久协作的「团队」。适合想试多 agent 协作工作流的人。"
+    },
+    {
+      "domain": "ai",
+      "name": "heygen-com/hyperframes",
+      "url": "https://github.com/heygen-com/hyperframes",
+      "language": "TypeScript",
+      "stars": 55307,
+      "stars_today": "624",
+      "one_liner": "写 HTML,渲染出视频——专门为 agent 生成视频这件事设计。",
+      "summary_zh": "一个「写 HTML、渲染视频」的框架,主打给 agent 用:让模型用熟悉的网页标记来表达画面,再渲染成视频。想让 agent 批量产出视频内容的场景可以关注。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "Google 发布 Gemini 4 Argon,却说太强只先给「可信防御者」用",
+      "url": "https://www.theverge.com/tech/1002980/google-gemini-4-argon",
+      "source": "The Verge / TechCrunch / Ars Technica",
+      "summary_zh": "Google 推出新一代前沿模型 Gemini 4 Argon,主打复杂软件工程、法律金融等企业知识工作和网络安全防御。但它限制访问,官方说因为模型在网络安全上太能打,现阶段只开放给「可信的网络防御者」。姿态耐人寻味:能力宣传与「暂时不让你用」同时出现。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "OpenAI 携手 Synopsys 推 GPT-Synopsys,把前沿模型塞进芯片设计",
+      "url": "https://news.synopsys.com/2026-09-30-OpenAI-and-Synopsys-Announce-GPT-Synopsys-Frontier-Intelligence-to-Revolutionize-Chip-Design",
+      "source": "Synopsys / Hacker News",
+      "summary_zh": "OpenAI 与 EDA 巨头 Synopsys 宣布合作推出 GPT-Synopsys,把前沿大模型接进芯片设计流程。消息在 HN 上热度不低(159 分)。呼应了 SemiEngineering 这阵子反复谈的主题:工程师想越过 RTL,用更贴近「意图」的表达方式做设计,而 LLM 正被当成那个入口。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "「决策模型」集体上线:Amazon、OpenAI、Cloudflare 各出一个又小又快的 Jev clone",
+      "url": "https://techcrunch.com/2026/10/01/amazon-releases-its-own-jev-clone-as-decision-models-flood-the-web/",
+      "source": "TechCrunch / Hacker News",
+      "summary_zh": "一波主打「快、便宜、只管做决策」的小模型涌现:AWS 的 Strand Labs 发了 Strands Decider 2B,OpenAI 推出同类的「Decisions API」用来管住自家成群的 agent,Cloudflare 则开源了 Clef 并附带一个 RL 微调平台。共同信号是:在 agent 遍地的场景里,快而廉价的决策智能开始和「又大又全」的生成模型分道扬镳。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "Google 搞出给「AI 设计的蛋白质」打水印的办法",
+      "url": "https://arstechnica.com/science/2026/09/google-figures-out-how-to-watermark-ai-designed-proteins/",
+      "source": "Ars Technica",
+      "summary_zh": "Google 展示了一种给 AI 设计出的蛋白质序列加水印的方法,已与一款常用的 AI 蛋白设计工具打通。目的是生物安全——让人能追溯某条蛋白是不是 AI 生成,以便监管和溯源。把「生成内容可追踪」从文本图像延伸到了生物分子。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "中国发射国网与遥感-40 卫星,Q4 发射排期拉满",
+      "url": "https://spacenews.com/china-launches-guowang-yaogan-40-satellites-sets-up-busy-q4-manifest/",
+      "source": "SpaceNews",
+      "summary_zh": "中国完成 9 月的第九、十次发射,把国网(Guowang)星座卫星和遥感-40 送入轨道,为年底一轮密集发射铺路。国网是中国的巨型低轨互联网星座,持续组网意味着又一个与星链对标的宽带星座在加速成形。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "波士顿动力给新款人形机械手「砍掉一根小指」",
+      "url": "https://www.therobotreport.com/boston-dynamics-drops-pinkie-on-new-humanoid-hand/",
+      "source": "The Robot Report",
+      "summary_zh": "波士顿动力推出新款人形机器人灵巧手,设计上去掉了小指。工程师为此把自己的小指和无名指绑起来过了一天,亲身体会少一根指头到底干不了什么、不影响什么,以此决定手部自由度的取舍。务实又有点好笑的产品决策方式。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "ASI 联手软银投 2.25 亿美元,搞品牌无关的自主重型工程机械",
+      "url": "https://www.therobotreport.com/tackling-construction-labor-shortages-asi-softbank-partner-autonomous-fleets/",
+      "source": "The Robot Report",
+      "summary_zh": "ASI 与软银合作,拿出 2.25 亿美元把「品牌无关」的自主重型工程设备规模化,投向基建项目,直指建筑业用工短缺。卖点是不绑定某家设备厂商,给各类挖机、推土机加装自动驾驶,降低对单一机型的依赖。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "礼来 amylin+Zepbound 组合拳减重 23.3%,又抬高了门槛",
+      "url": "https://www.fiercebiotech.com/biotech/lilly-raises-weight-loss-bar-its-amylin-zepbound-combo",
+      "source": "Fierce Biotech",
+      "summary_zh": "礼来公布其 amylin 与 Zepbound 组合药 eloraTZP 的数据:在 2 型糖尿病合并肥胖/超重成人中实现 23.3% 减重,在该人群里压过礼来自家的三靶点候选药 retatrutide。减重药竞赛里礼来再次把标杆往上挪了一截。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "AI 语音公司 ElevenLabs 估值翻倍至 220 亿美元",
+      "url": "https://techcrunch.com/2026/09/30/ai-voice-startup-elevenlabs-doubles-valuation-to-22b/",
+      "source": "TechCrunch",
+      "summary_zh": "AI 语音创业公司 ElevenLabs 估值翻倍到 220 亿美元,通过一笔 3 亿美元的员工股份转让完成,由 Wellington 和 T. Rowe Price 共同领投。语音赛道在这轮 AI 热里继续被资本追捧。"
+    },
+    {
+      "domain": "energy",
+      "title_zh": "美国签署行政令,收紧电网供应链安全",
+      "url": "https://semiengineering.com/us-executive-order-on-energy-grid-supply-chain-security/",
+      "source": "SemiEngineering",
+      "summary_zh": "美国出台针对电网供应链安全的行政令。SemiEngineering 点出一个关键转变:合规的重点不再只是证明设备在哪生产,而是看产品「如何工作」——功能层面的审查成为贸易限制的新抓手,对电网电子元件的采购和认证影响不小。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "把「早停诊断 + 一层小 LoRA」迁到别的开源模型和多跳任务,验证泛化",
+      "based_on": [
+        { "title": "Transformers Stop Thinking Too Early, and a Tiny LoRA Fixes It", "url": "https://arxiv.org/abs/2609.36585" }
+      ],
+      "why_now": "论文刚挂出,只在 Qwen3、Ouro 等少数模型和定长链式任务上验证过。「换个模型、换个多跳任务还成不成立」没人做,而 training-free 的迁移验证本身就是低风险可发表的扩展。",
+      "feasibility": "rank-8 LoRA 只加在一层,全程冻结其余权重,单卡 24GB 跑 7–8B 模型绰绰有余,2–3 周能出结论。",
+      "route": [
+        "复现官方:在 Qwen3-8B 上跑 24-line chain,确认准确率从 ~15% 升到 ~99%。",
+        "换骨干:把同一 LoRA 配方套到 Llama / Mistral 7B,看「早停瓶颈层」是否也落在早期。",
+        "换任务:从定长链式换成多跳 QA、符号推理链,检验 LoRA 的「接力」现象是否仍在。",
+        "探针可视化:看 LoRA 把 chain identity 往后传了几层,画出中间层的接力范围。"
+      ],
+      "risk": "别的模型早停瓶颈未必在同一层,LoRA 位置要重新搜;最坏情况结论不迁移,只能当成模型族特性。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "把 GeoShrink 的 training-free 扩散加速封成即插即用小库,适配点云/3D 扩散",
+      "based_on": [
+        { "title": "GeoShrink: Accelerating Diffusion Transformers with Two Lines of Code", "url": "https://arxiv.org/abs/2609.33723" },
+        { "title": "EMERGE: Resolution-Agnostic Point Cloud Generation with Equivariant Graph-Based Diffusion", "url": "https://arxiv.org/abs/2609.26039" }
+      ],
+      "why_now": "GeoShrink 刚证明在图像 DiT 上 training-free 提速、而且「两行代码」,但还没人验证它在点云/3D 几何扩散上的几何保真。plug-and-play 方法迁到别的模型本身就是攒 star 的低风险扩展。",
+      "feasibility": "纯推理,不训练;小模型单卡甚至 CPU 可跑。核心工作是把方法抽成与采样器解耦的 hook 并跑通几个开源 3D 扩散 repo,2–4 周。",
+      "route": [
+        "跑通 GeoShrink 官方在图像 DiT 上的加速,记下 FID 和步数作基线。",
+        "把加速规则抽成与 flow / diffusion 采样器解耦的 hook 库,一两行即可挂上。",
+        "接一个点云或 3D 几何扩散模型(EMERGE 或 Point Diffusion Mamba),测几何指标(Chamfer / EMD)在加速下掉多少。",
+        "发布 repo,附跨模型 benchmark 表和一键 demo。"
+      ],
+      "risk": "几何扩散的 innovation 结构也许不像图像那么光滑,anchor 跳步会伤细节,实测收益可能打折。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "用便宜自监督编码器替代 8×A100 级多模态编码器,做「穷人版 3D-LLM」配方",
+      "based_on": [
+        { "title": "On the Efficacy of Self-Supervised Point Cloud Encoders for Efficient 3D Large Language Models", "url": "https://arxiv.org/abs/2607.29136" }
+      ],
+      "why_now": "论文刚系统验证「Point-MAE / PCP-MAE 这类便宜 SSL 编码器能顶替需要 8×A100 对齐的 ULIP-2」,但只在 MiniGPT-3D 一个 testbed、少数任务上测过,换下游任务、换点云规模还没人接着验。",
+      "feasibility": "冻结 LLM、只微调小编码器,单卡 24–40GB 够用,2–3 周。",
+      "route": [
+        "复现:在 MiniGPT-3D 上用 Point-MAE 初始化,复现论文报告的分数。",
+        "换下游:在 3D 场景问答 / grounding(如 SceneBench)上测 SSL 编码器是否仍够用。",
+        "消融:画出「编码器冻结 vs 轻量微调」的性价比曲线,找性价比拐点。",
+        "整理成一页「穷人版 3D-LLM」配方,附最小复现脚本。"
+      ],
+      "risk": "SSL 编码器缺跨模态对齐,复杂空间推理任务上可能明显落后多模态编码器,省钱换来掉点。"
+    }
+  ]
+}
