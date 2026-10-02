@@ -1,0 +1,413 @@
+{
+  "date": "2026-10-03",
+  "editor_note": "今天 HF 榜几乎被一个主题占满:流式/世界模型的「记忆」该怎么存。OneStreamer 把记忆写成模型自己边看边生成的字幕,LOCI 用相机几何给线性记忆编址,后面还跟着 Memorizon、Honeycomb、MemFold 一串,核心诉求都一样——别再无限堆 KV cache。另一条暗线是省 token:PyRUA-Lean 用会自查重试的 Python 代码块把机器人 agent 的 token 砍掉 65%,GitHub 上那个让 agent 说「原始人语」的 caveman 也在凑热闹,连带 SemiEngineering 那条用高带宽闪存扛 KV cache 内存墙,软硬件在跟同一面墙较劲。最想让你点开的是苹果那条:第一次有操作系统厂商明确把 AI agent 当成权限模型里的新威胁来收紧磁盘访问,这比任何 agent demo 都更说明它们真的开始能碰你的东西了。另外交代一句,今天 arXiv 的分领域和研究点抓取都吃了 429,没有新鲜的各领域 arXiv 论文,板块里非 AI 的几条是从 HF 榜里挑的具身和医疗工作,其余领域今天就不硬凑了。",
+  "math_note": {
+    "name": "巴拿赫不动点定理（压缩映射原理）",
+    "name_en": "Banach Fixed-Point Theorem",
+    "field": "泛函分析 / 度量空间",
+    "one_liner": "把世界按固定比例缩小,放哪儿都会滑到同一个点。",
+    "statement": "给定一个完备度量空间上的映射 $T$,如果它是压缩的——存在常数 $0\\le k<1$,使任意两点满足 $d(Tx,Ty)\\le k\\,d(x,y)$,也就是每作用一次就把两点间距离至少按比例 $k$ 缩小——那么 $T$ 有且只有一个不动点 $x^{*}$(即 $Tx^{*}=x^{*}$),而且从任意起点 $x_0$ 出发反复迭代 $x_{n+1}=Tx_n$,都必然收敛到它。这里 $d$ 是距离,「完备」是指柯西列都在空间内有极限(不漏点)。",
+    "origin": "1922 年波兰数学家斯特凡·巴拿赫在他的博士论文里把它抽象成一条度量空间上的普适定理。在那之前,皮卡、林德勒夫等人解微分方程时早就反复用「逐次逼近」这招,但每次都要就事论事地证收敛。巴拿赫看穿了背后共同的结构:只要变换把距离按固定比例压小,迭代就一定收敛——于是把一堆具体的收敛证明一次性收编成了一条。",
+    "derivation": [
+      { "math": "x_{n+1}=Tx_n", "note": "从任意起点出发,反复作用 T,得到一串点。我们要证这串点会收敛。" },
+      { "math": "d(x_{n+1},x_n)\\le k\\,d(x_n,x_{n-1})\\le\\cdots\\le k^{\\,n}\\,d(x_1,x_0)", "note": "压缩性让每一步的「步长」都比上一步缩小 k 倍,于是相邻两点的距离被 k 的 n 次方压着,指数级变小。" },
+      { "math": "d(x_m,x_n)\\le\\sum_{j=n}^{m-1}k^{\\,j}\\,d(x_1,x_0)\\le\\frac{k^{\\,n}}{1-k}\\,d(x_1,x_0)", "note": "用三角不等式把远处两点的距离拆成一串步长相加,再用等比级数求和。因为 k<1,n 一大这个上界就趋于 0,说明这串点是柯西列。" },
+      { "math": "x_n\\longrightarrow x^{*}", "note": "空间完备,柯西列必有极限,记为 x*。到这里「极限存在」已经稳了。" },
+      { "math": "x^{*}=Tx^{*};\\quad d(x^{*},y^{*})\\le k\\,d(x^{*},y^{*})\\Rightarrow x^{*}=y^{*}", "note": "压缩映射连续,对 x_{n+1}=Tx_n 取极限得 x* 是不动点。若还有另一个不动点 y*,则它俩距离被自己的 k 倍压着,k<1 只能逼出距离为 0——所以不动点唯一。" }
+    ],
+    "applications": [
+      { "area": "微分方程", "detail": "皮卡逐次逼近把「解常微分方程初值问题」变成某个积分算子的不动点,压缩性直接给出解的存在与唯一。" },
+      { "area": "数值计算", "detail": "不动点迭代、牛顿法解方程,收敛性本质上就是在验证迭代映射在根附近是压缩的——牛顿法甚至把 k 压到接近 0,所以收敛飞快。" },
+      { "area": "强化学习", "detail": "贝尔曼最优算子在 sup 范数下是 γ-压缩(γ 是折扣因子),于是值迭代必然收敛到唯一的最优值函数,这是 Q-learning、动态规划能成立的地基。" },
+      { "area": "经济与博弈", "detail": "一般均衡、博弈均衡的存在性常常归结为某个「最优反应映射」的不动点,压缩版本给出均衡唯一且可迭代求出。" }
+    ],
+    "takeaway": "只要一个变换「把差距按固定比例缩小」,反复作用就必然滑向唯一的归宿——很多看起来八竿子打不着的「迭代会收敛」,从解方程到训 RL,底下都是这同一条 $0\\le k<1$ 在兜底。",
+    "viz": {
+      "type": "cobweb",
+      "caption": "拖动起点 x0,看折线像楼梯一样被夹进 √2≈1.414:f(x)=(x+2/x)/2 正是计算机开平方的牛顿迭代,它在不动点处导数为 0,是个极强的压缩,几步就到。",
+      "params": { "fn": "(x + 2/x)/2", "x0": 2.6, "xmin": 1, "xmax": 3, "iterations": 8 }
+    }
+  },
+  "crossover": {
+    "theory": "行列式点过程",
+    "theory_en": "Determinantal Point Process (DPP)",
+    "field": "概率论 / 随机过程",
+    "era": "1975 年 Macchi 为描述费米子统计提出,2012 年 Kulesza–Taskar 把它引入机器学习、给出可算的采样与推断后才真正好用",
+    "one_liner": "让点云自己「互相嫌弃」,挑出来的就是铺得最开的那一批。",
+    "theory_core": "DPP 定义在一个有限集合上,一个子集 $S$ 被抽中的概率正比于一个半正定核矩阵的子块行列式 $P(S)\\propto\\det(L_S)$,其中 $L_{ij}$ 衡量元素 $i,j$ 的相似度。行列式几何上就是这些元素向量张成的「体积」:两个元素越相似,体积越被压扁、越不可能同时入选,所以 DPP 天生偏爱互相排斥、铺得开的子集。要固定选 $k$ 个点就用 k-DPP。一句话,它把「多样性」写成了一个可计算的概率分布。",
+    "pc_problem": "大规模点云下采样现在主流是最远点采样 FPS:贪心地每次挑离已选集合最远的点,复杂度 $O(nk)$ 且严格串行,百万级点云一帧要几百毫秒,PointNet++ 这类网络里 FPS 层常吃掉前向 30% 以上的时间。随机采样 $O(n)$ 但覆盖不均、丢小目标;体素下采样又卡在分辨率与内存的两难里。想要「又快、又铺得开、又能顾及特征」,FPS 给不全。",
+    "bridge": "FPS 真正想要的「点之间尽量铺开、别扎堆」正是 DPP 的排斥性。映射很干净:点云里的每个点 ↔ ground set 的元素;点间的几何(加上特征)相似度 ↔ 核 $L$ 的元素,比如 $L_{ij}=\\exp(-\\lVert p_i-p_j\\rVert^2/2\\sigma^2)$ 再乘上特征相似度;「采样 k 个有代表性的点」↔ 从 k-DPP 抽一个大行列式的子集。FPS 的「挑最远」其实是 DPP 排斥性的一个贪心特例,而 DPP 给出的是带概率、可并行、还能把特征塞进核里的推广版。",
+    "angles": [
+      {
+        "dim": "复杂度",
+        "idea": "别用 n×n 的满核。用 Nyström 或随机特征把核低秩近似成 $L\\approx BB^\\top$(秩 $r\\ll n$),再走对偶 DPP 采样:只需对 $n\\times r$ 的特征矩阵做一次特征分解/QR,然后抽 k 个点。核心全是稠密线代,能直接压到 GPU 上并行,替掉串行 FPS。",
+        "gain": "从 FPS 的 $O(nk)$ 串行,换成 $O(nr^2+k^3)$ 的可并行线代;在 GPU 上处理十万量级点时,吞吐估计比串行 FPS 快数倍(估算,取决于 r)。",
+        "cost": "要选核带宽 $\\sigma$ 和秩 $r$;低秩近似后采样不再严格服从真 DPP,r 太小多样性会退化,逼近随机采样。"
+      },
+      {
+        "dim": "算法优化",
+        "idea": "把 k-DPP 当成一个特征感知的「可微 FPS」直接插进 PointNet++ 的 set-abstraction 层:用贪心 MAP 推断,每步选让 $\\log\\det$ 增量最大的点,子模性保证 $(1-1/e)$ 近似,并把预训练 encoder 的中间特征乘进核,让采样同时顾及几何覆盖和语义多样。",
+        "gain": "复杂度与 FPS 同量级,但带了特征感知;下游分类/分割精度估计可小涨 0.5–1 个点(估算),尤其在细结构和长尾类别上。",
+        "cost": "贪心 MAP 仍是串行的;要维护 Cholesky 的增量更新,实现比 FPS 繁一些,数值上要防核近奇异。"
+      },
+      {
+        "dim": "存储",
+        "idea": "对 KITTI/nuScenes 这类序列做「关键点 + 残差」几何压缩:每帧只存 DPP 选出的 k 个代表点(大行列式 = 最大信息体积)和周围点到它们的局部残差,互相相似的邻点被排斥掉、不重复编码,残差再量化。",
+        "gain": "一帧 64 线激光约 2MB,若 k 取原点数的约 10% 加上残差量化,码率估计省 50–70%(粗估,强烈依赖场景复杂度)。",
+        "cost": "解码要重建残差,有损;动态物体和遮挡处代表点不稳,需逐帧重算核,时序一致性要额外处理。"
+      }
+    ],
+    "experiment": [
+      "先在 CPU 上用 ModelNet40 跑通 PointNet++ 的 FPS baseline(下采样到 1024 点),记下 FPS 层耗时和分类精度,作为对照(一两天)。",
+      "实现贪心 k-DPP MAP(Cholesky 增量更新),用高斯几何核替换 FPS,对齐 k=1024,比耗时与精度。",
+      "加对偶 DPP + Nyström 近似采样(秩取 64–128),在 GPU 上测十万量级点云的下采样吞吐,对比 FPS。",
+      "把预训练 encoder 的中间特征乘进核,观察长尾类别分割 IoU 的变化。",
+      "(可选)在 KITTI 单帧上搭「DPP 关键点 + 残差」压缩原型,画码率-重建误差曲线。"
+    ],
+    "prior_art": [
+      { "title": "Determinantal Point Processes for Machine Learning (Kulesza & Taskar, 2012)", "url": "https://arxiv.org/abs/1207.6083", "note": "把 DPP 的核、采样、k-DPP、MAP 推断系统讲清的奠基综述,但靶子是文档摘要/推荐里的多样化子集选择,不是点云几何下采样。" },
+      { "title": "Fast Greedy MAP Inference for Determinantal Point Process", "note": "给出了 Cholesky 增量的快速贪心 MAP(把每步选点压到近线性),是上面『可微 FPS』那条能落地的关键,但原工作面向推荐系统,没碰点云(拿不准确切链接,略去 url 以免误导)。" },
+      { "title": "(自查结果)", "note": "查下来「DPP 直接替 FPS 做大规模点云下采样并测压缩」的公开工作很少见;相近的是把排斥采样/DPP 用在主动学习的标注点选取、图像 patch 选取上。把它当可微 FPS 插进 set-abstraction 并测几何压缩这一路,没找到直接对标的——这正是机会,也意味着没人替你踩过坑。" }
+    ],
+    "reality_check": "DPP 的行列式对核的条件数极其敏感——点云里的近邻点会让核近奇异,Cholesky 直接数值爆掉,得先加抖动或做鲁棒截断;而且就算近似采样能并行,带宽 $\\sigma$ 选错整个会退化成随机采样,省下的复杂度原样还回去。"
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "OneStreamer: Unifying Perception, Memory, and Proactive Response in Streaming Video Interaction",
+      "title_zh": "OneStreamer:把感知、记忆、主动响应拧进一条流式视频交互",
+      "url": "https://arxiv.org/abs/2610.01762",
+      "hf_url": "https://huggingface.co/papers/2610.01762",
+      "authors": "Xiangyu Zeng 等",
+      "affiliation": "南京大学",
+      "upvotes": 145,
+      "one_liner": "流式视频模型的「边看边记边答」,靠模型自己写的字幕当记忆。",
+      "summary_zh": "流式视频 LLM 的两难是:证据出现时还不知道以后哪个问题用得上,又不能为了记东西拖慢实时感知。OneStreamer 让模型一边看一边主动生成分层字幕(局部细节加事件摘要)当作可复用的事实记忆,回答时只看最近窗口加这些文字记录,不用回刷历史视觉特征。配了套百万级流式交互数据,4B 模型在同类里拿了最好成绩。思路挺实在——把记忆落成模型自己写的字幕,而不是无限堆 KV cache。",
+      "tags": ["视频LLM", "流式", "记忆"]
+    },
+    {
+      "domain": "ai",
+      "title": "On-Policy or Off-Policy Learning? A Systematic Study of Distillation Dynamics",
+      "title_zh": "On-Policy 还是 Off-Policy?把蒸馏动力学拆开来看",
+      "url": "https://arxiv.org/abs/2609.35259",
+      "hf_url": "https://huggingface.co/papers/2609.35259",
+      "authors": "Julianna Piskorz 等",
+      "affiliation": "剑桥大学",
+      "upvotes": 114,
+      "one_liner": "吵了很久的「on-policy 更好」,可能根本不是 rollout 策略的功劳。",
+      "summary_zh": "大家常说 on-policy(用学生自己采样的数据)能少遗忘、更新更稀疏、泛化更好,但过去的对比往往同时改一堆变量,说不清到底是哪个因素。这篇在强到弱蒸馏的受控设定里,单独拧 rollout 策略、token 级 KL 方向、学习率三个旋钮。结论有点反直觉:rollout 策略没那么关键,真正决定任务表现的是 KL 方向(forward KL 对 rollout 几乎免疫,reverse KL 才挑学生采样),遗忘和稀疏性则主要由学习率管。做调参的值得一读,能省下不少玄学。",
+      "tags": ["蒸馏", "RL", "on-policy"]
+    },
+    {
+      "domain": "ai",
+      "title": "E-MoE: Enhanced Mixture-of-Experts for Non-Factorized Diffusion Language Models",
+      "title_zh": "E-MoE:给非因子化扩散语言模型加一层专家混合",
+      "url": "https://arxiv.org/abs/2609.37533",
+      "hf_url": "https://huggingface.co/papers/2609.37533",
+      "authors": "Arseny Ivanov 等",
+      "upvotes": 49,
+      "one_liner": "用 MoE 的路由当「共享隐变量」,少步数生成不崩质量。",
+      "summary_zh": "掩码扩散语言模型每步解开几个 token,但反向过程通常按位置因子化,少步数时质量就掉——而少步数恰恰是扩散相对自回归的速度优势所在。之前有人加连续高斯隐变量来捕捉位置间相关,又容易后验坍缩被悄悄忽略。E-MoE 换个思路:把 MoE 骨干的专家路由决策当成离散的共享隐变量,反向过程写成若干因子化分布的混合,激活参数不增加。在几个合成多模态任务和 LM1B 上有效。算是把 MoE 的稀疏路由顺手用成了建模相关性的工具。",
+      "tags": ["扩散语言模型", "MoE"]
+    },
+    {
+      "domain": "ai",
+      "title": "Decoding Looped Transformers Better for (Almost) Free",
+      "title_zh": "把循环 Transformer 的解码做得更好(几乎不要钱)",
+      "url": "https://arxiv.org/abs/2610.02185",
+      "hf_url": "https://huggingface.co/papers/2610.02185",
+      "authors": "Weihao Liu 等",
+      "affiliation": "苹果",
+      "upvotes": 18,
+      "one_liner": "早一圈的「弱预测」免费拿来做对比,循环模型白捡几个点。",
+      "summary_zh": "循环 Transformer 靠反复跑同一个共享块省参数,每一圈都能解出下一个 token,但标准解码把前几圈的中间结果全扔了。LoopCD 发现:早圈算得少、晚圈算得多,天然就是一对弱-强预测,拿来做对比解码不用任何额外模型或训练。logit 空间版多一次输出、hidden 空间版零开销,就把 Ouro-2.6B 的 AIME pass@1 从 61.9% 抬到 73.3%。更香的是能把循环圈数砍一半还不掉点,省 22%–48% 的 FLOPs。training-free、复现便宜,很适合拿去别的模型上验证泛化。",
+      "tags": ["循环Transformer", "对比解码", "推理加速"]
+    },
+    {
+      "domain": "ai",
+      "title": "CorrGRPO: Correlation-Normalized GRPO for Multi-Reward Learning",
+      "title_zh": "CorrGRPO:把多奖励的相关性归一化,别让大奖励盖住小奖励",
+      "url": "https://arxiv.org/abs/2609.36820",
+      "hf_url": "https://huggingface.co/papers/2609.36820",
+      "authors": "Wenbin Hu 等",
+      "affiliation": "港科大",
+      "upvotes": 16,
+      "one_liner": "多个奖励一起训时,GRPO 的归一化偷偷偏心,这里给它校准。",
+      "summary_zh": "GRPO 训推理模型时,多个奖励是先求和再按组内标准差归一化,而这个方差正好等于所有奖励两两协方差之和。问题来了:尺度大、相关性强的奖励会主导归一化,把小尺度奖励的信号压没。CorrGRPO 把两两协方差归一成皮尔逊相关系数,在保持总奖励不变的前提下平衡各奖励的影响。多奖励 RL 里常见的「某项奖励一家独大」,这是个直接对症的修法。",
+      "tags": ["RL", "GRPO", "多奖励"]
+    },
+    {
+      "domain": "ai",
+      "title": "Omni-Embed-Mini: Binding Modalities Without Forgetting via Dense Distillation",
+      "title_zh": "Omni-Embed-Mini:加模态不忘文本的稠密蒸馏小嵌入",
+      "url": "https://arxiv.org/abs/2610.02148",
+      "hf_url": "https://huggingface.co/papers/2610.02148",
+      "authors": "Mohammed Irfan Kurpath 等",
+      "affiliation": "MBZUAI",
+      "upvotes": 11,
+      "one_liner": "文本权重一个 bit 不动,硬塞进五种新模态还不退化。",
+      "summary_zh": "给文本嵌入模型加新模态,通常会把文本检索质量拖下水,现有全模态嵌入器又动辄几十亿参数。这个 0.9B 模型的巧思是:老师信号不用另一个模型,每个样本配一段稠密级联字幕,老师目标就是冻结骨干对这段字幕的嵌入——师生共享同一套权重、几何完全一致,只用轻量投影头加分阶段 LoRA 适配器对齐模态编码器。文本权重逐 bit 不变,所以文本检索天然不会退(MTEB 的 BEIR-8 拿 49.57),同时扩到语音、音频、图像、视频、富文档,比其他开源全模态嵌入器小 2.7 到 9.5 倍。小团队想要个全模态检索底座,这性价比不错。",
+      "tags": ["多模态", "嵌入", "蒸馏"]
+    },
+    {
+      "domain": "ai",
+      "title": "Transformers Stop Thinking Too Early, and a Tiny LoRA Fixes It",
+      "title_zh": "Transformer 太早停止「思考」,一个小 LoRA 就能治",
+      "url": "https://arxiv.org/abs/2609.36585",
+      "hf_url": "https://huggingface.co/papers/2609.36585",
+      "authors": "Zehao Jin 等",
+      "upvotes": 2,
+      "one_liner": "十三个 base 模型只会跟 1.4–3.6 行引用,rank-8 LoRA 直接拉到几十行。",
+      "summary_zh": "预训练 Transformer 其实没用上多少层去顺着上下文做多跳引用——测了 13 个 base 模型,可靠跟随的只有 1.4 到 3.6 行,多堆几圈循环也不顶用。作者在某个靠前的层加一个 rank-8 的 LoRA、其余权重全冻,Qwen3-8B 在 24 行引用链上的精确率就从 15.5% 冲到 99%,训久一点能到 50 行;循环模型 Ouro 跑八圈能上 160 行。等于一个极小的干预把模型的「有效推理深度」撬开了,机理层面很有意思,复现成本也低。",
+      "tags": ["LoRA", "推理深度", "机理"]
+    },
+    {
+      "domain": "embodied",
+      "title": "EgoTools: Towards Tool-Centric Reasoning in Real-World Egocentric Videos",
+      "title_zh": "EgoTools:第一人称视频里的「工具使用」推理",
+      "url": "https://arxiv.org/abs/2609.39378",
+      "hf_url": "https://huggingface.co/papers/2609.39378",
+      "authors": "Shulin Tian 等",
+      "affiliation": "Ropedia",
+      "upvotes": 33,
+      "one_liner": "让模型看懂你怎么用工具——现在的多模态模型还差得远。",
+      "summary_zh": "日常和专业活动大多是用工具完成的,要看懂就得同时推理可供性、手-工具-物体的几何、流程进度和对目标物的因果影响,而现有视频模型在描述、问答上很强,一到工具中心的具身推理就露怯。EgoTools 补了数据和诊断基准:100 小时带同步音频、稠密字幕、推理型旁白和 3D 信息的第一人称录制,外加 1000 条覆盖感知、几何、流程、因果四轨的 QA。结果连 Gemini-3.1-Pro 也只有 66.9%,说明把工具使用落到视觉证据上还是块硬骨头。",
+      "tags": ["具身", "第一人称视频", "基准"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Fewer Tokens, Better Action: GPT-6 Astra Robot Agents with 14% Higher Success Rate but 65% Fewer Tokens",
+      "title_zh": "少 token,动作更准:机器人智能体省 65% token 还多 14% 成功率",
+      "url": "https://arxiv.org/abs/2610.01939",
+      "hf_url": "https://huggingface.co/papers/2610.01939",
+      "authors": "Ruiyang Si 等",
+      "affiliation": "北京大学 DAGroup",
+      "upvotes": 24,
+      "one_liner": "别每步都喂一堆图,把原语写成会自查、会重试的 Python 代码块。",
+      "summary_zh": "VLM 智能体靠视觉反馈和动作原语控制机器人,但反复调模型、冗余观测很烧 token。PyRUA-Lean 让智能体把经典机器人原语和学到的 VLA 策略组合进 Python 代码单元,做条件判断和局部重试,只在明确请求时才回传图像和状态去重规划。在 LIBERO-PRO、RoboTwin 2.0、RoboCasa365 共 700 个仿真任务上,同样的 LLM 调用预算下整体成功率从 63.1% 升到 71.7%。思路和当天 GitHub 上那股用省话术省 token 的风潮暗合——少喂、按需喂,反而更稳。",
+      "tags": ["VLA", "具身", "token效率"]
+    },
+    {
+      "domain": "bio",
+      "title": "OpenTumorBoard: A Real-World Benchmark of Multidisciplinary Tumor Board Discussion Trajectories",
+      "title_zh": "OpenTumorBoard:真实多学科肿瘤会诊轨迹的基准",
+      "url": "https://arxiv.org/abs/2609.32810",
+      "hf_url": "https://huggingface.co/papers/2609.32810",
+      "authors": "Anqi Li 等",
+      "upvotes": 5,
+      "one_liner": "把 YouTube 上真实肿瘤会诊录像做成基准,顶尖模型只拿 3.43/5。",
+      "summary_zh": "多学科肿瘤会诊是多个专科医生围着多模态检查和长期病史讨论出治疗方案的过程,但基准很少覆盖这种真实轨迹。OpenTumorBoard 从公开的肿瘤会诊录像里转写出 611 个病例、19157 轮讨论、十种专科角色,评两件事:单轮专科应答,以及模拟整场讨论直到形成治疗、手术、临床试验匹配的共识。评了 14 个通用和医疗 LLM,最好的在「与专科医生答案的临床等价性」上只有 3.43/5、与会诊结论对齐 2.78/5;微调和 RL 能涨,说明真实讨论轨迹可以拿来做适配。想做医疗 agent 的可以盯一下数据释放。",
+      "tags": ["医疗LLM", "基准", "肿瘤"]
+    },
+    {
+      "domain": "ai",
+      "title": "LOCI: Spatial Linear Memory for Streaming World Models",
+      "title_zh": "LOCI:给流式世界模型装一块「按视角存取」的线性记忆",
+      "url": "https://arxiv.org/abs/2609.40222",
+      "hf_url": "https://huggingface.co/papers/2609.40222",
+      "authors": "Ji Xia 等",
+      "affiliation": "Institute of Foundation Models",
+      "upvotes": 5,
+      "one_liner": "回到老地方该看见原来的东西——用相机几何给记忆编址。",
+      "summary_zh": "视频世界模型镜头转回看过的区域时,应该重现当初的样子,这要既记得住过去又能按当前视角检索对。KV cache 保真但随长度膨胀,循环记忆紧凑却把历史压成定长、单帧细节取不回。LOCI 做了个混合:一半 transformer 块保留 KV cache,另一半只看当前块、靠一个受投影相机几何调制的线性注意力记忆补充,视角同时进入「存哪」和「存什么」。在 MIND 记忆基准上比同类更忠实地重现回访内容,满历史时峰值显存比全 softmax 降约 30%,还能定长流式跑长视频。世界模型这波记忆设计里比较扎实的一个。",
+      "tags": ["世界模型", "记忆", "线性注意力"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "Panniantong/Agent-Reach",
+      "url": "https://github.com/Panniantong/Agent-Reach",
+      "language": "Python",
+      "stars": 88555,
+      "stars_today": "683",
+      "one_liner": "给 agent 装一双能逛全网的眼睛,还不用付 API 费。",
+      "summary_zh": "一个 CLI,让 AI agent 直接读和搜 Twitter、Reddit、YouTube、GitHub、B 站、小红书,号称零 API 费用。对做信息聚合、舆情、研究型 agent 的人省事——不用一个个平台接 API 再付费。能不能长期稳定绕过各家反爬是另一回事。"
+    },
+    {
+      "domain": "ai",
+      "name": "NVIDIA/OpenShell",
+      "url": "https://github.com/NVIDIA/OpenShell",
+      "language": "Rust",
+      "stars": 14411,
+      "stars_today": "584",
+      "one_liner": "让自主 agent 在一个安全、私有的沙箱里跑命令。",
+      "summary_zh": "英伟达开源的 agent 运行时,主打把自主 agent 的命令执行关进安全隔离环境。随着 agent 越来越敢动真文件(当天苹果收紧 macOS 磁盘权限就是同一焦虑),这类沙箱运行时正好对症。做 agent 基础设施的值得看一眼它的隔离模型。"
+    },
+    {
+      "domain": "ai",
+      "name": "colbymchenry/codegraph",
+      "url": "https://github.com/colbymchenry/codegraph",
+      "language": "C",
+      "stars": 72941,
+      "stars_today": "163",
+      "one_liner": "预建代码知识图谱,改代码自动同步,全程本地。",
+      "summary_zh": "把代码库预先索引成知识图谱,随代码变更自动更新,给 Claude Code、Codex、Cursor 等一堆 agent 用,目标是少 token、少工具调用、100% 本地。在大仓库里让 agent 理解结构而不是每次现翻文件,这个方向正经有用。"
+    },
+    {
+      "domain": "ai",
+      "name": "mksglu/context-mode",
+      "url": "https://github.com/mksglu/context-mode",
+      "language": "TypeScript",
+      "stars": 25017,
+      "stars_today": "276",
+      "one_liner": "把工具输出沙箱化压掉 98%,顺带持久化会话记忆。",
+      "summary_zh": "针对 AI 编码 agent 的上下文窗口优化:沙箱化工具输出(号称压缩 98%)、持久化会话记忆,再通过 MCP 加 hooks 在十多个平台间强制路由。和当天那股省 token 的整体风潮一致——上下文塞不下是实打实的痛点,数字夸张但方向对。"
+    },
+    {
+      "domain": "ai",
+      "name": "mvschwarz/openrig",
+      "url": "https://github.com/mvschwarz/openrig",
+      "language": "TypeScript",
+      "stars": 4271,
+      "stars_today": "691",
+      "one_liner": "用 Claude Code、Codex、Pi 搭一支有角色、有记忆的 agent 团队。",
+      "summary_zh": "让你自己组一个 agent 网络:持久化的团队、明确角色、共享上下文、各自负责的活。多 agent 协作从临时拉群往常驻编制走,想试长期运行的 agent 分工可以拿它起步。"
+    },
+    {
+      "domain": "ai",
+      "name": "heygen-com/hyperframes",
+      "url": "https://github.com/heygen-com/hyperframes",
+      "language": "TypeScript",
+      "stars": 55861,
+      "stars_today": "584",
+      "one_liner": "写 HTML,渲染成视频,专为 agent 设计。",
+      "summary_zh": "让 agent 用写 HTML 的方式产出视频。和当天那篇数据视频多 agent 编排(DataMagic)撞到一个需求上:程序化、可控地生成视频,比端到端像素模型更好保证内容准确。做自动化内容或报告视频的可以关注。"
+    },
+    {
+      "domain": "ai",
+      "name": "JuliusBrussee/caveman",
+      "url": "https://github.com/JuliusBrussee/caveman",
+      "language": "Go",
+      "stars": 109071,
+      "stars_today": "271",
+      "one_liner": "「何必多 token,少 token 能成事」——让 agent 说话像原始人省 65%。",
+      "summary_zh": "一个病毒式的 skill 加代理,靠把 coding agent 的措辞压成原始人语砍掉约 65% token。是个半玩笑的 gimmick,但背后的诉求很真:当天的 PyRUA-Lean(省 65% token)和好几个仓库都在同一条线上使劲。当真正的生产工具看要谨慎,当信号看挺有意思。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "苹果以「AI agent 带来新风险」为由,收紧 macOS 完全磁盘访问权限",
+      "url": "https://techcrunch.com/2026/10/02/apple-says-its-tightening-macos-full-disk-access-controls-due-to-new-risks-from-ai-agents/",
+      "source": "TechCrunch / The Verge",
+      "summary_zh": "苹果宣布将为 macOS 的完全磁盘访问权限加新控制,理由是越来越能干的 AI agent 一旦拿到对用户文件、信息、邮件、浏览历史的宽泛访问,风险被显著放大。这是操作系统厂商第一次明确把 agent 当成权限模型里的新威胁来对待。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "美国逮捕一名科技公司 CEO,指控其向中国走私 3 亿美元英伟达芯片",
+      "url": "https://arstechnica.com/tech-policy/2026/10/us-arrests-tech-ceo-accused-of-smuggling-300m-in-nvidia-chips-into-china/",
+      "source": "Ars Technica",
+      "summary_zh": "美方逮捕一名科技公司 CEO,指控其向中国走私价值约 3 亿美元的英伟达芯片。随着出口管制收紧,围绕高端 AI 芯片的灰色流通和执法对抗还在持续升级。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "UC 伯克利与 FuriosaAI 提出用高带宽闪存 HBF 扛 LLM 服务的内存墙",
+      "url": "https://semiengineering.com/hbf-for-high-throughput-llm-serving-uc-berkeley-furiosaai/",
+      "source": "SemiEngineering",
+      "summary_zh": "两家联合发论文刻画高带宽闪存(HBF)在 LLM 服务里的作用:模型越大、上下文越长,存权重和 KV cache 的内存容量与带宽越成瓶颈,agentic 负载尤甚。思路是用比 HBM 便宜、容量更大的 HBF 扛住服务端内存压力。和当天 LOCI 这类降显存的模型侧努力,正好一硬一软对上。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Runway 发布面向机器人的世界-动作模型 Praxis-1,计划开放权重",
+      "url": "https://www.therobotreport.com/runway-introduces-praxis-1-world-action-model-robotics/",
+      "source": "The Robot Report",
+      "summary_zh": "以视频生成起家的 Runway 推出面向机器人的世界-动作模型 Praxis-1,并表示公开时会以开放权重而非闭源形式发布。视频生成公司下场做机器人世界模型,是「会预测像素的模型能不能顺手会预测动作」这条线的又一注脚。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "波士顿动力给新款人形机械手「砍掉」小指",
+      "url": "https://www.therobotreport.com/boston-dynamics-drops-pinkie-on-new-humanoid-hand/",
+      "source": "The Robot Report",
+      "summary_zh": "波士顿动力的工程师把自己的小指和无名指绑一天,体会少两根手指到底能干和不能干什么,据此给新人形机械手做减法。灵巧手到底需要几根手指、每根值不值那份复杂度,是人形落地绕不开的成本账。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "诺华 75.75 亿美元拿下 Abogen 的体内自免 T 细胞衔接器",
+      "url": "https://www.fiercebiotech.com/biotech/novartis-pays-abogen-575m-vivo-autoimmune-t-cell-engager",
+      "source": "Fierce Biotech",
+      "summary_zh": "诺华向 Abogen 预付 5.75 亿美元、里程碑最高 72 亿,拿下一款 mRNA 编码的体内 T 细胞衔接器,该药在自免疾病早期临床显出苗头。交易就发生在诺华因三例死亡暂停一个自免 CAR-T 项目几周之后——「体内」路线被当成绕开 CAR-T 制备与安全负担的下一张牌。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "礼来 amylin-Zepbound 组合减重 23.3%,刷新自家糖尿病人群纪录",
+      "url": "https://www.fiercebiotech.com/biotech/lilly-raises-weight-loss-bar-its-amylin-zepbound-combo",
+      "source": "Fierce Biotech",
+      "summary_zh": "礼来公布 amylin-Zepbound 组合(eloraTZP)在 2 型糖尿病合并肥胖或超重的成人里实现 23.3% 减重,在该人群超过自家的三靶点候选药 retatrutide。减重赛道从单靶点卷到组合疗法,数字还在往上顶。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "中国发射国网、遥感-40 卫星,四季度发射排期拉满",
+      "url": "https://spacenews.com/china-launches-guowang-yaogan-40-satellites-sets-up-busy-q4-manifest/",
+      "source": "SpaceNews",
+      "summary_zh": "中国完成 9 月的第九、第十次发射,把国网(Guowang)和遥感卫星送入轨道,年底前还有密集排期。国网星座的持续组网节奏,是观察中国版低轨宽带推进速度的直接指标。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "隐藏信息最多的桌游 Stratego 被 AI 攻克,关键是猜对手暗子",
+      "url": "https://arstechnica.com/science/2026/10/ai-finally-beat-the-best-stratego-player-in-history-and-did-it-on-a-budget/",
+      "source": "Ars Technica",
+      "summary_zh": "Stratego 因为绝大部分棋子信息对对手隐藏,长期难倒 AI。这次的突破靠加了第二个神经网络专门猜测隐藏棋子的身份,而且据称是在不高的算力预算下做到的。不完美信息博弈里「先建模对手的隐藏状态」又添一例。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Sean Parker 围绕音乐重建 Stability AI",
+      "url": "https://techcrunch.com/2026/10/02/sean-parker-is-rebuilding-stability-ai-around-music/",
+      "source": "TechCrunch",
+      "summary_zh": "当年用 Napster 教会音乐行业什么叫「先斩后奏」的 Sean Parker,这次带着唱片公司的祝福和资金回来,把 Stability AI 的重心转向音乐。生成式音频从「先上线再谈授权」转向「拿着授权再做」,是这波内容生成合规化的一个缩影。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "把 LoopCD 迁到别的循环模型,验证「半深即达」能不能通用",
+      "based_on": [
+        { "title": "Decoding Looped Transformers Better for (Almost) Free", "url": "https://arxiv.org/abs/2610.02185" }
+      ],
+      "why_now": "方法上周刚挂,完全 training-free,而 Ouro、Huginn 这些循环模型权重都开源、单卡就能推理,是个零门槛复现并做泛化验证的窗口。",
+      "feasibility": "一张 24–40GB 卡做推理即可,不用训练,2–3 周能跑出一张完整的 FLOPs-精度曲线。",
+      "route": [
+        "跑通 Ouro-2.6B-Thinking 的官方推理,先复现 LoopCD-Hidden 在 AIME 上的提升(一两天)。",
+        "把 LoopCD-Hidden 原样搬到另一个循环家族(如 Huginn),看零改动是否仍然涨点。",
+        "扫描「用第几圈 loop 当弱对照」这个超参,画 FLOPs-精度曲线,找出能砍一半圈数的甜点。",
+        "在 GSM8K、HumanEval 上测它是否普遍有效,记录什么情况下失效。"
+      ],
+      "risk": "对比解码的增益可能只在特定循环架构上成立,换个家族就打回原形。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "用一层早期 LoRA 撬开「推理深度」,系统扫出最小有效干预",
+      "based_on": [
+        { "title": "Transformers Stop Thinking Too Early, and a Tiny LoRA Fixes It", "url": "https://arxiv.org/abs/2609.36585" }
+      ],
+      "why_now": "rank-8 单层 LoRA、其余权重全冻,24GB 卡就能复现,刚挂出来还没人系统地扫过「插在哪一层、用多大秩」。",
+      "feasibility": "单卡 <24GB,训练量极小,2 周能把层与秩的网格扫完。",
+      "route": [
+        "复现 Qwen3-8B 在 24 行引用链上从 15.5% 到 99% 的那个 LoRA(一两天)。",
+        "网格扫「插在第几层 × rank」,找出最小的有效干预组合。",
+        "构造可控长度的引用链和多跳 QA,量化「有效推理深度」随 LoRA 位置的变化。",
+        "看这个增益能不能迁移到非推理任务,比如长上下文检索。"
+      ],
+      "risk": "单层 LoRA 的增益可能被训练数据里 chain 的长度上限卡死,外推到更长的链就失败。"
+    },
+    {
+      "domain": "embodied",
+      "type": "repo",
+      "title": "做一个 token-lean 的 VLA agent 执行层(开源库)",
+      "based_on": [
+        { "title": "Fewer Tokens, Better Action (PyRUA-Lean)", "url": "https://arxiv.org/abs/2610.01939" }
+      ],
+      "why_now": "「少 token 多成功」这方向当天同时冒出 PyRUA-Lean 和 caveman 仓库,但没有通用、可插拔的开源实现;LIBERO/RoboTwin 纯仿真就能跑、不碰真机。",
+      "feasibility": "单卡做 VLM 推理加 CPU 仿真,几周能出个 v0 的 pip 可装小库。",
+      "route": [
+        "跑通 LIBERO-PRO 的官方仿真和一个 tool-calling baseline,记下 token 数与成功率(一两天)。",
+        "实现核心执行器:把机器人原语组合进会做条件判断、局部重试的 Python 代码单元,且只在被请求时才回传图像/状态。",
+        "在相同 LLM 调用预算下复现 63% 到 72% 的成功率提升,确认思路站得住。",
+        "把接口做成 adapter,支持换 planner 和 VLA,打包成库攒 star。"
+      ],
+      "risk": "选择性观测的收益高度依赖任务里冗余观测的占比,交互密集、每步都得看图的任务可能省不下多少 token。"
+    }
+  ]
+}
