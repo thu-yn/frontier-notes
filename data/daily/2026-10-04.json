@@ -1,0 +1,341 @@
+{
+  "date": "2026-10-04",
+  "editor_note": "今天 HF 榜几乎被两拨东西占满:视频/世界模型(综述、流式记忆、长上下文那一摊),和 agent 的后训练与评测。有意思的是非 AI 这几篇都在走同一条路——离子传输从静态晶格直接读通道、冷冻电镜跳过密度图直接出原子、原子间势按需分配算力,主题词是「别硬算,从结构里把答案读出来」。最想让你点开的是两篇:一篇在 oracle 设定下为近似优化证出了可证明的量子优势,把「量子到底哪里真赢」的边界又钉死一颗钉子;另一篇干脆主张「泛化是稳定,不是准确率」,同一道题换个问法答案就飘,这才叫没泛化好,而总分根本看不出来。顺手一提,最优传输今天同时出现在 OTRetarget(人到机器人的运动重定向)和下面的「思想碰撞」(拿它治点云低重叠配准),这工具这两年是真的到处冒头。最后交代一句:GitHub Trending 今天抓取报了 503,所以本期没有仓库板块,等明天补上。",
+  "math_note": {
+    "name": "刘维尔定理(相空间体积守恒)",
+    "name_en": "Liouville's Theorem (Phase-Space Volume Conservation)",
+    "field": "哈密顿力学 / 动力系统 / 统计物理",
+    "one_liner": "哈密顿流是相空间里的「不可压缩流体」,一团点怎么搅都不改体积。",
+    "statement": "在相空间(位置 $q$ 加动量 $p$ 一起张成的空间)里取一团初始状态点,让它们各自按哈密顿方程 $\\dot q=\\partial H/\\partial p,\\ \\dot p=-\\partial H/\\partial q$ 演化($H$ 是系统的能量函数),这团点占据的体积始终不变:$\\frac{d}{dt}\\,\\mathrm{vol}=0$。根子在于这个「速度场」的散度恒为零——$\\nabla\\cdot v=\\partial_q\\dot q+\\partial_p\\dot p=\\partial_q\\partial_p H-\\partial_p\\partial_q H=0$,两个混合偏导相消。换句话说,这团流体没有源也没有汇,只会被搬运、拉长、折叠,但不会被压缩或膨胀。",
+    "origin": "约瑟夫·刘维尔 1838 年给出。它后来成了吉布斯统计力学的地基:微正则系综之所以能用「相空间里等概率」来定义,正是因为哈密顿演化不改变这块体积,一团代表性系统的密度沿着自己的轨迹守恒,数状态这件事才有意义。",
+    "derivation": [
+      { "math": "\\partial_t\\rho+\\nabla\\cdot(\\rho v)=0", "note": "把这团点看成密度为 $\\rho$ 的「概率流体」,点既不生也不灭,这个守恒就写成连续性方程,和流体力学里一模一样。" },
+      { "math": "\\frac{d\\rho}{dt}=\\partial_t\\rho+v\\cdot\\nabla\\rho=-\\rho\\,\\nabla\\cdot v", "note": "沿着轨迹看密度的变化率(全导数),整理后发现它只由速度场的散度决定——散度为正代表局部在膨胀,密度就被稀释。" },
+      { "math": "v=(\\dot q,\\dot p)=\\Big(\\tfrac{\\partial H}{\\partial p},\\,-\\tfrac{\\partial H}{\\partial q}\\Big)", "note": "代入哈密顿方程,把抽象的速度场换成由能量函数 $H$ 具体生成的形式,这是哈密顿系统特有的结构。" },
+      { "math": "\\nabla\\cdot v=\\frac{\\partial^2 H}{\\partial q\\,\\partial p}-\\frac{\\partial^2 H}{\\partial p\\,\\partial q}=0", "note": "混合二阶偏导相等(克莱罗定理),一减就归零——这是哈密顿结构白送的性质,不用任何额外假设。" },
+      { "math": "\\frac{d\\rho}{dt}=0\\ \\Longrightarrow\\ \\det\\Big(\\frac{\\partial(q_t,p_t)}{\\partial(q_0,p_0)}\\Big)=1", "note": "密度沿轨迹不变,等价于说演化映射的雅可比行列式恒为 1——体积一点不漏地保住了。" }
+    ],
+    "applications": [
+      { "area": "统计物理", "detail": "微正则与正则系综的「等概率假设」合法,靠的就是相空间体积在哈密顿演化下守恒,否则连「数状态」都无从谈起。" },
+      { "area": "数值积分(辛积分器)", "detail": "做长时间分子动力学或天体力学仿真,普通 Runge-Kutta 会让能量慢慢漂移;辛积分器刻意保住这块相空间体积,轨道跑几万步也不发散。" },
+      { "area": "连续归一化流 / Neural ODE", "detail": "概率密度沿连续变换的对数变化量 $=-\\int\\nabla\\cdot v\\,dt=-\\int\\mathrm{tr}(\\partial v/\\partial x)\\,dt$,正是刘维尔定理的机器学习版本,让生成模型能精确算出样本似然。" },
+      { "area": "哈密顿蒙特卡洛(HMC)", "detail": "用保体积的哈密顿轨迹来提议新样本,雅可比恒为 1 使接受率公式大幅简化,是高维贝叶斯推断里的主力采样器。" }
+    ],
+    "takeaway": "「守恒」不一定是守住某个数值,也可以是守住一块体积、一种结构;认出系统背后那个不可压缩的几何,往往比死记演化公式更管用——从辛积分器到 $\\mathrm{tr}$ 形式的 CNF 似然,都是同一条定理换了身衣服。",
+    "viz": {
+      "type": "vectorfield",
+      "caption": "这是最简单的哈密顿系统——谐振子的相图,$\\dot x=y,\\ \\dot y=-x$。拖动种子点,它的流线永远是一圈闭合的同心圆,没有任何一条螺旋着往里收或往外散;正说明这个速度场既没有汇也没有源(散度为零),相空间面积守恒。",
+      "params": { "fx": "y", "fy": "-x", "xmin": -3, "xmax": 3, "ymin": -3, "ymax": 3, "density": 13, "seedX": 2, "seedY": 0, "steps": 760, "dt": 0.02 }
+    }
+  },
+  "crossover": {
+    "theory": "非平衡最优传输(熵正则 Sinkhorn)",
+    "theory_en": "Unbalanced Entropic Optimal Transport",
+    "field": "最优传输 / 测度论 / 凸优化",
+    "era": "1781 蒙日提出传输问题,2013 Cuturi 的熵正则 + Sinkhorn 让它能在 GPU 上快速求解,2018 前后非平衡 OT(允许质量不守恒)成型",
+    "one_liner": "把配准当成「两堆沙子互相搬运」,再允许搬不动的沙子原地丢掉——低重叠正好治。",
+    "theory_core": "经典最优传输问:两个概率测度 $\\mu,\\nu$ 之间,把一堆质量搬成另一堆的最省力方案是什么,代价 $W(\\mu,\\nu)=\\min_T\\langle C,T\\rangle$,其中 $C_{ij}$ 是点 $i$ 搬到点 $j$ 的单位代价,$T$ 是满足两侧边缘约束的传输计划。熵正则加一项 $\\varepsilon\\,H(T)$,解就能用 Sinkhorn 迭代(交替做行、列归一化)在显卡上快速算出一个软匹配矩阵。非平衡版进一步把「质量必须全部搬完」的硬约束换成 KL 软惩罚 $\\tau\\,\\mathrm{KL}(T\\mathbf 1\\,\\|\\,\\mu)$,允许一部分质量凭空消失或产生——哪边搬起来太亏,就倾向于不搬。",
+    "pc_problem": "点云配准里,ICP 及其变种在重叠率低于约 40% 时极易陷入错误局部最优:它硬给每个点找最近邻当对应,离群点和只在一侧出现的结构(动态物体、被遮挡区域)会把最小二乘整体拽偏。实践中 KITTI 相邻帧还好,但回环检测、跨视角拼接常常重叠不足 30%,成功率从 90% 以上掉到 50% 以下。基于特征(FPFH/FCGF)+ RANSAC 的方法鲁棒些,但 RANSAC 的迭代次数随外点率指数上升,百万点级一次配准动辄几秒到几十秒。",
+    "bridge": "源点云与目标点云各自看成一个经验测度 $\\mu=\\frac1n\\sum_i\\delta_{x_i}$、$\\nu=\\frac1m\\sum_j\\delta_{y_j}$;传输代价 $C_{ij}=\\lVert x_i-y_j\\rVert^2$(或特征空间距离)就是「这两个点该不该配成一对」的几何打分;传输计划 $T_{ij}$ 就是软对应矩阵,Sinkhorn 解出的每行每列近似一一对应,正好当作可微的匹配。而非平衡 OT 的 KL 松弛项,对应「允许源或目标里一部分点压根找不到配对」——这恰恰就是低重叠和离群点的数学建模:搬不过去的质量,罚一点就地销毁,而不是硬塞给一个错误的最近邻。",
+    "angles": [
+      {
+        "dim": "复杂度",
+        "idea": "朴素 Sinkhorn 每次迭代都要算并存满 $n\\times m$ 的代价/核矩阵,百万点根本放不下。改用低秩或 Nyström 近似核(如 low-rank Sinkhorn),或借 KeOps 的符号矩阵,把核分解成两个 $n\\times r$ 因子,矩阵-向量乘从 $O(nm)$ 降到 $O((n+m)r)$。",
+        "gain": "单次迭代 $O(n^2)\\to O(nr)$,$r\\ll n$;百万点的核矩阵内存从约 TB 级降到 GB 级(量级估算)。",
+        "cost": "低秩近似在代价矩阵「长尾」(远距点对)上误差大,$r$ 取小了软对应会糊成一片,得配合几何裁剪半径一起用。"
+      },
+      {
+        "dim": "存储",
+        "idea": "不显式物化传输计划 $T$,只存 Sinkhorn 的两个对偶势向量 $f\\in\\mathbb R^n,\\ g\\in\\mathbb R^m$,任何 $T_{ij}$ 需要时现算 $T_{ij}=\\exp((f_i+g_j-C_{ij})/\\varepsilon)$;再配合空间哈希只在半径邻域内保留非零项,传输计划天然稀疏。",
+        "gain": "存储从 $O(nm)$ 降到 $O(n+m)$ 的对偶势 + 稀疏邻接,约省两个数量级。",
+        "cost": "每次取 $T$ 都要重算指数,是拿算力换内存;$\\varepsilon$ 太小数值会上溢,必须在 log 域做(log-sum-exp 稳定化)。"
+      },
+      {
+        "dim": "鲁棒性",
+        "idea": "用非平衡 OT 的 KL 松弛给离群点和非重叠点显式留一条「退出通道」,再对 $\\varepsilon$ 做退火(从大到小),先粗匹配定大局再逐步细化。",
+        "gain": "低重叠(<30%)场景下配准成功率有望从 ICP 的约 50% 提到 70% 以上(估算,需实测),且对离群点不用再手调外点阈值。",
+        "cost": "多了 $\\tau,\\varepsilon$ 两个超参,退火调度敏感;松弛太狠会把真对应也一起当成「搬不动」丢掉。"
+      },
+      {
+        "dim": "算法优化",
+        "idea": "把 Sinkhorn 软对应当作可微层塞进配准网络(用学到的特征算 $C$),端到端训练;再用软对应的加权质心闭式做 SVD 解旋转平移(Kabsch/Procrustes),迭代几轮。",
+        "gain": "免掉 RANSAC 的指数级采样,外点率高时仍是确定性的多项式开销,通常几轮内收敛。",
+        "cost": "需要训练数据和一个特征提取器;纯几何、无特征时会退化成普通的 Sinkhorn-ICP。"
+      }
+    ],
+    "experiment": [
+      "先在 CPU 上用 POT(Python Optimal Transport)库跑通两个几百点小点云的熵正则 Sinkhorn 配准,把软对应矩阵画出来,记下不同 $\\varepsilon$ 下匹配的清晰度——一两天能完成。",
+      "换成 ModelNet40 单物体(2048 点),人工裁掉一侧 50%/70% 制造低重叠,对比 ICP、FGR、Sinkhorn-ICP 的配准误差与成功率。",
+      "把平衡 Sinkhorn 换成非平衡版(加 KL 松弛),扫 $\\tau$,看低重叠下成功率是否回升。",
+      "接 KeOps 做核的符号化,测 10 万到 100 万点时的显存与耗时曲线,确认「复杂度」那条收益是否真的兑现。",
+      "最后在 3DMatch / KITTI 的回环对上跑一遍,和 FCGF + RANSAC 比召回率与单次配准耗时。"
+    ],
+    "prior_art": [
+      { "title": "RPM-Net: Robust Point Matching using Learned Features (Yew & Lee, CVPR 2020)", "note": "用可微 Sinkhorn 层算软对应并做退火,证明了 OT 式匹配能在配准里端到端训练;但主要针对合成/中等规模数据,百万点级和非平衡松弛都没碰。" },
+      { "title": "Coherent Point Drift (Myronenko & Song, IEEE TPAMI 2010)", "note": "把配准建成高斯混合的概率匹配,思想和 OT 近亲、天然容忍噪声;但它是平衡模型、$O(nm)$ 开销,低重叠下仍会被整体拉偏。" },
+      { "title": "GeomLoss / KeOps 的大规模熵正则 OT 实现(Jean Feydy 等)", "note": "提供了 GPU 上大规模 Sinkhorn 的工程地基和对偶势存储,正好是「复杂度/存储」两条角度的现成底座;但这些库面向通用 OT,没专门针对点云配准的低重叠做封装。" }
+    ],
+    "reality_check": "最可能栽在「软对应 ≠ 正确对应」:熵正则会把对应抹成一片模糊,$\\varepsilon$ 调大了精度掉、调小了迭代数暴涨还数值不稳;而且真实 LiDAR 的点密度随距离剧烈变化,经验测度的质量分布本身就偏,不先做密度归一化,OT 会把「点多的地方」误当成「质量重」硬搬,南辕北辙。"
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Video Generation Models: A Survey of Post-Training and Alignment",
+      "title_zh": "视频生成模型:后训练与对齐综述",
+      "url": "https://arxiv.org/abs/2610.00812",
+      "hf_url": "https://huggingface.co/papers/2610.00812",
+      "authors": "Chaoyu Li、Xiaoyi Gu 等",
+      "affiliation": "亚利桑那州立大学 ASU",
+      "upvotes": 44,
+      "one_liner": "视频生成「预训练之后那一半」终于有人系统盘了一遍。",
+      "summary_zh": "一篇把视频生成的后训练和对齐工作梳理成体系的综述。重点不在怎么预训练出生成能力,而在之后怎么让模型听话——跟随指令、保持时序连贯、别违反物理和安全约束。文章点出视频对齐比图像/文本更难的几个地方:误差会沿时间累积、运动和外观纠缠在一起、多目标互相打架、时序属性几乎没有现成监督信号。想入门视频后训练的,拿它当地图不错。",
+      "tags": ["视频生成", "对齐", "综述"]
+    },
+    {
+      "domain": "ai",
+      "title": "X-Tree: Tokenizing Reusable Experience for Efficient Agent Generalization",
+      "title_zh": "X-Tree:把可复用的经验「分词」进权重里",
+      "url": "https://arxiv.org/abs/2609.32993",
+      "hf_url": "https://huggingface.co/papers/2609.32993",
+      "authors": "Sitao Cheng、Xunjian Yin 等",
+      "affiliation": "滑铁卢大学",
+      "upvotes": 33,
+      "one_liner": "不是把技能写进 prompt,而是像造词表一样把子流程塞进权重。",
+      "summary_zh": "多步 agent 通常在「扁平」的动作流上训练,SFT 和 RLVR 对每个 token 一视同仁,忽略了跨任务反复出现的子流程——而人正是靠这些可复用套路自上而下地规划。X-Tree 借鉴文本分词器「统计合并高频片段、建词表」的思路,直接从数据里把这种层级挖出来并训进权重,全程不调用 LLM。好处是复用能真正泛化,而不是像「写进 context 的技能」那样只停在检索层面。",
+      "tags": ["Agent", "RL", "经验复用"]
+    },
+    {
+      "domain": "ai",
+      "title": "Persona Dosing: Calibrated Activation Steering for Graded Trait Control",
+      "title_zh": "Persona Dosing:给人格表达「按剂量」调浓淡",
+      "url": "https://arxiv.org/abs/2609.36388",
+      "hf_url": "https://huggingface.co/papers/2609.36388",
+      "authors": "Zehao Jin、Junran Wang 等",
+      "upvotes": 40,
+      "one_liner": "想要三分傲慢还是七分?激活引导终于有了可校准的「刻度」。",
+      "summary_zh": "激活引导(activation steering)里那个干预系数只是个抽象强度,没法对应「我想让这个性格表达到几成」。这篇把它变成可下剂量的控制:给一段性格描述加一个目标强度,用一个描述条件化的控制器专门在人格响应上微调,再把它的「流时间」对照实测的性格表达强度做校准。在 Llama-3.1-8B、Qwen3-8B、Gemma-3-4B 上,它能在保持连贯性的前提下把核心性格表达拉上去。训练时甚至没用成对的目标强度标注,靠校准补上,挺巧。",
+      "tags": ["激活引导", "可控生成", "人格"]
+    },
+    {
+      "domain": "ai",
+      "title": "Decentralized Master-Mind: Joint Action Refinement through Iterative Intent Denoising in Multi-Agent Pathfinding",
+      "title_zh": "DMM:多智能体寻路里,靠「意图去噪」把各走各的拼成能配合的一步",
+      "url": "https://arxiv.org/abs/2609.32019",
+      "hf_url": "https://huggingface.co/papers/2609.32019",
+      "authors": "Valeriy Vyaltsev、Anton Andreychuk 等",
+      "upvotes": 41,
+      "one_liner": "每个 agent 单独采样都对,合到一起却撞车——问题出在最后那步采样。",
+      "summary_zh": "去中心化的多智能体寻路(MAPF)要求每个 agent 在只看局部、还能通信的条件下各自到达目标且不相撞。学来的策略即使每个 agent 的动作分布都学对了,独立采样时也可能把各自局部合理的选择拼成一个互相冲突的联合动作——撞车其实是最后采样环节造成的。DMM 用迭代式的「意图去噪」联合细化动作,把这类组合冲突消掉。对做多机协同的人,「问题出在采样而非策略」这个诊断本身就值得记一笔。",
+      "tags": ["多智能体", "寻路", "去噪"]
+    },
+    {
+      "domain": "ai",
+      "title": "KaliBench: A Fine-Grained Benchmark for Cybersecurity Tool Use on Kali Linux with Runtime-Free Verifiable Rewards",
+      "title_zh": "KaliBench:考 LLM 会不会在 Kali Linux 上正确敲命令",
+      "url": "https://arxiv.org/abs/2610.02206",
+      "hf_url": "https://huggingface.co/papers/2610.02206",
+      "authors": "Pengfei Li、Naufal Suryanto 等",
+      "upvotes": 10,
+      "one_liner": "不考知识、不考端到端,专考「这条命令到底敲对了没」。",
+      "summary_zh": "LLM 越来越多被用来把分析师的意图翻成安全工具的调用,但现有评测要么考知识、要么考端到端 agent 任务,没人直接量过「它能不能生成可执行的命令」。而安全操作全靠严格的命令行:参数顺序错、flag 和值配错,一条命令就废了。KaliBench 针对真实 Kali 工具做细粒度评测,关键是用「免运行时」的可验证奖励——不用真跑命令就能判对错,省掉搭靶场的麻烦。对做安全 agent 和工具调用评测的,是个干净的靶子。",
+      "tags": ["安全", "工具调用", "Benchmark"]
+    },
+    {
+      "domain": "ai",
+      "title": "Generalization Is Stability, Not Accuracy: Multi-Axis Evaluation of LLMs",
+      "title_zh": "泛化是稳定,不是准确率:对 LLM 做多轴评测",
+      "url": "https://arxiv.org/abs/2610.01428",
+      "hf_url": "https://huggingface.co/papers/2610.01428",
+      "authors": "Nagham Omar、Mahmoud Jabarin 等",
+      "affiliation": "以色列理工 Technion",
+      "upvotes": 9,
+      "one_liner": "同一道题换个问法答案就变——这才是泛化没做好,而总分看不出来。",
+      "summary_zh": "作者主张:LLM 的泛化应该是「同一个意思换不同说法,输出仍然一致且语义稳定」的能力,而不是单一 prompt 格式下的总分。现有做法用聚合准确率衡量,把「鲁棒」和「刷分」混为一谈。这篇改在单样本层面、跨多个输入变体、跨多个行为维度去看模型的波动性,关注方差而非均值。结论有点扎心:分数上去了不代表模型更稳。做评测的值得换这个视角试一试。",
+      "tags": ["评测", "鲁棒性", "泛化"]
+    },
+    {
+      "domain": "embodied",
+      "title": "OTRetarget: Joint Robot and Object Motion Retargeting via Optimal Transport",
+      "title_zh": "OTRetarget:用最优传输联合重定向机器人与物体运动",
+      "url": "https://arxiv.org/abs/2609.36602",
+      "hf_url": "https://huggingface.co/papers/2609.36602",
+      "authors": "Guillaume Besset、Erwann Carn 等",
+      "affiliation": "法国 INRIA",
+      "upvotes": 7,
+      "one_liner": "人示范的动作搬到机器人身上,连手里的物体一起搬,接触还不走样。",
+      "summary_zh": "把人的动作迁移到人形机器人,难点在既要适配机器人的身体比例,又要保住与地面、与被操作物体的接触关系——尤其是又走又抓的 loco-manipulation,光迁骨架不够,固定物体轨迹又限制了适配。OTRetarget 用最优传输把机器人和多物体的运动联合重定向,让接触在新身体上仍然自洽。正好和今天「思想碰撞」里拿 OT 治点云配准遥相呼应:OT 作为「把一种分布搬成另一种」的通用工具,这两年在几何和运动里到处冒头。",
+      "tags": ["人形机器人", "运动重定向", "最优传输"]
+    },
+    {
+      "domain": "bio",
+      "title": "Fold'EM: Direct atomic structure inference from Cryo-EM particles",
+      "title_zh": "Fold'EM:跳过密度图,直接从冷冻电镜颗粒推原子结构",
+      "url": "https://arxiv.org/abs/2610.01358",
+      "authors": "Advaith Maddipatla、Märt-Erik Mäeots 等",
+      "one_liner": "省掉「先重建密度图再套模型」那步,直接从颗粒图像读原子坐标。",
+      "summary_zh": "传统冷冻电镜(cryo-EM)流程分两步:先把大量颗粒图像重建成静电势密度图,再往图里拟合原子模型。第一步样本复杂度高,要很多颗粒图像,又贵又慢,对构象不均一的样品尤其吃力。Fold'EM 主张直接从颗粒图像推断原子结构,跳过中间的密度重建。如果真能稳住,对高通量结构测定是实打实的提速。(cryo-EM:把样品冻起来用电镜拍大量二维投影,再反推三维结构的技术)",
+      "tags": ["冷冻电镜", "蛋白结构", "生成模型"]
+    },
+    {
+      "domain": "quantum",
+      "title": "A provable quantum advantage for approximate optimization via decoded quantum interferometry",
+      "title_zh": "用「解码量子干涉」为近似优化证出一个可证明的量子优势",
+      "url": "https://arxiv.org/abs/2610.02145",
+      "authors": "Maximilian J. Kramer、Elies Gil-Fuster、Jens Eisert 等",
+      "one_liner": "在 oracle 设定下,量子算法这次是真·打赢了所有多项式经典算法。",
+      "summary_zh": "解码量子干涉(DQI)是近期一种做近似优化的量子范式,它借用优化与编码理论之间的对偶来求解,本身自带性能保证。但一直悬着的问题是:DQI 能不能可证明地超过所有多项式时间经典算法?这篇在 oracle(预言机)设定下给出了这样一个分离——对一类叫 folded optimization 的任务,证明了量子的可证明优势。这类结果的价值不在马上能用,而在于把「量子到底在哪类问题上真有优势」的边界又钉死了一颗钉子。",
+      "tags": ["量子优势", "近似优化", "编码理论"]
+    },
+    {
+      "domain": "chip",
+      "title": "Characterizing High Bandwidth Flash for LLM Serving",
+      "title_zh": "给大模型推理摸清「高带宽闪存」的脾气",
+      "url": "https://arxiv.org/abs/2609.39131",
+      "authors": "Zack Yu、Chloe Wong、Coleman Hooper 等",
+      "affiliation": "UC Berkeley / FuriosaAI",
+      "one_liner": "KV cache 越堆越大,与其全塞进 HBM,不如看看高带宽闪存能顶多少。",
+      "summary_zh": "大模型推理要存模型权重和 KV cache,模型变大、上下文变长后,显存的容量和带宽双双成瓶颈;agent 类负载反复在增长的上下文上交互,更想把 KV 状态留着复用,压力雪上加霜。高带宽闪存(HBF)提供了一条扩显存容量的路子。这篇系统刻画了 HBF 用于 LLM 服务时的真实表现——哪些场景顶得住、哪些会被带宽拖后腿。和 AI 侧「长上下文、KV cache 爆炸」的痛点正好对上,硬件产业这两年在认真找 HBM 之外的第二条腿。",
+      "tags": ["LLM推理", "存储", "KV cache"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "BranchIP: Learning Adaptive Equivariant Computation for Interatomic Potentials",
+      "title_zh": "BranchIP:让等变原子间势「按需分配」算力",
+      "url": "https://arxiv.org/abs/2610.02013",
+      "authors": "Laura Zichi、Gil Harari 等",
+      "one_liner": "张量积太贵,那就让模型自己决定哪里多算、哪里少算。",
+      "summary_zh": "等变机器学习原子间势(MLIP)把原子尺度模拟推进了一大步,但要精确处理复杂体系就得用很贵的模型,张量积是主要瓶颈,基座化的 MLIP 更把这问题放大。BranchIP 用一个统一框架学「自适应的张量积计算」——简单的局部环境少算几步,复杂的才上全量,把算力花在刀刃上。对做材料/分子动力学、嫌 MLIP 跑不长跑不大的人,这是个实用的提速思路。(等变:模型输出随坐标系旋转平移而自洽变换,是物理量本该有的性质)",
+      "tags": ["机器学习势", "分子动力学", "等变网络"]
+    },
+    {
+      "domain": "energy",
+      "title": "Topo-Spectral Percolation Descriptors for Mechanistic Ion Transport Pathways from Static Crystal Structures",
+      "title_zh": "只看静态晶体结构,就推出离子走哪条路、卡在哪个原子",
+      "url": "https://arxiv.org/abs/2610.01070",
+      "authors": "Diptendu Roy、Chiku Parida 等",
+      "one_liner": "不跑动力学,从晶格拓扑里直接读出离子的「高速路和收费站」。",
+      "summary_zh": "离子传输决定了固态电解质、电池电极、离子选择膜等一大批材料的宏观性能,而传输由结构里的扩散通道和那些限制跳跃的「瓶颈原子」决定——这些是晶格框架的内禀属性,与温度、载流子浓度等外部条件无关。这篇提出一组拓扑-谱的渗流描述符,直接从静态晶体结构算出离子传输的机制性通道,不用先跑昂贵的分子动力学。对高通量筛固态电解质,是个省算力的筛子。",
+      "tags": ["固态电解质", "离子传输", "材料筛选"]
+    }
+  ],
+  "repos": [],
+  "news": [
+    {
+      "domain": "chip",
+      "title_zh": "美国逮捕一名科技公司 CEO,指其走私 3 亿美元英伟达芯片入华",
+      "url": "https://arstechnica.com/tech-policy/2026/10/us-arrests-tech-ceo-accused-of-smuggling-300m-in-nvidia-chips-into-china/",
+      "source": "Ars Technica",
+      "summary_zh": "美国司法部逮捕一名科技公司 CEO,指控其向中国走私价值约 3 亿美元的英伟达芯片。此类抓捕持续发生,说明在出口管制下,高端 AI 芯片的灰色流通问题一直没被堵住。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "诺华最高 78 亿美元拿下 Abogen 的体内自免 T 细胞衔接器",
+      "url": "https://www.fiercebiotech.com/biotech/novartis-pays-abogen-575m-vivo-autoimmune-t-cell-engager",
+      "source": "Fierce Biotech",
+      "summary_zh": "诺华付 5.75 亿美元首付、外加最高 72 亿美元里程碑,拿下 Abogen 一款 mRNA 编码的体内 T 细胞衔接器,该药在自免疾病早期临床已显出苗头。这笔交易就在诺华因三例死亡暂停一个自免 CAR-T 项目几周后落地。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "赛诺菲付 10 亿美元首付,与再生元合作四个早期免疫项目",
+      "url": "https://www.fiercebiotech.com/biotech/sanofi-pays-regeneron-1b-4-early-stage-assets-ignite-rd",
+      "source": "Fierce Biotech",
+      "summary_zh": "赛诺菲向长期伙伴再生元支付 10 亿美元首付,合作推进四个早期免疫学项目,想复制 Dupixent 的成功。两家在 Dupixent 上的老交情是这次押注的底气。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "礼来 amylin + Zepbound 组合拳减重 23.3%,刷新自家纪录",
+      "url": "https://www.fiercebiotech.com/biotech/lilly-raises-weight-loss-bar-its-amylin-zepbound-combo",
+      "source": "Fierce Biotech",
+      "summary_zh": "礼来宣布其 amylin 与 Zepbound 的组合疗法 eloraTZP,在 2 型糖尿病合并肥胖/超重人群中实现 23.3% 的减重,在该人群里超过了自家的三靶点候选药 retatrutide。减重赛道的标杆又被礼来自己抬高一截。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Runway 发布面向机器人的世界动作模型 Praxis-1",
+      "url": "https://www.therobotreport.com/runway-introduces-praxis-1-world-action-model-robotics/",
+      "source": "The Robot Report",
+      "summary_zh": "一直做视频生成的 Runway 推出面向机器人的「世界动作模型」Praxis-1,把生成式世界模型往具身控制上迁。公司表示公开发布时会以开放权重而非闭源形式提供。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "苹果因 AI agent 带来的新风险,收紧 macOS 完全磁盘访问权限",
+      "url": "https://techcrunch.com/2026/10/02/apple-says-its-tightening-macos-full-disk-access-controls-due-to-new-risks-from-ai-agents/",
+      "source": "TechCrunch",
+      "summary_zh": "苹果表示将为 macOS 的「完全磁盘访问」权限加新的管控,理由是越来越能干的 AI agent 让「一把钥匙开所有文件、邮件、消息和浏览记录」变得更危险。这是操作系统层面首次明确为 agent 风险改权限模型。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "OpenAI 一名安全员工辞职并公开发声示警",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/1004408/openai-safety-quits-sounding-the-alarm",
+      "source": "The Verge",
+      "summary_zh": "曾负责为 OpenAI 每次重大模型发布撰写安全报告的 David Robinson 本周辞职,并在《大西洋月刊》撰文公开示警。又一位内部安全人士离职发声,外界对这波「集体敲警钟」观感复杂。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "火箭周报:SpaceX 完成三连发,Rocket Lab 拿下大单",
+      "url": "https://arstechnica.com/space/2026/10/rocket-report-spacex-completes-launch-triple-header-rocket-lab-nets-big-contract/",
+      "source": "Ars Technica",
+      "summary_zh": "本期火箭周报:SpaceX 完成一轮三连发,Rocket Lab 拿下一份大合同。同时蓝色起源向 FAA 申请每年最多 50 次新格伦发射与 50 次助推器回收的许可,商业发射节奏明显在往上提。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Aleph Alpha 发布主权开放权重模型 Kolibri",
+      "url": "https://aleph-alpha.com/en/blog/kolibri-has-landed-a-sovereign-open-weight-model/",
+      "source": "Hacker News",
+      "summary_zh": "德国 Aleph Alpha 发布开放权重模型 Kolibri,主打「主权 AI」——数据与模型可自主掌控、不依赖境外闭源 API。帖子在 HN 上热度不低,折射出欧洲对本土可控大模型的持续需求。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "亚马逊 10 亿美元平息数据中心争议,反招来更多争议",
+      "url": "https://arstechnica.com/tech-policy/2026/10/amazons-1b-plan-to-combat-data-center-backlash-draws-more-backlash/",
+      "source": "Ars Technica",
+      "summary_zh": "面对社区对数据中心的反弹,亚马逊抛出 10 亿美元计划并承诺停用保密协议(NDA),停用 NDA 获赞,但因淡化数据中心的污染问题再遭批评。AI 算力扩张与本地社区的矛盾,正从舆论场烧向真金白银。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "embodied",
+      "type": "repo",
+      "title": "做一个「防作弊」的 VLA 加速评测 harness(开源库)",
+      "based_on": [{ "title": "Faster and Better? Benchmark Bugs and Design Limitations Distort the Evaluation of Vision-Language-Action Acceleration", "url": "https://arxiv.org/abs/2609.37771" }],
+      "why_now": "training-free 的 VLA 推理加速方法最近扎堆冒出来,有些在仿真 benchmark 上「成功率反超原模型」——这篇指出那其实是评测 bug 造成的假象。现在正缺一个把这些坑堵上的统一 harness,门槛低、谁都用得上。",
+      "feasibility": "纯仿真(LIBERO / SIMPLER / ManiSkill),CPU + 单卡就能跑,不用训练,2–4 周能出一个可发布的 v0。",
+      "route": [
+        "先在 LIBERO 上把某个公开 VLA(如 OpenVLA)的官方推理和成功率复现,记下 baseline",
+        "照论文列的两类缺陷(初始状态泄漏、评测协议松动等)逐一定位,写成可复现的最小样例",
+        "把这些控制变量封进 harness:固定随机种子、隔离初始状态、统一延迟与成功判定",
+        "接上两三个 training-free 加速方法,给出「去掉 bug 之后」的公平对比榜,开源仓库 + 一键脚本"
+      ],
+      "risk": "如果这些缺陷高度 benchmark-specific,harness 换个环境就失效,通用性要打折。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "把 GeoShrink 这个 training-free 加速搬到 3D/点云扩散,验证「几何外推」还成不成立",
+      "based_on": [{ "title": "GeoShrink: Accelerating Diffusion Transformers with Two Lines of Code", "url": "https://arxiv.org/abs/2609.33723" }],
+      "why_now": "刚挂出来、完全 training-free、号称两行代码接入;而 3D/点云的扩散 transformer(native 3D 生成、图像转 3D)这两年权重陆续开源、单卡就能推理,是个零成本复现 + 跨域验证泛化的窗口。",
+      "feasibility": "单卡 24–40GB 做推理即可,不训练,2–3 周能扫出一条函数求值次数-质量曲线。",
+      "route": [
+        "先在一个图像 DiT 上复现 GeoShrink,确认它宣称的加速和「质量不掉」是真的",
+        "读懂它的「弦切外推 + 往返投影」跳步规则,移植到一个 3D/点云扩散采样器上",
+        "在同一批样本上对比 GeoShrink 与 DDIM/DPM-Solver 的 NFE 与生成质量",
+        "扫 anchor 密度,找出 3D token 下「不掉质量」的最省步数"
+      ],
+      "risk": "GeoShrink 依赖「相邻步的 innovation 平滑」这一假设,3D/点云 token 的几何可能不满足,跳步一多细节就崩。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "一个给小模型做「稳定性」体检的开源评测工具",
+      "based_on": [{ "title": "Generalization Is Stability, Not Accuracy: Multi-Axis Evaluation of LLMs", "url": "https://arxiv.org/abs/2610.01428" }],
+      "why_now": "这篇把泛化重新定义成「换个问法答案还一致」,并指出单一总分会把鲁棒和刷分混淆。现成能直接用的、按样本/跨变体/跨维度测稳定性的轻量工具还没有,正好填一个空。",
+      "feasibility": "只做推理(一个 7B 级开源模型 + 一个改写器),单卡甚至 CPU 加 API 都行,2–3 周能攒出带报告的库。",
+      "route": [
+        "选 2–3 个开源小模型,挑一个 QA/推理任务,先跑出常规准确率当对照",
+        "为每道题自动生成若干语义等价的改写(模板 + 一个改写模型)",
+        "对每个样本统计跨改写的输出一致性与语义方差,而不是只看对错",
+        "把这些指标封成一行调用的评测库 + 可视化报告,挑几个「高分但不稳」的例子做展示"
+      ],
+      "risk": "自动改写本身可能引入语义漂移,「不稳定」到底来自模型还是来自改写质量,需要人工校验一部分。"
+    }
+  ]
+}
