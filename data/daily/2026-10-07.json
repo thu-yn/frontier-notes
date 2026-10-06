@@ -1,0 +1,422 @@
+{
+  "date": "2026-10-07",
+  "editor_note": "今天 HF 榜几乎是 agent 专场:LMBuild 让 agent 去造能真正搭起来、还能用的东西(不止好看),UndoBench 专考 agent 翻车后会不会补救,Proactive-Gym 琢磨怎么让 agent 趁空闲主动帮忙又不添乱。另一条暗线更有意思——「模型学自己生成的东西会越学越歪」:Self-Generated Feedback 那篇把测试时训练的不稳定做了干净的因果拆解,冻住生成端就消掉九成损害。模型这头也热闹,Mistral Large 4(1T)和 Reflection 的 Beam(501B 开源权重)同天开火,都在喊「主权 AI / 本地训练」,而算力那头 Lambda 融 40 亿备 IPO,是同一条线。AI 攻进数学成了本周争论焦点(Quanta、Verge、连 erdosproblems 都被淹),正好配今天的「每日一理」隐函数定理——现代可微优化的地基就在那上头。最值得点开的我选 H-JEPA(LeCun 的分层世界模型)和魔法态培育那篇(容错量子里一个之前被偷偷绕过的真实成本);吐槽一句:OpenAI 的 agent 把 Wikipedia 跑崩,agent 时代的「公地悲剧」算是开场了。",
+  "math_note": {
+    "name": "隐函数定理",
+    "name_en": "Implicit Function Theorem",
+    "field": "数学分析 / 微分几何",
+    "one_liner": "方程没解开,也能知道解怎么随参数动——「隐式求导」的底气全在这。",
+    "statement": "一个方程 $F(x,y)=0$ 本身并没说 $y$ 是不是 $x$ 的函数(想想一个圆,上下两半都满足它)。隐函数定理说:只要 $F$ 连续可微,在某点满足 $F(x_0,y_0)=0$ 且对 $y$ 的偏导 $\\frac{\\partial F}{\\partial y}(x_0,y_0)\\neq 0$,那么在这点附近就一定能把方程局部解成一条光滑曲线 $y=g(x)$;更妙的是,不用真把 $g$ 解出来,它的斜率就能直接读:$g'(x)=-\\,F_x/F_y$(分子分母都是偏导)。多元版本把那个偏导换成对 $y$ 的雅可比矩阵可逆。",
+    "origin": "源头是 19 世纪的柯西,后来由意大利分析学家 Ulisse Dini 在 1870 年代系统化(所以常叫 Dini 定理)。动机很实在:天体力学和物理里到处是方程组,人们想知道「什么时候能把一个变量用其余变量局部表示出来」,而不必每次都费劲去显式求解。",
+    "derivation": [
+      { "math": "F(x_0,y_0)=0", "note": "先站在一个已知的解点上。我们想问:在它附近,能不能把 y 写成 x 的函数 g(x),并让 F(x,g(x)) 恒为 0?" },
+      { "math": "F(x,g(x))=0", "note": "假设这样的 g 存在,代回方程它必须恒等于 0。这是一条「沿曲线走 F 不变」的约束。" },
+      { "math": "F_x+F_y\\,g'(x)=0", "note": "对上式两边关于 x 求导,用链式法则。这一步只是微分,还没动用任何假设。" },
+      { "math": "g'(x)=-\\,F_x/F_y,\\quad F_y\\neq 0", "note": "解出斜率。要能这么除,必须 F_y≠0——这正是定理的关键条件;一旦 F_y=0(切线竖直),这步就崩了。" },
+      { "math": "\\dfrac{\\partial g}{\\partial x}=-\\,\\big(\\partial_y F\\big)^{-1}\\,\\partial_x F", "note": "多元推广:把除法换成雅可比矩阵求逆。存在性这一半其实要靠压缩映射(把求解写成一个收缩迭代)来保证,这里只给「斜率怎么来」的直觉。" }
+    ],
+    "applications": [
+      { "area": "可微优化 / 深度学习", "detail": "优化即一层(DEQ 深度平衡模型、双层/超参优化)靠「隐式求导」反传:把最优解当成满足某方程的隐函数,不用展开整个求解过程就能拿到梯度。" },
+      { "area": "热力学 / 物理", "detail": "状态方程 $F(P,V,T)=0$ 把三个量绑在一起,隐函数定理保证可以局部把任意一个解成其余两个的函数,并给出偏导间的关系(如循环关系)。" },
+      { "area": "机器人学", "detail": "逆运动学里关节角与末端位姿由约束方程绑定,雅可比可逆时就能局部求解、并知道位姿微小变化对应多少关节变化;雅可比奇异处正对应控制失效的奇异位形。" },
+      { "area": "曲线与曲面几何", "detail": "隐式表示的曲面 $F=0$(常见于点云重建的 SDF/占据场)在 $\\nabla F\\neq 0$ 处是光滑流形,法向就是 $\\nabla F$——这保证了等值面能稳定地抽取网格。" }
+    ],
+    "takeaway": "核心思想是:局部地,一条约束曲线长得就像它的切线。只要「对要解的变量那个方向」不退化(偏导/雅可比非零),非线性方程在小邻域里就和线性的一样好用——这也是整个「隐式微分」技术的根。",
+    "viz": {
+      "type": "custom",
+      "caption": "沿单位圆 $x^2+y^2=1$(也就是 $F=0$)拖动点 P:切线不竖时(绿),附近就能把曲线写成 $y=g(x)$,斜率正好是 $-x/y$;拖到最左、最右两点(红),切线竖直、$\\partial F/\\partial y=0$,这时同一个 x 对应上下两个 y,写不成单值函数——定理的条件在这里罢工。",
+      "html": "<div style='font-family:system-ui,sans-serif'><canvas id='ift' width='520' height='360' style='max-width:100%;touch-action:none'></canvas><div style='margin-top:8px;font-size:13px;line-height:1.9'>绕圆移动点 P:θ = <input id='ith' type='range' min='0' max='360' step='1' value='55' style='width:180px;vertical-align:middle'><div id='iftlab' style='margin-top:4px'></div></div></div>",
+      "script": "(function(){var root=el.querySelector('#ift');if(!root)return;var ctx=root.getContext('2d');var W=root.width,H=root.height;var cx=W/2,cy=H/2,S=110;var sl=el.querySelector('#ith');function P2(x,y){return [cx+x*S,cy-y*S];}function draw(){var th=+sl.value*Math.PI/180;var x=Math.cos(th),y=Math.sin(th);ctx.clearRect(0,0,W,H);ctx.strokeStyle='#e2e5ea';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(20,cy);ctx.lineTo(W-20,cy);ctx.moveTo(cx,20);ctx.lineTo(cx,H-20);ctx.stroke();ctx.strokeStyle='#2f74ff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,S,0,7);ctx.stroke();var bad=Math.abs(y)<0.18;var p=P2(x,y);var tx=-y,ty=x,L=150;ctx.strokeStyle=bad?'#e5484d':'#12a150';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(p[0]-tx*L,p[1]+ty*L);ctx.lineTo(p[0]+tx*L,p[1]-ty*L);ctx.stroke();ctx.fillStyle='#1b1f24';ctx.beginPath();ctx.arc(p[0],p[1],5,0,7);ctx.fill();var lab=el.querySelector('#iftlab');if(lab){if(bad){lab.innerHTML='\\u2202F/\\u2202y = 2y \\u2248 0 \\u2192 竖直切线,这里解不出 y=g(x)(定理失效)';lab.style.color='#e5484d';}else{var slope=(-x/y).toFixed(2);lab.innerHTML='\\u2202F/\\u2202y = 2y \\u2260 0 \\u2192 局部可解,g\\u2032(x) = \\u2212x/y = '+slope;lab.style.color='#12a150';}}}sl.addEventListener('input',draw);draw();})();"
+    }
+  },
+  "crossover": {
+    "theory": "交替投影的多项式(切比雪夫)加速",
+    "theory_en": "Polynomial (Chebyshev) Acceleration of Alternating Projections",
+    "field": "数值优化 / 凸与流形分析",
+    "era": "交替投影 von Neumann 1933;切比雪夫加速 1950s;本周这篇把它推广到光滑流形的不动点并给收敛率",
+    "trigger": { "title": "Polynomial Acceleration of Alternating Projections: Chebyshev Acceleration, Convergence Rates, and Retractions", "url": "https://arxiv.org/abs/2610.06150" },
+    "one_liner": "把 ICP 看成两面镜子之间反复反射,切比雪夫替你把反射次数开方——前提是镜子别晃。",
+    "theory_core": "交替投影(AP)把「求两个集合的交点」变成反复往两边投影:$x_{k+1}=P_B P_A x_k$。当两个集合是子空间/光滑流形时收敛是线性的,速率由二者之间的 Friedrichs 角 $\\theta$ 决定——误差每轮约乘 $\\cos^2\\theta$,夹角越小(越「几乎平行」)越慢。多项式(切比雪夫)加速用过去几步的线性组合,把收缩因子从约 $1-\\gamma$ 改善到约 $1-\\sqrt\\gamma$(其中 $\\gamma=\\sin^2\\theta$),本质和共轭梯度的加速同源。触发这次碰撞的这篇把这套从子空间推广到光滑流形的不动点,给出了局部 R-线性收敛和加速成立的条件。",
+    "pc_problem": "ICP(迭代最近点)是点云配准的主力:每轮先给源点云每个点找目标里的最近邻(建对应),再解一个最小二乘求刚体变换,反复迭代。在高重叠、好初值下几十轮内就收敛;但一旦重叠率低(<40%)、结构对称、或初始位姿偏差大,收敛会退化到上百轮甚至卡在局部极小。每轮最近邻查询靠 kd-tree 是 $O(n\\log n)$,点数到百万级时单轮几十到几百毫秒,上百轮就是几十秒——实时建图/回环检测里是硬瓶颈。",
+    "bridge": "ICP 的两步正好是两个「投影」:①固定变换、给每点取最近邻 = 把当前状态投影到「对应关系自洽」的约束集 A;②固定对应、求最优刚体变换 = 投影到刚体运动流形 B(即 SE(3))。于是整条 ICP 就是 $x_{k+1}=P_B P_A x_k$ 这个交替投影迭代。两个点云的重叠几何 ↔ 两个约束集的 Friedrichs 角:重叠高、特征丰富 = 夹角大 = 收敛快;低重叠/对称退化 = 夹角趋零 = 爬行。那篇论文对流形不动点的推广恰好对上 SE(3) 这个非线性约束。",
+    "angles": [
+      {
+        "dim": "算法优化",
+        "idea": "在外层 ICP 迭代上套切比雪夫/安德森加速:不改每轮的最近邻+最小二乘,只用最近 m 步的变换参数、在 SE(3) 的李代数 $\\mathfrak{se}(3)$ 上做线性组合,再 retract(指数映射)回流形,外推出下一步位姿。这正是那篇讲的「流形不动点 + 多项式加速 + retraction」。",
+        "gain": "线性收缩从约 $1-\\gamma$ 变到约 $1-\\sqrt\\gamma$,低重叠下迭代轮数从约 100 量级降到约 $\\sqrt{100}=10$ 量级(乐观估算,实际受假设限制会打折)。",
+        "cost": "远离收敛或外点多时加速可能发散,必须配信赖域/回退到普通 ICP;李代数外推只在局部小位移下成立。"
+      },
+      {
+        "dim": "复杂度",
+        "idea": "总耗时≈轮数×每轮 kd-tree 查询,减轮数直接砍总复杂度;再叠加每轮只在一个随机子采样(如 5% 的点)上建对应,用方差缩减稳住方向估计。",
+        "gain": "总复杂度从 $O(T\\,n\\log n)$ 降到约 $O(\\sqrt T\\cdot \\alpha n\\log n)$($\\alpha$ 为采样率),综合几倍到一个量级(估算)。",
+        "cost": "子采样放大每轮噪声,可能抵消加速带来的稳定性,需要自适应采样率、越接近收敛采得越密。"
+      },
+      {
+        "dim": "鲁棒性",
+        "idea": "把 Friedrichs 角当成在线诊断量:用最近几步误差的几何衰减比反推当前 $\\cos^2\\theta$,角太小(低重叠/对称退化的信号)就自动关掉加速、切回全局配准或分支,别让加速把你冲进错误盆地。",
+        "gain": "避免「加速加速着就飞了」,把低重叠场景的失败率压一截(估算),并给出可解释的「何时该放弃加速」准则。",
+        "cost": "需要可靠的在线角估计,噪声大时估计本身不稳,阈值要按传感器调。"
+      },
+      {
+        "dim": "并行",
+        "idea": "每轮最近邻查询天然可并行(GPU kd-tree / 哈希网格),加速层只在 CPU 上做 m 维小线性代数、几乎零成本;还可同时跑多个初值的加速 ICP,按各自估到的收敛率排序选最优,天然应对对称歧义。",
+        "gain": "单轮查询在 GPU 上再快约一个量级,多初值并行覆盖对称/多峰情形,整体墙钟进一步缩短。",
+        "cost": "GPU 最近邻实现本身有工程成本;多初值并行吃显存,初值太多反而摊薄收益。"
+      }
+    ],
+    "experiment": [
+      "在 Stanford bunny / ModelNet40 上跑通一个开源 ICP(如 Open3D 的 point-to-plane ICP),记下不同重叠率和初值下的迭代轮数与耗时——纯 CPU,半天能做完。",
+      "实现最朴素的安德森加速(窗口 m=3,先直接在四元数+平移这 7 个参数上外推,不上 SE(3) retraction),对比轮数,确认「减轮数」这条路通不通。",
+      "换成在 $\\mathfrak{se}(3)$ 上外推 + 指数映射 retract 回 SE(3),加信赖域回退,专测低重叠(约 30%)场景。",
+      "在 KITTI odometry 相邻帧上验证实时性与配准误差,和普通 ICP、point-to-plane、Fast-Robust-ICP 比轮数/耗时/误差。",
+      "若加速稳,把在线 Friedrichs 角诊断那条加进去,画「估计角 vs 实际加速增益」曲线,验证诊断是否可信。"
+    ],
+    "prior_art": [
+      { "title": "Fast and Robust ICP (Zhang, Yao, Deng, IEEE TPAMI 2022)", "note": "已经证明安德森加速对 ICP 有效、还配了 Welsch 鲁棒损失,代码开源。但他们没从 Friedrichs 角/多项式加速最优性的角度分析,也没做「角太小就自动关加速」的在线自适应;真正的切比雪夫式最优多项式加速在 ICP 上基本没人系统试过。" },
+      { "title": "交替投影加速在凸可行性问题上的既有工作(POCS / Douglas–Rachford 等)", "note": "查下来,交替投影及其加速在相位恢复、凸可行性里很成熟,但把「AP 的多项式加速理论 + Friedrichs 角解释」正式搬到 ICP/SE(3) 配准、并解释低重叠退化的,没找到直接做的;最接近的就是上面那条 Anderson-ICP。" }
+    ],
+    "reality_check": "ICP 的两个「投影」都不是往凸集投——最近邻那步随位姿跳变、不连续,刚体那步是非凸流形;交替投影那套漂亮的线性收敛和 $\\cos^2\\theta$ 速率只在「干净相交 + 光滑」假设下成立。真实点云有外点、部分重叠、对应关系会在迭代中整体翻转,这些假设说崩就崩,加速很可能恰在最该救场的低重叠场景里把你直接甩飞。所以加速必须带回退闸,别指望理论速率白拿。"
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "LMBuild: Evaluating LLM Agents for Generating Buildable and Functional Structures",
+      "title_zh": "LMBuild:考 LLM agent 造的东西能不能真搭起来、还能用",
+      "url": "https://arxiv.org/abs/2610.04292",
+      "hf_url": "https://huggingface.co/papers/2610.04292",
+      "authors": "Jiateng Liu、Rushi Wang、Cheng Qian 等",
+      "affiliation": "伊利诺伊大学厄巴纳-香槟分校(UIUC)",
+      "upvotes": 23,
+      "one_liner": "会画好看的不算本事,能照着装出来还能用才算。",
+      "summary_zh": "现有「让 LLM 生成 3D 结构」的评测大多只看几何好不好看,不管这东西能不能真造出来、造出来能不能干活。LMBuild 把生成物表示成装配结构——零件分解、关节、材料、装配顺序——专门评 agent 产出的东西是否可搭建、有功能,还配了统一的可复现评测环境。把「物理可实现性」这件之前被绕过的事摆上了台面。",
+      "tags": ["Agent", "3D", "Benchmark"]
+    },
+    {
+      "domain": "ai",
+      "title": "Foundations of Proactive Agents: Principles, Technical Layers, and Proactivity-Gym",
+      "title_zh": "主动式 agent 的基础:原则、技术分层与 Proactivity-Gym",
+      "url": "https://arxiv.org/abs/2609.37267",
+      "hf_url": "https://huggingface.co/papers/2609.37267",
+      "authors": "Jio Oh、Seunghyun Do、Young-Jun Lee 等",
+      "affiliation": "Minnesota NLP",
+      "upvotes": 20,
+      "one_liner": "主动帮忙的前提是别帮倒忙、别让人不敢信。",
+      "summary_zh": "主动式 agent 想趁空闲算力在你开口前就把活干了,但干对了也可能误判情境、增加你的复核成本、甚至削掉信任。这篇提了三条联合原则(3T:任务能力、时间分配、信任),把设计空间按五个维度拆开,还给了个评测环境 Proactivity-Gym。更像一篇把「主动性」这件事讲清楚的框架文,想做主动 agent 的可以拿来对齐概念。",
+      "tags": ["Agent", "Proactive"]
+    },
+    {
+      "domain": "ai",
+      "title": "Self-Generated Feedback Destabilizes Test-Time Training: A Causal Decomposition of Long-Horizon Adaptation",
+      "title_zh": "自己喂自己会让测试时训练失稳:长程自适应的因果拆解",
+      "url": "https://arxiv.org/abs/2610.05076",
+      "hf_url": "https://huggingface.co/papers/2610.05076",
+      "authors": "Cheng Luo、Bing Li、Bernard Ghanem",
+      "affiliation": "阿卜杜拉国王科技大学(KAUST)",
+      "upvotes": 18,
+      "one_liner": "模型照着自己的回声练习,练着练着就跑调了。",
+      "summary_zh": "测试时训练(TTT,推理时还在更新权重)让模型从自己的输出里学,但每次更新又改变了生成下一个训练样本的模型。在 128K token 的长流里,保留这种「自生成更新」会让模型在独立的人写文本上预测变差,多个配置和 Qwen3-4B 上都复现。关键是做了因果拆解:冻住生成模型能消掉九成以上的损害,说明毛病出在「自己喂自己」的闭环,而不是从生成文本学本身。",
+      "tags": ["TTT", "LLM", "Causal"]
+    },
+    {
+      "domain": "ai",
+      "title": "How to Loop MoE: Flatten the Experts, Untie the Attention",
+      "title_zh": "MoE 该怎么循环:把专家拍扁、解开注意力",
+      "url": "https://arxiv.org/abs/2609.35751",
+      "hf_url": "https://huggingface.co/papers/2609.35751",
+      "authors": "Shouren Wang、Chuang Ma、Mohsen Hariri 等",
+      "upvotes": 6,
+      "one_liner": "循环和稀疏两种省参数思路拼一起,专家池子变大、利用率上来。",
+      "summary_zh": "循环 Transformer(一块层反复用)和稀疏 MoE(每 token 只激活少数专家)是两种让参数用得更足的思路,这篇把它们拼起来问「MoE 到底该怎么循环」。给的答案 Foil:在专家参数和每 token 专家算量都不变的前提下,把专家层数减半、每层专家翻倍、过两遍,让每次路由从更大的池子里挑;同时解开注意力的绑定。固定算量下换来更高的专家利用率。",
+      "tags": ["MoE", "LLM", "Efficiency"]
+    },
+    {
+      "domain": "ai",
+      "title": "What Matters for Latent Reasoning with Flow Matching",
+      "title_zh": "潜空间推理用 flow matching,到底什么才重要",
+      "url": "https://arxiv.org/abs/2610.06666",
+      "hf_url": "https://huggingface.co/papers/2610.06666",
+      "authors": "Yassine Ouali、Adrian Bulat、Georgios Tzimiropoulos",
+      "affiliation": "三星研究院(Samsung Research)",
+      "upvotes": 6,
+      "one_liner": "先把「什么是好的潜思考」定义清楚,再用 flow matching 去真的满足它。",
+      "summary_zh": "潜空间推理让 LLM 在连续空间里「想」、只把答案说出来。作者先立了有效潜思考的五条标准:有用(真帮到答对而非只是改答案)、多样、可解释(解码出的思维链确实是答案依据)、可细化、省。指出现有方法大多只是从问题里抄捷径或把显式 CoT 蒸进权重,很难同时满足,于是改用 flow matching 来学。算是给「潜推理」这件事定了把尺子。",
+      "tags": ["Latent Reasoning", "Flow Matching"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Optimizing the Optimizer: Language Models Discover Faster Molecular Relaxation",
+      "title_zh": "优化优化器:语言模型搜出更快的分子弛豫算法",
+      "url": "https://arxiv.org/abs/2610.06577",
+      "hf_url": "https://huggingface.co/papers/2610.06577",
+      "authors": "Artem Tsypin、Vladimir Deshchenya、Kuzma Khrabrov 等",
+      "upvotes": 16,
+      "one_liner": "不是用 AI 算分子,是让 AI 把算分子的优化器改快。",
+      "summary_zh": "量子化学里几何优化很贵:每步要算一次力,在 DFT 级别这步吃掉大部分墙钟时间。他们让一个 agent 去改写优化器本身、尽量少调用力,还设了两道闸门——拒绝过早停止、拒绝不能泛化到新分子的「假改进」。从最快的开源优化器 Sella 出发,搜出 AutoSella 一家两个优化器。是「让 LLM 自动做科研」里少见有硬指标锚定的实证。",
+      "tags": ["AI4Science", "LLM", "Optimization"]
+    },
+    {
+      "domain": "embodied",
+      "title": "H-JEPA: End-to-End Learning of Hierarchical World Models for Visual Planning",
+      "title_zh": "H-JEPA:端到端学分层世界模型做视觉规划",
+      "url": "https://arxiv.org/abs/2610.06805",
+      "authors": "Wancong Zhang、Basile Terver、Michael Rabbat、Yann LeCun",
+      "one_liner": "把世界模型叠成金字塔,高层管大方向、低层管下一步。",
+      "summary_zh": "长程规划得在不同时间尺度和抽象层上推理,但现有 JEPA 世界模型大多只在单一尺度或共享潜空间里预测。H-JEPA 端到端训一叠带动作条件的 JEPA,每层在自己学到的潜空间里预测得更远;规划自顶向下走,上层朝目标优化、它的预测再变成下层规划器的子目标。数据里的因子按不同时间尺度演化时,这种分层最吃得上。LeCun 组延续世界模型路线的一步。",
+      "tags": ["World Model", "Planning", "JEPA"]
+    },
+    {
+      "domain": "embodied",
+      "title": "Encoded but Not in Control: Revealing the Grounding Gap in Vision-Language Robot Policies",
+      "title_zh": "编码进去了却没在控制:揭开视觉-语言机器人策略的 grounding 缺口",
+      "url": "https://arxiv.org/abs/2610.06235",
+      "authors": "Shaohan Jiang、Jiahang Cao、Qiduo He 等",
+      "one_liner": "机器人把指令编码进去了,但方向盘根本不在指令手里。",
+      "summary_zh": "语言条件策略到底是在「听指令」还是在「看场景猜任务」?光靠任务成功说明不了。他们保持场景不变、只改指令(换成有效的其他目标、无关名词、无关句子)来做干预,在仿真和真机上测 VLA 和世界-动作模型,发现很多策略其实没真正受语言控制,是从场景里推出任务。把「grounding gap」量化了出来——这对评估语言可控性是个很实用的探针。",
+      "tags": ["VLA", "Grounding", "Robotics"]
+    },
+    {
+      "domain": "quantum",
+      "title": "The practical cost of magic state cultivation",
+      "title_zh": "魔法态培育的真实成本",
+      "url": "https://arxiv.org/abs/2610.06828",
+      "authors": "Rohan Mehta、Varun Menon、Hengyun Zhou、Mikhail D. Lukin",
+      "one_liner": "之前算的培育成本,偷偷用了个计算时根本做不到的测量。",
+      "summary_zh": "容错量子计算需要高保真的非 Clifford「魔法态」,而「魔法态培育」是低时空开销的制备法。问题是:现有开销估计都假设最后能对输出做无噪声的横向测量来做后选,可这种测量会毁掉魔法态,真正计算时根本用不了。他们提出 Caliper,用只靠非破坏性中途测量的开边界后选,给出培育在真实约束下的成本。相当于把一个被方便假设掩盖的账重新算清楚。",
+      "tags": ["Quantum", "Fault-Tolerance", "Magic State"]
+    },
+    {
+      "domain": "bio",
+      "title": "Learning Latent Protein Languages for Autoregressive Generation",
+      "title_zh": "为自回归生成学一套「潜蛋白语言」",
+      "url": "https://arxiv.org/abs/2610.03978",
+      "hf_url": "https://huggingface.co/papers/2610.03978",
+      "authors": "Mahdi Pourmirzaei、Farzaneh Esmaili、Amir Ziashahabi 等",
+      "upvotes": 1,
+      "one_liner": "给蛋白换一套带上下文的「字母表」,自回归就不那么吃力了。",
+      "summary_zh": "自回归 Transformer 在蛋白序列和结构生成上一直偏弱,作者认为症结在「目标表示」:氨基酸 token 只编码残基身份、没有上下文语义。于是学了两套潜蛋白语言——PLL 在冻结的 ESM-2 之上把序列映到 4096 态的上下文字母表、一残基一 token,SLL 则给骨架坐标一套离散结构表示。思路是把表示先做对,再谈生成。",
+      "tags": ["Protein", "Autoregressive", "Representation"]
+    },
+    {
+      "domain": "chip",
+      "title": "The future of 3D NAND flash technology",
+      "title_zh": "3D NAND 闪存的未来",
+      "url": "https://arxiv.org/abs/2610.06363",
+      "authors": "Prasanna Venkatesan、Taeyoung Song、Gaurav Thareja 等",
+      "one_liner": "堆到千层,卡住的不是光刻机,是一个个电子待不住了。",
+      "summary_zh": "3D NAND 已是 AI 时代的存储底座,从模型训练、大规模推理到冷数据归档都靠它。路线图正冲向千层堆叠、单 die 几十万亿器件,但作者指出:扩展的主要约束不再是工艺集成或光刻,而是电荷存储本身的物理——横向电荷迁移、静电耦合、读扰动、传输受限,正进入「余量受限」区。一篇把这些收尾阶段挑战讲清楚的综述。",
+      "tags": ["NAND", "Storage", "Semiconductor"]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Deep learning enables large-scale inverse design of free-form metasurfaces",
+      "title_zh": "深度学习让大面积自由形超表面的反向设计跑得起来",
+      "url": "https://arxiv.org/abs/2610.05021",
+      "authors": "Viktor A. Lilja、Khosro Zangeneh Kamali、Mikael Käll 等",
+      "one_liner": "把反复电磁仿真换成懂局域性的代理模型,大面积超表面才设计得起。",
+      "summary_zh": "超表面是用亚波长结构操控光的超薄光学元件,能做出传统光学难实现的紧凑器件;但要在大面积上用满它的设计自由度,一直被反向设计所需的反复电磁仿真的巨大算力挡住。他们做了个「物理定制」的深度学习代理模型,利用电磁相互作用的局域性和对称性,从小尺度训练泛化到大面积,把仿真这一环的成本压下来。",
+      "tags": ["AI4Science", "Metasurface", "Inverse Design"]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "earthtojake/text-to-cad",
+      "url": "https://github.com/earthtojake/text-to-cad",
+      "language": "Python",
+      "stars": 17945,
+      "stars_today": "620",
+      "one_liner": "跟 agent 说句话,出一张能加工的参数化图纸。",
+      "summary_zh": "给编码/设计 agent 装上 CAD 能力,直接产出参数化 CAD 模型而不是图片或网格。做机械件、3D 打印件的人可以把设计意图交给它试试,离「可制造」比纯生成模型近一步。"
+    },
+    {
+      "domain": "ai",
+      "name": "deepseek-ai/DeepGEMM",
+      "url": "https://github.com/deepseek-ai/DeepGEMM",
+      "language": "Cuda",
+      "stars": 8676,
+      "stars_today": "363",
+      "one_liner": "DeepSeek 把自家 GEMM 核掏出来了,代码干净得像教材。",
+      "summary_zh": "面向 GPU 的干净高效 BLAS/矩阵乘法核库。对做 kernel 优化、自建推理/训练栈的人很有参考价值——既能直接用,源码也值得读,看大厂怎么把 GEMM 调到极致。"
+    },
+    {
+      "domain": "ai",
+      "name": "morluto/rea",
+      "url": "https://github.com/morluto/rea",
+      "language": "TypeScript",
+      "stars": 9075,
+      "stars_today": "2,963",
+      "one_liner": "给逆向工程配一队 agent,从行为一路挖到二进制。",
+      "summary_zh": "用 agent 做逆向工程,从观察 app 行为一直挖到原生二进制。安全研究、兼容性分析、老系统摸底都能用。今天涨近三千星,是榜上最猛的一个。"
+    },
+    {
+      "domain": "ai",
+      "name": "thedotmack/claude-mem",
+      "url": "https://github.com/thedotmack/claude-mem",
+      "language": "TypeScript",
+      "stars": 97132,
+      "stars_today": "536",
+      "one_liner": "让 agent 记得上次聊到哪。",
+      "summary_zh": "给 agent 做跨会话的持久上下文:记录会话里发生的事、用 AI 压缩、下次按需注入相关内容。被长对话里反复重述背景折磨的人会想要。"
+    },
+    {
+      "domain": "ai",
+      "name": "pbakaus/impeccable",
+      "url": "https://github.com/pbakaus/impeccable",
+      "language": "JavaScript",
+      "stars": 77652,
+      "stars_today": "609",
+      "one_liner": "专治 AI 生成界面那股「将就」味。",
+      "summary_zh": "一套给 AI 编码工具用的设计语言,目标是让它产出的界面更像样、更一致。把审美规则喂给 harness,而不是指望模型每次都碰巧好看。"
+    },
+    {
+      "domain": "ai",
+      "name": "cathrynlavery/diagram-design",
+      "url": "https://github.com/cathrynlavery/diagram-design",
+      "language": "HTML",
+      "stars": 43988,
+      "stars_today": "227",
+      "one_liner": "不要 Mermaid 那套糊弄图,给 agent 一套能看的图表。",
+      "summary_zh": "给 Claude Code、Codex、Copilot 等用的编辑式图表设计,42 种图,纯自包含 HTML+SVG,不依赖 Mermaid。常被 AI 生成图表的粗糙感劝退的人可以看看。"
+    },
+    {
+      "domain": "ai",
+      "name": "tester-army/e2e",
+      "url": "https://github.com/tester-army/e2e",
+      "language": "TypeScript",
+      "stars": 6221,
+      "stars_today": "1,720",
+      "one_liner": "给 agent 时代重写的端到端测试框架。",
+      "summary_zh": "面向 web 和移动端的新一代端到端测试框架。今天涨星很猛,值得做前端测试、想让 agent 自动写/跑 e2e 用例的人关注。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "Mistral 放出 Large 4,一个 1T 多模态模型",
+      "url": "https://techcrunch.com/2026/10/06/mistrals-new-1t-model-aims-to-leapfrog-closed-and-open-rivals/",
+      "source": "TechCrunch AI",
+      "summary_zh": "法国 Mistral 发布 Mistral Large 4,一个万亿参数级的多模态大模型,目标是同时压过美中两边的开闭源对手。HN 上热度很高(1497 分),是今天模型发布里声量最大的一个。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Reflection 推出 501B 开源权重模型 Beam,主打低算力对标中国模型",
+      "url": "https://reflection.ai/blog/introducing-beam",
+      "source": "Hacker News",
+      "summary_zh": "Reflection 把 Beam 和后续模型瞄准企业和主权国家,卖点是「AI 工厂」——让机构用自己的私有数据训练它的模型、建本地化 AI 系统。501B 开源权重、强调更低的算力成本,和 Mistral 同天开火,都在抢「主权/本地 AI」这块。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Nvidia 投的算力公司 Lambda 融 40 亿美元,备战 2027 IPO",
+      "url": "https://techcrunch.com/2026/10/06/ai-computing-startup-lambda-to-raise-4b-ahead-of-planned-ipo/",
+      "source": "TechCrunch AI",
+      "summary_zh": "Lambda 以 145 亿美元投前估值融资最多 40 亿,Coatue 和 Blackstone 领投,为 2027 年 IPO 铺路。模型越堆越大,算力这条线的钱也继续往里砸,和今天两场大模型发布是同一个故事的两头。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "OpenAI 将在欧盟给 ChatGPT 文本加水印",
+      "url": "https://techcrunch.com/2026/10/05/openai-will-start-watermarking-chatgpts-text-in-the-eu/",
+      "source": "TechCrunch AI",
+      "summary_zh": "为符合欧盟 AI 法案,OpenAI 开始给欧盟区的 ChatGPT 和 Codex 输出文本加隐形水印。不过它自己也承认,编辑过的文本会让这些标记更难被检出——水印能挡多少冒用,存疑。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "维基媒体称 OpenAI「失控」agent 可能和 5 月一次宕机有关",
+      "url": "https://www.theverge.com/news/1004929/wikipedia-openai-rogue-bots-wikimedia-foundation-outage",
+      "source": "The Verge AI",
+      "summary_zh": "维基媒体基金会确认在其平台上发现 OpenAI agent 的异常活动,包括擅自编辑维基、尝试「利用」Etherpad 工具,以及大流量冲击,疑似和 5 月那次宕机相关。AI agent 把第三方网站爬崩/搞乱的案例最近接连冒出来。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "AI 攻入数学,学界在震惊和焦虑中争论",
+      "url": "https://www.quantamagazine.org/is-ai-the-end-of-math-as-we-know-it-20261005/",
+      "source": "Quanta Magazine",
+      "summary_zh": "过去一年 OpenAI、Anthropic 等在多个长期未解的数学问题上宣布突破,据称还解了一个千禧年问题,远超很多人对现有系统的预期。但「快速迭代、打破常规」的硅谷做法让数学界在震惊、愤怒和寻找新定位之间纠结;连 erdosproblems.com 都被 AI 提交淹没。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "波士顿动力换帅,前亚马逊 Alexa 负责人 Rohit Prasad 出任 CEO",
+      "url": "https://www.therobotreport.com/boston-dynamics-appoints-former-amazon-executive-rohit-prasad-new-ceo/",
+      "source": "The Robot Report",
+      "summary_zh": "Prasad 此前是亚马逊高级副总裁、Alexa 与 AGI 团队的首席科学家。把一个做大模型和语音 AI 出身的人放到机器人硬件公司掌舵,信号很明确:波士顿动力想往「physical AI」靠。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "可编程内存控制器想让新 DRAM 技术更容易落地(ETH/CISPA/NYU)",
+      "url": "https://semiengineering.com/programmable-memory-controller-eases-adoption-of-new-dram-techniques-eth-zurich-cispa-nyu/",
+      "source": "SemiEngineering",
+      "summary_zh": "Terracotta 提出一个灵活的 DRAM 接口和内存控制器:观察到很多 DRAM 新技术(in-DRAM 计算、低延迟访问、可靠性增强)的命令和控制器结构其实相似,用一套可编程框架就能少改硬件地采纳它们。给这些长期卡在「每换一个技术就得改一次刚性接口」的研究松了绑。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Teradyne 投资 Bright Machines,把机器人搬进 AI 基础设施制造",
+      "url": "https://www.therobotreport.com/teradyne-invests-ibright-machines-brings-robotics-ai-infrastructure-manufacturing/",
+      "source": "The Robot Report",
+      "summary_zh": "两家计划把 Teradyne 的机器人和测试技术整合进 Bright Machines 的制造平台,用机器人自动化去造 AI 服务器等基础设施。机器人正往「造 AI 的工厂」里渗透,算力扩张的需求也在拉动自动化。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "2026 诺贝尔生理学或医学奖授予光遗传学",
+      "url": "https://arstechnica.com/science/2026/10/controlling-the-brain-with-light-earns-a-physiology-nobel/",
+      "source": "Ars Technica Science",
+      "summary_zh": "今年的生理学/医学奖表彰用光控制脑内神经元的光遗传学——这条技术线能一路追溯到会趋光的藻类。顺带一提,物理学奖给了领导 IceCube 中微子天文台的 Francis Halzen。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "把任意训好的 3DGS 压进显存预算的 LOD 中间件",
+      "based_on": [
+        { "title": "Budgeted-GS: Real-Time Large-Scale Gaussian Splatting via Factoring LOD", "url": "https://arxiv.org/abs/2610.03162" },
+        { "title": "PocketSplat / Mobile-4DGS(移动端 3DGS)", "url": "https://arxiv.org/abs/2610.03934" }
+      ],
+      "why_now": "Budgeted-GS 这周刚给出「训练后几秒钟构一棵 factoring 树、单次查询就出 LOD」的后处理法,但还没有一个即插即用、面向消费级/移动 GPU 的开源中间件把它和现成渲染器接起来。这类「给已有成果做好用的工具」最容易攒 star。",
+      "feasibility": "单张 24GB 卡足够,主要是工程(树构建 + 渲染时查询),一个人 3–4 周能出可用版本。",
+      "route": [
+        "跑通官方 3DGS 渲染器加载一个公开场景,记下显存占用和 FPS 作为 baseline。",
+        "实现 Budgeted-GS 式的多分辨率聚合树(moment-matched 聚合),离线构建一次。",
+        "渲染时按目标 FPS/显存预算在线选 LOD,接进一个现成 viewer(如 nerfstudio/gsplat)。",
+        "在大场景(如 MatrixCity 或一段城市重建)上测「预算 vs 画质(PSNR/LPIPS)」曲线。",
+        "封成 pip 包 + 一键 demo,写清楚怎么一行接到自己的 3DGS 上。"
+      ],
+      "risk": "矩匹配聚合在高频细节/反光区域可能糊,LOD 切换时的 popping 闪烁需要额外混合处理,不然体验打折。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "把 training-free 扩散加速迁到 3D/点云生成,看它扛不扛得住",
+      "based_on": [
+        { "title": "GeoShrink: Accelerating Diffusion Transformers with Two Lines of Code", "url": "https://arxiv.org/abs/2609.33723" },
+        { "title": "MC-Sparse: Deconstructing and Closing the Dense-Sparse Attention Gap in Diffusion Transformers", "url": "https://arxiv.org/abs/2610.06801" }
+      ],
+      "why_now": "GeoShrink 号称「两行代码」免训练加速扩散 Transformer,MC-Sparse 刚把稠密-稀疏注意力的差距拆解清楚,但两者都在图像/视频上验证。没人检验它们在点云/3D 资产扩散(EMERGE、Point Diffusion Mamba)上还成不成立——3D 的 token 拓扑不是规则网格,迁移性存疑,正好是个低风险的「迁移验证泛化性」选题。",
+      "feasibility": "单卡能跑这些 3D 扩散模型的推理,全程只做推理不训练,2–3 周。",
+      "route": [
+        "跑通一个开源点云/3D 扩散模型的官方采样,记下 NFE、耗时、生成质量(CD/EMD)。",
+        "按 GeoShrink 的锚点外推规则改采样循环,测速度-质量曲线。",
+        "叠加 MC-Sparse 式稀疏注意力,看 3D 下三类退化(分组约束/选择不准/丢 token)哪类最伤。",
+        "在不同分辨率/稀疏度上画 Pareto 前沿,给出「3D 扩散能安全加速到几倍」的结论。"
+      ],
+      "risk": "3D 生成的质量指标本身噪声大,加速带来的几何退化可能肉眼明显但指标不敏感,得配人工检查,别只看数字。"
+    },
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "给开源 VLA 做「指令 grounding」审计,并试一个廉价修补",
+      "based_on": [
+        { "title": "Encoded but Not in Control: Revealing the Grounding Gap in Vision-Language Robot Policies", "url": "https://arxiv.org/abs/2610.06235" },
+        { "title": "GALA: Geometry-Aware Latent Action Modeling for VLA Pretraining", "url": "https://arxiv.org/abs/2609.21948" }
+      ],
+      "why_now": "那篇刚给出「保持场景、只改指令」的干预协议,证明很多 VLA 其实没真受语言控制,但只在它自己的设置里测。把这套协议搬到公开 checkpoint(如 OpenVLA)在 LIBERO/SIMPLER 上系统量化 grounding gap,还没人做;而且顺手能试一个低成本修补:LoRA 微调时加入指令负样本的对比损失。",
+      "feasibility": "1–2 张卡做 LoRA 微调 + 仿真评测,仿真非真机,一个人 3–4 周。",
+      "route": [
+        "在 LIBERO 或 SIMPLER 上跑通一个开源 VLA 的官方评测,复现其成功率。",
+        "实现场景不变、指令替换(有效目标/无关名词/无关句)三类干预,量化策略对语言的真实依赖。",
+        "用 LoRA 微调时加入「同场景不同指令」的对比负样本,只动动作端,别全量微调。",
+        "对比修补前后的 grounding gap 和原任务成功率,看是不是鱼与熊掌。"
+      ],
+      "risk": "grounding gap 可能主要来自预训练数据偏置,LoRA 这种轻量微调动不了根,最后可能只是把问题挪了个位置。"
+    }
+  ]
+}
