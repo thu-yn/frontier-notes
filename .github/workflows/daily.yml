@@ -1,12 +1,17 @@
 name: 每日出版
 
 on:
-  schedule:
-    - cron: "0 19 * * *" # UTC 19:00 = 北京时间次日 03:00
-  workflow_dispatch: # 允许手动触发,方便测试
+  push:
+    branches: [main]
+    paths:
+      - "data/daily/**"
+      - "scripts/**"
+      - "requirements.txt"
+      - ".github/workflows/daily.yml"
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
@@ -30,99 +35,17 @@ jobs:
       - name: 安装依赖
         run: pip install -r requirements.txt
 
-      - name: 抓取原始数据
-        run: python scripts/fetch.py
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Claude 编辑总结
-        uses: anthropics/claude-code-action@v1
-        with:
-          # 用 Claude 订阅额度:本地跑 `claude setup-token` 后存入仓库 secrets
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          # 强调「本次运行内亲自 Write 出文件、不得委派子代理」:2026-07-21 那次 Claude 派了
-          # digest 子代理后说「稍后再写」就 end_turn,文件从没写出,却报 success(见 --disallowedTools Task)
-          prompt: "请阅读 prompts/summarize.md 并严格按其中要求完成今天的编辑任务。你必须在本次运行内亲自用 Write 写出 data/daily/<今天日期>.json,写完再结束;禁止把编辑任务委派给子代理(Task),禁止只声明「稍后再写」就结束。"
-          # allowedTools 放宽到 Bash(python3:*)/ls,避免 Claude 检查原始数据时被「requires approval」挡住绕远路;
-          # disallowedTools Task 硬禁子代理,防止再次出现「委派后 end_turn 不写文件」
-          claude_args: '--model claude-opus-4-8 --allowedTools "Read,Glob,Grep,Write,Edit,Bash(python3:*),Bash(ls:*)" --disallowedTools "Task"'
-          show_full_output: true
-
-      - name: 校验当日产出
+      - name: 校验最新一期
         run: |
-          # Claude 步骤即使没写出文件也会报 success,commit 步骤又会静默跳过,整条流水线照样绿。
-          # 这里显式校验当日 data/daily/<北京日期>.json 存在且合法,缺了/坏了就让工作流变红。
-          DATE=$(date -u -d '+8 hours' +%F)
-          F="data/daily/${DATE}.json"
-          if [ ! -f "$F" ]; then
-            echo "::error::Claude 未写出当日文件 $F,本期生成失败(疑似委派子代理后未落盘)"
-            exit 1
-          fi
-          python3 - "$F" <<'PY'
-          import json, sys
-          f = sys.argv[1]
-          d = json.load(open(f, encoding="utf-8"))          # 非法 JSON 会在此抛错
-          missing = [k for k in ("date", "editor_note", "math_note", "crossover") if k not in d]
-          if missing:
-              sys.exit(f"::error::{f} 缺少必需字段: {missing}")
-
-          # 思想碰撞同样只做「软校验」:字段缺了页面会跳过对应小节,不该拖垮整期发布。
-          # 只盯两件事:思路条数(规范要 3-4 条)、有没有真的覆盖上复杂度/存储/算法优化。
-          cx = d.get("crossover") or {}
-          for k in ("theory", "pc_problem", "bridge", "angles"):
-              if not cx.get(k):
-                  print(f"::warning::crossover 缺 {k}")
-          angles = cx.get("angles") or []
-          if not 3 <= len(angles) <= 4:
-              print(f"::warning::crossover.angles 有 {len(angles)} 条,规范要求 3-4 条")
-          CORE_DIMS = ("复杂度", "存储", "算法优化")
-          dims = [str(a.get("dim", "")) for a in angles]
-          hit = sum(1 for core in CORE_DIMS if any(core in dim for dim in dims))
-          if hit < 2:
-              print(f"::warning::crossover.angles 维度 {dims} 只覆盖了 {hit} 个核心维度"
-                    f"(复杂度/存储/算法优化,规范要求至少 2 个)")
-          for i, a in enumerate(angles, 1):
-              if not (a.get("idea") and a.get("gain") and a.get("cost")):
-                  print(f"::warning::crossover.angles[{i}] 缺 idea/gain/cost")
-
-          # 可视化 viz 只做「软校验」:形状不对只告警不失败——页面本就会优雅回落,
-          # 一块图的问题不该拖垮整期发布。
-          COMPONENTS = {"cobweb", "fourier", "gradient", "vectorfield", "riemann"}
-          viz = (d.get("math_note") or {}).get("viz")
-          if viz:
-              t = viz.get("type")
-              if t == "custom":
-                  if not (viz.get("html") and viz.get("script")):
-                      print("::warning::math_note.viz 为 custom 但缺 html 或 script")
-              elif t in COMPONENTS:
-                  if not isinstance(viz.get("params"), dict):
-                      print(f"::warning::math_note.viz 组件 {t} 缺 params 字典")
-              else:
-                  print(f"::warning::math_note.viz.type 未知: {t!r}(可用: {sorted(COMPONENTS)} 或 custom)")
-
-          print(f"✓ 当日文件已生成并校验通过: {f}")
+          python - <<'PY'
+          from pathlib import Path
+          from scripts.validate import validate_issue
+          path = max(Path('data/daily').glob('*.json'))
+          validate_issue(path, path.stem)
           PY
 
       - name: 构建站点
         run: python scripts/build.py
-
-      - name: 提交当日数据
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          # claude-code-action 会覆盖 checkout 留下的凭证,这里显式用 GITHUB_TOKEN 推送
-          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git add data/daily
-          if git diff --cached --quiet; then
-            echo "当日数据无变化,跳过提交"
-          else
-            git commit -m "第 $(date -u -d '+8 hours' +%F) 期"
-            # 运行期间 main 可能有新提交(比如正好在本地推了改动),rebase 后再推
-            git pull --rebase origin main
-            git push origin HEAD:main
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 配置 Pages
         uses: actions/configure-pages@v5

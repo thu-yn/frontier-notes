@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """每日抓取原始数据:HF 论文榜、GitHub trending、科技资讯 RSS。
 
-产出 data/raw/YYYY-MM-DD.json,供 Claude 总结成 data/daily/YYYY-MM-DD.json。
+产出 data/raw/YYYY-MM-DD.json,供 GPT-6.1 Sol 总结成 data/daily/YYYY-MM-DD.json。
 日期一律使用北京时间。
 """
 
@@ -41,7 +41,7 @@ NEWS_FEEDS = [
     ("Ars Technica Science", "https://arstechnica.com/science/feed/"),
 ]
 
-# 各领域的 arXiv 分类,每天取最新提交,由 Claude 精筛
+# 各领域的 arXiv 分类,每天取最新提交,由 GPT-6.1 Sol 精筛
 ARXIV_DOMAINS = {
     "embodied": "cat:cs.RO",
     "quantum": "cat:quant-ph",
@@ -51,7 +51,7 @@ ARXIV_DOMAINS = {
     "ai4s": "cat:physics.comp-ph OR cat:cs.CE",
 }
 
-# 「每日研究点」用的定向 arXiv 查询:面向单人可做的选题,精筛交给 Claude。
+# 「每日研究点」用的定向 arXiv 查询:面向单人可做的选题,精筛交给 GPT-6.1 Sol。
 # 查询串均已实测(2026-07,注释为近 7 天日均命中量),背景见 docs/research-radar-2026-07.md
 RESEARCH_QUERIES = {
     "pointcloud_3d": 'cat:cs.CV AND abs:"point cloud"',  # ~3.6 篇/天
@@ -86,7 +86,7 @@ RESEARCH_QUERIES = {
 
 # 「思想碰撞」用的理论侧 arXiv 查询:只挑那些有机会和点云处理(几何表示、复杂度、
 # 存储、优化)挂上钩的数学/物理分支,每天取最新提交。这些论文大多是纯理论,不指望
-# 篇篇能用——它们只是当天的「灵感触发器」,挂不上就让 Claude 自选理论,不许硬凑。
+# 篇篇能用——它们只是当天的「灵感触发器」,挂不上就让 GPT-6.1 Sol 自选理论,不许硬凑。
 THEORY_QUERIES = {
     # 微分几何 / 度量几何:曲率、测地距离、嵌入——点云本质就是采样自流形的度量空间
     "geometry": "cat:math.DG OR cat:math.MG",
@@ -109,7 +109,7 @@ THEORY_QUERIES = {
     "stat_physics": "cat:cond-mat.stat-mech OR cat:cond-mat.dis-nn",
 }
 
-# HN 头版粗筛关键词(覆盖全部领域),精筛交给 Claude
+# HN 头版粗筛关键词(覆盖全部领域),精筛交给 GPT-6.1 Sol
 HN_KEYWORDS = re.compile(
     r"\b(ai|llm|gpt|claude|gemini|deepseek|qwen|llama|mistral|openai|anthropic|"
     r"model|agent|transformer|diffusion|rag|inference|cuda|open.?source|"
@@ -148,7 +148,7 @@ def fetch_hf_papers(limit: int = 40) -> list[dict]:
                 "abstract": (p.get("summary") or "").strip(),
                 "upvotes": p.get("upvotes", 0),
                 "authors": [a.get("name", "") for a in (p.get("authors") or [])][:8],
-                # HF 标注的提交机构,约八成论文有;供 Claude 填 affiliation 字段
+                # HF 标注的提交机构,约八成论文有;供 GPT-6.1 Sol 填 affiliation 字段
                 "affiliation": (org.get("fullname") or org.get("name") or "").strip(),
                 "url": f"https://arxiv.org/abs/{arxiv_id}" if arxiv_id else "",
                 "hf_url": f"https://huggingface.co/papers/{arxiv_id}" if arxiv_id else "",
@@ -254,7 +254,7 @@ def fetch_arxiv_domains(per_domain: int = 25) -> dict[str, list[dict]]:
 
 
 def fetch_research(per_query: int = 15) -> dict[str, list[dict]]:
-    """「每日研究点」候选:按 RESEARCH_QUERIES 抓 arXiv 最新提交,按方向分组,供 Claude 挑选。
+    """「每日研究点」候选:按 RESEARCH_QUERIES 抓 arXiv 最新提交,按方向分组,供 GPT-6.1 Sol 挑选。
 
     查询之间有意保留重叠(如 efficient_llm 与 llm_agent_infer),这里按 arxiv_id
     全局去重,先出现的方向保留该论文。
@@ -280,7 +280,7 @@ def fetch_theory(per_query: int = 12) -> dict[str, list[dict]]:
     压缩感知),先出现的分支保留该论文。量少是正常的,这组数据只当灵感触发器用。
 
     单条分支失败只跳过它、不拖垮整组:这组是「思想碰撞」的灵感来源,少一个分支
-    顶多少几个备选,全空也只是让 Claude 改成自选理论,不该因此让当期抓取报错。
+    顶多少几个备选,全空也只是让 GPT-6.1 Sol 改成自选理论,不该因此让当期抓取报错。
     """
     out: dict[str, list[dict]] = {}
     seen: set[str] = set()
