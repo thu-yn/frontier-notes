@@ -1,0 +1,473 @@
+{
+  "date": "2026-11-04",
+  "editor_note": "这一期我更想看那些把实验条件摊开来的工作：LoopQ发现省显存未必省时间，Route Anything则把理想路由器与真正学出来的路由器分开报分。最建议点开的是近零词嵌入那篇，训练曲线看着还在走，梯度裁剪却可能悄悄吞掉更新。机器人这边，量化、控制延迟和移动机器人互通标准都在提醒我们，模型之外的运行环节也决定成败。研究点因此选了能用公开模型和离线记录开工的小切口；资讯中的预告、待交割交易和上周技术文章，都按各自的真实时间写。",
+  "math_note": {
+    "name": "高斯–马尔可夫定理",
+    "name_en": "Gauss–Markov Theorem",
+    "field": "数理统计 / 线性估计",
+    "one_liner": "在无偏这条线上，多绕出去的权重只会添方差。",
+    "statement": "设观测满足 $y=X\\beta+\\varepsilon$：$y$ 是测量值，$X$ 是固定且列满秩的设计矩阵，$\\beta$ 是待估参数，$\\varepsilon$ 是测量误差。若 $\\mathbb E[\\varepsilon]=0$ 且 $\\operatorname{Cov}(\\varepsilon)=\\sigma^2 I$，即误差没有系统偏差、方差相同且互不相关，那么最小二乘估计 $\\hat\\beta=(X^\\top X)^{-1}X^\\top y$ 在所有线性无偏估计中方差最小。更准确地说，对任意线性无偏估计 $\\tilde\\beta$，都有 $\\operatorname{Cov}(\\tilde\\beta)-\\operatorname{Cov}(\\hat\\beta)\\succeq0$，这里的半正定符号表示任何参数方向上的方差都不会更小；不要求误差服从高斯分布。",
+    "origin": "高斯面对天文观测和测地数据时，需要把多条带误差的测量合成一组可信参数。1821至1823年的工作给出了最小方差的理由，只用误差的一、二阶矩就能论证最小二乘的地位。马尔可夫后来在概率论教材中系统讲述这条结论，1912年的德译本也包含相关论述，两人的名字逐渐合在一起。",
+    "derivation": [
+      {
+        "math": "\\tilde\\beta=Ay,\\qquad \\mathbb E[Ay]=AX\\beta=\\beta\\ \\text{对所有 }\\beta\\quad\\Longrightarrow\\quad AX=I",
+        "note": "把任何线性估计器写成一个加权矩阵A。要求它对所有真实参数都无偏，就把自由选权重的问题变成了AX等于单位矩阵这一条约束。"
+      },
+      {
+        "math": "A_0=(X^\\top X)^{-1}X^\\top,\\qquad A=A_0+D,\\qquad DX=0",
+        "note": "A₀是最小二乘的权重，D是竞争者额外加上的部分。两套权重都满足无偏约束，所以额外部分乘上X必须消失。"
+      },
+      {
+        "math": "A_0D^\\top=(X^\\top X)^{-1}(DX)^\\top=0",
+        "note": "这一步消掉协方差展开中的交叉项。直觉上，额外权重落在不携带参数信号的方向，无法与最小二乘那部分配合着抵消噪声。"
+      },
+      {
+        "math": "\\operatorname{Cov}(Ay)=\\sigma^2AA^\\top=\\sigma^2(X^\\top X)^{-1}+\\sigma^2DD^\\top",
+        "note": "同方差且不相关，让误差协方差成为单位矩阵的倍数。竞争者的方差因此恰好等于最小二乘的方差，再加一个额外项。"
+      },
+      {
+        "math": "v^\\top\\!\\left[\\operatorname{Cov}(\\tilde\\beta)-\\operatorname{Cov}(\\hat\\beta)\\right]v=\\sigma^2\\|D^\\top v\\|^2\\ge0",
+        "note": "v表示任意想关心的参数组合。额外方差是一个平方长度，怎么选这个方向都不可能变成负数，结论就出来了。"
+      }
+    ],
+    "applications": [
+      {
+        "area": "传感器重复测量",
+        "detail": "多次测同一个距离且噪声同方差时，算术平均就是最小二乘，任意偏向某一次读数的固定权重都会增加方差。"
+      },
+      {
+        "area": "线性标定与回归",
+        "detail": "在模型正确、误差满足假设时，用最小二乘估计传感器增益或线性响应，能给出线性无偏估计的精度基线。"
+      },
+      {
+        "area": "配准中的局部增量",
+        "detail": "固定对应关系并线性化后，可用它检查位姿增量的估计；遇到异方差要先按已知协方差白化，离群点和错误对应则需要另外处理。"
+      }
+    ],
+    "takeaway": "最小二乘的最优性有明确边界：在给定模型和噪声假设下，额外的无偏自由度只会贡献 $DD^\\top$ 这份噪声；允许偏差或改变误差模型后，就要重新比较。",
+    "viz": {
+      "type": "custom",
+      "caption": "拖动t，改变三次独立同方差测量的权重。权重始终相加为1，曲线显示方差是等权平均的1+6t²倍，最低点就在t=0。",
+      "html": "<div style=\"max-width:640px\"><label>权重偏移 t <input data-gm-t type=\"range\" min=\"-0.6\" max=\"0.6\" step=\"0.01\" value=\"0\" style=\"width:65%\"></label><p data-gm-result aria-live=\"polite\"></p><canvas data-gm-canvas width=\"600\" height=\"220\" style=\"display:block;width:100%;height:auto\" role=\"img\" aria-label=\"无偏加权平均的方差曲线\">请拖动滑块查看方差变化。</canvas></div>",
+      "script": "(()=>{const slider=el.querySelector('[data-gm-t]'),out=el.querySelector('[data-gm-result]'),canvas=el.querySelector('[data-gm-canvas]'),ctx=canvas.getContext('2d');if(!ctx)return;const px=t=>50+(t+0.6)/1.2*510,py=v=>180-(v-1)/2.5*140;function draw(){const t=Number(slider.value),v=1+6*t*t;out.textContent='权重 = ('+(1/3+t).toFixed(3)+', '+(1/3-t).toFixed(3)+', 0.333)；方差 / 等权方差 = '+v.toFixed(3);ctx.clearRect(0,0,600,220);ctx.font='14px sans-serif';for(let level=1;level<=3;level++){ctx.strokeStyle='#d9d9d4';ctx.beginPath();ctx.moveTo(50,py(level));ctx.lineTo(560,py(level));ctx.stroke();ctx.fillStyle='#555';ctx.fillText(level+' 倍',3,py(level)+4);}ctx.strokeStyle='#888';ctx.beginPath();ctx.moveTo(px(0),25);ctx.lineTo(px(0),190);ctx.stroke();ctx.strokeStyle='#2440b3';ctx.lineWidth=3;ctx.beginPath();for(let i=0;i<=120;i++){const u=-0.6+i/100;if(i===0)ctx.moveTo(px(u),py(1+6*u*u));else ctx.lineTo(px(u),py(1+6*u*u));}ctx.stroke();ctx.fillStyle='#a83a52';ctx.beginPath();ctx.arc(px(t),py(v),6,0,2*Math.PI);ctx.fill();ctx.fillStyle='#555';ctx.fillText('-0.6',40,210);ctx.fillText('0',px(0)-4,210);ctx.fillText('t = 0.6',520,210);ctx.fillText('等权平均的方差下界',315,173);}slider.addEventListener('input',draw);draw();})();"
+    }
+  },
+  "crossover": {
+    "theory": "有效电阻与图的谱稀疏化",
+    "theory_en": "Effective Resistance and Spectral Graph Sparsification",
+    "field": "谱图论 / 随机数值线性代数",
+    "era": "2008年Spielman与Srivastava给出有效电阻采样，近线性拉普拉斯求解器让保留图能量的稀疏化成为可计算工具",
+    "one_liner": "删边要保住力学骨架，但别把假匹配也当成承重墙。",
+    "pc_problem": "当天的SparseGraph-I2P把配准候选的几何一致性做成图，还要避免重叠图像块重复匹配；它目前承诺后续放代码，因此最小实验先用已开源的SC²-PCR点对点配准。这里盯的是候选对应数 $m$，不是原始点数：若保留1万条候选，一张稠密FP32兼容矩阵就需 $4m^2\\approx400$ MB，若再同时保留两张同尺寸中间量就是约1.2 GB，这是数组体积估算。稠密矩阵乘向量每轮也要扫 $O(m^2)$ 个元素；低重叠时直接砍候选，又可能连真对应一起砍掉。",
+    "theory_core": "对非负加权无向图，拉普拉斯矩阵 $L=D-W$ 把边权矩阵 $W$ 和度矩阵 $D$ 合在一起，顶点信号 $x$ 的能量是 $x^\\top Lx=\\sum_{\\{i,j\\}}w_{ij}(x_i-x_j)^2$。把每条边当电导，它的有效电阻为 $R_e=b_e^\\top L^\\dagger b_e$，其中 $b_e$ 只在边的两个端点取1和−1，$L^\\dagger$ 是伪逆，电阻衡量这条连接有多少可替代路径。按 $p_e\\propto w_eR_e$ 采样并重新加权，在适当采样常数下，用 $q=O(m\\log m/\\epsilon^2)$ 条边就能以高概率让所有 $x$ 同时满足 $(1-\\epsilon)x^\\top Lx\\le x^\\top\\tilde Lx\\le(1+\\epsilon)x^\\top Lx$，$0<\\epsilon<1$ 控制误差。这里保住的是拉普拉斯二次型，不能据此断言邻接矩阵的主特征向量、最大团或正确匹配集合也保持不变。",
+    "bridge": "图中的一个顶点对应一条候选匹配 $(p_i,q_i)$，并非一个空间点；边权取两个匹配的刚性兼容程度，例如 $w_{ij}=\\max\\{0,1-[(\\|p_i-p_j\\|-\\|q_i-q_j\\|)/\\tau]^2\\}$，$\\tau$ 是距离容差。令信号 $s_i$ 表示匹配置信度，$s^\\top Ls$ 就是在惩罚几何上兼容、置信度却相差很大的候选。可测试的桥接方案是先构造一个稠密图上的置信度扩散基线，再用稀疏图近似它，最后用原始三维残差选位姿；这样能单独量出删边的影响，不把更换SC²打分器本身带来的变化混进去。",
+    "angles": [
+      {
+        "dim": "复杂度",
+        "idea": "把重复的稠密置信度扩散换成稀疏拉普拉斯乘法，近似有效电阻通过线性系统求解获得，不显式形成大伪逆。先在能装下的图上验证数值误差，再看预处理能否被多轮扩散和多次种子查询摊薄；原始兼容图若仍逐对构造，建图这一步依旧是 $O(m^2)$。",
+        "gain": "图确定后的单次乘法由 $O(m^2)$ 变为 $O(q)$；在 $m=10^4$、采样预算 $q=64m$ 条无向边时，双向稀疏项数约为稠密项数的1/78，这是操作数估计，不是实测加速比。",
+        "cost": "电阻估计和采样都是额外成本；只做一次打分时，预处理很可能比省下的计算还贵。固定64m条边只是实验预算，不自动满足某个ε的理论保证。"
+      },
+      {
+        "dim": "存储",
+        "idea": "稀疏图用CSR存行指针、列索引和重加权边值，同一候选的坐标与描述子只存一份。扩展到大图时分块扫描兼容关系，并分开记录电阻估计阶段与最终推理阶段的峰值内存，不能只展示最后那个小文件。",
+        "gain": "1万顶点、64m条无向边按双向CSR保存，32位索引加32位权重约10.3 MB，对比一张400 MB稠密矩阵约省40倍；这是忽略求解器工作区的存储估算。",
+        "cost": "若估电阻仍依赖完整稠密分解，预处理峰值一点没省。小规模验证可以用精确解，向大图外推必须另测稀疏预条件器及分块扫描的代价。"
+      },
+      {
+        "dim": "算法优化",
+        "idea": "把稠密扩散明确写成 $\\min_s\\|s-b\\|^2+\\gamma s^\\top Ls$，其中 $b$ 是描述子给的初始置信度，$\\gamma$ 是平滑强度；稀疏版本只替换 $L$，用共轭梯度求解。选出的候选仍交给加权刚体拟合，并在全部原始对应上计算截断几何残差；若失败，回退到原始SC²-PCR流程。",
+        "gain": "目标是把一次位姿假设的最终核验保持在 $O(m)$，同时让多轮扩散只访问 $O(q)$ 条边；是否能维持注册召回率必须实测，不预报精度收益。",
+        "cost": "二次型近似只支持这个扩散目标的近似分析，不能替代离群点鲁棒性证明。回退会抬高尾延迟，必须同时报告触发率。"
+      },
+      {
+        "dim": "鲁棒性",
+        "idea": "单独做重复走廊、对称物体和低重叠三组压力测试，把有效电阻采样与相同边数的均匀采样、按边权采样放在一起比。观察高电阻边到底连接了真匹配簇，还是把两个错误候选簇硬接在一起；几何筛边版本要作为另一种算法单列。",
+        "gain": "先设工程验收线：图存储至少减少10倍、召回下降不超过1个百分点；这是待检验目标，并非已经实现的结果。",
+        "cost": "有效电阻只认识图结构，错误的跨簇桥边也可能很重要。先筛边会改变被近似的原图，原图上的谱保证不能直接搬过来。"
+      }
+    ],
+    "experiment": [
+      "第1–2天、单张12–24 GB GPU：跑通ZhiChen902/SC2-PCR提供的3DMatch预计算对应数据，先取100对，记录召回率、峰值内存和端到端延迟；固定候选抽样与随机种子。",
+      "第3–5天：把每对候选限制到512或1024条，用CPU双精度计算小图有效电阻，按采样概率重加权；检查常数信号零能量以及一组随机信号的能量比，小图还用广义特征值检查最坏方向。",
+      "第2周：加入稠密扩散、稀疏扩散和原SC²-PCR三路对照，所有路线使用同一原始对应和位姿核验；扫边预算、ε与平滑强度，并记录预处理成本。",
+      "第3周：增加3DLoMatch子集并将候选数逐步扩到2048、4096，内存和时间允许再到1万；复用公开描述子，不训练网络，对召回差异做配对bootstrap，单独报预处理峰值、稳态内存、尾延迟和回退率。"
+    ],
+    "prior_art": [
+      {
+        "title": "Graph Sparsification by Effective Resistances",
+        "url": "https://arxiv.org/abs/0803.0929",
+        "note": "Spielman与Srivastava已给出电阻采样和二次型保持的理论；这里借用现成工具，点云候选里的离群点正确性不在其保证内。"
+      },
+      {
+        "title": "SC²-PCR: A Second Order Spatial Compatibility for Efficient and Robust Point Cloud Registration",
+        "url": "https://openaccess.thecvf.com/content/CVPR2022/html/Chen_SC2-PCR_A_Second_Order_Spatial_Compatibility_for_Efficient_and_Robust_CVPR_2022_paper.html",
+        "note": "它已用二阶兼容和谱方法找可靠对应并拟合位姿，不能再把“谱方法用于配准”当新意；本实验只问有能量误差控制的删边能否降低开销。"
+      },
+      {
+        "title": "Spectral Measurement Sparsification for Pose-Graph SLAM",
+        "url": "https://david-m-rosen.github.io/publication/spectralsparsification-iros/",
+        "note": "MAC已在位姿图上通过最大化代数连通度选择测量边；它的顶点是位姿，本方案的顶点是含大量离群点的候选对应，且目标是近似整个二次型，二者不能混为同一保证。"
+      }
+    ],
+    "reality_check": "最可能翻车的是高电阻假桥边被优先留下：保住了原图能量，也可能只是更忠实地保住了错误几何；如果电阻预处理比原配准还慢，这条路线就该停在负结果。"
+  },
+  "papers": [
+    {
+      "domain": "embodied",
+      "title": "LoopQ: Fair, Closed-Loop Evaluation of Quantized Vision-Language-Action Models",
+      "title_zh": "LoopQ：把VLA量化放回相同条件下做闭环比较",
+      "url": "https://arxiv.org/abs/2611.05093v1",
+      "authors": "Syed Umer Bukhari、Magnus Almgren、Ahmed Ali-Eldin",
+      "one_liner": "比特数不是秒表。",
+      "summary_zh": "LoopQ固定检查点、量化层和执行引擎，在四类视觉语言动作模型上做了超过18万次仿真回合，比较通用与VLA专用量化方法。真实低比特模型能把显存压到约二分之一至三分之一，但在H100、batch=1及论文测试的库内核上，量化后的π0.5和OpenVLA-OFT反而慢1.06–1.58倍。部分在标准LIBERO上看不出损失的配置，遇到LIBERO-plus扰动会掉1.5–4.3个百分点。结论有硬件与内核边界，拿它检查部署假设比拿它宣布“量化无用”更合适。",
+      "tags": [
+        "VLA",
+        "量化",
+        "闭环评测"
+      ]
+    },
+    {
+      "domain": "ai",
+      "title": "Near-Zero Token Embeddings Silently Stall Training in Gated Sequence Models",
+      "title_zh": "近零词嵌入会让门控序列模型悄悄丢掉训练更新",
+      "url": "https://arxiv.org/abs/2611.04449",
+      "authors": "Xin Liu、Boyuan Sun、Yuxin Wang 等",
+      "one_liner": "训练没报错，不代表这一步真的更新了。",
+      "summary_zh": "罕见词的输入嵌入若被权重衰减压得接近零，Mamba、Gated DeltaNet等门控模型可能沿多层归一化把梯度放大到溢出，随后全局范数裁剪把整批梯度清零。在作者的Nemotron-3-Nano-4B泰卢固语续训案例中，约20%的步骤因此丢失更新。GroupClip把嵌入梯度单独裁剪并用更稳的范数计算，直接修补已有检查点的训练流程；另一项门控修正GateFloor的实验规模只做到3.7亿参数。这个问题的触发条件很具体，别把案例比例套到所有模型上。",
+      "tags": [
+        "数值稳定性",
+        "梯度裁剪",
+        "门控模型"
+      ],
+      "hf_url": "https://huggingface.co/papers/2611.04449",
+      "upvotes": 6
+    },
+    {
+      "domain": "ai",
+      "title": "Order-Only On-Policy Distillation",
+      "title_zh": "只学老师的词元排序，够不够做在线蒸馏？",
+      "url": "https://arxiv.org/abs/2611.02112",
+      "authors": "Guangzeng Han、Yu Wu、Xiaolei Huang",
+      "one_liner": "老师的置信度未必适合学生，偏好顺序可能更好学。",
+      "summary_zh": "O³PD让学生先生成自己的前缀，再学习老师最偏好的前K个词元的相对顺序，省去拟合整套概率值。这个排序目标对老师的正温度缩放不变，六组师生模型的数学推理平均分都超过原有在线蒸馏，最高高出2.9个百分点。结果说明监督信号可以更精简，但证据目前集中在数学推理，排序本身仍取决于老师质量。",
+      "tags": [
+        "蒸馏",
+        "排序监督",
+        "推理"
+      ],
+      "hf_url": "https://huggingface.co/papers/2611.02112",
+      "upvotes": 28
+    },
+    {
+      "domain": "ai",
+      "title": "IdeaTaste: Do LLMs Share the Research Taste of Human Researchers?",
+      "title_zh": "IdeaTaste：大模型的研究选题品味有多接近研究社群？",
+      "url": "https://arxiv.org/abs/2611.03424",
+      "authors": "Shanshan Zhong、Chen Xu、Jingjie Ning 等",
+      "one_liner": "能写像样的提案，和能挑出可行的题，是两件事。",
+      "summary_zh": "IdeaTaste把文献冻结在2025年，让模型提出研究计划，再与相同社群2026年实际发表的工作比对。六个模型、四个领域和9万多份提案里，引用匹配与想法匹配分别只到真人社群水平的约26%和18%，盲评中差距也主要落在预期成功率。这个评测把“方向说得对、方案落不下去”拆了出来；不过接近后来发表的分布，只是研究品味的一种代理指标。",
+      "tags": [
+        "AI科研",
+        "研究评测",
+        "选题"
+      ],
+      "hf_url": "https://huggingface.co/papers/2611.03424",
+      "upvotes": 35,
+      "affiliation": "Carnegie Mellon University School of Computer Science"
+    },
+    {
+      "domain": "ai",
+      "title": "WebHarbor: Docking Real Websites for Evolving GUI Agent Environments",
+      "title_zh": "WebHarbor：把网站工作流做成可重置的GUI智能体环境",
+      "url": "https://arxiv.org/abs/2611.03634",
+      "authors": "Zhaoyang Wang、Qianhui Wu、Boyu Gou 等",
+      "one_liner": "能稳定重跑的登录后流程，比又一张榜单更有用。",
+      "summary_zh": "WebHarbor重建了153个可执行、可用Docker启动的网站环境，提供3518个多步任务，覆盖不少登录后的操作流程。环境随任务扩展，由人和编码智能体一起实现，再由人检查界面、功能和任务有效性，代码与数据已公开。可控状态让评测和强化学习更容易重复，但复刻站点的功能边界仍取决于作者实现了哪些流程。",
+      "tags": [
+        "GUI Agent",
+        "仿真环境",
+        "可复现评测"
+      ],
+      "hf_url": "https://huggingface.co/papers/2611.03634",
+      "upvotes": 10,
+      "affiliation": "Microsoft"
+    },
+    {
+      "domain": "ai",
+      "title": "Route Anything: A Study of Model and Policy Routing for General-Purpose AI Systems",
+      "title_zh": "Route Anything：跨模型和机器人策略的路由到底能赚多少？",
+      "url": "https://arxiv.org/abs/2611.05275",
+      "authors": "Pengfei Zhou、Yixing Ma、Hexin Wang 等",
+      "one_liner": "先看学出来的路由器，别只看知道答案的上限。",
+      "summary_zh": "这项工作把语言、图像、视频、智能体和机器人操作放进同一套路由研究框架，整理了452种候选配置的374401次带评分运行。逐样本预知得分的理想挑选器比最佳固定候选高5.4分，而真正学出来的路由器在16项基准上平均只高0.3分。机器人操作侧则同时提高1.1分、减少24%的策略运行时间；我更关心这种可部署的质量与成本折中。",
+      "tags": [
+        "模型路由",
+        "成本评测",
+        "策略选择"
+      ],
+      "hf_url": "https://huggingface.co/papers/2611.05275",
+      "upvotes": 5
+    },
+    {
+      "domain": "embodied",
+      "title": "PadLoc: Training-Free Floor-Plan Localization by Sparse Geometric Matching",
+      "title_zh": "PadLoc：不训练定位后端，用稀疏几何把传感器放进平面图",
+      "url": "https://arxiv.org/abs/2611.05172v1",
+      "authors": "Marian Bookhahn、Frank Neumann",
+      "one_liner": "墙的方向先缩小搜索，再谈更大的网络。",
+      "summary_zh": "PadLoc沿用深度前端，把平面图定位中的稠密位置与朝向网格，换成由主要墙面方向产生的少量候选，再用自由空间匹配和概率滤波跟踪位置。固定竞争方法的深度输入后，它在Bonn LiLocBench的轮式里程计条件下，1米内定位成功率比UnLoc高23–32个百分点。它省掉的是后端训练与稠密状态搜索，遇到杂乱工地时仍要处理墙面提取和深度质量，不能把“免训练”理解成没有前端依赖。",
+      "tags": [
+        "平面图定位",
+        "免训练",
+        "几何匹配"
+      ]
+    },
+    {
+      "domain": "chip",
+      "title": "UMLoad: Fast On-Demand Model Loading on Unified Memory Architecture",
+      "title_zh": "UMLoad：统一内存上的模型加载，还在做多少多余搬运？",
+      "url": "https://arxiv.org/abs/2611.04253v1",
+      "authors": "Zimeng Wang、Jinrong Yang、Rong Chen",
+      "one_liner": "共享内存硬件，也会被旧加载路径拖慢。",
+      "summary_zh": "UMLoad针对CPU和GPU共享物理内存的平台，把框架的逻辑分配与物理页映射解耦，省掉权重复制，同时保留副本独立性，并用GPU辅助清零新分配的页。作者在Intel、AMD和NVIDIA统一内存平台、六个模型及三类框架上测试，相比原始加载流程，平均加载时间降低36.6%–71.9%。模型路由时的首词延迟也明显缩短，关注点是切换模型的等待；这些数字不能直接外推到普通独立显卡。",
+      "tags": [
+        "统一内存",
+        "模型加载",
+        "端侧推理"
+      ]
+    },
+    {
+      "domain": "bio",
+      "title": "BEND 2.0: Benchmarking the Capabilities Needed to Design DNA",
+      "title_zh": "BEND 2.0：DNA模型预测得准，能否真的指导设计？",
+      "url": "https://arxiv.org/abs/2611.03806v1",
+      "authors": "Andreas Bjerregaard、Rachael DeVries、Dionysia Danai Brilli 等",
+      "one_liner": "平均效应猜得准，未必看懂突变之间的相互作用。",
+      "summary_zh": "BEND 2.0用五个实验数据集上的八项任务，检查基因组模型能否预测DNA编辑的影响，并帮助挑选候选序列。冻结模型表征后加一个线性读出层，有时就能追平或超过模型原生输出；但平均效应表现好，仍可能掩盖具体细胞情境或突变相互作用上的短板。这套基准的价值在于把预测分数和设计效用分开检验，不能用总体相关性替代具体设计任务的验证。",
+      "tags": [
+        "基因组模型",
+        "DNA设计",
+        "基准"
+      ]
+    },
+    {
+      "domain": "quantum",
+      "title": "DynaMite: Dynamic Measurement Scheduling To Accelerate Fault-Tolerant Quantum Programs",
+      "title_zh": "DynaMite：量子纠错中的测量，不必每轮都等一样久",
+      "url": "https://arxiv.org/abs/2611.05233v1",
+      "authors": "Dongwhee Kim、Suhas Vittal、Poulami Das",
+      "one_liner": "读得更准和算得更可靠，最优等待时间未必相同。",
+      "summary_zh": "容错量子程序要反复测量纠错用的校验信息：读得太快容易判错，等得太久又让量子态因退相干丢失信息。DynaMite根据一个逻辑周期里剩余的纠错预算与轮数，动态选择下一轮测量时长，作者评估中逻辑周期平均提速1.69倍，逻辑错误率降至基线的0.46倍。这里优化的是完整纠错过程的取舍，收益依赖具体读出和噪声条件，硬件实现还得核对控制器能否及时完成决策。",
+      "tags": [
+        "量子纠错",
+        "动态调度",
+        "读出延迟"
+      ]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "vercel-labs/agent-desktop",
+      "url": "https://github.com/vercel-labs/agent-desktop",
+      "language": "Rust",
+      "stars": 13379,
+      "stars_today": "3,791",
+      "one_liner": "给智能体一份能操作的控件树。",
+      "summary_zh": "agent-desktop通过系统无障碍接口读取桌面应用，把控件和可用动作作为JSON交给外部智能体，支持macOS、Windows和Linux。CLI和C库负责观察与操作，本身不带模型；对没有暴露无障碍语义的界面，仍要检查实际覆盖能力。"
+    },
+    {
+      "domain": "ai",
+      "name": "max-sixty/worktrunk",
+      "url": "https://github.com/max-sixty/worktrunk",
+      "language": "Rust",
+      "stars": 10644,
+      "stars_today": "438",
+      "one_liner": "多份工作目录，也需要一个顺手的入口。",
+      "summary_zh": "Worktrunk围绕Git worktree提供创建、切换、列状态和清理命令，还能用钩子串起本地工作流。适合频繁并行处理分支的人；共享构建缓存的收益取决于文件系统能力，合并冲突仍需正常处理。"
+    },
+    {
+      "domain": "ai",
+      "name": "JustVugg/colibri",
+      "url": "https://github.com/JustVugg/colibri",
+      "language": "C",
+      "stars": 47403,
+      "stars_today": "802",
+      "one_liner": "冷专家留在磁盘，速度取决于缓存命中。",
+      "summary_zh": "colibri用C实现分层MoE推理：常用专家放GPU或内存，冷专家按需从磁盘读入，并支持CUDA、Vulkan和CPU路径。它让大模型有机会在较小内存的机器上运行，但模型文件仍占磁盘，持续读盘时每词延迟可能很高，不能把“能装下”当成“交互流畅”。"
+    },
+    {
+      "domain": "ai",
+      "name": "floci-io/floci",
+      "url": "https://github.com/floci-io/floci",
+      "language": "Java",
+      "stars": 29041,
+      "stars_today": "482",
+      "one_liner": "先在本机把云端工作流跑通。",
+      "summary_zh": "Floci为开发和CI提供本地AWS服务模拟，已有SDK、CLI和Terraform等工具可以改接本地端点，S3与DynamoDB工作流是直接的切入点。适合减少集成测试对云账户的依赖；模拟器的API覆盖和行为仍要对照具体服务检查。"
+    },
+    {
+      "domain": "ai",
+      "name": "anomalyco/hex",
+      "url": "https://github.com/anomalyco/hex",
+      "language": "Rust",
+      "stars": 4748,
+      "stars_today": "410",
+      "one_liner": "按键说话，端侧转写后直接粘贴。",
+      "summary_zh": "Hex是面向Mac、Windows和Linux的本地语音听写工具，按住快捷键录音，松开后把转写文本粘贴到当前应用。首次运行下载语音模型，之后在设备上处理，适合把语音当通用输入方式；先用自己的口音和术语表测识别效果更实际。"
+    },
+    {
+      "domain": "ai",
+      "name": "D4Vinci/Scrapling",
+      "url": "https://github.com/D4Vinci/Scrapling",
+      "language": "Python",
+      "stars": 95295,
+      "stars_today": "1,658",
+      "one_liner": "抓取、解析和续跑，放进同一套接口。",
+      "summary_zh": "Scrapling把HTTP请求、浏览器渲染、页面解析和并发爬取放进一个Python库，还提供自适应元素查找、会话复用及暂停续跑。适合维护长期数据采集任务；自适应定位能缓解网页改版，语义结构大改时仍要检查抽取结果。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "Anthropic公开FlashProve原型，验证输出来自哪组模型权重",
+      "url": "https://www.anthropic.com/research/provable-inference",
+      "source": "Anthropic Research",
+      "summary_zh": "11月2日公开的FlashProve用密码学证明，将被检查的输出词元归属于预先承诺的一组模型权重，属于事后证明。作者在4比特Llama 4 Maverick的测试中报告单H100批处理证明吞吐约110词元/秒，但证明的每GPU耗时仍约为所比较vLLM推理的70–95倍。这个证明说明计算与权重相符，答案本身是否正确还需要另外判断。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "fal F轮融资由Bessemer领投，继续建设生成式媒体推理服务",
+      "url": "https://www.bvp.com/news/investing-in-fal-the-generative-media-company",
+      "source": "Bessemer Venture Partners",
+      "summary_zh": "Bessemer在11月3日的公告中确认领投fal F轮，延续此前多轮投资。fal向开发者提供图像、视频等生成模型的API和部署基础设施，并已扩展到工作流及模型后训练；这类服务要围绕整帧反复迭代的负载优化，基础设施需求与逐词生成的语言模型并不相同。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Apple公布新内容分级项，涉及浪漫或性内容的虚拟伴侣最低18+",
+      "url": "https://developer.apple.com/news/?id=yxkh08us",
+      "source": "Apple Developer",
+      "summary_zh": "Apple 11月2日公告称，App Store Connect将从11月16日起新增位置共享与约会关系两类内容申报，其中约会关系包含提供性或浪漫内容的虚拟伴侣，最低年龄分级为18+。所有应用需在2027年1月12日前完成申报；范围并非所有AI聊天工具，也不能把内容分级直接写成已经完成用户年龄核验。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Siri AI向所有开发者开放应用集成预览",
+      "url": "https://developer.apple.com/news/?id=gdk2umrf",
+      "source": "Apple Developer",
+      "summary_zh": "Apple 11月3日在iOS、iPadOS、macOS和visionOS 27.3测试版中开放开发者预览，应用可通过App Intents把内容和动作接入Siri AI，也可组合多个动作为复杂请求服务。当前开放的是开发与试验入口，公告明确还要数月才面向客户交付，不能等同于第三方应用能力已在正式系统全面上线。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Google宣布调整K–12账户的AI与Search访问开关",
+      "url": "https://blog.google/products-and-platforms/products/education/ai-learning-era-updates-2026/",
+      "source": "Google Blog",
+      "summary_zh": "Google 11月3日提出，将让K–12学生账户的Gemini、Gemini Notebook、Gemini in Classroom和Google Search默认关闭，由学校管理员显式开启。公司表示会在未来数月先提供过渡细则；同日还宣布把引导式学习能力带入Search和Classroom，以分步引导替代直接给出作业答案。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "ISO 21423明确不同厂商工业移动机器人的通信与互通要求",
+      "url": "https://www.automate.org/robotics/news/new-iso-interoperability-standard-helps-mobile-robots-from-different-vendors-work-together",
+      "source": "A3",
+      "summary_zh": "A3在11月2日公告介绍ISO 21423:2026，规定工业移动机器人、车队管理器和其他设备如何交换信息、请求动作，包括位置、速度、方向、状态与任务等。它处理的是混合厂商车队的通信基础，采用标准之后仍需实现和验证接口，不能据此声称现有机器人已经自动互通或获得整套安全认证。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Churchill XI股东批准与Agility合并，交割和交易仍在计划阶段",
+      "url": "https://www.agilityrobotics.com/content/churchill-capital-corp-xi-shareholders-approve-business-combination-with-agility-robotics",
+      "source": "Agility Robotics",
+      "summary_zh": "11月2日特别股东会批准了Churchill XI与Agility Robotics的合并及相关提案，公告预计交易及相关融资合计带来约4.65亿美元毛资金。公司列出的计划是美国日期11月4日交割、11月5日以AGLT代码开始交易，且仍以满足交割条件为前提；本期确认的是股东批准，尚无据此认定交易已完成。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Netflix小范围测试AI Discover，用主题逐步收窄推荐",
+      "url": "https://about.netflix.com/en/news/introducing-ai-discover",
+      "source": "Netflix",
+      "summary_zh": "Netflix 11月3日宣布在电视应用里向一小部分会员测试AI Discover，先让用户选择心情、同行观看者或可用时间等主题，再逐层缩小片单。AI参与生成推荐主题，用户也能保留或排除推荐；目前属于小范围体验测试，不能当成全量上线或内容生成模型发布。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "方法回看：Figma披露专用设计编辑模型的训练与评测",
+      "url": "https://www.figma.com/blog/training-a-figma-fluent-editing-model/",
+      "source": "Figma Blog",
+      "summary_zh": "这篇文章发表于10月29日，讨论用Figma原生文件格式表示设计、生成编辑请求，并通过结构验证和视觉评审筛选训练样本。团队早期用超过25万条样本微调Llama 3.3 70B，随后尝试更新底座和强化学习，同时分开评价结构、指令满足度与视觉效果；最新展示的编辑模型仍未发布，内部成绩也需要独立验证。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "embodied",
+      "type": "paper",
+      "title": "把VLA量化误差与动作延迟拆开：做一次可执行的二因素实验",
+      "based_on": [
+        {
+          "title": "LoopQ: Fair, Closed-Loop Evaluation of Quantized Vision-Language-Action Models",
+          "url": "https://arxiv.org/abs/2611.05093"
+        },
+        {
+          "title": "VLALagBench: Understanding When and Why VLA Inference Latency Matters",
+          "url": "https://arxiv.org/abs/2611.03103"
+        }
+      ],
+      "why_now": "11月2日的VLALagBench已系统研究延迟，11月3日的LoopQ又显示实际低比特内核可能更慢，单独再做一张延迟榜很容易重复。可检验的增量是用相同观测时序，区分量化带来的动作数值变化与推理耗时变化，判断二者是否交互。",
+      "feasibility": "单人约3周、1张24 GB GPU，使用moojink/openvla-oft已公开的LIBERO策略，只做推理与小规模仿真；官方列出的LIBERO推理需求约16 GB，给渲染和测量留出余量。不依赖LoopQ尚待发布的实现，也不跑论文的18万回合全量实验。",
+      "route": [
+        "第1–2天跑通OpenVLA-OFT官方LIBERO示例和一个完整任务，固定检查点、图像预处理、动作头、随机种子与同一个Transformers执行环境，记录每个动作块的观测时间戳、GPU耗时和峰值显存。",
+        "只加入实际可执行的8比特或4比特内核路径，分别核对模型驻留显存和Profiler内核；浮点模拟量化只用于精度对照，不能把它的运行时间当低比特部署速度。",
+        "给仿真增加固定步长时钟和动作队列，推理期间物理时间继续推进。按实测耗时记录回放调度，构造全精度/量化动作与基准/量化延迟分布的四格对照，记录动作年龄和过期丢弃率。",
+        "先选6个任务、每个30个配对种子，比同步执行与异步动作队列；统一报告成功率、完成仿真时间、P50/P95动作年龄与配对置信区间。若小样本区间太宽，在单卡预算内只扩充最有信号的任务，不承诺分辨1个百分点。",
+        "对照VLALagBench已有的延迟敏感性结论，检查联合误差是否超出两项单独损失的相加，并公开配置、延迟记录和负结果；移动目标扩展放在静态任务四格实验跑稳之后。"
+      ],
+      "risk": "最容易得到假结论的地方是推理时暂停了仿真，或跨精度顺手换了引擎和预处理；那样量到的是评测器差异，无法解释动作延迟。"
+    },
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "把ARCBench判定器拆成离线工具：从压缩记录追到具体工具调用",
+      "based_on": [
+        {
+          "title": "Do Agents Still Follow the Rules? Benchmarking Rule Compliance under Agent Context Compaction",
+          "url": "https://arxiv.org/abs/2611.03223"
+        },
+        {
+          "title": "ARCBench",
+          "url": "https://github.com/VUAISec/ARCBench"
+        }
+      ],
+      "why_now": "11月2日的ARCBench已提供真实工具循环、确定性判定器和固定请求的回放测试，适合趁接口刚公开时做一个小适配层。COMPINT已经做过约束提取，ARCBench也已有失败归因；这里的增量应是离线导入、跨压缩次数的记录对齐和可浏览报告，不宣称发明新防御。",
+      "feasibility": "单人1–2周，核心功能纯CPU、无需调用闭源API。只支持可从工具名和参数确定的规则，复用公开fixture与回放记录；自然语言规则是否被完整保留，可人工标注小样本，不把在线模型裁判列为必需组件。",
+      "route": [
+        "第1–2天用ARCBench自带fixture和golden回放跑通两个规则案例，核对原始工具调用、预期标签及回放请求，整个过程不触发真实邮箱或外部业务系统。",
+        "定义JSONL输入：原始规则及来源、压缩前后文本、会话与轮次ID、工具调用及结果；先写ARCBench导入器，再接受一个通用工具调用格式，保留原始参数供复核。",
+        "将已有确定性规则判定封成独立命令，首批只做收件人域名、路径边界和数值限额；对否定、例外与“没有执行动作”分别显示标签，保留规则来源，语义不确定时显示待复核。",
+        "生成本地HTML报告，按原规则、各次摘要、首次相关动作并排查看；把摘要中能定位的原文片段和人工语义标签分开，防止关键词仍在就误报“规则完整保留”。",
+        "在公开fixture与少量人工审阅记录上测标签一致率、导入覆盖率和每千条记录耗时，附最小接入示例；对照COMPINT的约束提取模块说明边界，参考其原论文https://arxiv.org/abs/2608.11242。"
+      ],
+      "risk": "如果最后只是给ARCBench原报告换皮，就没有维护价值；要用另一个来源的真实工具记录证明导入层有用，并明确离线诊断本身不能阻止违规。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "把点云黑盒适配改成严格因果：缺类与漂移时原型库还能不能用？",
+      "based_on": [
+        {
+          "title": "3D-BBDA: Backpropagation-Free Black-Box Domain Adaptation for Robust 3D Point Cloud Recognition",
+          "url": "https://arxiv.org/abs/2611.03588"
+        },
+        {
+          "title": "PCoTTA: Continual Test-Time Adaptation for Multi-Task Point Cloud Understanding",
+          "url": "https://arxiv.org/abs/2411.00632"
+        }
+      ],
+      "why_now": "11月2日的3D-BBDA用目标域伪标签构建原型，正文明确先积累目标缓冲区，再以128样本分块对齐；这给“单次前向”与“在线可用”之间留下了一个可测的差别。持续点云适配和原型混合已有PCoTTA等工作，本题限定只读黑盒输出、不回传梯度、预测时不使用未来样本，研究缺类与突变顺序下的代价。",
+      "feasibility": "单人2–3周、1张12–24 GB GPU，使用jiachens/ModelNet40-C公开数据和PointNet检查点，提取几何特征与小矩阵对齐可在CPU完成。无需取得新的私有权重；3D-BBDA按正文公式做清楚标注的独立实现，先在同一公开检查点下比较，不要求复现作者所有骨干网络。",
+      "route": [
+        "第1–2天从ModelNet40-C官方仓库下载已有PointNet权重与腐蚀数据，跑通干净集、噪声和稀疏采样三种推理；冻结网络并缓存每个样本的黑盒logits及样本ID。",
+        "按3D-BBDA公式实现非参数几何表征、原型对齐和分数融合，建立先积累整段目标缓冲区的对照，同时单列原型构建、128样本对齐与单样本预测耗时。",
+        "构造固定顺序的数据流：先只出现一部分类别，再引入新类，最后切换腐蚀；每次必须先预测再更新原型，过去窗口只取32、128或512样本，禁止用后续测试样本补全当前原型。",
+        "比较不适配、目标缓冲区对照、简单滑动窗口以及带类别覆盖门控的遗忘原型；门控只用预测熵和有效样本数，缺类时回退冻结源模型，标签仅用于最后统计。",
+        "用独立验证流确定阈值，在多个固定顺序上报分类错误率、缺类召回、校准误差、恢复所需样本数和P95延迟；与PCoTTA的可训练原型路线对照说明信息访问条件，避免把协议放宽当算法提升。"
+      ],
+      "risk": "类别长期不出现时，纯目标原型没有信息可恢复，伪标签还可能自我强化；门控的真实收益可能只是更频繁回退源模型，必须报告覆盖率和回退比例。"
+    }
+  ]
+}
