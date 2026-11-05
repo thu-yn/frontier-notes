@@ -1,0 +1,472 @@
+{
+  "date": "2026-11-05",
+  "editor_note": "今天我最想连着读的是 Dory、LoCo 和那篇检索中的上下文退化分析：计算可以花在隐空间循环里，也可以从已经想明白的推理尾巴里省下来，但先要弄清楚模型究竟被什么拖住。检索实验把矛头指向与证据竞争的内容，YANAMI 则提醒我们，多轮任务还得检查状态有没有被正确继承，不能只数上下文长度。机器人这边，异步策略把慢速语义理解和快速动作分开，读起来比单纯加大模型更贴近控制系统的实际麻烦。研究点留给已开放权重和工具的项目；资讯里的交易金额、产品自报成绩和公告日期也各按原始口径写，不把意向当交付。",
+  "math_note": {
+    "name": "Hoeffding 不等式",
+    "name_en": "Hoeffding’s Inequality",
+    "field": "概率论 / 统计学习",
+    "one_liner": "多跑几次能压住偶然，但前提是这些试验真的独立。",
+    "statement": "设 $X_1,\\ldots,X_n$ 是相互独立、取值都在 $[0,1]$ 内的随机变量，例如独立抽样任务上的成功指示；$\\bar X=n^{-1}\\sum_i X_i$ 是样本均值，$\\mu=\\mathbb E\\bar X$ 是它的期望，不要求每次试验同分布。对任意容忍误差 $\\varepsilon>0$，都有 $\\Pr(|\\bar X-\\mu|\\ge\\varepsilon)\\le 2\\exp(-2n\\varepsilon^2)$。如果希望偏差超过 $\\varepsilon$ 的概率不大于 $\\delta$，其中 $0<\\delta<1$，取 $n\\ge\\log(2/\\delta)/(2\\varepsilon^2)$ 就够；误差减半，保守的样本量要求会变成四倍。",
+    "origin": "Wassily Hoeffding 在 1963 年的论文 Probability Inequalities for Sums of Bounded Random Variables 中给出了这类界。他关心的是：不知道完整分布、只有变量的范围时，能否对有限次抽样的偶然偏差给出明确上限。这比等样本趋向无穷时再讨论近似分布，更适合给一次实际评测定预算。",
+    "derivation": [
+      {
+        "math": "Y_i=X_i-\\mathbb E X_i,\\qquad S=\\sum_{i=1}^{n}Y_i=n(\\bar X-\\mu)",
+        "note": "先减去各自的期望，把问题改成零均值变量的和会向右偏多少；S 就是放大 n 倍的均值偏差。"
+      },
+      {
+        "math": "\\mathbb E e^{\\lambda Y_i}\\le e^{\\lambda^2/8},\\qquad \\lambda\\in\\mathbb R",
+        "note": "这一步用 Hoeffding 引理。对长度为 1 的有界区间，指数函数的凸性先把内部取值压到两个端点，再对中心化后的对数矩母函数作二阶上界；变量的具体分布就被范围代替了。"
+      },
+      {
+        "math": "\\mathbb E e^{\\lambda S}=\\prod_i\\mathbb E e^{\\lambda Y_i}\\le e^{n\\lambda^2/8}",
+        "note": "独立性让和的指数期望拆成乘积。这是证明里不能随便省掉的条件，同一场景的相邻帧通常不能直接当作独立试验。"
+      },
+      {
+        "math": "\\Pr(S\\ge n\\varepsilon)\\le e^{-\\lambda n\\varepsilon}\\mathbb E e^{\\lambda S}\\le\\exp(-\\lambda n\\varepsilon+n\\lambda^2/8),\\quad\\lambda>0",
+        "note": "用 Markov 不等式约束非负变量 exp(λS) 的尾部。λ 是我们自己能调的参数，接下来选让这个上界最小的值。"
+      },
+      {
+        "math": "\\lambda_*=4\\varepsilon,\\qquad \\Pr(S\\ge n\\varepsilon)\\le e^{-2n\\varepsilon^2},\\qquad \\Pr(|S|\\ge n\\varepsilon)\\le 2e^{-2n\\varepsilon^2}",
+        "note": "对上一步的指数配方或求导，得到最佳 λ。向左偏的概率同样处理，再把两个尾部相加；概率上界大于 1 时取 1 即可。"
+      }
+    ],
+    "applications": [
+      {
+        "area": "机器人成功率评测",
+        "detail": "对独立抽样的任务初始状态，若要求成功率估计误差不超过 5 个百分点、失败概率至多 5%，这个分布无关的充分样本量是 738 次；它很保守，也不能把重复同一轨迹的帧数算进去。"
+      },
+      {
+        "area": "点云鲁棒性抽检",
+        "detail": "随机抽物体检查某种扰动下的错误率时，可先按目标误差确定测试集规模；同一物体的多个旋转版本应按物体分组处理依赖。"
+      },
+      {
+        "area": "模型选择",
+        "detail": "同时比较 $M$ 个预先固定的候选时，用联合界可把充分样本量改为 $n\\ge\\log(2M/\\delta)/(2\\varepsilon^2)$，避免挑了最高分后还沿用单模型的置信说法。"
+      }
+    ],
+    "takeaway": "有限样本保证来自有界性和独立性；把高度相关的数据重复计数，不会自动换来 $e^{-2n\\varepsilon^2}$ 这样的可靠衰减。",
+    "viz": {
+      "type": "custom",
+      "caption": "拖动试验次数 n 和容忍误差 ε：图中是公平硬币样本均值的精确分布，红柱是偏离 0.5 至少 ε 的两侧尾部；下面比较精确尾概率与 Hoeffding 上界。",
+      "html": "<div><label>试验次数 n <input data-n type=\"range\" min=\"20\" max=\"400\" step=\"10\" value=\"100\"><span data-nv></span></label><br><label>容忍误差 ε <input data-e type=\"range\" min=\"0.02\" max=\"0.30\" step=\"0.01\" value=\"0.10\"><span data-ev></span></label><canvas data-plot width=\"640\" height=\"280\" style=\"width:100%;max-width:640px\" role=\"img\" aria-label=\"公平硬币样本均值的二项分布及双侧尾部\"></canvas><p data-info aria-live=\"polite\"></p></div>",
+      "script": "(()=>{const q=s=>el.querySelector(s),a=q('[data-n]'),b=q('[data-e]'),c=q('[data-plot]'),g=c.getContext('2d');function draw(){const n=Number(a.value),e=Number(b.value);q('[data-nv]').textContent=' '+n;q('[data-ev]').textContent=' '+e.toFixed(2);const p=[Math.pow(0.5,n)];for(let k=1;k<=n;k++)p[k]=p[k-1]*(n-k+1)/k;const peak=Math.max(...p);let tail=0;g.clearRect(0,0,640,280);g.font='13px sans-serif';g.fillStyle='#444';g.fillText('样本均值 = 正面次数 / n；每根柱子是一种可能结果',25,20);g.strokeStyle='#999';g.beginPath();g.moveTo(30,35);g.lineTo(30,240);g.lineTo(610,240);g.stroke();for(let k=0;k<=n;k++){const red=Math.abs(k/n-0.5)+1e-12>=e;if(red)tail+=p[k];g.fillStyle=red?'#c25353':'#357a88';const h=185*p[k]/peak;g.fillRect(30+580*k/n-0.5,240-h,Math.max(1,580/(n+1)),h);}g.strokeStyle='#9e4242';g.setLineDash([4,4]);for(const t of [0.5-e,0.5+e]){const x=30+580*t;g.beginPath();g.moveTo(x,35);g.lineTo(x,240);g.stroke();}g.setLineDash([]);g.fillStyle='#444';g.fillText('0',27,263);g.fillText('0.5',310,263);g.fillText('1',605,263);const bound=Math.min(1,2*Math.exp(-2*n*e*e));q('[data-info]').textContent='精确双侧尾概率 '+tail.toExponential(3)+'；Hoeffding 上界 '+bound.toExponential(3)+'。图只画独立、公平硬币，定理适用于所有独立的 [0,1] 有界变量。';}a.addEventListener('input',draw);b.addEventListener('input',draw);draw();})();"
+    }
+  },
+  "crossover": {
+    "theory": "误差无损变换与双浮点状态",
+    "theory_en": "Error-Free Transformations and Two-Float State",
+    "field": "数值分析 / 浮点算术",
+    "era": "1960 年代已有补偿求和；2000 年代高精度浮点变换逐步成熟，本期论文把双 FP32 状态接入大规模时间积分",
+    "trigger": {
+      "title": "A wider state, not wider arithmetic, for single-precision time integration",
+      "url": "https://arxiv.org/abs/2611.05365v1"
+    },
+    "one_liner": "让体素记住被舍掉的零头，先别把整张地图都升级成双精度。",
+    "pc_problem": "靶子是长时间融合点云的体素地图：每个体素在线维护质心和协方差，供平面拟合或配准使用。直接累加坐标及平方和再相减容易发生数值消去，已有工程做法包括局部坐标、中心矩更新和 FP64 累加；这里要比较的是在稳定更新之外，持久状态本身的舍入还占多少。一个确切的格式量级是：在 $10^6$ 米附近，FP32 相邻数间隔为 $0.0625$ 米，毫米细节若已在输入转型时消失，后续补偿救不回来。即使先移到局部坐标，百万次更新的合成压力测试仍可能把微小质心增量舍掉；这不是实测的建图失效比例。仅按每体素 3 个均值和 6 个对称中心矩计，百万体素用 FP32 是 36 MB，用 FP64 是 72 MB，尚未计点数、哈希表和索引。",
+    "theory_core": "把一个持久标量存成未立即相加的两部分 $s=h+\\ell$，其中 $h$ 是 FP32 主值，$\\ell$ 留住被舍入的小量。误差无损变换 TwoSum 对两个浮点输入 $a,b$ 计算一对 $u,v$，在满足相应 IEEE 舍入及无溢出等条件时有 $u+v=a+b$；这不等于普通 FP32 加法突然变精确。双浮点加法、乘法再组合这些变换，更新后重新规范化成主值和余量。本期论文在时间积分中只加宽状态表示，右端计算仍用 FP32；迁移到点云只能期待压低状态舍入，不能把其微分方程误差界直接搬过来。",
+    "bridge": "时间积分里的状态 $s$ 对应体素中的均值向量 $\\mu$ 和未归一化中心矩矩阵 $M_2$；每一步物理增量对应新点对统计量的更新。先用单位权重的 Welford 更新：$\\delta=x-\\mu$，$\\mu^+=\\mu+\\delta/(n+1)$，$M_2^+=M_2+\\delta(x-\\mu^+)^\\top$，其中 $x$ 是局部坐标的新点、$n$ 是已有点数；协方差再由 $M_2/n$ 或 $M_2/(n-1)$ 按所用定义得到。将加到这两个持久状态上的增量通过双浮点访问器写回，其他邻域查询、特征提取继续读取主值。映射的边界也很明确：输入误差、离群点和配准位姿误差属于另外三类问题，余量缓冲不会替它们买单。",
+    "angles": [
+      {
+        "dim": "存储",
+        "idea": "把主值和余量分成两组连续数组，先给所有体素保留 FP32 主值，只为累计更新次数多且增量接近舍入间隔的体素分配余量。触发条件用更新计数加上“主值加增量后未变化”的频率，阈值在验证集上固定；体素一旦升级就保留余量，先避免反复降级造成新的损失。",
+        "gain": "若只有 10% 体素需要 9 个余量字段，统计量主体估算从全 FP64 的 72 MB 降到 39.6 MB，约省 45%；相对全 FP32 则多 3.6 MB。比例是假设，标志位、余量索引及分配器开销须另报。",
+        "cost": "全量使用双 FP32 与 FP64 都是每标量 8 字节，没有天然的状态存储优势。动态分配、地址跳转和迟到的升级还可能吃掉收益；升级前丢掉的位不会回来。"
+      },
+      {
+        "dim": "算法优化",
+        "idea": "先在转成 FP32 之前减去局部原点，再用 Welford 的中心矩公式替换原始平方和相减；这两项都是必须具备的强基线。只在持久状态加法和必要的乘法上接 TwoSum、TwoProd 及规范化，保留 FP32 的其余计算，同时加入普通 Kahan 补偿作便宜对照。",
+        "gain": "总扫描仍是 $O(N)$、每点固定大小更新；目的在于不用全程 FP64 算术就保存小于一个 FP32 舍入间隔的累计增量。以中心值约 1、单次增量 $10^{-8}$ 的压力测试看，朴素写回可能完全不动，余量应能累计后再进位；这是可检验的数值目标，不是配准精度承诺。",
+        "cost": "仅给均值补偿而忽略中心矩的乘法误差可能仍不稳定。编译器重排、fast-math、溢出及设备的非正规数处理都要检查；更多 FP32 指令不保证比 FP64 快。"
+      },
+      {
+        "dim": "并行",
+        "idea": "在已经按体素分组的点流中，先在线程块内算出计数、均值和中心矩，再用 Chan 的分组中心矩合并式更新全局状态。用固定归约树合并主值与余量，避免把一对浮点数拆成两个互不协调的全局原子加法。",
+        "gain": "若同一体素可连续攒到 32 个点，理论上全局统计量写回次数可从每组 32 次降为 1 次；实际缩减取决于分组密度。标准分块基线本就能得到这部分收益，比较时必须给它相同的归约树。",
+        "cost": "混乱稀疏的扫描可能没有足够同体素点；新加排序的代价要计入，不能拿排序后的更新内核与未排序端到端程序比。树形归约仍有舍入，并不保证不同分块配置逐位一致。"
+      },
+      {
+        "dim": "评测",
+        "idea": "把输入转型损失、更新公式消去和状态长期舍入拆成三个单独实验。预先固定局部平面、薄结构及不同点到达顺序，用相同输入的 FP64 二遍中心化结果作参考，再在真实序列上看法线角误差与点到平面残差。",
+        "gain": "把合成扫描覆盖到每体素 10²、10⁴、10⁶ 次更新，预先把“相对协方差误差至少降低 10 倍”设为继续投入的筛选线；这是一条实验门槛，尚无实测增益。",
+        "cost": "真实地图通常早已限制每体素累计点数或使用局部坐标，可能根本进不了这个压力区间；合成数据赢很多、真实配准完全不变，应如实收成负结果。"
+      }
+    ],
+    "experiment": [
+      "第 1–2 天，纯 CPU：生成局部坐标为主、带可控微小扰动的平面点流；比较朴素 FP32、局部坐标加 Welford、Kahan、双浮点和 FP64 二遍参考，记录质心及协方差误差。另做先在百万米坐标转 FP32 的反例，确认补偿无法恢复输入丢失的信息。",
+      "第 3–5 天：用已公开的 KITTI Odometry 点云序列搭一个独立体素统计回放器，固定配准位姿和点顺序，只比较统计模块；普通真实回放与重复更新的合成压力测试分开报告。",
+      "第 2 周，单张 12–24GB GPU：实现固定分块归约与双浮点访问器；相同编译选项、归约树和输入下测端到端耗时、内存及法线误差，连同局部坐标 Welford FP32、Kahan 和 FP64 一起比较。",
+      "第 3 周：扫余量分配比例和触发阈值，只在训练/验证序列上选阈值，再在保留序列测失效体素比例及配准残差；如果真实数据上只有格式误差改善，停止扩大成整套 SLAM 系统。"
+    ],
+    "prior_art": [
+      {
+        "title": "Accurate Sum and Dot Product",
+        "url": "https://epubs.siam.org/doi/10.1137/030601818",
+        "note": "Ogita、Rump 和 Oishi 在 2005 年已系统研究误差无损变换与高精度累加，基本算术不是新贡献；这里只考虑体素状态的选择性配置。"
+      },
+      {
+        "title": "Algorithms for Computing the Sample Variance: Analysis and Recommendations",
+        "url": "https://doi.org/10.1080/00031305.1983.10483115",
+        "note": "Chan、Golub 和 LeVeque 已分析中心化、分组等方差计算的稳定性，必须先把这些稳定更新做好，不能用不稳定的平方和基线制造收益。"
+      },
+      {
+        "title": "Resolution Where It Counts: Hash-based GPU-Accelerated 3D Reconstruction via Variance-Adaptive Voxel Grids",
+        "url": "https://doi.org/10.1145/3777909",
+        "note": "这项 GPU 三维重建工作已用 Welford 在线维护体素相关方差；检索未找到与本提案完全同设定的选择性双 FP32 质心/协方差状态实验，不能因此声称点云数值稳定性尚无人研究。"
+      }
+    ],
+    "reality_check": "如果局部坐标加 Welford 已把误差压到传感器噪声以下，再给体素记更多小数位只是在增加访存；先跑这个强基线，再决定要不要做双浮点。"
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Dory1.0-4B: A Looped Normalized-GPT",
+      "title_zh": "Dory：用重复计算同一块网络换取更深的推理",
+      "url": "https://arxiv.org/abs/2611.03998",
+      "authors": "Maxim Fishman、Simeng Sun、Shantanu Acharya 等",
+      "one_liner": "少吐 token 不等于少做计算，循环次数得和实际延迟一起看。",
+      "summary_zh": "Dory 是一个 4B 参数的循环语言模型，同一份权重可在推理时重复执行共享层块，以适应不同计算预算。作者在 Agent 基准上报告，四轮循环比一轮少生成约 1.3–2.5 倍的 token，并用只保留末轮键值缓存的方法限制缓存占用。BF16、低精度及 GGUF 权重已公开；这些结果说明计算能转移到隐空间，不能直接解读成相同比例的加速。",
+      "tags": [
+        "循环模型",
+        "隐空间推理",
+        "开放权重"
+      ],
+      "hf_url": "https://huggingface.co/papers/2611.03998",
+      "upvotes": 6,
+      "affiliation": "NVIDIA"
+    },
+    {
+      "domain": "ai",
+      "title": "Think Less, Locally: Local Preference Learning for Reasoning Compression",
+      "title_zh": "LoCo：在推理的具体岔路口学习何时收尾",
+      "url": "https://arxiv.org/abs/2611.04814",
+      "authors": "Muyao Yuan、Liyan Xu、Weizhan Zhang 等",
+      "one_liner": "教模型认出“已经够了”，比一刀切限字数更有针对性。",
+      "summary_zh": "LoCo 从模型自己生成的数学推理中找出可能过度思考的位置，固定此前的前缀，再生成更短且经过验证的后续，构成局部偏好对来训练。作者报告数学输出缩短 41.7%–45.4%，只用数学数据训练后，代码输出也缩短 23.4%–36.3%，准确率保持或改善。方法的看点是比较同一推理状态下的后续选择；论文目前对代码和模型仍使用“将公开”的表述。",
+      "tags": [
+        "推理压缩",
+        "偏好学习",
+        "DPO"
+      ],
+      "hf_url": "https://huggingface.co/papers/2611.04814",
+      "upvotes": 65,
+      "affiliation": "Tencent"
+    },
+    {
+      "domain": "ai",
+      "title": "You don't need long context",
+      "title_zh": "长上下文一定必要吗？频繁压缩历史的实验",
+      "url": "https://arxiv.org/abs/2611.05306",
+      "authors": "Peter Belcak、Saurav Muralidharan、Jindong Jiang 等",
+      "one_liner": "可以缩短历史，但要先说明摘要必须保住哪些东西。",
+      "summary_zh": "这篇 NVIDIA 技术报告在多种长输入和长程任务中频繁压缩历史，发现保持较短上下文时，任务准确率可以几乎不掉。软件工程实验甚至把每个上下文里的动作数压到最多一次，并由此讨论用语义状态接力执行任务。它挑战的是“所有历史都留着才可靠”的默认做法，不能据此认为摘要永远不会丢掉关键条件。",
+      "tags": [
+        "上下文压缩",
+        "长程Agent",
+        "推理成本"
+      ],
+      "hf_url": "https://huggingface.co/papers/2611.05306",
+      "upvotes": 9,
+      "affiliation": "NVIDIA"
+    },
+    {
+      "domain": "ai",
+      "title": "Length Is Cheap, Competition Is Not: Attention Predicts Context Rot in Retrieval",
+      "title_zh": "检索上下文退化：干扰证据可能比文本长度更关键",
+      "url": "https://arxiv.org/abs/2611.04169",
+      "authors": "Yinuo Liu",
+      "one_liner": "同样长的一段输入，空话和竞争答案不是一回事。",
+      "summary_zh": "作者在五个 0.5B–3B 开放模型上把中性填充与同格式竞争证据分开测试：前者的检索准确率可保持在 0.97–1.00，后者可降到 0.16–0.33。模型分给正确证据的注意力比输入长度更能解释失误，代码和 126,473 次试验记录已公开。结论来自受控检索实验，适合拿来检查评测中的混杂因素，还不足以包办所有长程 Agent 的失败解释。",
+      "tags": [
+        "上下文退化",
+        "检索评测",
+        "注意力"
+      ],
+      "hf_url": "https://huggingface.co/papers/2611.04169",
+      "upvotes": 0
+    },
+    {
+      "domain": "ai",
+      "title": "YANAMI: A Large-Scale Multimodal Dataset and Benchmark for Multiturn Stateful Interaction",
+      "title_zh": "YANAMI：把多轮视觉对话中的状态继承单独拿出来测",
+      "url": "https://arxiv.org/abs/2611.05280",
+      "authors": "Shengyu Wang、Tengyue Nong、Junming Liu 等",
+      "one_liner": "听懂“改成蓝色”之后，还得记得哪些东西不能跟着改。",
+      "summary_zh": "YANAMI 收集 40 万段多轮多模态对话，覆盖图像融合、编辑、世界建模和视觉推理，并另设 400 段对话的评测集。它把理解当前对话状态与把状态正确落实到图像中分开计分，避免把一串互相独立的单轮问答叫成多轮交互。对编辑模型来说，这比只看最后一张图好不好看更能暴露遗忘和误改。",
+      "tags": [
+        "多模态",
+        "多轮交互",
+        "状态追踪"
+      ],
+      "hf_url": "https://huggingface.co/papers/2611.05280",
+      "upvotes": 26
+    },
+    {
+      "domain": "ai",
+      "title": "FlowTranslator: Training-Free In-Image Machine Translation with Flow-Based Editing",
+      "title_zh": "FlowTranslator：不再训练专用模型，直接把图中文字译回图里",
+      "url": "https://arxiv.org/abs/2611.04303",
+      "authors": "Zhixian Li、Xingsong Ye、Yongkun Du 等",
+      "one_liner": "不用训练很诱人，但真实照片上的完整成功率仍要看。",
+      "summary_zh": "FlowTranslator 先让文字识别模型和语言模型给出翻译提示，再控制流式图像编辑模型的生成轨迹，把译文放回原图。它分别在文字区域的早期噪声和中期编辑位移上动手，使背景保留与新文字生成更容易兼顾。在真实整图 ScenePair 照片译成中文的测试上，作者报告完全匹配准确率为 40.1%；这个数字也说明，识字、翻译和排版串起来后仍有不少失败。",
+      "tags": [
+        "图内翻译",
+        "免训练",
+        "图像编辑"
+      ],
+      "hf_url": "https://huggingface.co/papers/2611.04303",
+      "upvotes": 10,
+      "affiliation": "Fudan University"
+    },
+    {
+      "domain": "embodied",
+      "title": "DreamX: Video Diffusion Model is a Universal Latent Action Learner",
+      "title_zh": "DreamX：从预训练视频模型里抽取跨本体的潜在动作",
+      "url": "https://arxiv.org/abs/2611.05377v1",
+      "authors": "Jisoo Kim、Chaehyun Kim、Junsu Kim 等",
+      "one_liner": "把视频表征压成四个动作 token，先看它有没有丢掉控制需要的细节。",
+      "summary_zh": "DreamX 复用视频扩散模型的时空特征，学习尽量剥离外观变化、保留动作变化的紧凑表示。每个潜在视频帧由 1,200 个 token 压到 4 个，作者在 LARY-Bench 及跨人类、机器人视频迁移中测试了这种共享接口。这里的 300 倍是表征 token 数的压缩比，不是机器人推理速度或真机成功率的提升倍数。",
+      "tags": [
+        "潜在动作",
+        "视频扩散",
+        "跨本体迁移"
+      ]
+    },
+    {
+      "domain": "embodied",
+      "title": "Asynchronous Robot Policies",
+      "title_zh": "异步机器人策略：慢速理解场景，快速生成动作",
+      "url": "https://arxiv.org/abs/2611.05155v1",
+      "authors": "Sombit Dey、Luc Van Gool、Danda Pani Paudel",
+      "one_liner": "机器人不必每动一下，都等大模型重新想一遍。",
+      "summary_zh": "ARP 让较大的视觉语言模型低频更新语义记忆，由轻量动作专家读取记忆和新观测，在独立的高频进程中控制机器人。训练时故意让两边的观测在时间上错位，教动作专家应付已经变旧的语义信息。作者在 Franka 任务和动态仿真中报告改善，并测试把语义模型运行频率降到原来的十分之一；系统收益取决于记忆过期后还能不能及时反应。",
+      "tags": [
+        "异步控制",
+        "VLA",
+        "实时推理"
+      ]
+    },
+    {
+      "domain": "bio",
+      "title": "iGC: Antibody Optimization via Reinforcement Learning over a Learned Somatic Hypermutation Prior",
+      "title_zh": "iGC：先学自然突变，再用奖励挑更会结合的抗体",
+      "url": "https://arxiv.org/abs/2611.05270v1",
+      "authors": "Thao Nguyen、Robert G. Alberstein、Ewa Nowara 等",
+      "one_liner": "结合分数再高，也要检查模型是不是在钻奖励的空子。",
+      "summary_zh": "iGC 先从 B 细胞谱系中学习体细胞高频突变，也就是免疫系统逐步修改抗体的规律，再用强化学习朝指定抗原的结合目标优化。策略受到原始突变先验约束，同时用一个学习出的惩罚网络压住重复高奖励替换等投机行为。论文给出突变预测、计算亲和力优化和多样性评测；这些计算结果不能替代候选抗体的湿实验验证。",
+      "tags": [
+        "抗体设计",
+        "强化学习",
+        "生物先验"
+      ]
+    },
+    {
+      "domain": "chip",
+      "title": "Workload-Static Optical Circuit Switching For Scalable LLM Inference Decode",
+      "title_zh": "为解码负载固定光路：减少大模型多卡通信的绕行",
+      "url": "https://arxiv.org/abs/2611.05104v1",
+      "authors": "Maximilian Thürmer、Nicolas Scotto di Perto、Eloise Stein 等",
+      "one_liner": "模型部署一旦固定，网络未必还需要对每个包临时选路。",
+      "summary_zh": "这项工作把大模型逐 token 解码中的通信模式视为部署后基本固定，联合选择并行方式、光路和集合通信调度。作者用经过硬件测量校准的网络模型，在 576 个加速器的设定下研究光电互连取舍，相比 4:1 超售的包交换网络，报告最高 65% 的交互性和 119% 的能效提升。这些是特定拓扑、负载和比较基线下的建模结果，并不是已经部署同规模光网络的实机成绩。",
+      "tags": [
+        "光互连",
+        "解码通信",
+        "系统建模"
+      ]
+    },
+    {
+      "domain": "ai4s",
+      "title": "Molecular Prior Networks",
+      "title_zh": "分子先验网络：给少量已测分子，就预测同项目的新分子",
+      "url": "https://arxiv.org/abs/2611.05103v1",
+      "authors": "Pawel Gomoluch、Anthony Bradley",
+      "one_liner": "把旧项目学到的规律带进新项目，省掉一次专门训练。",
+      "summary_zh": "Molecular Prior Networks 把一个项目里已经测过的分子及活性值作为上下文，一次前向计算预测待测分子的蛋白结合强弱。模型预先从数千个亲和力数据集中学习项目间的共性，在 FS-Mol 回归版最小支持集设定下达到有竞争力的表现，且不用为每个新任务再训练。与只在学得特征上做核回归的简化版相比，它的收益不完全来自分子相似性；目前应按少样本计算基准理解，还没有药物发现成功率的结论。",
+      "tags": [
+        "少样本学习",
+        "分子活性",
+        "元学习"
+      ]
+    }
+  ],
+  "repos": [
+    {
+      "name": "NVIDIA/auto-ontology",
+      "url": "https://github.com/NVIDIA/auto-ontology",
+      "language": "Python",
+      "stars": 4921,
+      "stars_today": "2,050",
+      "domain": "ai",
+      "one_liner": "先把业务口径和数据血缘交代清楚，再让 Agent 写查询。",
+      "summary_zh": "Auto Ontology 从企业元数据构建语义目录与关系层，帮助 Agent 对齐指标、实体及来源，再生成和检查查询。它提供 MCP、CLI 和 API 接口，适合已经有多套数据库和冲突口径的分析系统。默认栈包含 Postgres、Web 服务和 NVIDIA NIM 推理端点，需要按自己的数据权限与模型服务配置部署。"
+    },
+    {
+      "name": "max-sixty/worktrunk",
+      "url": "https://github.com/max-sixty/worktrunk",
+      "language": "Rust",
+      "stars": 11012,
+      "stars_today": "531",
+      "domain": "ai",
+      "one_liner": "把 worktree 的创建、切换和清理变成顺手的日常操作。",
+      "summary_zh": "Worktrunk 是用 Rust 写的 Git worktree 管理 CLI，以分支名寻址工作目录，并把创建、切换、状态检查和清理串起来。对同时维护几条修复线、实验分支或编码 Agent 工作区的人，价值在于减少目录与分支管理的琐碎步骤。工作目录隔离之后，合并冲突和共享外部服务仍要由项目自己处理。"
+    },
+    {
+      "name": "vercel-labs/agent-desktop",
+      "url": "https://github.com/vercel-labs/agent-desktop",
+      "language": "Rust",
+      "stars": 15039,
+      "stars_today": "2,470",
+      "domain": "ai",
+      "one_liner": "用系统的可访问性树，给桌面操作一个可引用的目标。",
+      "summary_zh": "agent-desktop 读取 macOS、Windows 和 Linux 应用的可访问性树，返回带元素引用的 JSON，再让上层 Agent 执行点击或输入。它本身没有内置模型，适合给现有 Agent 接上桌面交互能力。自绘控件是否暴露足够语义、应用更新后引用是否失效，仍决定了这条路径能走多远。"
+    },
+    {
+      "name": "thedotmack/claude-mem",
+      "url": "https://github.com/thedotmack/claude-mem",
+      "language": "TypeScript",
+      "stars": 112827,
+      "stars_today": "1,172",
+      "domain": "ai",
+      "one_liner": "跨会话记忆能省重复介绍，检索回来的旧结论还得有出处。",
+      "summary_zh": "claude-mem 记录工具使用观察，生成语义摘要，并在后续会话中检索相关项目记忆。适合经常跨天继续同一工程、希望减少重复交代背景的人。它记住的是过去会话中的观察和总结，错误判断或已过期事实也可能一起回来，接入时应保留原记录供追溯。"
+    },
+    {
+      "name": "The-PR-Agent/pr-agent",
+      "url": "https://github.com/The-PR-Agent/pr-agent",
+      "language": "Python",
+      "stars": 14744,
+      "stars_today": "280",
+      "domain": "ai",
+      "one_liner": "把 PR 初筛放进流水线，别把自动评论数当审查质量。",
+      "summary_zh": "PR-Agent 可对合并请求生成说明、审查意见和修改建议，支持 CLI、GitHub Actions 及多种代码托管平台。它通过 LiteLLM 接多家模型，也能对接本地服务，适合先在熟悉的仓库测误报与漏报。当前仓库属于社区维护的原版项目，与 Qodo 的托管产品要分别看待。"
+    },
+    {
+      "name": "floci-io/floci",
+      "url": "https://github.com/floci-io/floci",
+      "language": "Java",
+      "stars": 29589,
+      "stars_today": "1,090",
+      "domain": "ai",
+      "one_liner": "把依赖的云接口搬进本地，集成测试才能更容易重复。",
+      "summary_zh": "Floci 是面向开发、测试和 CI 的本地 AWS 服务模拟器，现有 SDK、CLI 或基础设施工具可以改指向本地端点。它适合给依赖云存储、队列等接口的数据和 Agent 服务做集成测试。具体 API 行为和覆盖面仍需用项目真正依赖的调用核对，不能从接口兼容推出所有云端行为一致。"
+    },
+    {
+      "name": "D4Vinci/Scrapling",
+      "url": "https://github.com/D4Vinci/Scrapling",
+      "language": "Python",
+      "stars": 96505,
+      "stars_today": "2,005",
+      "domain": "ai",
+      "one_liner": "静态请求、浏览器渲染和结构化抓取，终于能共用一套接口。",
+      "summary_zh": "Scrapling 把 HTTP 抓取、浏览器交互、解析和并发爬取放进一个 Python 库，并提供 CLI 与 MCP 接口。可复用会话、重试、断点恢复及自适应元素匹配，适合维护持续变化的数据采集流程。自适应匹配之后仍要检查提取字段的含义，页面没报错不代表抓到了原来那个数据。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "Kimi K3.1 Pro 权重已开放，模型卡列出 2.8T 总参数",
+      "url": "https://huggingface.co/moonshotai/Kimi-K3.1-Pro",
+      "source": "Moonshot AI / Hugging Face",
+      "summary_zh": "本期跟踪到 Kimi K3.1 Pro 权重公开，承接官方技术博客此前给出的 11 月 4 日开放安排。模型卡列出约 2.8 万亿总参数、每 token 激活 1,040 亿参数、约 100 万 token 上下文，以及 MXFP4 权重和 MXFP8 激活格式。它采用自有 Kimi K3.1 Pro License；开放下载的意义是可审查和自部署，完整模型的资源门槛仍在集群量级。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Conductor 宣布加入 Meta，云版将在 11 月分步关闭",
+      "url": "https://www.conductor.build/announcement",
+      "source": "Conductor 官方公告",
+      "summary_zh": "Conductor 于 11 月 4 日确认加入 Meta，未在公告中披露交易金额。官方时间表写明停止新用户注册，云工作区 11 月 13 日改为只读、11 月 20 日关闭；本地版继续接收新模型和关键修复至 2027 年初。对使用者最具体的变化是迁移窗口，团队预告的新界面还没有可用产品细节。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "高通发布 2026 财年财报，把下一年增长重点转向非手机业务",
+      "url": "https://investor.qualcomm.com/files/content_files/FY2026-4th-Quarter-Earnings-Release.pdf",
+      "source": "Qualcomm 财报",
+      "summary_zh": "高通 11 月 4 日公布截至 9 月 27 日的 2026 财年业绩，全年 GAAP 营收为 431 亿美元。公司把 2027 财年描述为非手机收入增长的重要转折期，特别提到数据中心业务开始爬坡。这里是财报中的业务展望，既有合作公告与未来收入目标都不能直接算成当季已实现的数据中心收入。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "LiberAI 发布 Liber-0，自报在 60 个未见操作任务上达到 36% 成功率",
+      "url": "https://www.liberai.com/blog/liber0/",
+      "source": "LiberAI 技术博客",
+      "summary_zh": "LiberAI 本周公开 Liber-0 世界动作模型，称预训练覆盖超过 220 万小时的人类经验。官方报告在 60 个由模型提出的随机任务、共 600 次试验中，整体成功率为 36%，包含取放与多步非取放操作。这是开发方定义任务和执行的零样本评测，尚不能据此推成对任意新机器人或生产场景都成立的泛化成绩。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "Boehringer 与中国生物制药签肿瘤项目协议，近端付款与里程碑分开算",
+      "url": "https://www.boehringer-ingelheim.com/human-health/boehringer-announces-new-oncology-partnership-sbp-group",
+      "source": "Boehringer Ingelheim 官方公告",
+      "summary_zh": "双方 11 月 4 日宣布多项目选择权及许可协议，方向包括抗体药物偶联物——把药物载荷接到抗体上——以及招募 T 细胞攻击肿瘤的连接器。SBP Group 将获得 3.58 亿美元首付款和近期付款，另有潜在约 70 亿美元的选择权、研发、监管及商业里程碑，并可获得销售提成。标题里常见的约 74 亿美元是条件性总额，不能当作已经到账的现金。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "Blackstone 与 Boston Scientific 合作，出资开发微型心脏泵",
+      "url": "https://www.blackstone.com/news/press/blackstone-life-sciences-announces-455-million-collaboration-to-co-fund-development-of-boston-scientific-vitalyst-heart-pump-for-patients-with-cardiogenic-shock/",
+      "source": "Blackstone 官方公告",
+      "summary_zh": "Blackstone Life Sciences 11 月 2 日宣布 4.55 亿美元合作，共同资助 Boston Scientific 的 VITALYST 微型心脏泵项目。产品拟用于急性心肌梗死相关的心源性休克，通过临时机械循环支持改善器官供血。这次进展是研发资金合作，公告没有给出已获批上市或已证实临床获益的结论。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "补读 10 月 27 日公告：Ipsen 拟在 GLP 毒理研究中使用虚拟对照组",
+      "url": "https://ir.criver.com/news-releases/news-release-details/charles-river-leverages-virtual-control-groups-glp-studies",
+      "source": "Charles River 官方公告",
+      "summary_zh": "本期 RSS 未标发布日期，回查原公告为 10 月 27 日：Charles River 将向 Ipsen 的一项拟开展 GLP 合规研究提供虚拟对照组数据，用历史对照记录和统计方法替代部分同期对照动物。公司提出适用条件下最多减少 12% 动物使用的潜力，尚不是该项前瞻研究已完成后的结果。真正要检验的是历史数据匹配、研究终点和批次差异能否支持同样可信的判断。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "AT&T Connected Life 接入 Gemini，把安防视频整理成可检索的事件",
+      "url": "https://about.att.com/blogs/2026/connected-life-home-security.html",
+      "source": "AT&T 官方博客",
+      "summary_zh": "AT&T 11 月 4 日介绍 Connected Life 与 Google Home Premium 的整合，包括用自然语言描述送货等家庭事件、搜索视频历史，以及汇总多小时活动的 Home Brief。这里的发布重点是家庭安防服务与多模态整理能力的接入，并非另发一个基础模型。功能可用性依赖相应服务方案，生成的事件叙述也不能当作视频证据本身。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "给 pcrobust 加一个组合扰动与次序检查器，先解决评测复用",
+      "based_on": [
+        {
+          "title": "Do We Still Need Rotation-Invariant Architectures? A Statistical Robustness Benchmark for Point Cloud Classification",
+          "url": "https://arxiv.org/abs/2611.03952v1"
+        },
+        {
+          "title": "pcrobust：官方基准包与公开检查点",
+          "url": "https://github.com/Abdullah-Nasir-Chowdhury/pcrobust"
+        }
+      ],
+      "why_now": "11 月 2 日提交的论文把姿态、噪声和遮挡之间的取舍讲得很明确，官方 pcrobust 已提供扰动函数、193 个检查点和统计管线，今天可以接着做。查过 ModelNet40-C 与 pcrobust，单扰动和统计分析都已有实现；本工具只补“旋转后遮挡”与“遮挡后旋转”等组合及次序审计，不宣称重新发明鲁棒性评测或填补所有组合扰动研究。",
+      "feasibility": "单人约 2 周；先用 CPU 重建冻结表格，再以一张 8–12GB GPU 跑两个现成分类器的推理，显存是小批量估计。不训练十个架构，也不使用需申请下载的额外数据集，第一版只跑官方可自动下载的 ModelNet40。",
+      "route": [
+        "第 1–2 天：固定 pcrobust v1.0.0，运行其离线表格复现及数字对照；下载 ModelNet40 和同训练配方的两个公开检查点，跑 100 个物体的干净输入与单扰动基线，先确认模型、标签和输入归一化相符。",
+        "把现成扰动函数包成可序列化的顺序管线，固定每个物体的旋转轴、噪声及遮挡视角，建立 3×3 的两因素强度小网格；保存完整随机种子与次序，新增组合结果用独立名称，避免混进官方 ModelNet40-C 分数。",
+        "对同一物体比较两种扰动次序，报告配对准确率差和最差组合的下尾表现；直接复用官方统计函数，按物体做聚类重采样，预先选一个主要比较，其余标为探索分析。",
+        "同时记录预处理和推理耗时，导出逐样本 JSONL、复现实验配置及简洁 HTML 报告。把工具做成 pcrobust 的小插件，并写清楚采用的检查点、数据协议和已知不兼容项。"
+      ],
+      "risk": "遮挡依赖观察方向，而原论文部分姿态实验是单轴设定；不先固定相机与坐标系，测出的“次序效应”可能只是两个实验实际用了不同的遮挡定义。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "Dory 的循环预算该给谁：做一次按请求路由、严格算延迟的实验",
+      "based_on": [
+        {
+          "title": "Dory1.0-4B: A Looped Normalized-GPT",
+          "url": "https://arxiv.org/abs/2611.03998v1"
+        },
+        {
+          "title": "NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16 官方模型卡",
+          "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16"
+        }
+      ],
+      "why_now": "11 月 2 日技术报告给出了同一检查点的循环数和末轮缓存方案，现成 4B 权重与官方推理分支可把实验压到单卡。核查已有工作，PonderNet（arXiv:2107.05407）与 Huginn（arXiv:2502.05171）都已研究自适应计算，Dory 也有难度感知训练；这里收窄为冻结 Dory、按请求选 1/2/4 轮，检验带路由开销的实际延迟预算，而非宣称动态深度是新概念。",
+      "feasibility": "单人约 2–3 周；一张 24GB GPU，BF16 权重约 8GB，小批量、输入加输出上限 8K，先实测缓存后定批量，不尝试 256K 上下文。只训练 CPU 上的小型路由器，三种循环配置顺序评测，不同时加载三份模型。",
+      "route": [
+        "第 1–2 天：按官方模型卡固定 Dory 支持分支的具体提交，注意 vLLM 支持仍在 PR 中；启用 last_loop 缓存，在 20 个公开算术样例上跑通 1、2、4 轮，记录首 token、端到端延迟、输出长度和峰值显存。",
+        "从公开 GSM8K 训练集抽 300 题作校准，对每题离线跑三个循环数，记录正确与耗时；测试集另留约 300 题，整个实验固定解码设置和输出上限，并将截断视为失败。",
+        "只用请求中可见的特征，例如 token 长度、数值及运算符数量，训练一个小路由器预测各档成本和成功机会，再在校准集选预算阈值。测试时一次请求只运行选中的档位，禁止先看正确答案或三档输出再挑结果。",
+        "对比固定 1/2/4 轮与相同平均预算的随机混合路由；按平均端到端延迟配平，另报 P95 延迟、成功率、置信区间和缓存模式。把有答案的逐题最优档位只画成不可部署的上限。",
+        "冻结路由器后，在公开 SVAMP 算术题上测迁移，数据与重复题去重；如果简单特征路由只在校准集有效，就发表清楚的预算审计和负结果，不追加大规模微调。"
+      ],
+      "risk": "难度并不一定能从廉价请求特征预测；额外循环还可能改变输出长度，按循环数或 token 数配预算会得到虚假的加速，必须把模型重配、预热规则和路由耗时交代清楚。"
+    }
+  ]
+}
