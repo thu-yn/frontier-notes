@@ -1,0 +1,502 @@
+{
+  "date": "2026-11-06",
+  "editor_note": "这期我最想追问的是：省下来的到底是参数、显存，还是完整任务的时间？LoopVQ 把循环模型的缓存压到每元素半比特，VLA 的测量论文却提醒我们，量化和编译的收益不能直接相乘。Agent 那边也有类似的账：多轮强化学习可能主要练出了纠错耐力，砍掉交互预算，优势就缩水了。我会先点开 cuRoboV2-Fast，看它怎么把载荷和力矩约束一起塞进毫秒级规划；做独立实验的朋友，可以从后面的点云组合扰动工具开工。资讯按北京时间 11 月 6 日这期收录，事件实际发生在 11 月 3 日、4 日或 5 日的，正文都单独标明。",
+  "math_note": {
+    "name": "下降引理：光滑函数的二次上界",
+    "name_en": "Descent Lemma for Smooth Functions",
+    "field": "数值优化 / 微积分",
+    "one_liner": "梯度指方向，曲率决定这一步能迈多大。",
+    "statement": "设可微函数 $f:\\mathbb{R}^d\\to\\mathbb{R}$ 的梯度满足 $\\|\\nabla f(x)-\\nabla f(y)\\|\\le L\\|x-y\\|$，其中 $x,y$ 是参数向量，$\\nabla f$ 是坡度，$L>0$ 限制坡度变化的速度，范数取欧氏范数。那么 $f(y)\\le f(x)+\\langle\\nabla f(x),y-x\\rangle+\\frac L2\\|y-x\\|^2$，尖括号表示内积：沿切线预测的变化，再加一个二次安全垫，就罩住了真实函数。取梯度下降步 $y=x-\\eta\\nabla f(x)$，只要步长 $0<\\eta<2/L$，函数值就不会增加。这里不要求凸性；走到梯度很小的位置，也不等于找到了全局最优。",
+    "origin": "1847 年，柯西为求解方程和极小化问题提出沿最陡方向逐步移动的办法。方向容易写，走多远却需要控制曲率；二十世纪的一阶优化理论把梯度的 Lipschitz 条件，也就是坡度不能突然乱跳，整理成了今天这条二次上界。它是现代光滑优化的标准工具，现代形式不宜全部归到柯西名下。",
+    "derivation": [
+      {
+        "math": "h=y-x,\\qquad f(y)-f(x)=\\int_0^1\\langle\\nabla f(x+th),h\\rangle\\,dt",
+        "note": "把从 x 到 y 的变化写成沿直线的坡度积分。h 是位移，t 从零走到一；这是多元函数沿一条线使用微积分基本定理。"
+      },
+      {
+        "math": "f(y)-f(x)-\\langle\\nabla f(x),h\\rangle=\\int_0^1\\langle\\nabla f(x+th)-\\nabla f(x),h\\rangle\\,dt",
+        "note": "先减掉起点切线已经解释的那部分，只留下弯曲造成的预测误差。"
+      },
+      {
+        "math": "\\langle\\nabla f(x+th)-\\nabla f(x),h\\rangle\\le Lt\\|h\\|^2",
+        "note": "内积不超过两个向量长度的乘积，而梯度变化又不超过 L 倍路程；于是每个位置的误差都能被同一个量罩住。"
+      },
+      {
+        "math": "f(y)\\le f(x)+\\langle\\nabla f(x),h\\rangle+\\frac L2\\|h\\|^2",
+        "note": "把上一行从零积到一，t 的积分是二分之一，二次上界就出来了。"
+      },
+      {
+        "math": "f(x-\\eta\\nabla f(x))\\le f(x)-\\eta\\left(1-\\frac{L\\eta}{2}\\right)\\|\\nabla f(x)\\|^2",
+        "note": "把位移换成负梯度方向。括号为正时，这一步至少能减少右边写出的量；超过步长界后，这个保证就失效了。"
+      }
+    ],
+    "applications": [
+      {
+        "area": "学习率选择",
+        "detail": "用局部曲率估计或回溯搜索挑步长，避免训练损失因一步跨太远而上升；随机梯度还需另算噪声项。"
+      },
+      {
+        "area": "轨迹优化",
+        "detail": "机器人轨迹的光滑代价在固定约束区域内可用二次上界控制更新幅度，防止一次修正把当前解推坏。"
+      },
+      {
+        "area": "点云配准",
+        "detail": "固定对应点后的光滑位姿子问题可据此设置下降步；对应关系切换处不能直接套同一个光滑性保证。"
+      }
+    ],
+    "takeaway": "一个方向看起来能下降还不够，要给沿途的弯曲留预算；$\\eta<2/L$ 是保证，不是对任意神经网络都可直接照填的学习率。",
+    "viz": {
+      "type": "gradient",
+      "caption": "拖动起点并调学习率：这条抛物线的 L=1，步长小于 2 时逐步下降，等于 2 时来回等高跳，大于 2 时越跳越远。",
+      "params": {
+        "fn": "0.5*x*x",
+        "x0": 1.4,
+        "lr": 0.8,
+        "maxLr": 2.5,
+        "xmin": -4,
+        "xmax": 4,
+        "steps": 12
+      }
+    }
+  },
+  "crossover": {
+    "theory": "截断度量上的部分 Gromov–Wasserstein 匹配",
+    "theory_en": "Partial Gromov–Wasserstein Matching with Truncated Metrics",
+    "field": "度量几何 / 部分最优传输",
+    "era": "GW 在 2000 年代形成计算框架，2010 年代的正则化求解和近年的部分匹配让小规模实验更容易复现。",
+    "trigger": {
+      "title": "Matching Random Point Sets with Minimum Distortion",
+      "url": "https://arxiv.org/abs/2611.06845v1"
+    },
+    "one_liner": "密度不同的两次扫描，别逼每个点都认一个亲戚。",
+    "pc_problem": "同一物体从两个位置扫描，点数、遮挡和近邻间距都不同；ICP 常用最近邻反复更新位姿，初始姿态差或重叠低时容易锁错。这里把靶子收窄到已知为同一刚体、重叠率约 30%–70% 的两片点云，而非任意两片城市场景。若每片各 $N=10^4$ 点，改用稠密结构匹配时，两张内部距离矩阵加一张耦合矩阵，仅三张 float32 数组就约 1.2 GB，尚未计求解器临时量。当天理论论文说明，一维均匀独立采样强求双射时，极小点间距会制造很大失真；它的指数结论不能直接搬到三维激光扫描。",
+    "theory_core": "Gromov–Wasserstein（GW）先比较各自内部的距离关系，不要求两片点云已经处在同一坐标系。设 $C^X_{ik}$、$C^Y_{jl}$ 是两边点对的距离，$\\pi_{ij}\\ge0$ 是把源点 i 配给目标点 j 的软匹配权重，它最小化类似 $\\sum_{i,k,j,l}(C^X_{ik}-C^Y_{jl})^2\\pi_{ij}\\pi_{kl}$ 的结构误差。部分匹配允许一部分质量不参与配对，避免遮挡区被硬塞给某个对应点，但必须固定匹配总量或为未匹配质量收费，否则零匹配就是平凡解。再把距离换成 $d_{\\delta,R}(x,x^{\\prime})=\\min\\{\\|x-x^{\\prime}\\|,R\\}+\\delta\\,\\mathbf{1}_{x\\ne x^{\\prime}}$，其中 $R>0$ 是远距离截断尺度、$\\delta>0$ 是短距离底噪；它仍是度量，但会改变原始几何。",
+    "bridge": "理论里的两个带权度量空间，对应两片点云的体素锚点及其内部距离矩阵；锚点权重对应占据空间的份额，而不是简单按原始点数投票。$\\pi$ 对应跨扫描的软对应，未运输质量对应不可见区和离群点；从耦合取高置信点对后，用加权刚体拟合求旋转和平移。$\\delta$ 对应传感器分辨率附近不该被过分解读的点间距，R 对应本次愿意比较的几何尺度。这里借当天理论提醒“别追逐随机采样的最小间隙”，并不声称其定理证明了这个新损失更好；部分 GW 配准本身也已有工作。",
+    "angles": [
+      {
+        "dim": "复杂度",
+        "idea": "用多分辨率体素锚点替换全点稠密 GW，每片先保留约 512 个锚点，求出粗耦合后只在候选重叠区恢复细点并做局部 ICP。先固定锚点数比较均匀体素、随机和 FPS 三种取样，避免把减少点数的收益算成新度量的收益。",
+        "gain": "等规模、平方损失的稠密 GW 矩阵收缩可从每轮 $O(N^3)$ 缩到 $O(m^3)$；$N=10000,m=512$ 时该部分算术量理论上少约 7400 倍，实际总耗时不会按这个比例下降。",
+        "cost": "GW 仍然非凸，锚点化也可能把门框、栏杆等区分位姿的薄结构删掉；该量级不含取样、部分传输子问题和精配准开销。"
+      },
+      {
+        "dim": "存储",
+        "idea": "磁盘缓存只保存锚点坐标、权重和原始点到体素的映射，不保存全点两两距离。每次读入两个扫描块后再生成锚点距离矩阵；耦合求完仅保留每行最强的少数候选，释放稠密中间量。",
+        "gain": "三张 10000×10000 的 float32 主矩阵约 1.2 GB，换成三张 512×512 后约 3.15 MB，主矩阵内存约降 380 倍；这不是整个进程的实测峰值。",
+        "cost": "每对扫描都要重算距离，稀疏化耦合后也不再保留原求解器的精确边缘约束；必须先完成粗位姿估计，再丢掉稠密计划。"
+      },
+      {
+        "dim": "算法优化",
+        "idea": "在相同部分 GW 求解器上，仅把欧氏距离矩阵替换为带底噪和远端截断的矩阵；两边共用以米计的尺度，不各自归一化。验证集上扫少量匹配质量、底噪和截断值，再由软耦合筛点，强制旋转行列式为正做加权刚体拟合。",
+        "gain": "先设一个可证伪的目标：在稀疏度相差 4 倍、重叠 30% 的子集上，配准召回率比同锚点、同预算的部分 GW 高 5 个百分点；这是实验目标，尚无结果。",
+        "cost": "底噪太大或 R 太小会让不同结构看起来一样；匹配质量过小还会只挑一小块容易对齐的区域，必须同时报告覆盖率和位姿误差。"
+      },
+      {
+        "dim": "鲁棒性",
+        "idea": "把短距离底噪、远距离截断和部分匹配分开消融，再与 FPFH+RANSAC、普通 ICP、原始距离的部分 GW 对照。专门加入镜像、重复立柱和近乎平面样本，并按重叠率与密度比分层报告失败。",
+        "gain": "三项开关形成 8 组可解释配置；若只有完全重叠样本受益，就能尽早否定低重叠场景的价值，节省后续完整训练成本。",
+        "cost": "距离矩阵无法区分镜像，同样也难区分重复结构；最终刚体残差和正旋转约束只能筛掉一部分错误，不能保证找到真对应。"
+      }
+    ],
+    "experiment": [
+      "第 1–2 天，纯 CPU：跑通 PGW_Metric 的形状匹配示例，再从一个公开 ModelNet40 物体造两片各 128 点的已知刚体变换样本，比较普通与部分匹配；不先追求大场景。",
+      "第 3–5 天：固定 512 个体素锚点，构造重叠率 30%/50%/70%、点密度比 1/2/4 的小网格，记录配准召回、旋转和平移误差、匹配覆盖率、峰值内存与时间。",
+      "第 2 周：只在验证物体上选底噪、截断与运输质量，固定迭代次数和停止阈值，完成三项开关及取样策略消融；测试物体全程隔离。",
+      "第 3 周：在少量公开 3DMatch 扫描对上验证，增加重复平面和镜像对照，检查合成集上的收益是否还在；CPU 或单张 16–24 GB 卡即可，算不完就缩样本而非扩大硬件预算。"
+    ],
+    "prior_art": [
+      {
+        "title": "EMPOT: partial alignment of density maps and rigid body fitting using unbalanced Gromov-Wasserstein divergence",
+        "url": "https://arxiv.org/abs/2311.00850",
+        "note": "已在冷冻电镜的三维点云表示上用非平衡 GW 求耦合，再求刚体变换；本栏能检验的是采样密度和距离尺度处理，不能把 GW 配准本身称为新组合。"
+      },
+      {
+        "title": "Partial Gromov-Wasserstein Metric",
+        "url": "https://arxiv.org/abs/2402.03664",
+        "note": "已给出部分 GW 的度量理论、求解算法及形状匹配实验，官方 PGW_Metric 有可跑示例；本栏对其内部距离做的修改需要独立消融，不能沿用原度量保证来宣称配准正确。"
+      }
+    ],
+    "reality_check": "最大的坑是先把几何截平，再用更低的匹配损失庆祝成功：损失降了、真实位姿却错得更稳，这个方案就该停。"
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Turns Matter: Advancing Streaming Video RL via Turn-Level Credit",
+      "title_zh": "每一轮都该单独记功：流式视频强化学习的轮级信用分配",
+      "url": "https://arxiv.org/abs/2611.06728",
+      "authors": "Shuai Dong、Kanghui Tian、Linghan Chen 等",
+      "one_liner": "该开口还是继续看，也得分别算功劳。",
+      "summary_zh": "TurnWise 训练流式视频模型在每一轮决定回答还是继续观察，针对的是整段对话共用一个奖励信号造成的错奖错罚。它用补上静默动作的前缀来估计后续回报，再先在轮内平均 token 损失、后在轮间平均，让长回答不至于压过等待动作。作者报告无需额外采样轨迹或训练价值网络即可改善表现；这解决的是信用分配，奖励本身是否靠谱仍要另查。",
+      "tags": [
+        "流式视频",
+        "强化学习",
+        "信用分配"
+      ],
+      "hf_url": "https://huggingface.co/papers/2611.06728",
+      "upvotes": 121
+    },
+    {
+      "domain": "ai",
+      "title": "FrontierPhysics: Evaluating Agents for End-to-End Physics Research",
+      "title_zh": "FrontierPhysics：让智能体完整做一次物理研究",
+      "url": "https://arxiv.org/abs/2611.06910",
+      "authors": "Bingran You、Wenjun Ke、Ria Rosenauer 等",
+      "one_liner": "会解物理题，离做成研究还隔着一整条流程。",
+      "summary_zh": "42 位物理学家用自己的研究构造了 56 项任务，要求智能体查文献、定计划、做实验并交出论文式成果。评估把确定性检查和专家量规结合起来；22 个模型的 26 种配置中，没有一种能在 168 次运行里通过超过 46 次。作者对轨迹的人工复查认为，短板常在论证严谨性和研究直觉；这个通过数衡量的是该基准的判分标准，不能直接当作真实论文录用率。",
+      "tags": [
+        "科研智能体",
+        "物理基准",
+        "端到端评测"
+      ],
+      "hf_url": "https://huggingface.co/papers/2611.06910",
+      "upvotes": 46,
+      "affiliation": "BenchFlow"
+    },
+    {
+      "domain": "ai",
+      "title": "What Does Multi-Turn Reinforcement Learning Really Improve in LLM Agents?",
+      "title_zh": "多轮强化学习究竟教会智能体什么",
+      "url": "https://arxiv.org/abs/2611.06483",
+      "authors": "Kejian Zhu、Zhuoran Jin、Shangqing Tu 等",
+      "one_liner": "多给几轮能补救，不代表第一步判断更准。",
+      "summary_zh": "这篇把候选轨迹数量和交互轮数拆开评测，发现多轮强化学习的优势很依赖足够的轮数预算，预算紧时会明显收缩。它提升得更稳定的是出错后的恢复能力，而非每一步决策都同步变强。作者还试了训练时混用不同预算的 BudgetMix RL；部署比较时，最好连工具调用次数一起固定，单看成功率容易误判。",
+      "tags": [
+        "Agent",
+        "强化学习",
+        "预算约束"
+      ],
+      "hf_url": "https://huggingface.co/papers/2611.06483",
+      "upvotes": 33,
+      "affiliation": "中科院自动化所"
+    },
+    {
+      "domain": "ai",
+      "title": "On the Generalization Limitation of On-Policy Distillation for Post-RL Consolidation",
+      "title_zh": "强化学习后的在线策略蒸馏，能否真的合并泛化能力",
+      "url": "https://arxiv.org/abs/2611.05609",
+      "authors": "Yichen Wang、Yufa Zhou、Siqi Zhu 等",
+      "one_liner": "课内像老师，换题仍可能退回去。",
+      "summary_zh": "作者检查让学生跟着自身生成轨迹向多个教师学习的蒸馏方式，发现分布内成绩接近教师并不代表泛化能力完成了合并。Qwen3 实验中，外推任务得分仍可能低于原始基座，组合任务也落后于最强教师。补数据覆盖、保留基座行为的回放和按更新几何做修补能缓解部分退化；这些结论来自文中的任务设置，还不足以判定所有在线蒸馏都如此。",
+      "tags": [
+        "蒸馏",
+        "分布外泛化",
+        "能力遗忘"
+      ],
+      "hf_url": "https://huggingface.co/papers/2611.05609",
+      "upvotes": 16,
+      "affiliation": "ByteDance"
+    },
+    {
+      "domain": "ai",
+      "title": "LoopVQ: Sub 1-bit KV Cache Quantization for Looped Transformers",
+      "title_zh": "LoopVQ：把循环 Transformer 的 KV 缓存压到一比特以下",
+      "url": "https://arxiv.org/abs/2611.05304",
+      "authors": "Minsoo Cheong、Sungjoo Yoo",
+      "one_liner": "循环省了权重，缓存却还在按轮数长。",
+      "summary_zh": "循环 Transformer 反复使用同一组层，但每次循环都要留自己的键值缓存，内存未必跟参数一起省下来。LoopVQ 把多轮的通道联合做向量量化，并微调码本去匹配全精度输出，在 Ouro 和 Huginn 上测试了每元素 0.5 比特的配置。作者在 SGLang 的 32K 上下文测试中报告解码延迟接近减半；这是特定循环架构和运行条件下的结果，每元素比特数也不等于整个服务的压缩比。",
+      "tags": [
+        "KV Cache",
+        "向量量化",
+        "循环模型"
+      ],
+      "hf_url": "https://huggingface.co/papers/2611.05304",
+      "upvotes": 9,
+      "affiliation": "Seoul National University"
+    },
+    {
+      "domain": "ai",
+      "title": "The SIMPLE Law for Energy Cost of LLM Inference",
+      "title_zh": "SIMPLE：拆开计算大模型推理的能耗",
+      "url": "https://arxiv.org/abs/2611.03330",
+      "authors": "Hiari Pizzini Cavagna、Andrea Proia、Daniele Cesarini 等",
+      "one_liner": "同样一个 token，排在长历史后面更费电。",
+      "summary_zh": "SIMPLE 把输入预填充与逐 token 解码分开，再把解码中的缓存访问和新 token 计算拆开，用四参数模型解释推理能耗。作者在 H100 上测了六个家族的 13 个稠密模型，报告平均绝对百分比误差为 11.97%，不需要逐模型重新校准。它还展示了前缀缓存只能去掉部分输入处理成本、长历史的缓存访问账仍在；迁移到别的硬件或 MoE 模型前要重新验证。",
+      "tags": [
+        "推理能耗",
+        "性能建模",
+        "长上下文"
+      ],
+      "hf_url": "https://huggingface.co/papers/2611.03330",
+      "upvotes": 8,
+      "affiliation": "ECS Lab"
+    },
+    {
+      "domain": "ai",
+      "title": "AnchorComplete: Recovering Complete Scene Meshes from Partial Point Clouds",
+      "title_zh": "AnchorComplete：从残缺点云恢复完整场景网格",
+      "url": "https://arxiv.org/abs/2611.03228",
+      "authors": "Weirong Chen、Ismail El-Yamany、Ganlin Zhang 等",
+      "one_liner": "补出来的背面，先记作假设。",
+      "summary_zh": "AnchorComplete 在 TRELLIS.2 上加入残缺点云条件，把全局场景信息和局部观测结合起来，生成完整场景网格。它按实际尺度在固定窗口中由粗到细细化，在 Replica 和 SCRREAM 上报告了优势，尤其针对稀疏视角。保留已观测几何是这个设计的关键，但不可见区域仍来自生成先验，用于抓取或碰撞判断时还要单独量化错误补全。",
+      "tags": [
+        "点云补全",
+        "场景重建",
+        "3D 生成"
+      ],
+      "hf_url": "https://huggingface.co/papers/2611.03228",
+      "upvotes": 9
+    },
+    {
+      "domain": "embodied",
+      "title": "cuRoboV2-Fast: Fast Torque-Limited Collision-Free Motion Planning",
+      "title_zh": "cuRoboV2-Fast：带载荷与力矩约束的快速避碰规划",
+      "url": "https://arxiv.org/abs/2611.06913v1",
+      "authors": "Balakumar Sundaralingam、Adithyavairavan Murali、Stan Birchfield",
+      "one_liner": "规划器快一点，得连手里搬的重量一起算。",
+      "summary_zh": "cuRoboV2-Fast 用 B 样条表示轨迹，并把可微逆动力学接进优化，让机械臂避碰时也考虑载荷和电机力矩上限。作者在 RTX 5090、3 kg 载荷条件下报告平均规划时间 4.4 ms，比 cuRoboV2 快 14.7 倍；YAM 拾放实验的平均完成周期为 5.93 秒，缩短 34.6%。这些是具体硬件和任务下的结果，速度、加速度、力矩等约束在采样点检查，也仍需留意采样间隔中的峰值。",
+      "tags": [
+        "运动规划",
+        "GPU",
+        "力矩约束"
+      ]
+    },
+    {
+      "domain": "embodied",
+      "title": "Where Is VLA Inference Time Spent? Bottlenecks and Optimization Interactions Across GPUs",
+      "title_zh": "VLA 推理时间花在哪：跨 GPU 的瓶颈与优化交互",
+      "url": "https://arxiv.org/abs/2611.06710v1",
+      "authors": "Muhammad Danish Waseem、Ahmed Ali-Eldin Hassan",
+      "one_liner": "编译、量化、剪枝，收益不能直接相乘。",
+      "summary_zh": "VLA 就是把图像和语言变成机器人动作的策略，这篇测了七类策略和七组推理优化，并覆盖从 H100 到 Jetson Thor 的四类 GPU。它把 CPU 发射开销、显存带宽和算子效率分开分析，指出先做一种优化，会改变另一种方法能省的时间。产出是按延迟预算选优化顺序的 VLA-Triage 指引；没有跨设备实测时，别拿一张卡的加速比外推整个产品。",
+      "tags": [
+        "VLA",
+        "推理加速",
+        "性能剖析"
+      ]
+    },
+    {
+      "domain": "quantum",
+      "title": "Linear-time erasure recovery for quantum expander codes",
+      "title_zh": "量子扩展码的线性时间擦除恢复",
+      "url": "https://arxiv.org/abs/2611.06818v1",
+      "authors": "Anirudh Krishna、Christopher A. Pattison",
+      "one_liner": "知道哪儿丢了，也需要跟得上的解码器。",
+      "summary_zh": "擦除错误指已知哪些量子比特出了问题，恢复它比在全系统里找未知错误更有结构可用。Small-Set-Peeling 把经典码的剥离式恢复推广到量子扩展码，也就是借助扩展图组织校验关系的一类纠错码，证明能在线性时间内修复最多 D−1 个擦除位置，D 是该码的设计距离。结合已有的错误转擦除算法，还能得到局部图上的泡利错误解码器；这是特定码族的算法保证，并非量子硬件已经实现了这个规模的纠错。",
+      "tags": [
+        "量子纠错",
+        "LDPC",
+        "线性时间解码"
+      ]
+    },
+    {
+      "domain": "bio",
+      "title": "BEND 2.0: Benchmarking the Capabilities Needed to Design DNA",
+      "title_zh": "BEND 2.0：DNA 模型能否指导真正的序列设计",
+      "url": "https://arxiv.org/abs/2611.03806v1",
+      "authors": "Andreas Bjerregaard、Rachael DeVries、Dionysia Danai Brilli 等",
+      "one_liner": "突变效果猜得准，还得知道组合起来会怎样。",
+      "summary_zh": "BEND 2.0 用五组实验数据构造八项任务，检查 DNA 模型能否预测序列修改的作用，并据此选择候选序列。作者发现冻结模型表征后接一个线性预测头，有时就能追平或超过模型原生输出；不过平均效果预测得好，仍可能漏掉特定细胞环境下的效果及突变间的相互作用。它更像给设计能力做分项体检，不能把其中一个高分直接等同于新序列在实验里有效。",
+      "tags": [
+        "基因组模型",
+        "DNA 设计",
+        "功能评测"
+      ]
+    }
+  ],
+  "repos": [
+    {
+      "name": "NVIDIA/auto-ontology",
+      "url": "https://github.com/NVIDIA/auto-ontology",
+      "language": "Python",
+      "stars": 7265,
+      "stars_today": "2,707",
+      "domain": "ai",
+      "one_liner": "先把同一个指标的口径对齐，再让 Agent 查数。",
+      "summary_zh": "这是把企业元数据整理成本体和语义目录的框架，让查询知道指标、实体和关系各自是什么意思。它结合 SQL 生成、来源追踪和查询校验，并通过 MCP、CLI 与 API 提供上下文，适合跨系统指标口径混乱的团队。自动整理出的关系仍要校核，接上语义层不等于每条查询都正确。"
+    },
+    {
+      "name": "vercel-labs/agent-desktop",
+      "url": "https://github.com/vercel-labs/agent-desktop",
+      "language": "Rust",
+      "stars": 16797,
+      "stars_today": "2,173",
+      "domain": "ai",
+      "one_liner": "桌面自动化先读控件树，能少猜很多像素。",
+      "summary_zh": "这个 Rust 工具通过操作系统的无障碍接口读取桌面控件树，给可操作元素返回引用，再让外部智能体执行点击和输入。它提供 CLI 与 C 库，支持 macOS、Windows 和 Linux，本身不包含决策模型。适合需要可复核操作目标的桌面 Agent；自绘界面能暴露多少结构，仍取决于应用本身。"
+    },
+    {
+      "name": "D4Vinci/Scrapling",
+      "url": "https://github.com/D4Vinci/Scrapling",
+      "language": "Python",
+      "stars": 97936,
+      "stars_today": "1,661",
+      "domain": "ai",
+      "one_liner": "从抓一页到跑爬虫，少拼几层胶水。",
+      "summary_zh": "Scrapling 把 HTTP 请求、浏览器渲染、解析和并发爬取放进一个 Python 框架，还带会话复用、重试和数据导出。做文献监测或定期采集时，统一接口比给每种页面单独攒脚本省事。它的自适应元素定位可以减少部分页面改版维护，关键字段仍应检查是否抓串。"
+    },
+    {
+      "name": "max-sixty/worktrunk",
+      "url": "https://github.com/max-sixty/worktrunk",
+      "language": "Rust",
+      "stars": 11498,
+      "stars_today": "546",
+      "domain": "ai",
+      "one_liner": "多条实验分支，各有自己的工作目录。",
+      "summary_zh": "Worktrunk 给 Git worktree 加了一层命令行管理，让同一仓库的多个分支在各自目录中运行，并支持切换、列表和钩子工作流。适合同时维护实验、修复和文稿分支的人，也能服务多个编码进程。它整理的是工作目录和分支状态，冲突的语义仍得开发者判断。"
+    },
+    {
+      "name": "lz4/lz4",
+      "url": "https://github.com/lz4/lz4",
+      "language": "C",
+      "stars": 12367,
+      "stars_today": "16",
+      "domain": "ai",
+      "one_liner": "压缩率少争一点，先让读数据跟上算力。",
+      "summary_zh": "LZ4 是成熟的无损压缩库，主打压缩和解压速度，适合点云帧、缓存块等频繁读写的数据。若训练管线卡在磁盘或网络，把分块格式与 LZ4 配合很值得测；追求最小文件体积则需要和 Zstd 等方法在自己的数据上比较。这里收录的是当天上榜的老工具，不是今日新发布。"
+    },
+    {
+      "name": "microsoft/VibeVoice",
+      "url": "https://github.com/microsoft/VibeVoice",
+      "language": "Python",
+      "stars": 55888,
+      "stars_today": "214",
+      "domain": "ai",
+      "one_liner": "长音频、说话人和流式转写，先按子模型选。",
+      "summary_zh": "VibeVoice 目前包含长音频语音识别、流式识别和实时语音合成等子模型，长音频识别会输出说话人、时间戳与文本。做会议或机器人语音接口时，应按延迟、语言和输出形式选择对应权重。早期长篇多说话人 TTS 代码已从仓库撤下，不能仅看旧介绍就假定整套生成能力仍可直接复现。"
+    },
+    {
+      "name": "floci-io/floci",
+      "url": "https://github.com/floci-io/floci",
+      "language": "Java",
+      "stars": 30382,
+      "stars_today": "784",
+      "domain": "ai",
+      "one_liner": "把云服务搬到本地，先把集成流程跑顺。",
+      "summary_zh": "Floci 是本地 AWS 服务模拟器，可以让 SDK、CLI 和基础设施脚本对着本地端点运行，便于开发、持续集成和离线实验。它试图降低本地测试对云账号与真实资源的依赖，适合带对象存储、消息队列和数据库的研究工具。模拟器的通过结果不能覆盖真实云上的权限、配额和服务边界。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "Hy4 于 11 月 4 日发布，权重仍是随后开放的安排",
+      "url": "https://www.tencent.com/zh-cn/tencent-launches-hy4-joining-the-ranks-of-the-worlds-leading-open-source-ai-models/",
+      "source": "腾讯官方",
+      "summary_zh": "腾讯 11 月 4 日发布 Hy4，加入视觉理解和电脑操作能力，并针对 Blender、CAD 等专业软件做专项训练。官方表述是近期开放模型权重和系统卡，所以本期不把“发布”写成“权重已可下载”；11 月 5 日的 HN 讨论时间也不是模型发布日期。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Claude 推出个人财务测试功能，通过 Plaid 只读连接账户",
+      "url": "https://claude.com/it/resources/articles/introducing-personal-finance-in-claude",
+      "source": "Anthropic 官方",
+      "summary_zh": "Anthropic 11 月 5 日宣布 Personal Finance，本周开始向美国 Pro、Max 和 Ultra 用户逐步提供测试版。用户通过 Plaid 连接银行或银行卡后，可以询问余额、交易和支出分类；访问是只读，功能不能转账、管理或投资资金。官方还把该专用入口内的对话列为不用于模型训练，入口以外仍适用原有隐私设置。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Dropbox 披露约 3.5 亿美元现金收购 Tigris 的协议，尚待交割",
+      "url": "https://investors.dropbox.com/node/14451/html",
+      "source": "Dropbox · 8-K 文件",
+      "summary_zh": "Dropbox 在 11 月 5 日披露，已于 11 月 3 日签署收购 Tigris 全部股权的最终协议，现金对价约 3.5 亿美元，仍受惯常价格调整影响。文件预计 2026 年第四季度交割，且须满足或豁免交割条件；应把它理解为已签约的交易，不能写成收购已经完成。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Perplexity 推出 Teammates，接手持续性工作并回报进度",
+      "url": "https://www.perplexity.ai/uk/hub/blog/teammates-are-agents-for-complex-ongoing-work",
+      "source": "Perplexity 官方",
+      "summary_zh": "Perplexity 的 Teammates 面向持续进行的工作，可以规划任务、在过程中检查结果，并把完成的成果交回审阅。官方说明可接入 Slack、GitHub、Gmail 等工具，先向 Max 订阅者开放网页版，iOS 随后推出。它把产品重心从一次问答推向常驻工作流，实际可承担的范围取决于用户连接的工具和项目权限。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Box 公布接入 Nemotron 的权限感知检索，计划 2027 年初开放",
+      "url": "https://ca.marketscreener.com/news/box-partners-with-nvidia-to-deliver-the-trusted-content-layer-for-enterprise-ai-ce785fdcd188f222",
+      "source": "Box · Business Wire 公司公告",
+      "summary_zh": "Box 在 11 月 5 日的 BoxWorks 公布 Box Context Retrieval，使用 NVIDIA Nemotron 模型，让智能体按既有文件权限获取企业内容。该检索引擎计划于 2027 年初向 Enterprise Advanced 客户一般可用；同期已经开放的是 Box AI 中从 Nemotron 3 Ultra 开始的模型接入。新引擎的公布和模型接入的可用时间需要分开看。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Agility 通过合并进入纳斯达克，融资与订单仍需分开算",
+      "url": "https://www.agilityrobotics.com/content/agility-becomes-first-u-s-publicly-listed-pure-play-humanoid-robotics-company-begins-trading-today-on-nasdaq-as-aglt",
+      "source": "Agility 官方",
+      "summary_zh": "Agility 在 11 月 4 日完成与 Churchill Capital Corp XI 的业务合并，11 月 5 日以 AGLT 开始在纳斯达克交易。公司公告称，合并及相关融资共带来约 4.65 亿美元毛资金，其中包含此前已收到的 1 亿美元。Digit 5 超过 3 亿美元的多年订单附带产品和合同里程条件，不能直接当成已确认收入或全部完成的交付。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "ABB 确认中国业务收购被禁止，全球机器人交易后续仍在讨论",
+      "url": "https://www.abb.com/global/en/news/140154/update-on-divestment-of-abb-robotics",
+      "source": "ABB 官方",
+      "summary_zh": "ABB 11 月 5 日确认，软银告知其中国外商投资安全审查工作机制办公室已禁止收购 ABB 机器人在中国的业务。原交易于 2025 年 10 月宣布，整个机器人部门的企业价值为 53.75 亿美元；ABB 说双方仍在沟通推进交易。公告没有宣布全球交易终止，也没有公布监管决定的具体理由。"
+    },
+    {
+      "domain": "chip",
+      "title_zh": "高通财报重申 2027 财年数据中心 50 亿美元收入目标",
+      "url": "https://www.sec.gov/Archives/edgar/data/804328/000080432826000127/qcom092726erex991.htm",
+      "source": "Qualcomm · 财报公告",
+      "summary_zh": "高通 11 月 4 日公布截至 9 月 27 日的 2026 财年第四季度业绩：GAAP 营收 103.22 亿美元，同比下降 8%，汽车业务季度收入首次达到 20 亿美元。公司同时重申 2027 财年数据中心收入 50 亿美元的目标，并列出与 Amazon 的多代 AI 数据中心产品合作。这个数字是下一财年的目标，不能拿来充当已经实现的数据中心销售额。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "ai",
+      "type": "repo",
+      "title": "给 pcrobust 补一层组合扰动与失效报告工具",
+      "based_on": [
+        {
+          "title": "Do We Still Need Rotation-Invariant Architectures? A Statistical Robustness Benchmark for Point Cloud Classification",
+          "url": "https://arxiv.org/abs/2611.03952v1"
+        },
+        {
+          "title": "pcrobust：作者发布的评测协议与检查点",
+          "url": "https://abdullah-nasir-chowdhury.github.io/projects/wacv2027/"
+        }
+      ],
+      "why_now": "当天数据里的这篇新论文和项目页已给出十类架构、评测管线与 193 个检查点，复现入口比从零训练轻得多。已有工具已能做扰动和统计，切口应缩到“同一样本上的旋转×密度×噪声组合、可重复的失败定位”，先检查它的现有接口再决定补哪一层。",
+      "feasibility": "单人 2–3 周，单张 8–16 GB GPU 以推理为主；先仅接 PointMLP 和 RIConv++，不重训十个架构。CPU 负责生成与缓存扰动，几何点数先控制在每物体 1024 点。",
+      "route": [
+        "第 1–2 天固定 pcrobust v1.0.0，先在 CPU 复算一张官方表，再用官方检查点跑通 100 个 ModelNet40 测试物体的干净推理，确认数据顺序和归一化一致。",
+        "定义可回放的扰动配置：固定随机种子，旋转后分别施加 1024/512/256 点下采样和两个噪声强度；记录操作顺序，并分别测均匀丢点与模拟扫描线丢点。",
+        "给同一样本生成配对报告：准确率、置信度、特征漂移和错误类别；以物体为重采样单位计算区间，避免把同一物体的几十个扰动副本算成独立样本。",
+        "做一个输出 JSON/CSV 与本地 HTML 的小 CLI，只补组合场景和失败案例导航；再接一份独立 ScanObjectNN 子集，检查结论是否跨数据域成立。"
+      ],
+      "risk": "作者已经提供完整评测包；如果新工具只换个壳调用单项扰动，没有可回放组合和跨域诊断，基本没有独立价值。"
+    },
+    {
+      "domain": "embodied",
+      "type": "repo",
+      "title": "给单张消费卡做 VLA 延迟与闭环成功率的配对体检",
+      "based_on": [
+        {
+          "title": "Where Is VLA Inference Time Spent? Bottlenecks and Optimization Interactions Across GPUs",
+          "url": "https://arxiv.org/abs/2611.06710v1"
+        },
+        {
+          "title": "LoopQ: Fair, Closed-Loop Evaluation of Quantized Vision-Language-Action Models",
+          "url": "https://arxiv.org/abs/2611.05093v1"
+        }
+      ],
+      "why_now": "本期两篇测量工作把跨 GPU 优化交互和量化的闭环损失摆在一起，LoopQ 还指出执行引擎本身能改变延迟。已有大规模评测做得很全，适合补的是单一消费卡上一键定位“省在何处、任务亏在哪里”的小工具，不必复制整张排行榜。",
+      "feasibility": "单人约 3 周，单张 24–32 GB GPU、batch=1，全程 LIBERO 仿真，无需训练或真机。OpenVLA-OFT 官方 README 给 LIBERO 推理的显存需求约 16 GB，额外空间留给剖析和编译；不同卡只报告各自实测。",
+      "route": [
+        "第 1–2 天跑通 moojink/openvla-oft 的官方 LIBERO-Spatial 检查点和一项任务的 5 个回合，固定动作分块、预处理、动作反归一化参数与环境版本。",
+        "在同一引擎、同一量化层范围下做 BF16、仅编译、真实低比特权重、低比特加编译四组；若某配置只有伪量化，单独标注，不能给它报低比特加速。",
+        "同时记录 GPU 内核计时和包含预处理、CPU 调度的策略端到端 p50/p95 延迟，拆出视觉主干与动作头；另记显存峰值和编译冷启动。",
+        "先用 10 个任务×20 个配对初始状态×4 组配置，共 800 回合筛查明显退化；对有差异的任务再增加样本，用任务内配对区间报告成功率，不能据小样本宣称 1 个百分点的增益。",
+        "封装环境检查、配置导出和本地报告，增加少量视觉扰动测试；固定相同控制频率，若要模拟推理延迟造成的动作等待，另列实时调度实验。"
+      ],
+      "risk": "普通仿真往往在等待推理时冻结时间，测得策略更慢并不会自动造成成功率下降；延迟与任务表现必须分项报告。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "OCR 修改否决器，能否在低误差文档上学会少动笔",
+      "based_on": [
+        {
+          "title": "Rewrite, Then Veto: Rewriter-Agnostic Edit Gating for LLM-Based Post-OCR Correction",
+          "url": "https://arxiv.org/abs/2611.05539v1"
+        },
+        {
+          "title": "ocr-edit-gate-release：官方代码、数据获取入口与权重说明",
+          "url": "https://github.com/SniperJF/ocr-edit-gate-release"
+        }
+      ],
+      "why_now": "11 月 3 日提交的 EditVeto 已提供公开模型和数据入口，但原文也报告：给最强竞赛输出加否决器，反而把 cMER 从 0.0050 推到 0.0065。这个反例比再追一遍平均分更有用，可以研究低错误率文档下，阈值能否根据文档风险自适应，且不把罕见词一律当错字。",
+      "feasibility": "单人 2–3 周，单张 24 GB 卡；先用已发布的 0.6B text-only gate 和 Qwen3-8B 改写器顺序推理，必要时只用 LoRA 微调小 gate。采用官方公开数据的非商业研究用途，不复现论文中需要双 H200 的 72B 改写链路。",
+      "route": [
+        "第 1–2 天按官方入口取得 HIPE-OCRepair 的训练和开发数据，跑通字符对齐、edit blocks 与官方评分器；在一个开发子集上让 Qwen3-8B 生成改写，接已开放的 text-only gate。",
+        "在训练集内部按原始文档留出校准集，按 OCR 置信度、编辑比例、数字与专名占比分桶，比较全放行、全否决、原文全局阈值三种基线；OCR 真值只用于标签和评分。",
+        "先只做分桶阈值和温度校准，约束把原本正确字符改坏的比例；若比全局阈值没有稳定改善，就不增加神经网络复杂度。",
+        "冻结阈值后跨语言和出版物测试，报告官方 cMER、修改精确率、被误改的正确字符比例与配对 bootstrap 区间；明确自己用了新的开发协议，不再冒称复现官方排行榜。",
+        "若存在稳定收益，只微调 0.6B gate 的小适配器，并加入日期、金额、专名样本的消融；把低误差桶和高误差桶分别报告，保留失败案例。"
+      ],
+      "risk": "用参考答案估计每篇文档的错误率再选阈值会直接泄漏标签；部署时必须只依赖 OCR 输出及可获得的置信特征。"
+    }
+  ]
+}
