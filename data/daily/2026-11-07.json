@@ -1,0 +1,474 @@
+{
+  "date": "2026-11-07",
+  "editor_note": "今天有几篇论文都在追问同一件事：指标涨了，究竟是哪一环起了作用？我会先读 PACT-Check，它把跨模型通信和普通适配的收益拆开；再看 BILBY，静态折叠过关的设计，放到分子动力学里未必站得住。VFlash 和 T3R 也有看头，但生成阶段、前向计算和整机闭环的提速要分开读。资讯里我偏爱 Stretch Gen 2：少掉的电缆和缩短的维修时间，比一段漂亮演示更接近仓库每天要付的账。",
+  "math_note": {
+    "name": "Neyman–Pearson 引理",
+    "name_en": "Neyman–Pearson Lemma",
+    "field": "数理统计 / 假设检验",
+    "one_liner": "误报预算有限，就把它花在最像真信号的地方。",
+    "statement": "假设正常情况 $H_0$ 与异常情况 $H_1$ 的数据分布都已完全给定，密度分别是 $f_0(x)$、$f_1(x)$。用 $\\phi(x)\\in[0,1]$ 表示看到数据 $x$ 时报警的概率，要求误报率 $\\mathbb E_0[\\phi]\\le\\alpha$，其中 $\\alpha$ 是事先规定的预算。引理说：按似然比 $\\Lambda(x)=f_1(x)/f_0(x)$ 从大到小报警，并在阈值相等处必要时随机化以用满预算，就能在所有满足预算的规则里让检出率 $\\mathbb E_1[\\phi]$ 最大。这里比较的是两个已知分布；换成未知分布或任意神经网络分数，最优性不能直接照搬。",
+    "origin": "Jerzy Neyman 和 Egon S. Pearson 在 1933 年的《On the Problem of the Most Efficient Tests of Statistical Hypotheses》中系统研究了检验效率。他们关心的是：既然任何规则都可能犯错，能否先约束把正常情况判成异常的频率，再尽量减少漏检？这条引理给出了两个简单假设之间的答案，也把检验从一个单独的显著性数字变成了可比较的决策规则。",
+    "derivation": [
+      {
+        "math": "\\max_{0\\le\\phi\\le1}\\ \\mathbb E_1[\\phi]\\quad\\text{s.t.}\\quad\\mathbb E_0[\\phi]\\le\\alpha",
+        "note": "先把目标摆正：正常情况下误报不能超预算，异常情况下则希望尽量多报出来。下标 0、1 分别表示按正常、异常的分布取平均。"
+      },
+      {
+        "math": "\\phi^*(x)=\\begin{cases}1,&f_1(x)>k f_0(x),\\\\0,&f_1(x)<k f_0(x),\\\\\\gamma,&f_1(x)=k f_0(x),\\end{cases}\\qquad \\mathbb E_0[\\phi^*]=\\alpha",
+        "note": "选择非负阈值 k 和边界报警概率 γ，把预算分给异常相对正常更常出现的数据。离散数据可能没法靠一个硬阈值刚好用满预算，所以允许在边界掷一次有偏硬币。"
+      },
+      {
+        "math": "(\\phi^*(x)-\\phi(x))(f_1(x)-k f_0(x))\\ge0",
+        "note": "拿任意竞争规则 φ 来比。阈值上方最优规则已经报到 1，下方已经降到 0，因此两个括号总是同号；在边界，第二个括号等于零。"
+      },
+      {
+        "math": "\\mathbb E_1[\\phi^*]-\\mathbb E_1[\\phi]\\ge k\\bigl(\\mathbb E_0[\\phi^*]-\\mathbb E_0[\\phi]\\bigr)\\ge0",
+        "note": "把上一行对所有数据积分。竞争规则花掉的误报预算不比 α 多，而 φ* 恰好花满，右边就非负，检出率最优也就出来了。"
+      }
+    ],
+    "applications": [
+      {
+        "area": "雷达与通信检测",
+        "detail": "在已知噪声与信号统计模型时，固定虚警率后选择似然比阈值，让弱信号尽量少漏掉。"
+      },
+      {
+        "area": "工业异常筛查",
+        "detail": "把可承受的正常样品误拦截率作为约束，再比较不同异常评分在这个工作点的检出率。"
+      },
+      {
+        "area": "Agent 运行监控",
+        "detail": "比较重启或拦截策略时先对齐误触发率，再看能抓住多少失败；实际分布靠估计得到，仍须用独立样本核实。"
+      }
+    ],
+    "takeaway": "相同的误报预算下，排序的依据应是「异常相对正常有多常见」，而非异常密度 $f_1(x)$ 单独有多大。",
+    "sources": [
+      {
+        "title": "Neyman & Pearson (1933), On the Problem of the Most Efficient Tests of Statistical Hypotheses",
+        "url": "https://doi.org/10.1098/rsta.1933.0009"
+      },
+      {
+        "title": "UCL Special Collections：Neyman–Pearson 1933 年论文手稿档案",
+        "url": "https://archives.ucl.ac.uk/CalmView/Record.aspx?id=E+S+PEARSON%2F9%2F4%2F2&src=CalmView.Catalog"
+      }
+    ]
+  },
+  "crossover": {
+    "theory": "Sigmoid 张量列车与稀疏纠错残差",
+    "theory_en": "Sigmoid Tensor Trains with Sparse Correction Residuals",
+    "field": "数值分析 / 张量网络 / 几何压缩",
+    "era": "2011 年张量列车分解系统化；2024 年已有紧凑三维表示；2026 年的 Sigmoid 分解把目标直接换成二值重建。",
+    "trigger": {
+      "title": "Sigmoid Tensor Decomposition for Compact Representations of Binary Data",
+      "url": "https://arxiv.org/abs/2611.08020v1"
+    },
+    "one_liner": "先算上被低秩抹掉的细节，再谈省下了多少字节。",
+    "pc_problem": "这次盯住 Rohbau3D 这类真实工地扫描的局部占用查询：给定一个量化体素，回答里面是否确实有采样点，尤其别吞掉门框、栏杆等薄结构。常见实现用稀疏坐标、八叉树或位图；以一个 $512^3$ 局部网格估算，逐体素 float32 占 $512\\,\\mathrm{MiB}$，按位打包仍需 $16\\,\\mathrm{MiB}$；若只有 100 万个占用体素，存 uint32 Morton 索引约 $3.8\\,\\mathrm{MiB}$，尚未熵编码。这些是表示规模的计算示例，不是 Rohbau3D 的实测统计。低秩分解可能省存储，却容易抹掉少数细点；真正要赢的是稀疏表示的实际字节数，并同时保住查询正确性。",
+    "theory_core": "张量列车（TT）把一个多维数组的单个元素写成一串小矩阵的乘积 $z_b=G_1[b_1]\\cdots G_d[b_d]$，其中 $d$ 是索引的维数，内部矩阵宽度 $r$ 称为秩。再用 $p_b=\\sigma(z_b)=1/(1+e^{-z_b})$ 表示占用概率，以二元交叉熵拟合零与一，表达能力来自低秩结构与最后的非线性共同作用。固定其他核后，单个核的交叉熵子问题是凸的，但所有核一起优化仍然非凸。当天论文已经压缩了 CAD 占用体素、Stanford 扫描和医学掩码；这里提出的实验只研究分块扫描数据上的位级索引、纠错残差和随机查询，不把「TT 用到三维」当新贡献。",
+    "bridge": "把每个坐标的二进制位按空间层级交错排列：$512=2^9$，于是一个体素对应 $d=27$ 个二值索引 $b_1,\\ldots,b_{27}$，每个 $G_j$ 对应一个坐标位及其与其他尺度的关联。真实点落入该体素就令 $B_b=1$，否则令 $B_b=0$；这只是观测点的占用标记，不能把零解释成可安全通行的自由空间。低秩核承担墙面等重复模式，最终序列化模型的阈值输出是 $\\widehat B_b$；把所有不一致位置组成集合 $E=\\{b:B_b\\ne\\widehat B_b\\}$，查询时异或纠正。这样薄结构不用逼着全局秩一路上涨，而是让少数例外单独付字节；例外不稀疏时这笔账就不成立。",
+    "angles": [
+      {
+        "dim": "存储",
+        "idea": "用交错坐标位的 TT 核替换局部稠密占用数组，再把错误位置的 Morton 索引排序并差分编码。最终文件要同时计入核、量化参数、块头、残差和随机访问索引；码率目标直接用总字节数，不用浮点参数量代替。",
+        "gain": "以 $d=27,r=16$、内部秩相同、FP32 核为例，核参数为 $4r+2(d-2)r^2=12864$ 个，约 $50.3\\,\\mathrm{KiB}$；若恰好只有 $R=10^4$ 个错误位置，先按每个 4 字节粗算残差约 $39\\,\\mathrm{KiB}$。这只是约 90 KiB 加索引的条件预算，是否胜过稀疏坐标或八叉树必须实测。",
+        "cost": "薄结构、旋转与杂乱遮挡可能同时抬高秩和残差数；随机查询索引还可能比差分码流大，不能只报压缩后的顺序文件。"
+      },
+      {
+        "dim": "复杂度",
+        "idea": "解码接口只接受请求的体素位置，逐条收缩对应 TT 核，再查残差集合，不先恢复整个三维网格。批量请求按 Morton 前缀分组，复用共同的前缀收缩；残差采用分块索引，避免每次从头解差分流。",
+        "gain": "查询 $Q$ 个体素的直接计算量约 $O(Qdr^2)$，核与未压缩残差索引的常驻量级为 $O(dr^2+R)$，可省去完整网格的解码缓冲；这是以额外算术换内存，单次查询不会比位图的 $O(1)$ 访问更便宜。",
+        "cost": "为生成精确纠错集合，编码端仍须检查全部 $N=512^3$ 个位置；分块流式检查只能控制峰值内存，不能消掉这次 $O(Ndr^2)$ 级工作。"
+      },
+      {
+        "dim": "算法优化",
+        "idea": "训练时用采样的体素交叉熵替换每步展开全网格：占用点、薄结构邻域和背景各抽一部分，并用采样概率倒数校正权重。先在 128³ 块上比较线性 TT 与 Sigmoid TT，再测试位级索引和逐级增秩；所有方法给相同的实际文件预算。",
+        "gain": "若每步抽 $B=2^{16}$ 个体素，$512^3$ 网格的单步损失项由约 1.34 亿降至约 6.6 万，数量比为 2048；每步计算约 $O(Bdr^2)$。这不是总训练加速 2048 倍的承诺，采样方差和所需步数要另报。",
+        "cost": "低概率区域的逆概率权重会放大方差；过分偏向占用点又会制造大片假阳性。新采样策略和位级索引都超出原论文的直接实验，不能借用其数值结果当保证。"
+      },
+      {
+        "dim": "鲁棒性",
+        "idea": "核完成序列化后，用固定的解码精度与阈值重算所有错误位置，假阳性和漏点一起写进纠错集合。评价时单列门框、细杆和边界体素，并把未观测空间与已观测空射线的语义分开；需要自由空间地图时另存可见性信息。",
+        "gain": "若错误位置枚举完整且解码器一致，异或纠错能把同一量化网格上的占用位错误降到 0；原坐标取体素中心的几何误差仍可达 $\\sqrt3\\,\\Delta/2$，其中 $\\Delta$ 是体素边长。",
+        "cost": "这里的精确只针对量化后的二值占用，不恢复点的原始浮点坐标、重复采样次数、颜色或强度；不同平台的阈值翻转也会破坏纠错，必须测试一致性。"
+      }
+    ],
+    "experiment": [
+      "第 1–2 天，纯 CPU：用 Rohbau3D 官方下载器取一个工地的坐标分片，裁出少量 64³ 块，跑通 Morton 稀疏索引、位图和通用压缩基线，核对逐体素占用完全一致；不依赖任何分割模型或权重。",
+      "第 1 周，单张 24 GB GPU：在 128³ 小块上实现线性 TT 与 Sigmoid TT，扫秩 4、8、16，记录假阳性、漏点、薄结构召回、拟合时间和实际序列化字节。先确认非线性确有收益，再增加实验规模。",
+      "第 2 周：比较三维直接 TT 与交错坐标位的 TT，在相同文件预算下加入完整纠错集合；把核精度、残差字节和随机访问索引全部记账，并在 CPU 与 GPU 解码结果之间检查阈值一致性。",
+      "第 3 周：在另一工地留出的块上固定超参数，少量升级到 512³，比较 Morton 加通用压缩、八叉树和 TT 加残差；报告编码时间、峰值内存、随机查询 p50/p99，以及完整遍历恢复的耗时。",
+      "设置止损线：总文件不优于较强稀疏基线，或随机查询延迟超出目标应用预算，就停在负结果报告；不能靠只比较稠密 float32 网格宣布成功。"
+    ],
+    "prior_art": [
+      {
+        "title": "Tensor-Train Point Cloud Compression and Efficient Approximate Nearest-Neighbor Search",
+        "url": "https://arxiv.org/abs/2410.04462",
+        "note": "2024 年已把 TT 用于点集压缩与近邻搜索，重点是高维向量集合的概率表示和索引；它说明组合本身已有先例，量化三维占用的精确纠错则是另一套约束。"
+      },
+      {
+        "title": "Coarse-To-Fine Tensor Trains for Compact Visual Representations",
+        "url": "https://arxiv.org/abs/2406.04332",
+        "note": "PuTT 已研究由粗到细优化 TT，并包含三维拟合实验；可借鉴其初始化思路，本题还要额外支付纠错码流与随机访问的成本。"
+      },
+      {
+        "title": "RENO: Real-Time Neural Compression for 3D LiDAR Point Clouds",
+        "url": "https://openaccess.thecvf.com/content/CVPR2025/papers/You_RENO_Real-Time_Neural_Compression_for_3D_LiDAR_Point_Clouds_CVPR_2025_paper.pdf",
+        "note": "RENO 从稀疏占用码的预处理和预测两端压低 LiDAR 编码开销；它提醒我们，稀疏编码已有成熟对手，模型拟合和遍历残差的时间也必须计入。"
+      }
+    ],
+    "reality_check": "最可能失败的是残差根本不稀疏：薄杆、旋转表面和扫描噪声一起把错误位置撑大，几十 KiB 的核很漂亮，总文件却比直接存稀疏坐标还大。"
+  },
+  "papers": [
+    {
+      "domain": "ai",
+      "title": "Decoupled Predictive Decision Making: A Shared Conditional Predictor for Agents",
+      "title_zh": "解耦预测式决策：给 Agent 配一个共享条件预测器",
+      "url": "https://arxiv.org/abs/2611.02075",
+      "hf_url": "https://huggingface.co/papers/2611.02075",
+      "authors": "Lang Mo、Xingxuan Zhang、Qi Wang 等",
+      "affiliation": "Stable AI",
+      "upvotes": 113,
+      "one_liner": "经验不一定要写回权重，也可以交给另一个模型来读。",
+      "summary_zh": "DPDM 让语言模型把当前任务与历史记录转成语义表示，再由冻结的 LimiX-2 条件预测器判断工具、候选答案或推理步骤。50 个基准上，Qwen3.5-27B 在相同历史记录与查询下的平均准确率从少样本提示的 78.80% 升至 82.33%；摘要里更高的 84.92% 使用了各方法各自的历史预算。最有意思的是部署阶段两个模型都不更新参数，但历史样本的可得性和使用成本仍得一起比较。",
+      "tags": [
+        "Agent",
+        "条件预测",
+        "经验学习"
+      ]
+    },
+    {
+      "domain": "ai",
+      "title": "Random Is Almost Enough? Stable and Low-Cost Benchmark Compression via BestRand",
+      "title_zh": "随机抽样几乎够用？用 BestRand 稳定压缩评测集",
+      "url": "https://arxiv.org/abs/2611.00883",
+      "hf_url": "https://huggingface.co/papers/2611.00883",
+      "authors": "George Ling、Shanshan Zhong、Lijin Yang 等",
+      "affiliation": "Carnegie Mellon University",
+      "upvotes": 50,
+      "one_liner": "小评测集最危险的，往往是偶尔错得特别大。",
+      "summary_zh": "BestRand 研究怎样用少量题目估计完整基准的成绩：随机子集通常不差，但少数子集会带来很大的估计误差。作者在 70 多个文本、多模态和 Agent 基准上检验方法，相对所比较的方法平均降低 50.2% 的高误差风险、16.4% 的估计误差，构造子集的成本为原来的 51.3%。这些数字说的是评测压缩的统计可靠性和构造成本，最终要发布的模型排名仍应回到完整基准核验。",
+      "tags": [
+        "评测",
+        "子集选择",
+        "统计可靠性"
+      ]
+    },
+    {
+      "domain": "ai",
+      "title": "On the Opportunities and Challenges of Prefill-to-Autoregressive Cross-Model Transfer",
+      "title_zh": "预填充到自回归的跨模型迁移：机会与陷阱",
+      "url": "https://arxiv.org/abs/2611.06976",
+      "hf_url": "https://huggingface.co/papers/2611.06976",
+      "authors": "Zhenyi Shen、Junru Lu、Wei Liu 等",
+      "affiliation": "King's College London",
+      "upvotes": 12,
+      "one_liner": "接上大模型后涨分，未必是大模型传来了有用信息。",
+      "summary_zh": "PLatour 通过轻量线性桥把冻结大模型读提示时的表示传给小模型，用任务奖励训练这个连接。关键实验却发现，一些任务的收益用无信息信号、自通信或只训练接收端也能复现，桥本身可能只是在做参数高效适配。作者因此提出 PACT-Check，单独测量收益中真正来自通信的部分；做模型协作实验时，这组反事实对照比只报涨分更有说服力。",
+      "tags": [
+        "模型协作",
+        "反事实评测",
+        "参数高效适配"
+      ]
+    },
+    {
+      "domain": "ai",
+      "title": "D3D: Decoupled Diffusion Drafting for Asynchronous Speculative Decoding",
+      "title_zh": "D3D：把扩散草稿生成与验证解耦，支持异步推测解码",
+      "url": "https://arxiv.org/abs/2611.06425",
+      "hf_url": "https://huggingface.co/papers/2611.06425",
+      "authors": "Baoyou Chen、Ruiqiao Mei、Guancong Lin 等",
+      "affiliation": "Fudan University",
+      "upvotes": 18,
+      "one_liner": "草稿写得再快，也别每轮都等主模型点头才动笔。",
+      "summary_zh": "D3D 让扩散草稿模型不再依赖主模型最新的隐藏状态，从而在主模型验证当前块时并行准备后续候选。论文在七个基准上报告，面向 Qwen3-8B 和 Qwen3-32B 的平均解码加速分别为 5.00 倍和 5.71 倍，对比 DFlash 的 4.03 倍和 3.67 倍。这里衡量的是论文配置下的解码阶段，部署时还要看草稿模型开销、请求批量与硬件争用。",
+      "tags": [
+        "推测解码",
+        "扩散模型",
+        "推理加速"
+      ]
+    },
+    {
+      "domain": "ai",
+      "title": "TailSteer: Trajectory-Tail Steering for Drift-Resistant Multi-turn Image Editing",
+      "title_zh": "TailSteer：在去噪尾段压住多轮图片编辑的漂移",
+      "url": "https://arxiv.org/abs/2611.06741",
+      "hf_url": "https://huggingface.co/papers/2611.06741",
+      "authors": "Ruikang Li、Zixuan Chen、Jiarui Wu 等",
+      "affiliation": "MMLab-CUHK",
+      "upvotes": 36,
+      "one_liner": "连续改二十次之后，没让改的地方还认得出来吗？",
+      "summary_zh": "TailSteer 针对多轮编辑中不断累积的画面漂移，在训练最后阶段保持早期去噪接近基座，把保真修正集中到轨迹尾部。它从编辑器自己的采样轨迹里学习，以原图中应保留的内容作参照，不要求人工整理成对的编辑真值。作者在 FLUX、SenseNova、Qwen 系列上检验了 15–20 轮编辑，报告漂移降低且基本保留原有单轮能力；读结果时要同时看编辑是否完成和无关内容是否被保住。",
+      "tags": [
+        "图像编辑",
+        "多轮交互",
+        "扩散模型"
+      ]
+    },
+    {
+      "domain": "embodied",
+      "title": "VFlash: Fast, Accurate Visual Planning via Flash Primitive Decoding",
+      "title_zh": "VFlash：把整条视觉轨迹一次解出来",
+      "url": "https://arxiv.org/abs/2611.08449v1",
+      "authors": "Yu-Cheng Chou、Shihao Wang、Jin Huang 等",
+      "affiliation": "NVIDIA 等",
+      "one_liner": "坐标是一段几何结构，没必要逐字念完。",
+      "summary_zh": "VFlash 利用点、框和轨迹的已知格式，一次预测完整视觉单元的坐标，而非逐 token 自回归生成。视觉单元只要通过结构检查就能直接接受，因此这部分改变了原模型的输出分布，效果要靠空间精度与下游成功率判断。在四组 MolmoSpaces 任务上，使用其计划的世界动作模型平均成功率为 70.2%，基线为 62.6%。约 25 倍的生成加速来自三维点运动预测的初步单次 rollout 测量，不能当成所有机器人任务的整机加速。",
+      "tags": [
+        "视觉规划",
+        "并行解码",
+        "机器人"
+      ]
+    },
+    {
+      "domain": "embodied",
+      "title": "T3R: Training-Free Two-Stage Token Refinement Towards Efficient and Robust VLA Models",
+      "title_zh": "T3R：不重训，先删冗余视觉 token，再调注意力",
+      "url": "https://arxiv.org/abs/2611.08413v1",
+      "authors": "Mohammed Hassan、Zhenyang Chen、Zheng Wang 等",
+      "one_liner": "删掉背景以后，留下来的信息也得分清主次。",
+      "summary_zh": "T3R 先用分割结果裁掉与动作无关的视觉块，再给保留区域和语言指令加入显著性引导的注意力偏置，全程不重训 VLA。LIBERO-Spatial 上删去 85% 的场景相机视觉 token 后，成功率基本保持；在物体位置分布变化的测试中，最高提升 7 个百分点。最高 3.3 倍加速对应高分辨率下的 LLM 前向计算，实际部署还需把分割、预处理和控制链路的时间补齐。",
+      "tags": [
+        "VLA",
+        "免训练",
+        "Token 裁剪"
+      ]
+    },
+    {
+      "domain": "chip",
+      "title": "Should You Split Decode? Disaggregation Across Future Models and Accelerators",
+      "title_zh": "解码阶段还要继续拆吗？跨模型与加速器的部署比较",
+      "url": "https://arxiv.org/abs/2611.08299v1",
+      "authors": "Ramyad Hadidi",
+      "one_liner": "多拆一层服务，未必多换来一层效率。",
+      "summary_zh": "这篇用 SiliconForge 校准模型比较两种推理部署：已有的预填充与解码分离，以及进一步把解码中的注意力和前馈计算拆开。按相同功率预算、重叠规则和服务时限优化后，进一步拆分没有稳定的每千瓦有效吞吐优势，多数标称结果更支持原有分法。改变映射与资源池大小，把提前锁定方案的归一化有效吞吐损失中位数从 36% 降到 9%；结论来自建模比较，适合用来审视硬件采购假设。",
+      "tags": [
+        "推理架构",
+        "加速器",
+        "性能建模"
+      ]
+    },
+    {
+      "domain": "bio",
+      "title": "Static Recovery Is Not Dynamic Stability: Dynamics-Aware Benchmarking of Protein Motif Scaffolding",
+      "title_zh": "静态恢复不等于动态稳定：重新检查蛋白质功能片段的支架",
+      "url": "https://arxiv.org/abs/2611.07723v1",
+      "authors": "Emile de Bruyn、Moritz Schäffler、Jannik Schneider 等",
+      "one_liner": "折回来像，不代表动起来也对。",
+      "summary_zh": "BILBY-PRO 用 220 个案例扩展蛋白质功能片段的支架设计评测，BILBY-MD 则用全原子分子动力学——模拟原子随时间运动——检查设计是否维持参考结构的动态特征。对原 MotifBench 中 55 个已通过静态判据的模型与题目组合，31 个满足作者的动力学支持标准，只有 8 个通过全部检查。这个差距提醒我们把静态恢复、动态一致性与实验功能分开验证，分子动力学本身也不等于湿实验。",
+      "tags": [
+        "蛋白质设计",
+        "评测",
+        "分子动力学"
+      ]
+    },
+    {
+      "domain": "quantum",
+      "title": "Provable circuit-level thresholds for non-abelian topological phases",
+      "title_zh": "非阿贝尔拓扑相的电路级容错阈值证明",
+      "url": "https://arxiv.org/abs/2611.08488v1",
+      "authors": "Yuanjie Ren、Margarita Davydova、Shankar Balasubramanian 等",
+      "one_liner": "把抽象的拓扑保护，落实到会出错的测量电路。",
+      "summary_zh": "作者为二维非手性拓扑序构造量子存储方案，覆盖非阿贝尔情形，也就是交换准粒子的顺序会影响量子态的那类体系。方案给出把错误转成可测信号的提取电路，以及同步运行的经典解码算法，并在局域随机电路噪声模型下证明存在容错阈值。这是对具体噪声模型的理论保证，论文没有把它包装成硬件已经达到阈值的实验结果。",
+      "tags": [
+        "量子纠错",
+        "拓扑量子存储",
+        "容错阈值"
+      ]
+    },
+    {
+      "domain": "ai4s",
+      "title": "A Generative Foundation Model for Multimodal Tokamak Tasks",
+      "title_zh": "GenToka：用同一个生成模型处理多种托卡马克测量任务",
+      "url": "https://arxiv.org/abs/2611.08153v1",
+      "authors": "Yingshuai Ji、Haodong Feng、Guohong Deng 等",
+      "one_liner": "波形、剖面和控制信号，开始放进同一个预测框架。",
+      "summary_zh": "GenToka 面向托卡马克这种用磁场约束等离子体的装置，把波形、剖面、场和标量分别编码，再用共享条件扩散 Transformer 生成指定目标。作者将 TokaMark 扩展成 MAST 装置上的六组共 20 个任务；相对 TokaMind，前四组的宏平均归一化均方根误差降低 4.7%，第五组降低 17.7%。这批结果支持多种诊断信号联合建模，但仍是特定装置测量上的任务评估，离跨装置泛化和真实闭环控制还隔着验证。",
+      "tags": [
+        "聚变",
+        "多模态时间序列",
+        "科学基础模型"
+      ]
+    }
+  ],
+  "repos": [
+    {
+      "domain": "ai",
+      "name": "zed-industries/zed",
+      "url": "https://github.com/zed-industries/zed",
+      "language": "Rust",
+      "stars": 93602,
+      "stars_today": "292",
+      "one_liner": "编辑器快一点，日常等待就少一点。",
+      "summary_zh": "Zed 是用 Rust 构建、支持多人协作的代码编辑器，目前提供 macOS、Linux 和 Windows 版本。适合想把协作与代码浏览放进同一工作区的人，是否迁移还要看自己的语言服务、插件和远程开发需求。"
+    },
+    {
+      "domain": "ai",
+      "name": "astral-sh/ruff",
+      "url": "https://github.com/astral-sh/ruff",
+      "language": "Rust",
+      "stars": 50683,
+      "stars_today": "213",
+      "one_liner": "把 Python 风格检查和格式整理放回一次顺手的操作里。",
+      "summary_zh": "Ruff 用 Rust 实现 Python 静态检查与格式化，整合了多类常见检查规则、自动修复和导入排序。做实验仓库时可以把它接到编辑器和持续集成，减少格式噪声；类型问题与运行时行为仍需要各自的检查。"
+    },
+    {
+      "domain": "ai",
+      "name": "nushell/nushell",
+      "url": "https://github.com/nushell/nushell",
+      "language": "Rust",
+      "stars": 40977,
+      "stars_today": "177",
+      "one_liner": "处理实验结果时，管道里传表格比反复拆字符串省心。",
+      "summary_zh": "Nushell 把文件列表、JSON 和命令结果视为带结构的数据，可以在管道里直接筛选、排序和聚合。收拾批量实验记录、对齐指标表时很合适，但它有自己的语法，已有 Bash 脚本迁移前需要逐段适配。"
+    },
+    {
+      "domain": "ai",
+      "name": "prometheus/prometheus",
+      "url": "https://github.com/prometheus/prometheus",
+      "language": "Go",
+      "stars": 67174,
+      "stars_today": "140",
+      "one_liner": "推理服务慢在哪，先把时间序列留下来。",
+      "summary_zh": "Prometheus 定时拉取指标，以带标签的时间序列存储，再通过 PromQL 查询和规则告警。它适合观察推理服务的排队、吞吐和错误率；指标标签应控制取值种类，逐请求细节交给日志或追踪系统处理。"
+    },
+    {
+      "domain": "ai",
+      "name": "etcd-io/etcd",
+      "url": "https://github.com/etcd-io/etcd",
+      "language": "Go",
+      "stars": 52610,
+      "stars_today": "123",
+      "one_liner": "多台服务需要一致意见时，元数据得有可靠的落点。",
+      "summary_zh": "etcd 是基于 Raft 共识的分布式键值存储，用来保存配置、服务发现和协调所需的关键状态。部署多个推理服务或调度组件时可以参考它的可靠性设计，代价是需要认真维护集群与备份。"
+    },
+    {
+      "domain": "ai",
+      "name": "google/skills",
+      "url": "https://github.com/google/skills",
+      "language": "Python",
+      "stars": 22816,
+      "stars_today": "532",
+      "one_liner": "官方产品的操作知识，也开始以可复用工作流交付。",
+      "summary_zh": "Google 把 Cloud 与其他产品的 Agent Skills 放进同一仓库，覆盖身份权限、部署、检索和多模态服务等工作流。它适合已经使用相应产品、想给编码助手补具体操作上下文的人；挑选时应对照实际产品版本和所需账户权限。"
+    },
+    {
+      "domain": "ai",
+      "name": "cloudflare/security-audit-skill",
+      "url": "https://github.com/cloudflare/security-audit-skill",
+      "language": "JavaScript",
+      "stars": 63919,
+      "stars_today": "2,524",
+      "one_liner": "安全报告最有用的部分，是别人能沿着证据复查。",
+      "summary_zh": "Cloudflare 的这个技能把仓库审计组织成覆盖记录、候选验证、独立复核和结构化报告等阶段，并附 JSON 报告与覆盖台账的校验器。它适合研究 Agent 审计流程与证据管理；运行成本包含多轮模型调用和独立核验，结果质量仍取决于证据是否完整。"
+    }
+  ],
+  "news": [
+    {
+      "domain": "ai",
+      "title_zh": "Google 于 11 月 5 日发布 Gemini Omni 1.2 Flash，支持原生 15 秒视频",
+      "url": "https://blog.google/innovation-and-ai/technology/developers-tools/introducing-gemini-omni-1-2-flash/",
+      "source": "Google DeepMind 官方博客",
+      "summary_zh": "官方宣布在 Gemini API 和企业产品中正式提供该视频生成与编辑模型，原生时长由 10 秒增至 15 秒，并支持对同一片段继续对话修改。720p 视频标价为每秒 0.07 美元，较 Omni 1.1 下调 30%。参考跟随与一致性的改善主要由厂商展示，官方也列出快速运动和复杂物理仍需改进。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "Physicl 获 1000 万美元种子融资，发布面向模型薄弱场景的 Studio",
+      "url": "https://finance.yahoo.com/technology/ai/articles/physicl-raises-10-million-solve-130000065.html",
+      "source": "Physicl / GlobeNewswire 公司公告",
+      "summary_zh": "11 月 6 日的公司公告称，本轮由 Inovia Capital 领投、US Venture Partners 参与，用于面向物理 AI 的定向训练数据平台。同步推出的 Studio 支持生成定制环境和带精确真值的训练数据，着重补模型处理不好的场景。这样的数据能否稳定改善真实机器人表现，还需要在相同任务上做仿真与真机对照。"
+    },
+    {
+      "domain": "ai",
+      "title_zh": "Censys 报告发现 1465 台主机暴露 ARTEX 管理控制台",
+      "url": "https://censys.com/blog/artex-agentic-asbestos",
+      "source": "Censys 原始研究",
+      "summary_zh": "11 月 5 日发布的报告统计，截至 11 月 4 日有 1465 台主机运行着可从公网访问的 ARTEX 控制台；其中约 650 台集中在两组相同配置的托管网段。ARTEX 是由大模型驱动的渗透测试框架，报告同时梳理了其被用于已披露攻击活动的情况。这个数量描述的是暴露主机，不能直接当成独立攻击者或已发生的入侵次数。"
+    },
+    {
+      "domain": "embodied",
+      "title_zh": "补读 11 月 3 日发布：Stretch Gen 2 把升级重点放在维修与停机时间",
+      "url": "https://bostondynamics.com/news/boston-dynamics-launches-next-generation-stretch-robot",
+      "source": "Boston Dynamics 官方公告",
+      "summary_zh": "11 月 6 日的跟进报道指向 Boston Dynamics 于 11 月 3 日公布的第二代卸货机器人，改动来自第一代超过 10 万运行小时的反馈。厂商称内部线缆减少 81%，转向驱动模块的更换时间由约一天缩至约一小时，同时更新连接器、夹具和诊断工具。它把可靠性改进落到了具体故障源，但这些维护数据仍需结合客户现场工况理解。"
+    },
+    {
+      "domain": "space",
+      "title_zh": "CesiumAstro 宣布 7.3 亿美元 D 轮，计划建设 737 颗卫星的星座",
+      "url": "https://www.cesiumastro.com/press-release/series-d",
+      "source": "CesiumAstro 官方公告",
+      "summary_zh": "公司在 11 月 5 日公告中宣布完成 7.3 亿美元 D 轮融资，估值超过 45 亿美元，由 Janus Henderson 领投；公告另外列出 1 亿美元债务融资。资金支持其从通信部件和卫星供应商扩展到自营空间基础设施，并公布计划由 737 颗卫星组成的 Synchronicity 星座。Element-1 已开始在轨运行，后续星座仍处于建设计划阶段。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "T-Therapeutics 完成 1.33 亿美元 B 轮，推进两项 TCR 双特异项目",
+      "url": "https://rss.globenewswire.com/news-release/2026/11/05/3396064/0/en/t-therapeutics-announces-oversubscribed-133-million-series-b-financing-to-achieve-clinical-proof-of-concept-for-first-in-class-tcr-bispecific-therapies-in-cancer-and-autoimmune-dis.html",
+      "source": "T-Therapeutics / GlobeNewswire 公司公告",
+      "summary_zh": "11 月 5 日公告称，本轮由 Advent Life Sciences 和 British Business Bank 共同领投，资金将支持肿瘤和自身免疫疾病两条 TCR-CD3 双特异项目取得临床概念验证。这里的双特异分子一端识别目标细胞呈递的蛋白片段，另一端接上 T 细胞，目的是把免疫杀伤导向指定目标。融资支持的是后续临床开发，公告尚未给出人体疗效验证结果。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "补读 11 月 4 日协议：海创向 Evommune 授权 VAV1 降解剂，首期对价需拆开看",
+      "url": "https://ir.evommune.com/financial-information/sec-filings/content/0001193125-26-447608/evmn-20261104.htm",
+      "source": "Evommune Form 8-K",
+      "summary_zh": "按 11 月 4 日签署并披露的协议，Evommune 获得 EVO570 等 VAV1 分子胶降解剂在大中华区以外的独家权利，这类药物借助细胞自身降解系统清除靶蛋白。首期对价包括 2000 万美元现金和按协议估值 1000 万美元的预付认股权证，不能全部写成已经支付的现金。其余最高 1.5 亿美元开发与监管里程碑、9.2 亿美元商业里程碑均有条件，另有销售分成。"
+    },
+    {
+      "domain": "bio",
+      "title_zh": "西门子医疗启动体外诊断业务拆分，拟以 Olyrian Diagnostics 独立运营",
+      "url": "https://www.siemens-healthineers.com/press/releases/olyrian-diagnostics",
+      "source": "Siemens Healthineers 官方公告",
+      "summary_zh": "11 月 5 日公告确认，体外诊断业务已启动剥离准备，未来名称为 Olyrian Diagnostics，品牌将分阶段推出。体外诊断指在实验室或诊疗现场检测血液等离体样本；该业务的独立组织过渡预计到 2028 年中完成。过渡期间它仍属于 Siemens Healthineers，当前动作是启动拆分流程。"
+    }
+  ],
+  "research_ideas": [
+    {
+      "domain": "embodied",
+      "type": "repo",
+      "title": "给 Rohbau3D 做一个点云—全景图评测往返检查器",
+      "based_on": [
+        {
+          "title": "Rohbau3D-Semantics：官方数据、标签与投影工具",
+          "url": "https://github.com/RauchLukas/Rohbau3D"
+        },
+        {
+          "title": "rohbau3d-benchmark：已有分工地划分与语义分割基线",
+          "url": "https://github.com/A-SHOJAEI/rohbau3d-benchmark"
+        }
+      ],
+      "why_now": "当天研究数据中的 Rohbau3D-Semantics 于 11 月 4 日提交，官方仓库的下载索引已列出 class、instance 和采样映射分片。官方已有全景与立方体投影脚本，社区也已有分割基线，机会在为这些转换补可审计的点索引、可见性和计分检查，而非再做一个渲染器或宣称首个基准。",
+      "feasibility": "一人约 2–3 周，核心用 NumPy 和分块文件读取，CPU 即可；接入已有预测文件也不要求训练模型。按每块约 10 万点流式处理，内存预算先定 8–16 GB 并实测，不必一次加载整个工地，也不依赖社区仓库尚含占位符的权重链接。",
+      "route": [
+        "第 1–2 天：按官方下载索引取一个工地的坐标、class、sample_idx 和 inv_sample_idx，跑通官方投影工具；保存原始 point_id，并先核对索引范围、映射方向和标签数量。",
+        "为体素采样、全景投影和立方体投影统一输出 point_id 到像素或体素的映射；投影使用最近深度选择与显式可见性掩码，禁止把被遮挡点也当成可逆样本。",
+        "先用真值标签走一次转换闭环：在可见且未合并的点上应精确回到原标签；多点合并位置单独报语义冲突率、细类丢失率和有效点覆盖率，不把不可逆损失算作模型错误。",
+        "实现接收逐点或逐像素预测文件的 CLI，同时输出全点与可见子集的混淆矩阵；按官方类表分别披露背景类是否计分，检查训练与测试的 site_id 不交叉。",
+        "把索引错位、遮挡覆盖、背景类漏算三类可控错误做成小型示例，输出逐点差异表和一页 HTML 报告；用第二个工地验证工具，再发布数据转换与评测审计库。"
+      ],
+      "risk": "官方已经解决了不少投影问题，工具能否被采用取决于是否真能抓到计分或映射错误；应先展示一个可定位的失误案例，别把正确的遮挡损失误报为 bug。"
+    },
+    {
+      "domain": "ai",
+      "type": "paper",
+      "title": "Axis-LoRA 遇到时间有效期：小适配器之外，还需要多硬的时间约束？",
+      "based_on": [
+        {
+          "title": "Axis-LoRA: Probing and Adapting Embedding Models for Personal-Memory Retrieval",
+          "url": "https://github.com/dohoonkim-ai/axis-lora"
+        },
+        {
+          "title": "Beyond Dialogue Time: Temporal Semantic Memory for Personalized LLM Agents",
+          "url": "https://aclanthology.org/2026.findings-acl.1496/"
+        }
+      ],
+      "why_now": "当天收录的 Axis-LoRA 于 11 月 5 日提交 arXiv，代码已包含 4196 条 AxisCF 训练样本，适合便宜地追问检索收益来自语义适配还是明确的日期约束；它在 10 月 EMNLP 已有版本，不能说是刚出现的全新方向。LongMemEval 已有时间查询扩展，TSM 也已研究持续时间记忆，因此这里只检验轴适配与可审计时间过滤的互补性，不把加时间戳当创新。",
+      "feasibility": "一人约 2–3 周，只用 MiniLM 或 bge-base 和已发布样本，单张 12–24 GB GPU 做小批量适配，显存为规划估计。官方默认四卡脚本需改成单进程并减小批量；梯度累积不能复原跨设备的对比负样本，必须把单卡基线与实验使用的批量和负样本口径一并重报。",
+      "route": [
+        "第 1–2 天：先跑官方 MiniLM 冻结检索与评测脚本，复用已发布 AxisCF，不重做大模型造数；检查数据划分和每条记忆可用的时间字段，再启动单进程、小批量的 Axis-LoRA 训练。",
+        "建立四个同预算对照：冻结检索、冻结检索加时间过滤、Axis-LoRA、Axis-LoRA 加同一时间过滤；只处理能从查询与记忆元数据确定的时间窗口，解析不了时保留原候选。",
+        "从已有问句中固定抽取带 before、after、during 或明确日期的子集，再加入规则生成且有确定答案的日期改写；训练和测试按用户与日期模板隔离，既报告原始问题也报告改写问题。",
+        "按对话发生时间与事件有效时间分两轨评测；真实事件时间未知时标为未知，禁止拿答案或人工真值来替检索器补全。除 Recall@10 外，记录时间冲突候选比例、过滤造成的漏召回、索引额外字节和 CPU 延迟。",
+        "给出三个随机种子的配对差异及按用户重采样的置信区间；若收益只出现在人工日期格式上，就发布失效分析和过滤基线，不扩大成通用个人记忆结论。"
+      ],
+      "risk": "最容易得到的假收益来自把对话时间误当事件时间，或用测试答案补出过滤条件；一旦去掉这些隐性信息，适配与时间过滤可能都只剩很小的改进。"
+    }
+  ]
+}
